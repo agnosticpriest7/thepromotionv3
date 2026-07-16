@@ -4969,9 +4969,13 @@ function drawLabels(){
   // kitchen counter along the north wall (the table + chairs are real furniture now)
   ctx.fillStyle='#241d16';ctx.fillRect(U(898),U(40),U(264),U(24));ctx.fillStyle='#c3c7cc';ctx.fillRect(U(900),U(42),U(260),U(20));ctx.fillStyle='#e7e9ec';ctx.fillRect(U(900),U(42),U(260),U(4));
   ctx.fillStyle='#8a8f96';ctx.fillRect(U(1120),U(46),U(26),U(12));ctx.fillStyle='#3a3f45';ctx.fillRect(U(940),U(48),U(14),U(10));
-  // reception desk
-  ctx.fillStyle='#241d16';ctx.fillRect(U(358),U(598),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(360),U(600),U(128),U(38));ctx.fillStyle='#c7bda0';ctx.fillRect(U(360),U(600),U(128),U(4));
-  ctx.fillStyle='#20242a';ctx.fillRect(U(410),U(606),U(20),U(12));
+  // reception desk — wire in the reception_desk sprite (it was in the art but never drawn;
+  // the front desk was a plain painted block). Fall back to the block if the art is missing.
+  if(ok('reception_desk')){
+    sprAt('reception_desk',U(424),U(644),'reception_desk');
+  } else {
+    ctx.fillStyle='#241d16';ctx.fillRect(U(358),U(598),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(360),U(600),U(128),U(38));ctx.fillStyle='#c7bda0';ctx.fillRect(U(360),U(600),U(128),U(4));ctx.fillStyle='#20242a';ctx.fillRect(U(410),U(606),U(20),U(12));
+  }
   // kitchen vending
   ctx.fillStyle='#241d16';ctx.fillRect(U(1188),U(150),U(26),U(52));ctx.fillStyle='#8a2f2a';ctx.fillRect(U(1190),U(152),U(22),U(48));ctx.fillStyle='#20242a';ctx.fillRect(U(1193),U(156),U(16),U(20));
   // reception waiting chairs

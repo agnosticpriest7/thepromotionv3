@@ -516,6 +516,12 @@ const EPILOGUE = `
   def(G,'career',   function(){ return (typeof career!=='undefined')?career:null; });
   def(G,'dale',     function(){ return (typeof dale!=='undefined')?dale:null; });
   def(G,'catfish',  function(){ return (typeof catfish!=='undefined')?catfish:null; });
+  def(G,'layout',   function(){ var pick=function(n,d){ try{ return eval(n); }catch(e){ return d; } };
+    return { S:pick('S',1), objects:pick('objects',[]), desks:pick('desks',[]), walls:pick('walls',[]),
+      ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]), meetingTable:pick('meetingTable',null),
+      breakTable:pick('breakTable',null), kitchenTable:pick('kitchenTable',null),
+      EXIT:pick('EXIT',null), MUSTER:pick('MUSTER',null), HR_OFFICE:pick('HR_OFFICE',null),
+      SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]) }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });

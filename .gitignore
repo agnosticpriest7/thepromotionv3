@@ -11,3 +11,4 @@ Desktop.ini
 # scratch / local test output
 /test/tmp/
 *.log
+test/floormap.svg
