@@ -1,0 +1,13 @@
+# the harness is pure Node built-ins — nothing to install
+node_modules/
+
+# OS / editor cruft
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~
+
+# scratch / local test output
+/test/tmp/
+*.log
