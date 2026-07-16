@@ -2945,7 +2945,7 @@ function buildOptions(t){
       items.push(...partGrab('decaf',seen));
       return {title:'Coffee machine',items};
     }
-    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:'Pocket a stapler (petty)',risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{logLine('Swiped office supplies.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},...partGrab('supplies',seen)]};}
+    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:'Pocket a stapler (petty)',risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{logLine('Swiped office supplies.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},(o.suppliesDay===day?{label:'Supply cupboard is picked clean until tomorrow',disabled:true}:{label:invFull()?'Take assorted prank supplies (pockets full)':'Take assorted prank supplies (wildcard)',disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.suppliesDay=day;player.inv.push('supplies');renderLeverage();logLine('Palmed a handful of assorted supplies. Contraband now — the cupboard is picked clean until tomorrow.','t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take supplies':'Grabbed supplies, unseen');}})]};}
     if(o.type==='files')return {title:'HR Files (locked cabinet)',items:[...catfishFileItems(),player.hasKeycard?{label:player.channel?'Already snooping...':'Unlock & crack the files (hold ~3s)',disabled:!!player.channel,risk:seen?seenTag():'very risky',hot:seen,act:()=>startSnoop()}:{label:"Locked — you need HR's keycard",disabled:true}]};
     if(o.type==='toilet'){const seen2=seenByAnyone();return {title:o.label,items:[
       {label:o.rigged?'Already rigged to overflow':'Rig it to overflow (prank)',disabled:o.rigged,risk:seen2?seenTag():'sneaky',hot:seen2,act:()=>startAct(4,'Rigging the plumbing',()=>rigToilet(o))},
@@ -3268,7 +3268,17 @@ function spreadRumorAbout(vector,t){
     logLine(`Spread a rumour about ${t.name.split(' ')[0]} through ${vector.name.split(' ')[0]}. It reaches them and bites${boost>1?` — ${vector.name.split(' ')[0]} was happy to carry it`:''}.${d?'':' (no proof, but it stuck)'}`,'w');
     toast(`Rumour about ${t.name.split(' ')[0]} landed. Stress +${hit}`);
     addSuspicion(hrSeesPlayer()?18:6,'Rumour-mongering');
-    witnessReact();
+    /* The MESSENGER is a willing carrier — they don't turn on you for passing gossip about
+       someone they don't care about (a friend of the subject already shut it down above, as a
+       backfire). But if the SUBJECT is within earshot, they OVERHEAR you talking about them
+       and round on you. */
+    if(cdist(t,player)<Math.round(150*S)){
+      t.stress=clamp(t.stress+6,0,100);
+      t.mood=clamp(t.mood-8,-100,100);
+      t.bubble={t:2.6,text:pick(['Are you talking about ME?','I HEARD that.','Say that to my face.'])};
+      addSuspicion(hrSeesPlayer()?6:3,`${t.name.split(' ')[0]} overheard you`);
+      logLine(`${t.name.split(' ')[0]} was close enough to overhear — they know it was you.`,'w');
+    }
     if(t.stress>=100&&t.meltCd<=0)meltdown(t);
   } else {
     vector.bubble={t:2.2,text:'Says who?'};
