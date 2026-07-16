@@ -2420,11 +2420,13 @@ function tickIntro(dt){
   const dp=routeAt(INTRO_ROUTE,intro.d);
   const pp=routeAt(INTRO_ROUTE,intro.d-INTRO_GAP);
   const odx=dp.x-d.x, ody=dp.y-d.y;
+  const pdx=pp.x-player.x, pdy=(pp.y+2)-player.y;   // the PLAYER's own step this frame
   d.x=dp.x;d.y=dp.y;
   player.x=pp.x;player.y=pp.y+2;
-  // face + animate both
+  // face + animate both — face the direction each is actually walking, so nobody moonwalks
   if(walking&&(Math.abs(odx)>0.01||Math.abs(ody)>0.01)){
     d.face=Math.atan2(ody,odx);
+    if(Math.abs(pdx)>0.01||Math.abs(pdy)>0.01)player.face=Math.atan2(pdy,pdx);
     const step=Math.hypot(odx,ody);
     d.moving=true;d.animT=(d.animT||0)+step;
     player.moving=true;player.animT=(player.animT||0)+step;
