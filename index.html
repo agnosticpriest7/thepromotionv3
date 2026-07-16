@@ -2309,27 +2309,33 @@ function startBossTour(){
 function endBossTour(){boss.alive=false;boss.onFloor=false;const bt=tasks.find(t=>t.bonus&&!t.done);if(bt){tasks=tasks.filter(t=>t!==bt);logLine('The CEO went back upstairs. You missed the chance to impress him.','t');renderTasks();}}
 /* ---- Day 1: Dale walks you to your desk (scripted route, no physics) ---- */
 let intro=null;
+/* Dialogue beats gated on POSITION. `hold:true` marks a point of interest — Dale stops
+   there and won't walk past until he's delivered the line, then lingers a moment. The
+   `at` values are aligned to where each landmark actually falls on the route below
+   (Annex 0.43, the three-ways beat mid-floor 0.57, Kitchen 0.75, HR 0.84, bullpen 0.96). */
 const INTRO_BEATS=[
-  {at:0.00,t:2.2,say:"You must be the new intern. Up. Follow me — quick tour."},
-  {at:0.14,t:2.4,say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.34,t:2.6,say:"That corner — the Annex. Where they stick the new ones. You'll be here soon."},
-  {at:0.44,t:2.6,say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
-  {at:0.52,t:2.6,say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.58,t:2.6,say:"Do the work. Run a clean floor long enough and the board hands it to you."},
-  {at:0.64,t:2.6,say:"Or get someone in power to owe you. Make yourself useful to the right person."},
-  {at:0.70,t:2.6,say:"Or dig up something buried. But that road's a cliff. Your funeral."},
-  {at:0.78,t:2.6,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.87,t:2.6,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.96,t:2.4,say:"And watch the bullpen. It's cutthroat. Guard your stapler."},
-  {at:1.00,t:2.8,say:"Right. That desk's yours. Two jobs. Go on — day's yours now."},
+  {at:0.00,t:2.2,hold:true,say:"You must be the new intern. Up. Follow me — quick tour."},
+  {at:0.16,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.43,t:2.8,hold:true,say:"That corner — the Annex. Where they stick the new ones. You'll be here soon."},
+  {at:0.50,t:2.6,         say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
+  {at:0.57,t:2.6,hold:true,say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.61,t:2.6,         say:"Do the work. Run a clean floor long enough and the board hands it to you."},
+  {at:0.65,t:2.6,         say:"Or get someone in power to owe you. Make yourself useful to the right person."},
+  {at:0.69,t:2.6,         say:"Or dig up something buried. But that road's a cliff. Your funeral."},
+  {at:0.75,t:2.6,hold:true,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.84,t:2.6,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.96,t:2.4,hold:true,say:"And watch the bullpen. It's cutthroat. Guard your stapler."},
+  {at:1.00,t:2.8,hold:true,say:"Right. That desk's yours. Two jobs. Go on — day's yours now."},
 ];
-/* a hand-authored grand tour, elevator -> Annex -> Kitchen -> past HR -> your desk.
-   Generated against the real nav grid so it never clips a wall or a desk. */
+/* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
+   -> past HR -> the bullpen -> your desk. Verified against the real nav grid — the middle
+   traverse (wp17-20) was A*-routed below the Sales-row desks and up through the x=850
+   doorway so it never clips a desk or wall. */
 const INTRO_ROUTE=[
   {x:110,y:570},{x:390,y:570},{x:430,y:530},{x:730,y:530},{x:750,y:510},{x:870,y:510},
   {x:890,y:490},{x:890,y:470},{x:1050,y:470},{x:1050,y:630},{x:1050,y:510},{x:1070,y:490},
   {x:1070,y:470},{x:1090,y:450},{x:1090,y:430},{x:1110,y:410},{x:1110,y:390},{x:1150,y:350},
-  {x:1150,y:270},{x:850,y:270},{x:850,y:210},{x:890,y:210},{x:910,y:190},{x:930,y:190},
+  {x:910,y:350},{x:850,y:250},{x:850,y:210},{x:890,y:210},{x:910,y:190},{x:930,y:190},
   {x:950,y:170},{x:970,y:170},{x:990,y:150},{x:890,y:150},{x:870,y:170},{x:770,y:170},
   {x:730,y:210},{x:610,y:210},{x:570,y:170},{x:410,y:170},{x:390,y:150},{x:370,y:150},
 ];
@@ -2360,7 +2366,7 @@ function startIntro(){
     if(n.homeDesk){const s=deskSeat(n.homeDesk);n.x=s.x-n.w/2;n.y=s.y-n.h/2;n.goal=null;n.path=null;n.bubble=null;unstickEnt(n);}
   });
   hrs().forEach((h,i)=>{h.x=HR_OFFICE.x+(i?Math.round(24*S):-Math.round(24*S));h.y=HR_OFFICE.y;h.goal=null;h.path=null;h.bubble=null;unstickEnt(h);});
-  intro={i:0,t:0,dale,desk:myD,d:0,age:0};
+  intro={i:0,t:0,dale,desk:myD,d:0,age:0,pause:0};
   const p0=routeAt(INTRO_ROUTE,0);
   dale.x=p0.x;dale.y=p0.y;dale.goal=null;dale.path=null;
   const pp=routeAt(INTRO_ROUTE,-INTRO_GAP);
@@ -2373,21 +2379,26 @@ function tickIntro(dt){
   const d=intro.dale;
   intro.age+=dt;
   intro.t-=dt;
-  if(intro.age>60){endIntro(true);return true;}      // absolute safety net
-  // slide both along the authored route — no collision, no pathfinding, no snagging
+  if(intro.pause>0)intro.pause=Math.max(0,intro.pause-dt);
+  if(intro.age>100){endIntro(true);return true;}      // absolute safety net
+  /* Slide both along the authored route, but STOP at each point of interest: Dale never
+     walks past the next hold-beat's spot until he has said his line there (and then lingers
+     a moment). This keeps "that's the Annex / Kitchen / HR" landing while he stands at it,
+     and lets the dialogue pace the walk instead of the walk outrunning the dialogue. */
+  let capFrac=1;
+  for(let k=intro.i;k<INTRO_BEATS.length;k++){ if(INTRO_BEATS[k].hold){capFrac=INTRO_BEATS[k].at;break;} }
   const walking=intro.d<INTRO_LEN;
-  if(walking)intro.d=Math.min(INTRO_LEN,intro.d+INTRO_SPEED*dt);
+  const capD=Math.min(INTRO_LEN,capFrac*INTRO_LEN);
+  if(intro.pause<=0 && walking) intro.d=Math.min(capD, intro.d+INTRO_SPEED*dt);
   const frac=INTRO_LEN>0?(intro.d/INTRO_LEN):1;
-  /* dialogue beats are gated on POSITION, not a timer: a line fires when Dale reaches the
-     spot it describes, and only once the previous line has cleared so they don't overlap.
-     This keeps "that's the Annex / Kitchen / HR" in sync with where he actually is. */
   if(intro.i<INTRO_BEATS.length){
     const b=INTRO_BEATS[intro.i];
     const ready=(intro.t<=0);                          // previous bubble finished
-    const arrived=(frac>=b.at) || (b.at>=1 && !walking);
+    const arrived=(frac>=b.at-1e-6) || (b.at>=1 && !walking);
     if(ready&&arrived){
       d.bubble={t:b.t,text:b.say};
       intro.t=b.t+0.35;
+      if(b.hold)intro.pause=Math.max(intro.pause||0, b.t*0.55+0.4);   // linger at the landmark
       intro.i++;
       SFX.talk();
     }
