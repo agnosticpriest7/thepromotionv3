@@ -88,7 +88,7 @@
   .mItem.head b{color:#e6e2d6}
   #menuTip{position:relative;margin-bottom:5vh;font-size:12px;letter-spacing:1px;color:#c3ccd8;
     text-shadow:0 1px 4px #000}
-  #panelTabs{display:flex;gap:6px;margin-bottom:10px}
+  #panelTabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
   .ptab{font-family:var(--mono);font-size:12.5px;letter-spacing:1px;background:rgba(255,255,255,.08);color:#cfc9ba;
     border:1px solid rgba(255,255,255,.18);padding:9px 16px;cursor:pointer;border-radius:4px}
   .ptab.active{background:var(--panel);color:var(--ink);border-color:var(--panel);font-weight:700}
@@ -368,6 +368,7 @@
           <button class="ptab active" data-tab="tasks">JOURNAL</button>
           <button class="ptab" data-tab="people">PEOPLE</button>
           <button class="ptab" data-tab="org">ORG CHART</button>
+          <button class="ptab" data-tab="paths">PATHS</button>
           <button class="ptab" data-tab="lev">LEVERAGE</button>
           <button class="ptab" data-tab="log">LOG</button>
           <button class="ptab" data-tab="set">SETTINGS</button>
@@ -376,6 +377,7 @@
         <div class="pbody" id="tab-tasks"><div id="taskChips"></div></div>
         <div class="pbody" id="tab-people" hidden><div id="peopleRows"></div></div>
         <div class="pbody" id="tab-org" hidden><div id="orgRows"></div></div>
+        <div class="pbody" id="tab-paths" hidden><div id="pathsBody"></div></div>
         <div class="pbody" id="tab-lev" hidden><div id="levChips"></div>
           <div class="phelp">Get caught? Demotion and detention, never game over. Climb to CEO — no time limit.</div>
         </div>
@@ -5984,6 +5986,72 @@ function renderOrg(){
   el.innerHTML=rows.join('');
 }
 
+/* ── PATHS panel (HANDOFF-3 Part C(b)) ───────────────────────────────────────
+   Read-only legibility: one place to see progress toward all three roads to CEO,
+   so the climb reads as an accumulating project. Every number and lock is read
+   straight from the SAME state the real gates use (gateFor / catfishAvailable /
+   scoreTheDay), so this can never disagree with the gates. It changes nothing.
+   Pure DOM/CSS (%-based), so there are no fixed world coords to scale by S. */
+function renderPaths(){
+  const el=document.getElementById('pathsBody'); if(!el)return;
+  const bar=(lab,val,col)=>`<div class="pbar"><span>${lab}</span><div class="tr"><div class="fl" style="width:${clamp(Math.round(val),0,100)}%;background:${col}"></div></div><b style="font-size:11px">${Math.round(val)}%</b></div>`;
+  const rankName=RANKS[player.rank];
+  const isMgr=player.rank>=5;                              // MANAGER (RANKS index 5)
+  const ceoOpen=(career.meritReady||career.vpFavor>=1);   // the exact gateFor('CEO') condition
+
+  /* MERIT — reach Manager, then branch health ≥MERIT_TARGET for MERIT_DAYS days */
+  const m=meritStatus();                                   // {h, streak, need, target}
+  const meritPct=100*Math.min(1,(m.streak||0)/m.need);
+  let meritFx;
+  if(career.meritReady) meritFx='<b style="color:#4a8c5a">✓ Streak complete — the board is watching. Reach 100% promotion to take it.</b>';
+  else if(!isMgr) meritFx=`🔒 Locked until MANAGER (you are ${rankName}). Good days only start counting once you run the floor.`;
+  else meritFx=`Today's branch health <b>${m.h}/${m.target}</b>. Days held at ≥${m.target}: <b>${m.streak||0}/${m.need}</b>. Drop below and the streak resets.`;
+  const meritCard=`<div class="pcard"><div class="pname">MERIT — the honest climb${career.meritReady?' <span class="aly">READY</span>':''}</div>
+    <div class="psub">Make Manager, then keep branch health ≥${m.target} for ${m.need} days. The board hands you the job.</div>
+    ${bar('Good days',meritPct,career.meritReady?'#4a8c5a':'#3b6ea5')}
+    <div class="pfx">${meritFx}</div></div>`;
+
+  /* LOYALTY — Dale's arc; fake title at beat 12; finish → he recommends you */
+  const arcLen=DALE_ARC.length, step=dale.step||0;
+  const loyPct=100*Math.min(1,step/arcLen);
+  let loyFx;
+  if(dale.done) loyFx='<b style="color:#4a8c5a">✓ Dale recommended you personally — Sterling is expecting you.</b>';
+  else {
+    const parts=[`Beat <b>${step}/${arcLen}</b>`, `Dale trusts you ${Math.round(dale.favor||0)}%`];
+    if(dale.titled) parts.push('<b style="color:#8a5a12">fake title granted — it counts as your Manager chair</b>');
+    else parts.push(step<12?`fake title at beat 12 (${12-step} to go)`:'fake title unlocked at beat 12');
+    loyFx=parts.join(' · ');
+  }
+  const loyCard=`<div class="pcard"><div class="pname">LOYALTY — Dale's man${dale.done?' <span class="aly">READY</span>':''}</div>
+    <div class="psub">Run Dale's ${arcLen}-beat errand arc. Beat 12 earns a fake title; finish it and he walks you into the top job.</div>
+    ${bar('Dale arc',loyPct,dale.done?'#4a8c5a':'#c98a1a')}
+    <div class="pfx">${loyFx}</div></div>`;
+
+  /* LEVERAGE / catfish — Manager-gated; 3 machines → reply → leak → confront */
+  const avail=catfishAvailable();                          // player.rank>=5 — the real lock
+  let dossier=60*Math.min(1,catfish.emailsSent/catfish.needed);
+  if(catfish.replied) dossier=Math.max(dossier,80);
+  if(catfish.leaked) dossier=100;
+  let catFx;
+  if(!avail) catFx=`<b style="color:#c0392b">🔒 MANAGER-GATED — locked until you make MANAGER (you are ${rankName}).</b>`;
+  else if(catfish.leaked) catFx='<b style="color:#4a8c5a">✓ Replies leaked. Confront Sterling to finish it.</b>';
+  else {
+    const parts=[`<b>${catfish.emailsSent}/${catfish.needed}</b> coworker machines used`];
+    if(catfish.emailsSent<catfish.needed) parts.push('email Sterling from 3 different machines');
+    else if(!catfish.replied) parts.push('waiting for Sterling to write back');
+    else parts.push("pull his replies from the HR files (needs HR keycard), then confront him");
+    catFx=parts.join(' · ');
+  }
+  const catCard=`<div class="pcard"><div class="pname">LEVERAGE — the catfish${avail?'':' 🔒'}</div>
+    <div class="psub">Manager-gated. Email Sterling from ${catfish.needed} coworkers' machines, leak his replies from the HR files, then confront him.</div>
+    ${bar('Dossier',dossier,'#8e44ad')}
+    <div class="pfx">${catFx}</div></div>`;
+
+  const header=`<div class="pcard" style="background:#faf7ef"><div class="pname">THE WAY UP — three roads to CEO</div>
+    <div class="psub">You are <b>${rankName}</b>. ${ceoOpen?'<b style="color:#4a8c5a">A path is OPEN — reach 100% promotion to take the top job.</b>':'None finished yet. This just shows the hole getting deeper — it changes no gates.'}</div></div>`;
+
+  el.innerHTML=header+meritCard+loyCard+catCard;
+}
 let panelOpen=false, panelTab='tasks';
 /* The settings tab had no focus model at all — a couple of buttons were hard-wired to
    X and Y and everything else (including RESTART) was simply unreachable on a controller. */
@@ -6023,22 +6091,23 @@ function setActivate(){const b=setBtns();if(b[setSel])b[setSel].click();setTimeo
 function setTab(t){
   SFX.nav();
   panelTab=t;
-  ['tasks','people','org','lev','log','set'].forEach(k=>{
+  ['tasks','people','org','paths','lev','log','set'].forEach(k=>{
     const b=document.getElementById('tab-'+k); if(b)b.hidden=(k!==t);
   });
   document.querySelectorAll('.ptab').forEach(b=>{b.classList.toggle('active',b.dataset.tab===t);});
   if(t==='org')renderOrg();
   if(t==='people')renderPeople();
+  if(t==='paths')renderPaths();
 }
 function togglePanel(force){
   SFX.open();
   panelOpen=(force===undefined)?!panelOpen:force;
   const p=document.getElementById('panel');
   if(p)p.classList.toggle('open',panelOpen);
-  if(panelOpen){closeMenu();renderOrg();renderTasks();renderLeverage();updateSettingsUI();setSel=0;setHighlight();jrnSel=0;jrnHighlight();}
+  if(panelOpen){closeMenu();renderOrg();renderPaths();renderTasks();renderLeverage();updateSettingsUI();setSel=0;setHighlight();jrnSel=0;jrnHighlight();}
 }
 function cyclePanelTab(d){
-  const order=['tasks','people','org','lev','log','set'];
+  const order=['tasks','people','org','paths','lev','log','set'];
   const i=(order.indexOf(panelTab)+d+order.length)%order.length;
   setTab(order[i]);
   setSel=0; setHighlight(); jrnSel=0; jrnHighlight();
@@ -6059,7 +6128,7 @@ function fitObjective(ob){
     });
   }catch(e){}
 }
-function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=nowT;renderInvBar();renderTrackHUD();if(panelOpen&&panelTab==='tasks')renderTasks();}if(panelOpen&&nowT-lastOrg>1000){lastOrg=nowT;if(panelTab==='org')renderOrg();if(panelTab==='people')renderPeople();}{const te=document.getElementById('time');te.textContent=fmtTime(clock);te.classList.toggle('frozen',!!worldFrozen);}document.getElementById('phase').textContent=currentPhase().name;{const o=phaseObjective();const ob=document.getElementById('objText'),oc=document.getElementById('objChk');if(ob){
+function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=nowT;renderInvBar();renderTrackHUD();if(panelOpen&&panelTab==='tasks')renderTasks();}if(panelOpen&&nowT-lastOrg>1000){lastOrg=nowT;if(panelTab==='org')renderOrg();if(panelTab==='people')renderPeople();if(panelTab==='paths')renderPaths();}{const te=document.getElementById('time');te.textContent=fmtTime(clock);te.classList.toggle('frozen',!!worldFrozen);}document.getElementById('phase').textContent=currentPhase().name;{const o=phaseObjective();const ob=document.getElementById('objText'),oc=document.getElementById('objChk');if(ob){
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);

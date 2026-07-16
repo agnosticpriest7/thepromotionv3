@@ -515,6 +515,7 @@ const EPILOGUE = `
   def(G,'RANKS',    function(){ return (typeof RANKS!=='undefined')?RANKS:null; });
   def(G,'career',   function(){ return (typeof career!=='undefined')?career:null; });
   def(G,'dale',     function(){ return (typeof dale!=='undefined')?dale:null; });
+  def(G,'catfish',  function(){ return (typeof catfish!=='undefined')?catfish:null; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });
