@@ -3854,6 +3854,34 @@ function checkMeeting(){if(currentPhase().name==='Meeting'&&!meetingCredited&&cd
 
 /* day loop */
 let lastPhase='Clock-In';
+/* Missing the 10:00 meeting is SLACKING — the boss's domain — not wrongdoing (HR's). So it
+   costs promotion PROGRESS (your climb), never suspicion, and it scales with rank: an intern's
+   absence is invisible, an Assistant Manager's is conspicuous. It also escalates — the first
+   miss in a run is a warning; a second is a write-up (the existing discipline path), which then
+   resets the two-strike clock. Reuses triggerDiscipline() and player.prog; the counter rides on
+   `career` (already snapshotted), so no new save field. HANDOFF-3 Part C(a). */
+function missMeeting(){
+  const rank=player.rank;
+  if(rank<2){
+    // INTERN / JUNIOR SALES: nobody expects the new blood to run the room.
+    logLine('You skipped the 10:00 meeting. At your level, nobody thought to look for you.','t');
+    return;
+  }
+  career.meetingMisses=(career.meetingMisses||0)+1;
+  if(career.meetingMisses>=2){
+    // a pattern now — Dale writes you up, and the two-strike clock resets
+    career.meetingMisses=0;
+    logLine(`You skipped standup again. At ${RANKS[rank]} that reads as a problem — Dale writes you up.`,'b');
+    toast('Missed the meeting again — written up.');
+    triggerDiscipline();
+    return;
+  }
+  // first miss: noted. Slacking costs your climb, not your record — scaled by rank.
+  const dock=Math.round((rank-1)*3);   // SALES −3, SENIOR −6, ASSISTANT MANAGER −9, MANAGER −12
+  player.prog=clamp(player.prog-dock,0,100);
+  logLine(`You missed the 10:00 meeting. At ${RANKS[rank]} your absence gets noticed — promotion progress −${dock}. Skip it again and it's a write-up.`,'a');
+  toast(`Missed the meeting. Promotion −${dock}`);
+}
 function advanceClock(dt){
   tickAlarm(dt);
   clock+=MIN_PER_SEC*dt;
@@ -3863,7 +3891,7 @@ function advanceClock(dt){
     if(!intro){playShiftPrinter();toast(`— ${ph} —`);}
     if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();}
     if(lastPhase==='Clock-In'&&!phaseCred['Clock-In'])addSuspicion(6,'Late clock-in noted');
-    if(lastPhase==='Meeting'&&!meetingCredited)addSuspicion(8,'Your absence at the meeting was noticed');
+    if(lastPhase==='Meeting'&&!meetingCredited)missMeeting();
     if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase))clearSeats();
     if(ph==='Meeting')assignSeats(meetingChairs);
     if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')assignBreakSeats();
