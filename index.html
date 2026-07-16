@@ -2007,7 +2007,12 @@ function tickMeltEvent(dt){
     if(pr){
       const spot={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)};
       const atPrinter=cdist(n,spot)<Math.round(28*S);
-      if(!atPrinter){ n.errand={x:spot.x,y:spot.y,dwell:99,ptype:'rampage',arrived:false}; n.batFrame=0; }
+      if(!atPrinter){
+        // Walk over with the bat DOWN (normal walk sprite). Don't rebuild the errand every
+        // frame, and hold the swing clock at 0 so the first swing lands clean on arrival.
+        if(!(n.errand&&n.errand.ptype==='rampage'))n.errand={x:spot.x,y:spot.y,dwell:99,ptype:'rampage',arrived:false};
+        n.batFrame=null; meltEvent.batT=0;
+      }
       else {
         n.goal=null;n.path=null;n.errand=null;
         n.face=Math.atan2((pr.y+pr.h/2-n.y),(pr.x+pr.w/2-n.x));
@@ -2307,14 +2312,14 @@ let intro=null;
 const INTRO_BEATS=[
   {at:0.00,t:2.2,say:"You must be the new intern. Up. Follow me — quick tour."},
   {at:0.14,t:2.4,say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.34,t:2.6,say:"That corner — the Annex. Where they stick the new ones. You'll start there."},
+  {at:0.34,t:2.6,say:"That corner — the Annex. Where they stick the new ones. You'll be here soon."},
   {at:0.44,t:2.6,say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
   {at:0.52,t:2.6,say:"You want the top job? Three ways up, and only one won't get you fired."},
   {at:0.58,t:2.6,say:"Do the work. Run a clean floor long enough and the board hands it to you."},
   {at:0.64,t:2.6,say:"Or get someone in power to owe you. Make yourself useful to the right person."},
   {at:0.70,t:2.6,say:"Or dig up something buried. But that road's a cliff. Your funeral."},
   {at:0.78,t:2.6,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.87,t:2.6,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their eyeline."},
+  {at:0.87,t:2.6,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
   {at:0.96,t:2.4,say:"And watch the bullpen. It's cutthroat. Guard your stapler."},
   {at:1.00,t:2.8,say:"Right. That desk's yours. Two jobs. Go on — day's yours now."},
 ];
@@ -2855,7 +2860,6 @@ function buildOptions(t){
       {label:'Compliment (mood + / friendship +)',risk:'safe',act:()=>{n.mood=clamp(n.mood+18,-100,100);n.friend=clamp(n.friend+8,0,100);toast(`${n.name} cheered up.`);checkAlly(n);}},
       ...missionItems(n),
       ...feudItems(n),
-      {label:`Plant gossip about ${n.name}`,risk:seen?'HR WATCHING':'risky',hot:seen,act:()=>plantGossip(n)},
       {label:'Clear their name (debunk gossip)',risk:'safe',act:()=>{n.stress=clamp(n.stress-22,0,100);n.mood=clamp(n.mood+14,-100,100);n.friend=clamp(n.friend+10,0,100);n.bubble={t:2,text:'Thanks!'};logLine(`Stuck up for ${n.name} and cleared the air. They warm to you.`,'g');toast(`${n.name} is grateful.`);checkAlly(n);}},
       ...finisherItems(n),
       ...((n.mistakes>=1)?[{label:`Report their ${n.mistakes} mistake(s) to Dale`,risk:'they take a warning',act:()=>reportMistakes(n)}]:[]),
@@ -2871,16 +2875,10 @@ function buildOptions(t){
         : {label:'Complete task here',risk:'good',act:()=>completeTask(del)});
     }
     {
-      const lev=player.leverage[player.leverage.length-1];
-      const rt=lev&&lev.target?activeNPCs().find(x=>x.name===lev.target):null;
-      if(!lev){
-        items.push({label:'Spread a rumour (you have none)',disabled:true});
-      } else if(rt && rt.name===n.name){
-        items.push({label:`Can't spread the ${rt.name.split(' ')[0]} rumour TO ${rt.name.split(' ')[0]}`,disabled:true});
-      } else {
-        const isFriend=rt&&((n.friends||[]).includes(rt.name)||(rt.friends||[]).includes(n.name));
-        const rk = seen?'HR WATCHING' : isFriend?`${n.name.split(' ')[0]} is loyal to ${rt?rt.name.split(' ')[0]:'them'} — will backfire` : 'proof makes it stick';
-        items.push({label:rt?`Tell ${n.name.split(' ')[0]} the rumour about ${rt.name.split(' ')[0]}`:'Spread what you overheard',risk:rk,hot:seen,act:()=>spreadGossip(n)});
+      // messenger = the worker in front of you; you pick the SUBJECT from a submenu.
+      const others=activeNPCs().filter(x=>isWorker(x)&&x!==n);
+      if(others.length){
+        items.push({label:'Spread a rumour (pick who it’s about)…',risk:seen?'HR WATCHING':'through them',hot:seen,act:()=>pickRumorSubject(n)});
       }
     }
     if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?'HR WATCHING':'very risky',hot:seen,act:()=>frame(n)});
@@ -3183,6 +3181,68 @@ function spreadGossip(n){
   logLine(`Spread "${item.label}" through ${n.name.split(' ')[0]}. It reaches ${t.name.split(' ')[0]} and bites.${rivalBoost>1?' '+n.name.split(' ')[0]+' was happy to carry it.':''}`,'w');
   addSuspicion(hrSeesPlayer()?18:6,'Rumor-mongering');
   if(t.stress>=100&&t.meltCd<=0)meltdown(t);
+}
+/* ── Rumour system (HANDOFF-3 Part B #5) ─────────────────────────────────────
+   You talk to a worker (the MESSENGER / vector) and pick the SUBJECT from a
+   submenu. With dirt on the subject it's a sure thing and the dirt is spent;
+   with no proof it's a 40% coin-flip that bites weaker. A messenger loyal to
+   the subject shuts it down (backfire, telegraphed in the submenu); a rival or
+   feuding messenger carries it 1.3x. Replaces plantGossip/spreadGossip (now
+   unused). Tuning dials: the 0.40 no-proof chance and the 16 no-proof power. */
+function pickRumorSubject(vector){
+  const subjects=activeNPCs().filter(x=>isWorker(x)&&x!==vector);
+  if(!subjects.length){toast('Nobody else to gossip about.');return;}
+  const items=subjects.map(t=>{
+    const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
+    const d=dirtOn(t.name);
+    const boost=(vector.rival||vector.feudWith===t.name);
+    const risk = loyal ? `loyal to ${t.name.split(' ')[0]} — backfires`
+               : d ? 'you have proof — sticks'
+               : boost ? 'no proof — 40% · willing carrier'
+               : 'no proof — 40%';
+    return {label:`About ${t.name}${t.rival?' ★':''}${d?' · DIRT':''}`,risk,hot:!!d,act:()=>spreadRumorAbout(vector,t)};
+  });
+  items.push({label:'Cancel',act:()=>{}});
+  renderMenu({title:`${vector.name.split(' ')[0]} — spread a rumour about who?`,items});
+}
+function spreadRumorAbout(vector,t){
+  if(!vector||!t||!vector.alive||!t.alive)return;
+  const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
+  if(loyal){
+    /* Told to one of the subject's friends: they defend the subject, tip them off, and
+       think less of you for trying. */
+    vector.friend=clamp(vector.friend-10,0,100);
+    t.stress=clamp(t.stress-8,0,100);
+    t.bubble={t:2.4,text:'Someone’s talking about me?'};
+    vector.bubble={t:2.4,text:`${t.name.split(' ')[0]}? No. Not buying it.`};
+    logLine(`You tried to spread a rumour about ${t.name.split(' ')[0]} through ${vector.name.split(' ')[0]} — they're loyal and shut it down. Word will get back.`,'b');
+    toast(`${vector.name.split(' ')[0]} is loyal to ${t.name.split(' ')[0]}. That backfired.`);
+    addSuspicion(hrSeesPlayer()?18:8,'Clumsy rumour-mongering');
+    return;
+  }
+  const seen=seenByAnyone();
+  const d=dirtOn(t.name);
+  const chance=d?1.0:0.40;                 // proof lands for sure; hearsay is a 40% coin-flip
+  const basePower=d?(d.power||18):16;      // hearsay bites weaker
+  if(d){const i=player.leverage.indexOf(d);if(i>=0)player.leverage.splice(i,1);renderLeverage();}
+  {const m=missions.find(x=>!x.done&&x.kind==='rumor'&&x.target===t.name);if(m)setTimeout(()=>creditMission(m,seen?0.3:0.05),400);}
+  if(Math.random()<chance){
+    const boost=(vector.rival||vector.feudWith===t.name)?1.3:1.0;
+    const hit=Math.round(basePower*boost);
+    t.stress=clamp(t.stress+hit,0,100);
+    t.mood=clamp(t.mood-Math.round(hit*0.8),-100,100);
+    t.bubble={t:2.4,text:'Who’s been talking?'};
+    logLine(`Spread a rumour about ${t.name.split(' ')[0]} through ${vector.name.split(' ')[0]}. It reaches them and bites${boost>1?` — ${vector.name.split(' ')[0]} was happy to carry it`:''}.${d?'':' (no proof, but it stuck)'}`,'w');
+    toast(`Rumour about ${t.name.split(' ')[0]} landed. Stress +${hit}`);
+    addSuspicion(hrSeesPlayer()?18:6,'Rumour-mongering');
+    witnessReact();
+    if(t.stress>=100&&t.meltCd<=0)meltdown(t);
+  } else {
+    vector.bubble={t:2.2,text:'Says who?'};
+    logLine(`You floated a rumour about ${t.name.split(' ')[0]} to ${vector.name.split(' ')[0]}, but with no proof it didn't take.`,'t');
+    toast(`No proof — the rumour about ${t.name.split(' ')[0]} fizzled.`);
+    addSuspicion(hrSeesPlayer()?10:3,'Idle gossip');
+  }
 }
 function lastBySrc(srcs){for(let i=player.leverage.length-1;i>=0;i--)if(srcs.includes(player.leverage[i].src))return player.leverage[i];return null;}
 function snitchItem(item,authority){
