@@ -495,10 +495,38 @@ function drawBatFrame(file,frame,cx,yBottom,tw){
 }
 const ART={};
 let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
+/* Some sheets — the per-character bat-swing sheets and the printer wreck — were
+   exported as RGB with a solid magenta background (no alpha channel), so they
+   draw as a pink block. Key that magenta out to transparent at load time and
+   hand back a <canvas> that ok() / drawBatFrame / drawObjects treat exactly
+   like an Image (same .complete / .naturalWidth / .naturalHeight contract).
+   The background isn't pure #f0f — it's an off-magenta (~220,13,217) that
+   varies — so we key on magenta's brightness-independent signature: green
+   sitting well below BOTH red and blue. That also eats anti-aliased edge
+   pixels (no pink fringe) while leaving skin/hair/clothes untouched.
+   Same-origin on GitHub Pages, so getImageData never taints; if it ever does
+   (e.g. file://), we fall back to the raw image — pink returns but nothing
+   crashes. Permanent fix would be re-exporting those PNGs with real alpha. */
+const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'));
+function keyOutMagenta(img){
+  try{
+    const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    if(!w||!h) return img;
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    const x=c.getContext('2d'); x.drawImage(img,0,0);
+    const id=x.getImageData(0,0,w,h), d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      if(d[i]-d[i+1]>60 && d[i+2]-d[i+1]>60) d[i+3]=0;   // magenta: green far below red & blue
+    }
+    x.putImageData(id,0,0);
+    c.complete=true; c.naturalWidth=w; c.naturalHeight=h;    // quack like an Image for ok()/draw*
+    return c;
+  }catch(e){ return img; }   // taint or any failure -> raw image, no crash
+}
 function loadArt(){
   ART_FILES.forEach(n=>{
     const im=new Image();
-    im.onload=()=>{artLoaded++;if(artLoaded>=artTotal)artReady=true;};
+    im.onload=()=>{ if(COLORKEY.has(n))ART[n]=keyOutMagenta(im); artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.onerror=()=>{artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.src=ART_PATH+n+'.png';
     ART[n]=im;
