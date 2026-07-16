@@ -793,6 +793,7 @@ const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 const objects=[
   {type:'printer',x:92,y:224,w:34,h:26,label:'Printer',jammed:false},
+  {type:'printer',x:1140,y:430,w:34,h:26,label:'Printer',jammed:false},   // 2nd printer, right side above the annex
   {type:'water',x:600,y:388,w:24,h:30,label:'Water cooler',trapped:false},
   {type:'coffee',x:28,y:438,w:30,h:26,label:'Coffee',trapped:false},
   {type:'supply',x:20,y:300,w:44,h:26,label:'Supplies'},
@@ -1303,15 +1304,18 @@ function deptColor(n){return n.mgr?COL.mgr:{sales:COL.sales,acct:COL.acct,hr:COL
 /* clock */
 let day=1, clock=8*60;
 const DAY_START=8*60, DAY_END=17*60, MIN_PER_SEC=0.9;
+/* Breaks run 10 minutes longer, and start 10 minutes EARLIER so their end times (and the
+   phases that follow) are unchanged — the extra time comes out of the preceding work block,
+   not the next one. */
 const PHASES=[
   {name:'Clock-In',start:8*60,end:8*60+30},
-  {name:'Regular Work',start:8*60+30,end:9*60+45},
-  {name:'Morning Break',start:9*60+45,end:10*60},
+  {name:'Regular Work',start:8*60+30,end:9*60+35},        // ends 10 min earlier
+  {name:'Morning Break',start:9*60+35,end:10*60},          // 9:35–10:00 (was 9:45; +10 min, same end)
   {name:'Meeting',start:10*60,end:10*60+45},
-  {name:'Regular Work',start:10*60+45,end:12*60},
-  {name:'Lunch / Break',start:12*60,end:12*60+45},
-  {name:'Regular Work',start:12*60+45,end:14*60},
-  {name:'Afternoon Break',start:14*60,end:14*60+15},
+  {name:'Regular Work',start:10*60+45,end:11*60+50},       // ends 10 min earlier
+  {name:'Lunch / Break',start:11*60+50,end:12*60+45},      // 11:50–12:45 (was 12:00; +10 min, same end)
+  {name:'Regular Work',start:12*60+45,end:13*60+50},       // ends 10 min earlier
+  {name:'Afternoon Break',start:13*60+50,end:14*60+15},    // 13:50–14:15 (was 14:00; +10 min, same end)
   {name:'Regular Work',start:14*60+15,end:16*60+30},
   {name:'Clock-Out',start:16*60+30,end:17*60},
 ];
@@ -2586,7 +2590,7 @@ function tickCones(dt){
   const md=myDesk();
   const atDesk=md&&cdist(md,pc)<Math.round(70*S);
   const covered=player.workPass||(tasks.length>0&&tasks.every(t=>t.done));
-  if(mgrN&&working&&!atDesk&&!alarmActive&&!covered&&!meltEvent&&inCone(mgrN,pc)){
+  if(mgrN&&working&&!atDesk&&!alarmActive&&alarmGrace<=0&&!covered&&!meltEvent&&inCone(mgrN,pc)){
     if(player.slack<1)startle(mgrN);
     player.slack=clamp(player.slack+15*dt,0,100);   // ~6.5s to trigger — time to notice and move
     if(player.slack>=100){player.slack=0;addSuspicion(8,'Dale clocked you away from your desk');mgrN.bubble={t:2.2,text:'Working hard?'};toast('Dale noticed you slacking. Get to your desk!');}
@@ -3892,7 +3896,13 @@ function advanceClock(dt){
     if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();}
     if(lastPhase==='Clock-In'&&!phaseCred['Clock-In'])addSuspicion(6,'Late clock-in noted');
     if(lastPhase==='Meeting'&&!meetingCredited)missMeeting();
-    if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase))clearSeats();
+    if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase)){
+      clearSeats();
+      /* Everyone files back to their desks now. Give them a grace window (same mechanism as
+         after a fire drill) so Dale doesn't write people up for being "away from their desk"
+         while they're still walking back from the meeting or a break. */
+      if(isWorkPhase(ph)){ alarmGrace=Math.max(alarmGrace,14); NPCS.forEach(n=>{n.seenT=0;}); }
+    }
     if(ph==='Meeting')assignSeats(meetingChairs);
     if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')assignBreakSeats();
     lastPhase=ph;
