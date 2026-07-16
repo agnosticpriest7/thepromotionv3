@@ -1405,6 +1405,14 @@ function moveEntity(ent,dx,dy){
   if(!solid(box))ent.y=ny;
 }
 function objByType(t){return objects.find(o=>o.type===t);}
+/* nearest object of a type to an entity — used so a printer-smash victim marches to the
+   CLOSEST printer, not always the first one in the list. */
+function nearestPrinter(from){
+  const ps=objects.filter(o=>o.type==='printer');
+  if(!ps.length)return null;
+  if(!from)return ps[0];
+  return ps.reduce((best,p)=>cdist(from,p)<cdist(from,best)?p:best, ps[0]);
+}
 /* the button legend follows whatever you are actually holding */
 function promptKey(){return (typeof padSeen!=='undefined'&&padSeen)?'X':'E';}
 
@@ -1974,7 +1982,7 @@ function startMeltEvent(n,final){today.meltdowns++;
   if(printerMode){
     /* THE OFFICE SPACE HOMAGE. The victim marches to the printer and executes it. Bat
        animation comes later — for now: walk there, the homage track plays, themed text. */
-    const pr=objByType('printer');
+    const pr=nearestPrinter(n);
     meltEvent.printerMode=true;
     if(pr){ n.errand=null; n.goal={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)}; n.printerGoal=pr; }
     playMeltdownSting(PRINTER_TRACK);
@@ -2009,7 +2017,7 @@ function tickMeltEvent(dt){
     /* THE OFFICE SPACE HOMAGE: march to the printer and execute it in place, swinging a bat.
        The 4-frame swing loops; the impact frame (2 = bat fully down) is where the hit sound,
        the printer damage, and the screen shake all land together. */
-    const pr=n.printerGoal||objByType('printer');
+    const pr=n.printerGoal||nearestPrinter(n);
     if(pr){
       const spot={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)};
       const atPrinter=cdist(n,spot)<Math.round(28*S);
@@ -5081,9 +5089,12 @@ function drawAlertMark(n){
 function drawNPC(n){
   if(n.wentHome||n.gone)return;
   if(n.boss&&!n.onFloor)return;
-  {const sh=(n.melFx>0)?Math.round(Math.sin(n.melFx*40)*3):0;
+  {let sh=(n.melFx>0)?Math.round(Math.sin(n.melFx*40)*3):0;
    const st=stressTier(n);let jit=(st>=3&&isWorker(n))?Math.round(Math.sin(nowT*18+n.x)*2):0;
    if(n.rampage)jit=Math.round(Math.sin(nowT*40+n.x)*3);
+   /* Mid-swing at the printer, hold the body steady — the swing sheet IS the animation, and
+      the rampage vibration layered on top just made it read as noise. */
+   if(meltEvent&&meltEvent.printerMode&&meltEvent.n===n&&n.batFrame!=null){sh=0;jit=0;}
    const ox=n.x; n.x+=sh+jit;
    /* Printer-meltdown victim mid-swing: draw their bat sheet frame instead of the normal
       character sprite. Falls through to the usual draw if the sheet didn't load or they
