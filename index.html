@@ -914,7 +914,7 @@ function takeItem(c,id,mode){
     if(invFull()){toast('Pockets full (8 max) — drop something first.');return;}
     player.inv.push(id);renderLeverage();
     logLine(`Took ${it.label} from the ${c.label.toLowerCase()}.`,'t');
-    addSuspicion(seen?8:2,seen?'HR saw you pocket something':'Pocketed quietly');
+    addSuspicion(seen?8:2,seen?whoSaw()+' saw you pocket something':'Pocketed quietly');
     /* a note is two things at once: you read it (intel), and you keep it (their handwriting) */
     if(id==='note')noteIntel();
   } else if(CONSUMABLE[id]){useConsumable(id);}
@@ -2497,6 +2497,22 @@ function workerSeesPlayer(){
 }
 /* "someone caught you" — HR or a nosy coworker. Used to gate prank consequences. */
 function seenByAnyone(){return hrSeesPlayer() || !!workerSeesPlayer();}
+/* The red risk tag for "you're being watched". HR in a cone is the big hammer; a coworker
+   catching you is the smaller one — but it is NOT HR, so don't say "HR WATCHING" when it's a
+   colleague standing next to you (that mislabel showed up constantly during the clock-in
+   cluster at the elevator). Name the actual watcher instead. */
+function seenTag(){
+  if(hrSeesPlayer())return 'HR WATCHING';
+  const w=workerSeesPlayer();
+  return w?`${w.name.split(' ')[0].toUpperCase()} SEES YOU`:'';
+}
+/* Who actually saw you — for suspicion-reason log lines. 'HR' or the coworker's first name,
+   so the feed stops crediting HR for something a colleague caught. */
+function whoSaw(){
+  if(hrSeesPlayer())return 'HR';
+  const w=workerSeesPlayer();
+  return w?w.name.split(' ')[0]:'Someone';
+}
 /* Call at the MOMENT you commit wrongdoing. Returns whether you were seen (by anyone), and
    if a coworker (not HR) caught you, makes them react — they gasp, they remember it, and it
    nudges your suspicion (a worker who saw you is liable to mention it to HR later). HR being
@@ -2878,10 +2894,10 @@ function buildOptions(t){
       // messenger = the worker in front of you; you pick the SUBJECT from a submenu.
       const others=activeNPCs().filter(x=>isWorker(x)&&x!==n);
       if(others.length){
-        items.push({label:'Spread a rumour (pick who it’s about)…',risk:seen?'HR WATCHING':'through them',hot:seen,act:()=>pickRumorSubject(n)});
+        items.push({label:'Spread a rumour (pick who it’s about)…',risk:seen?seenTag():'through them',hot:seen,act:()=>pickRumorSubject(n)});
       }
     }
-    if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?'HR WATCHING':'very risky',hot:seen,act:()=>frame(n)});
+    if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?seenTag():'very risky',hot:seen,act:()=>frame(n)});
     if(n.friend>=ALLY_THRESHOLD){
       items.push({label:'— Ally favors —',disabled:true});
       items.push({label:n.mission?'Already on a job for you':'Send them to sabotage someone…',disabled:!!n.mission,risk:'their risk',act:()=>pickHitTarget(n,false)});
@@ -2896,8 +2912,8 @@ function buildOptions(t){
   }
   if(t.kind==='obj'){
     const o=t.ref;
-    if(o.type==='printer'){const cp=openTask('printer');return {title:'Printer',items:[cp?{label:cp.label.replace(' at the printer','')+' (task)',risk:'good',act:()=>completeTask(cp)}:{label:'No printer task today',disabled:true},{label:o.jammed?'Already jammed':'Jam it (prank)',disabled:o.jammed,risk:seen?'HR SEES YOU':'sneaky',hot:seen,act:()=>jamPrinter(o)},...partGrab('letterhead',seen)]};}
-    if(o.type==='water'){const wt=openTask('water');return {title:'Water cooler',items:[wt?{label:'Refill it (task)',risk:'good',act:()=>completeTask(wt)}:{label:'Sip water',disabled:true},{label:o.trapped?'Trap already set':'Rig a spill trap (prank)',disabled:o.trapped,risk:seen?'HR SEES YOU':'sneaky',hot:seen,act:()=>{o.trapped=true;logLine('Rigged a spill trap at the water cooler.','w');addSuspicion(seen?26:9,seen?'HR caught your prank':'A prank, unseen');}}]};}
+    if(o.type==='printer'){const cp=openTask('printer');return {title:'Printer',items:[cp?{label:cp.label.replace(' at the printer','')+' (task)',risk:'good',act:()=>completeTask(cp)}:{label:'No printer task today',disabled:true},{label:o.jammed?'Already jammed':'Jam it (prank)',disabled:o.jammed,risk:seen?seenTag():'sneaky',hot:seen,act:()=>jamPrinter(o)},...partGrab('letterhead',seen)]};}
+    if(o.type==='water'){const wt=openTask('water');return {title:'Water cooler',items:[wt?{label:'Refill it (task)',risk:'good',act:()=>completeTask(wt)}:{label:'Sip water',disabled:true},{label:o.trapped?'Trap already set':'Rig a spill trap (prank)',disabled:o.trapped,risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.trapped=true;logLine('Rigged a spill trap at the water cooler.','w');addSuspicion(seen?26:9,seen?whoSaw()+' caught your prank':'A prank, unseen');}}]};}
     if(o.type==='coffee'){
       const ct=openTask('coffee');
       const items=[];
@@ -2908,14 +2924,14 @@ function buildOptions(t){
         items.push({label:`You are already carrying ${player.coffeeFor.split(' ')[0]}'s coffee`,disabled:true});
       }
       items.push({label:'Coffee break (stress −)',risk:'safe',act:()=>{player.stress=clamp(player.stress-15,0,100);toast('Ahh. Stress −15');}});
-      items.push({label:o.trapped?'Trap already set':'Rig a spill trap (prank)',disabled:o.trapped,risk:seen?'HR SEES YOU':'sneaky',hot:seen,act:()=>{o.trapped=true;logLine('Rigged the coffee machine to spill.','w');addSuspicion(seen?26:9,seen?'HR caught your prank':'A prank, unseen');}});
+      items.push({label:o.trapped?'Trap already set':'Rig a spill trap (prank)',disabled:o.trapped,risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.trapped=true;logLine('Rigged the coffee machine to spill.','w');addSuspicion(seen?26:9,seen?whoSaw()+' caught your prank':'A prank, unseen');}});
       items.push(...partGrab('decaf',seen));
       return {title:'Coffee machine',items};
     }
     if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:'Pocket a stapler (petty)',risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{logLine('Swiped office supplies.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},...partGrab('supplies',seen)]};}
-    if(o.type==='files')return {title:'HR Files (locked cabinet)',items:[...catfishFileItems(),player.hasKeycard?{label:player.channel?'Already snooping...':'Unlock & crack the files (hold ~3s)',disabled:!!player.channel,risk:seen?'HR RIGHT THERE':'very risky',hot:seen,act:()=>startSnoop()}:{label:"Locked — you need HR's keycard",disabled:true}]};
+    if(o.type==='files')return {title:'HR Files (locked cabinet)',items:[...catfishFileItems(),player.hasKeycard?{label:player.channel?'Already snooping...':'Unlock & crack the files (hold ~3s)',disabled:!!player.channel,risk:seen?seenTag():'very risky',hot:seen,act:()=>startSnoop()}:{label:"Locked — you need HR's keycard",disabled:true}]};
     if(o.type==='toilet'){const seen2=seenByAnyone();return {title:o.label,items:[
-      {label:o.rigged?'Already rigged to overflow':'Rig it to overflow (prank)',disabled:o.rigged,risk:seen2?'HR WATCHING':'sneaky',hot:seen2,act:()=>startAct(4,'Rigging the plumbing',()=>rigToilet(o))},
+      {label:o.rigged?'Already rigged to overflow':'Rig it to overflow (prank)',disabled:o.rigged,risk:seen2?seenTag():'sneaky',hot:seen2,act:()=>startAct(4,'Rigging the plumbing',()=>rigToilet(o))},
       {label:'Hide in a stall (lie low, stress −8)',risk:'safe',act:()=>startAct(5,'Hiding out',()=>{player.stress=clamp(player.stress-8,0,100);player.suspicion=clamp(player.suspicion-3,0,100);toast('Nobody looks for you in here. Stress −8');})}
     ]};}
     if(o.type==='phones'){
@@ -2929,7 +2945,7 @@ function buildOptions(t){
       return {title:'Sales phones',items};
     }
     if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';return {title:'Whiteboard',items:[inMtg?{label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})}:(openTask('board')?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:'Study the sales chart (look keen)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}})]};}
-    if(o.type==='alarm')return {title:'Fire alarm',items:[{label:alarmActive?'Already ringing':'Pull it (clears the whole floor!)',disabled:alarmActive,risk:seen?'HR SEES YOU':'chaos',hot:seen,act:()=>pullAlarm()}]};
+    if(o.type==='alarm')return {title:'Fire alarm',items:[{label:alarmActive?'Already ringing':'Pull it (clears the whole floor!)',disabled:alarmActive,risk:seen?seenTag():'chaos',hot:seen,act:()=>pullAlarm()}]};
   }
   if(t.kind==='elevator'){
     const ph=currentPhase().name;
@@ -2960,7 +2976,7 @@ function buildOptions(t){
           its.push({label:`Have ${ITEMS[id].label} now (${ITEMS[id].use})`,risk:'safe',act:()=>takeItem(c,id,'use')});
           its.push({label:`Pocket ${ITEMS[id].label} (to hand over)`,risk:invFull()?'pockets full':'safe',disabled:invFull(),act:()=>takeItem(c,id,'pocket')});
         } else {
-          its.push({label:`Take ${ITEMS[id].label}${ITEMS[id].part?'':' ('+ITEMS[id].use+')'}`,risk:ITEMS[id].part?(seen2?'HR WATCHING':'contraband'):'safe',hot:seen2&&ITEMS[id].part,act:()=>takeItem(c,id)});
+          its.push({label:`Take ${ITEMS[id].label}${ITEMS[id].part?'':' ('+ITEMS[id].use+')'}`,risk:ITEMS[id].part?(seen2?seenTag():'contraband'):'safe',hot:seen2&&ITEMS[id].part,act:()=>takeItem(c,id)});
         }
       });
     } else its=[{label:'Picked clean (restocks tomorrow)',disabled:true}];
@@ -2991,7 +3007,7 @@ function buildOptions(t){
         else if(pb.stage===0&&pb.type!=='well'&&pb.type!=='calendar'&&!invHas('kit_'+pb.type))stepLabel=`Need ${ITEMS['kit_'+pb.type].label} — craft at your desk`;
         else stepLabel=`Work the ${PRANK_SHORT[pb.type]} (stage ${pb.stage+1}/${pb.tier})`;
         const blocked=present||stepLabel.startsWith('Need');
-        prankItems.push({label:stepLabel,disabled:blocked,risk:present?'owner here!':(seen?'HR WATCHING':'sneaky'),hot:seen,act:()=>startAct(5,'Working the prank',()=>advancePrankStage(own))});
+        prankItems.push({label:stepLabel,disabled:blocked,risk:present?'owner here!':(seen?seenTag():'sneaky'),hot:seen,act:()=>startAct(5,'Working the prank',()=>advancePrankStage(own))});
         prankItems.push({label:'Abandon the prank',act:()=>{own.prankBuild=null;toast('Prank abandoned');}});
       }
     }
@@ -3091,7 +3107,7 @@ function sarcasticFinish(n){
     meltdown(n);
     // it's loud, and it's traceable
     const heat=12+witnesses.length*4+(seen?22:0);
-    addSuspicion(heat,seen?'HR watched you trigger that':'People saw who set them off');
+    addSuspicion(heat,seen?whoSaw()+' watched you trigger that':'People saw who set them off');
     witnesses.forEach(w=>{
       w.friend=clamp(w.friend-14,0,100);
       w.stress=clamp(w.stress+6,0,100);
@@ -3111,7 +3127,7 @@ function reportMistakes(n){
   n.friend=clamp(n.friend-25,0,100);
   player.prog=clamp(player.prog+3,0,100);
   toast(`Reported ${n.name.split(' ')[0]}. Promotion +3`);
-  addSuspicion(seen?10:3,seen?'HR saw you running to Dale':'A quiet word with Dale');
+  addSuspicion(seen?10:3,seen?whoSaw()+' saw you running to Dale':'A quiet word with Dale');
   if(n.stress>=100&&n.meltCd<=0)meltdown(n);
   tryPromote();
 }
@@ -3146,7 +3162,7 @@ function swipePrized(d,own,present){
     logLine(`Swiped ${ITEMS[it].label} off ${own.name.split(' ')[0]}'s desk. They are already looking for it.${bonus?' A Peacock without their prized thing is a wreck.':''}`,'w');
     if(own.stress>=100&&own.meltCd<=0)meltdown(own);
   }
-  addSuspicion(seen?16:5,seen?'HR saw you pocket it':'Petty theft, unseen');
+  addSuspicion(seen?16:5,seen?whoSaw()+' saw you pocket it':'Petty theft, unseen');
 }
 function plantGossip(n){{const m=missions.find(x=>!x.done&&x.kind==='rumor'&&x.target===n.name);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.3:0.05),400);}n.mood=clamp(n.mood-25,-100,100);n.stress=clamp(n.stress+20,0,100);logLine(`Planted gossip about ${n.name}. Their stress climbs.`,'w');addSuspicion(hrSeesPlayer()?22:8,hrSeesPlayer()?'HR saw you scheming':'Low-key scheming');witnessReact();}
 function spreadGossip(n){
@@ -3277,7 +3293,7 @@ function rigToilet(o){
   SFX.craft();
   logLine('You rigged the toilet to overflow on the next flush. Now you wait.','w');
   toast('Toilet rigged. Someone is going to have a bad day.');
-  addSuspicion(seen?18:4,seen?'HR saw you tampering in the restroom':'Plumbing sabotage, unseen');
+  addSuspicion(seen?18:4,seen?whoSaw()+' saw you tampering in the restroom':'Plumbing sabotage, unseen');
 }
 function tickToilets(dt){
   objects.forEach(o=>{
@@ -3305,7 +3321,7 @@ function openDeskLoot(d){
   if(!d.loot||!d.loot.length){toast('Nothing left in there.');return;}
   const own=activeNPCs().find(n=>n.name===d.owner);
   const seen=seenByAnyone();
-  addSuspicion(seen?14:4,seen?'HR saw you in someone else\u2019s desk':'Rifled a desk, unseen');
+  addSuspicion(seen?14:4,seen?whoSaw()+' saw you in someone else\u2019s desk':'Rifled a desk, unseen');
   SFX.drawer();
   const items=[];
   d.loot.forEach(id=>{
@@ -3388,7 +3404,7 @@ const MASTER_FIND={
   m_peacock:'an email to a client, from their account, calling them an idiot',
   m_socialite:'the client list, on a drive, in their drawer',
 };
-function partGrab(id,seen){return[{label:invFull()?`Take ${ITEMS[id].label} (pockets full)`:`Take ${ITEMS[id].label}`,disabled:invFull(),risk:seen?'HR WATCHING':'sneaky',hot:seen,act:()=>{player.inv.push(id);renderLeverage();logLine(`Palmed ${ITEMS[id].label}. Contraband now.`,'t');addSuspicion(seen?12:3,seen?'HR saw you take it':'Grabbed it, unseen');}}];}
+function partGrab(id,seen){return[{label:invFull()?`Take ${ITEMS[id].label} (pockets full)`:`Take ${ITEMS[id].label}`,disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{player.inv.push(id);renderLeverage();logLine(`Palmed ${ITEMS[id].label}. Contraband now.`,'t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take it':'Grabbed it, unseen');}}];}
 /* ===== CRAFTING =====
    Was a wall of text you had to read. Now it is a grid: what you can make, dimmed if you
    cannot, with the parts it takes shown as icons — green if you have it, red if you don't. */
