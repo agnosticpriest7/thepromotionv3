@@ -365,12 +365,20 @@ function createWorld(opts) {
     }
     const list = G.NPCS || [];
     for (const n of list) {
-      if (!n || !n.alive || !n.onFloor) { if (n) { posTrack.delete(n.id); stuckAccum.delete(n.id); } continue; }
+      // active set = alive & not gone (matches activeNPCs(); onFloor is a boss/promoted-away flag,
+      // NOT a "present on the floor" flag — filtering on it would skip nearly every worker).
+      if (!n || !n.alive || n.gone) { if (n) { posTrack.delete(n.id); stuckAccum.delete(n.id); } continue; }
       if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) {
         stats.nonFiniteEntities++; if (!stats.firstNonFiniteEntity) stats.firstNonFiniteEntity = (n.name || n.id);
         continue;
       }
-      const navigating = !!(n.goal && n.path && n.path.length && (n.wp == null || n.wp < n.path.length));
+      // "stuck in geometry" = has a goal it is meaningfully FAR from (beyond any arrival
+      // tolerance) with an active path, yet isn't moving. Standing on top of your goal,
+      // seated, or resting is arrival/idle — not stuck. (Arrival tolerances in-game run
+      // ~14-28px*S; 70 clears them with margin.)
+      const gg = n.goal;
+      const distGoal = (gg && gg.x != null) ? Math.hypot(gg.x - n.x, gg.y - n.y) : 0;
+      const navigating = !!(gg && distGoal > 70 && n.path && n.path.length && (n.wp == null || n.wp < n.path.length));
       const prev = posTrack.get(n.id);
       const moved = !prev || Math.hypot(n.x - prev.x, n.y - prev.y) > 0.5;
       if (navigating && !moved) {
