@@ -15,9 +15,6 @@ function segRect(x1,y1,x2,y2){
   return {x:Math.min(x1,x2),y:Math.min(y1,y2),w:Math.abs(x2-x1)||T,h:Math.abs(y2-y1)||T};
 }
 const walls=[];
-// explicit wall segments
-by('wall').forEach(w=>walls.push(segRect(w.x1,w.y1,w.x2,w.y2)));
-
 // walled rooms: outline with door gaps. [name,x,y,w,h]
 const WALLED=[
   ['CEO Office',0,0,260,180],['HR Office',400,0,160,180],['Manager Office',880,0,160,180],
@@ -46,6 +43,8 @@ WALLED.forEach(([n,x,y,w,h])=>{
   edge(x,y,x,y+h,false);       // left
   edge(x+w,y,x+w,y+h,false);   // right
 });
+// explicit wall segments (perimeter + dividers) — carve door gaps in these too
+by('wall').forEach(w=>edge(w.x1,w.y1,w.x2,w.y2, w.y1===w.y2));
 
 // ---------- ROOMS (label zones) ----------  {name,x,y,w,h,c}
 const RC={ 'CEO Office':'#8e44ad','HR Office':'#c0392b','Manager Office':'#c9a41a','Asst. Manager':'#7c7768',

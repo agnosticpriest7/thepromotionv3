@@ -614,6 +614,9 @@ const CAST={
   'Ramesh':        13,
   'Vera':          14,
   'Doug':          15,
+  'Colette':       16,   // CEO Assistant (new — level overhaul)
+  'Nadia':         17,   // Accountant (new)
+  'Vaughn':        18,   // Accountant (new)
   'Dale Brackett': 20,   // navy jacket, loud tie, pleased with himself
 };
 /* new hires draw from these */
@@ -729,35 +732,24 @@ function updateCamera(){const vw=VW/ZOOM,vh=VH/ZOOM;cam.x=player.x+player.w/2-vw
 const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a30',intern:'#d9a521',
   floor:'#d8d2c4',wall:'#8f8672',wallLt:'#a89e88',desk:'#9c8f6f',deskTop:'#c7bda0',chair:'#5a4632',table:'#7a5c3a'};
 
+/* Walls REBUILT from the level-overhaul plan (test/gen_level.js): perimeter + dividers as
+   rects, plus each room outline with a 44u door gap carved at every door. Authored 1400x760. */
 const walls=[
-  // perimeter — a real floor plan edge
-  {x:0,y:0,w:1240,h:12},{x:0,y:748,w:1240,h:12},{x:0,y:0,w:12,h:760},{x:1228,y:0,w:12,h:760},
-  // HR office (flush to the north exterior wall) — one door, on the south side
-  {x:640,y:12,w:10,h:138},{x:830,y:12,w:10,h:138},{x:640,y:140,w:80,h:10},{x:770,y:140,w:70,h:10},
-  // Dale's office
-  {x:660,y:360,w:10,h:120},{x:660,y:470,w:180,h:10},{x:830,y:360,w:10,h:120},
-  /* door on the LEFT of the north wall — it used to open straight onto Dale's desk,
-     which sealed his office off from the pathfinding grid */
-  {x:660,y:360,w:12,h:10},{x:718,y:360,w:122,h:10},
-  // meeting room (NW corner — flush to the north + west exterior walls, open east side)
-  {x:12,y:196,w:252,h:10},{x:254,y:12,w:10,h:100},
-  // break room (west wall — open east side)
-  {x:12,y:356,w:10,h:138},{x:12,y:356,w:252,h:10},{x:12,y:484,w:252,h:10},
-  // kitchen (NE corner — flush to the north + east exterior walls, open west side)
-  {x:878,y:12,w:10,h:120},{x:878,y:236,w:350,h:10},
-  // the annex (SE corner — flush to the south + east exterior walls, door on the north)
-  {x:908,y:500,w:120,h:10},{x:1092,y:500,w:136,h:10},{x:908,y:500,w:10,h:248},
-  // sales room (locked until you make SALES) — door gap on the north side
-  {x:150,y:648,w:84,h:10},{x:274,y:648,w:130,h:10},{x:150,y:648,w:10,h:100},{x:394,y:648,w:10,h:100},
-  // restrooms (flush to the south exterior wall) — door gap on the north side
-  {x:596,y:552,w:80,h:10},{x:726,y:552,w:82,h:10},{x:596,y:552,w:10,h:196},{x:798,y:552,w:10,h:196},
-  /* the M/W divider starts BELOW the door — it used to sit directly under the gap,
-     which walled the restroom off from the pathfinding grid entirely */
-  {x:698,y:626,w:8,h:122},
+  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1020,y:575,w:98,h:10},{x:1162,y:575,w:78,h:10},
+  {x:0,y:-5,w:260,h:10},{x:0,y:175,w:260,h:10},{x:-5,y:0,w:10,h:180},{x:255,y:0,w:10,h:38},{x:255,y:82,w:10,h:98},
+  {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
+  {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
+  {x:1040,y:-5,w:120,h:10},{x:1040,y:115,w:38,h:10},{x:1122,y:115,w:38,h:10},{x:1035,y:0,w:10,h:120},{x:1155,y:0,w:10,h:120},
+  {x:380,y:275,w:38,h:10},{x:462,y:275,w:178,h:10},{x:380,y:495,w:38,h:10},{x:462,y:495,w:178,h:10},{x:375,y:280,w:10,h:220},{x:635,y:280,w:10,h:220},
+  {x:840,y:275,w:98,h:10},{x:982,y:275,w:118,h:10},{x:840,y:495,w:98,h:10},{x:982,y:495,w:118,h:10},{x:835,y:280,w:10,h:220},{x:1095,y:280,w:10,h:220},
+  {x:640,y:335,w:18,h:10},{x:702,y:335,w:138,h:10},{x:640,y:435,w:18,h:10},{x:702,y:435,w:138,h:10},{x:635,y:340,w:10,h:100},{x:835,y:340,w:10,h:100},
+  {x:380,y:595,w:58,h:10},{x:482,y:595,w:76,h:10},{x:602,y:595,w:58,h:10},{x:380,y:755,w:280,h:10},{x:375,y:600,w:10,h:160},{x:655,y:600,w:10,h:160},
+  {x:0,y:275,w:38,h:10},{x:82,y:275,w:56,h:10},{x:182,y:275,w:58,h:10},{x:0,y:415,w:240,h:10},{x:-5,y:280,w:10,h:140},{x:235,y:280,w:10,h:140},
+  {x:1240,y:475,w:160,h:10},{x:1240,y:575,w:160,h:10},{x:1235,y:480,w:10,h:58},{x:1240,y:375,w:160,h:10},{x:1235,y:380,w:10,h:58},{x:1240,y:275,w:160,h:10},{x:1235,y:280,w:10,h:58},{x:1395,y:280,w:10,h:300},
 ];
-const EXIT={x:96,y:596};          // the lift doors
+const EXIT={x:60,y:720};           // the lift doors (SW elevator lobby)
 const ELEVATOR=EXIT;
-const MUSTER={x:190,y:604};       // where people gather: spawn, clock-out, fire drill
+const MUSTER={x:150,y:720};       // where people gather: spawn, clock-out, fire drill
 
 const desks=[];
 /* rows are 95 apart (was 80) and columns 150 (was 130) — the art is bigger than the
@@ -769,58 +761,89 @@ const desks=[];
      THE BULLPEN    (6) — SALES.  The middle.
      THE ANNEX      (3) — JUNIOR. Where they put you, and where they put the new ones.
    Get promoted and you MOVE. So does everybody else. */
-[[326,104,'you',1],[326,199,'Marcus',1],[326,294,'Priya',1],
- [476,104,'Chad',1],[476,199,'Dana',1],[476,294,'Otis',1],
- [930,292,'Wren',2],[1064,292,'Sana',2],[930,387,'Gil',2],
- [962,566,'Ramesh',0],[1106,566,'Vera',0],[962,668,'Doug',0],[1106,668,null,0]]
- .forEach(d=>desks.push({x:d[0],y:d[1],w:64,h:34,owner:d[2],tier:d[3],rigged:null,planted:null}));
+/* Workstations REBUILT from the plan (test/gen_level.js). owner:null = empty desk.
+   Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
+   role tease); the hire+promotion code skips reserved desks so they stay empty. */
+[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales'},
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true},
+ {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales'},
+ {x:900,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales'},
+ {x:840,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales'},
+ {x:1040,y:720,w:60,h:40,owner:'Chad',tier:1,dept:'sales'},
+ {x:1140,y:720,w:60,h:40,owner:'Dana',tier:1,dept:'sales'},
+ {x:1240,y:720,w:60,h:40,owner:'Ramesh',tier:1,dept:'sales'},
+ {x:1340,y:720,w:60,h:40,owner:'Vera',tier:1,dept:'sales'},
+ {x:1240,y:580,w:60,h:40,owner:'Doug',tier:1,dept:'sales'},
+ {x:1340,y:580,w:60,h:40,owner:null,tier:1,dept:'sales'},
+ {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
+ {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
+ {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
+ {x:680,y:60,w:40,h:60,owner:'Nadia',tier:0,dept:'acct'},
+ {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct'},
+ {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec'},
+ {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true}]
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
    from the furniture they were supposedly sitting at. fitTableSeats() below reads the
    sprite's real footprint once the art loads and drops the seats onto the actual chairs. */
-const meetingTable={x:66,y:76,w:120,h:52};
+/* Tables REBUILT from the plan. Meeting = conference table; Break room has TWO tables
+   (breakTable + breakTableB); Kitchen = open-concept table by the counter. */
+const meetingTable={x:540,y:320,w:40,h:120};
 const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null}];
-const breakTable={x:100,y:420,w:100,h:40};
+const breakTable={x:880,y:340,w:40,h:120};
+const breakTableB={x:1020,y:340,w:40,h:120};   // second break table (level overhaul)
 const breakChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                   {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                   /* the couch: three places, authored, not derived */
-                   {x:52,y:392,couch:true,by:null},{x:72,y:392,couch:true,by:null},{x:92,y:392,couch:true,by:null}];
-const kitchenTable={x:1000,y:110,w:110,h:50};
+                   {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
+const kitchenTable={x:1250,y:130,w:100,h:50};
 const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
+/* Interactive objects REBUILT from the plan pins (test/gen_level.js). Two printers + two
+   waters are intentional. Toilets sit in the central Restroom. */
 const objects=[
-  {type:'printer',x:92,y:224,w:34,h:26,label:'Printer',jammed:false},
-  {type:'printer',x:1140,y:430,w:34,h:26,label:'Printer',jammed:false},   // 2nd printer, right side above the annex
-  {type:'water',x:600,y:388,w:24,h:30,label:'Water cooler',trapped:false},
-  {type:'coffee',x:28,y:438,w:30,h:26,label:'Coffee',trapped:false},
-  {type:'supply',x:20,y:300,w:44,h:26,label:'Supplies'},
-  {type:'files',x:700,y:40,w:30,h:26,label:'HR Files',restricted:true},
-  {type:'alarm',x:300,y:22,w:16,h:22,label:'Fire Alarm'},
-  {type:'board',x:30,y:22,w:84,h:26,label:'Whiteboard'},
-  {type:'phones',x:166,y:668,w:32,h:22,label:'Sales phones'},
-  {type:'toilet',x:628,y:700,w:26,h:30,label:'Toilet (M)',rigged:false},
-  {type:'toilet',x:756,y:700,w:26,h:30,label:'Toilet (W)',rigged:false},
+  {type:'printer',x:932,y:524,w:34,h:26,label:'Printer',jammed:false},
+  {type:'printer',x:692,y:144,w:34,h:26,label:'Printer',jammed:false},
+  {type:'water',x:760,y:488,w:24,h:30,label:'Water cooler',trapped:false},
+  {type:'water',x:760,y:288,w:24,h:30,label:'Water cooler',trapped:false},
+  {type:'coffee',x:1240,y:240,w:30,h:26,label:'Coffee',trapped:false},
+  {type:'files',x:500,y:40,w:30,h:26,label:'HR Files',restricted:true},
+  {type:'alarm',x:1032,y:522,w:16,h:22,label:'Fire Alarm'},
+  {type:'board',x:400,y:300,w:84,h:26,label:'Whiteboard'},
+  {type:'phones',x:1060,y:620,w:32,h:22,label:'Sales phones'},
+  {type:'supply',x:740,y:360,w:40,h:26,label:'Supplies'},
+  {type:'toilet',x:440,y:680,w:26,h:30,label:'Toilet (M)',rigged:false},
+  {type:'toilet',x:580,y:680,w:26,h:30,label:'Toilet (W)',rigged:false},
 ];
+/* Bins (contraband/loot) + shelves REBUILT from the plan (test/gen_level.js). */
 const CONTAINERS=[
-  {x:222,y:372,w:30,h:24,label:'Break room cabinet',kind:'cabinet'},
-  {x:1186,y:60,w:26,h:56,label:'Kitchen fridge',kind:'fridge'},
-  {x:36,y:158,w:36,h:22,label:'Meeting credenza',kind:'cabinet'},
-  {x:508,y:648,w:26,h:22,label:'Reception drawer',kind:'box'},
-  {x:1188,y:552,w:24,h:34,label:'Annex locker',kind:'locker'},
-  {x:940,y:726,w:28,h:22,label:'Annex crate',kind:'box'},
-  {x:856,y:400,w:24,h:34,label:'Hall locker',kind:'locker'},
-  {x:560,y:44,w:30,h:22,label:'Hall cabinet',kind:'cabinet'},
-  {x:16,y:230,w:24,h:34,label:'West locker',kind:'locker'},
-  {x:16,y:520,w:28,h:22,label:'Lost & found',kind:'box'},
-  {x:250,y:716,w:30,h:22,label:'South cabinet',kind:'cabinet'},
-  {x:866,y:700,w:28,h:22,label:'Mail crate',kind:'box'},
-  {x:1196,y:330,w:24,h:34,label:'East locker',kind:'locker'},
-  {x:1188,y:660,w:24,h:34,label:'Annex locker',kind:'locker'},
-  {x:596,y:110,w:24,h:34,label:'Hall locker',kind:'locker'},
-  {x:356,y:710,w:30,h:24,label:'Leads cabinet',kind:'cabinet'},
+  {x:806,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:606,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:666,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:746,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:746,y:409,w:28,h:22,label:'Supply bin',kind:'box'},
+  {x:1166,y:9,w:28,h:22,label:'Kitchen bin',kind:'box'},
+  {x:526,y:49,w:28,h:22,label:'HR bin',kind:'box'},
+  {x:1246,y:489,w:28,h:22,label:'Senior sales bin',kind:'box'},
+  {x:1246,y:389,w:28,h:22,label:'Senior sales bin',kind:'box'},
+  {x:1246,y:289,w:28,h:22,label:'Senior sales bin',kind:'box'},
+  {x:1026,y:589,w:28,h:22,label:'Sales bin',kind:'box'},
+  {x:1026,y:629,w:28,h:22,label:'Sales bin',kind:'box'},
+  {x:766,y:449,w:28,h:22,label:'Supply bin',kind:'box'},
+  {x:766,y:309,w:28,h:22,label:'Break bin',kind:'box'},
+  {x:1266,y:249,w:28,h:22,label:'Kitchen bin',kind:'box'},
+  {x:560,y:0,w:20,h:120,label:'Accounting shelf',kind:'cabinet'},
+  {x:860,y:0,w:20,h:120,label:'Manager shelf',kind:'cabinet'},
+  {x:0,y:180,w:20,h:100,label:'Exec shelf',kind:'cabinet'},
+  {x:1200,y:0,w:200,h:40,label:'Kitchen counter',kind:'cabinet'},
+  {x:400,y:0,w:160,h:20,label:'HR shelf',kind:'cabinet'},
+  {x:880,y:0,w:160,h:20,label:'Manager shelf',kind:'cabinet'},
+  {x:1140,y:60,w:20,h:60,label:'Asst mgr shelf',kind:'cabinet'},
+  {x:820,y:340,w:20,h:100,label:'Supply shelf',kind:'cabinet'},
+  {x:740,y:340,w:80,h:20,label:'Supply shelf',kind:'cabinet'},
+  {x:1360,y:40,w:40,h:240,label:'Kitchen pantry',kind:'cabinet'},
 ];
 const ITEMS={
   jello:{label:'a packet of Jell-O',part:true},
@@ -933,7 +956,7 @@ function dropItemMenu(){
   items.push({label:'Cancel',act:()=>{}});
   renderMenu({title:'Your pockets',items});
 }
-const errandPoints=[{x:645,y:672,type:'restroom'},{x:762,y:672,type:'restroom'},{x:92,y:330,type:'supply'},{x:100,y:262,type:'printer'},{x:600,y:360,type:'water'},{x:62,y:418,type:'coffee'},{x:1040,y:200,type:'coffee'},{x:540,y:700,type:'chat'}];
+const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:740,y:360,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:488,type:'water'},{x:1240,y:240,type:'coffee'},{x:700,y:600,type:'chat'}];
 
 const player={x:400,y:180,w:16,h:16,speed:1.7,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0};
 
@@ -1031,8 +1054,8 @@ function NPC(name,dept,desk){
 const NPCS=[];
 NPCS.push(NPC('Brenda','hr',null));
 NPCS.push(NPC('Marla','hr',null));
-const pegg=NPC('Peggy','sales',null);pegg.receptionist=true;pegg.x=416;pegg.y=576;pegg.speed=1.05;NPCS.push(pegg);
-desks.filter(d=>d.owner&&d.owner!=='you').forEach(d=>NPCS.push(NPC(d.owner,d.x<430?'sales':(d.x<560?'acct':'sales'),d)));
+const pegg=NPC('Peggy','sales',null);pegg.receptionist=true;pegg.x=80;pegg.y=490;pegg.speed=1.05;NPCS.push(pegg);
+desks.filter(d=>d.owner&&d.owner!=='you').forEach(d=>NPCS.push(NPC(d.owner,d.dept||'sales',d)));
 let rival=NPCS.find(n=>n.name==='Chad'); if(rival)rival.rival=true;
 /* ================= WHO LIKES WHO =========================================
    Everybody has one or two friends on this floor. They lower each other's stress
@@ -1061,7 +1084,7 @@ NPCS.filter(n=>n.dept==='hr').forEach((h,i)=>{
   h.hrDeskT=rand(13,17);               // ~15s of paperwork before the rounds start
   h.hrSettled=false;
   h.lastBeat=-1;
-  h.x=397+i*260;h.y=175+i*300;
+  h.x=420+i*80;h.y=90;   // HR office desks (level overhaul)
 });
 
 /* the CEO (comes down from the top floor now and then) */
@@ -1098,8 +1121,16 @@ function assembleAtElevator(){
   player.x=ELEVATOR.x+Math.round(4*S);player.y=ELEVATOR.y+Math.round(26*S);
   unstickPlayer();
 }
-function deskSeat(d){return {x:d.x+d.w/2,y:d.y+d.h+Math.round(26*S)};}
-function auditPoint(d){return {x:d.x+d.w/2,y:d.y+d.h+Math.round(26*S)};}
+/* The seat is where the owner stands. It used to always be BELOW the desk, which for the
+   south-wall sales desks landed inside the perimeter wall (and inside a prop for a couple of
+   others) — boxing the NPC in. Pick the first walkable side instead. */
+function deskSeat(d){
+  const m=Math.round(26*S), cx=d.x+d.w/2, cy=d.y+d.h/2;
+  const cand=[{x:cx,y:d.y+d.h+m},{x:cx,y:d.y-m},{x:d.x+d.w+m,y:cy},{x:d.x-m,y:cy}];
+  try{ for(const p of cand){ if(walkableAt(p.x,p.y)) return p; } }catch(e){}
+  return cand[0];
+}
+function auditPoint(d){return deskSeat(d);}
 function triggerAudit(){
   if(meltEvent)return;
   const hr=pick(hrs());if(!hr)return;
@@ -1288,7 +1319,7 @@ function shredDoc(){
 }
 
 /* Branch manager (resident, does his rounds) */
-const DALE_DESK={x:744,y:384,w:78,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true};
+const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true};
 desks.push(DALE_DESK);
 const mgr=NPC('Dale Brackett','exec',DALE_DESK); mgr.mgr=true; mgr.speed=0.89; mgr.chatCd=rand(6,14); mgr.lastLine=''; mgr.x=748; mgr.y=452;
 /* authored at 1240x760 — scaleWorld() scales it */
@@ -1419,7 +1450,7 @@ function promptKey(){return (typeof padSeen!=='undefined'&&padSeen)?'X':'E';}
 /* ===== PATHFINDING (A*) ===== */
 const CELL=Math.round(20*S), COLS=Math.floor(W/CELL), ROWS=Math.floor(H/CELL);
 let grid=[];
-const sealedZones=[{x:150,y:648,w:254,h:100,id:'sales'}];
+const sealedZones=[];   // level overhaul: sales-room gating rewired later
 function buildGrid(){
   grid=[];
   for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++){
@@ -1566,7 +1597,7 @@ function checkStuck(n,dt,onStuck){
 const hrPatrol=[{x:397,y:175},{x:600,y:100},{x:900,y:120},{x:1150,y:180},{x:1150,y:330},
   {x:1120,y:600},{x:900,y:700},{x:700,y:520},{x:560,y:700},{x:340,y:600},
   {x:150,y:520},{x:150,y:320},{x:300,y:230},{x:560,y:330},{x:860,y:330}];
-const HR_OFFICE={x:745,y:100};      // scaled by scaleWorld
+const HR_OFFICE={x:480,y:90};       // scaled by scaleWorld (level overhaul)
 /* each HR officer walks their own beat, pauses to sweep their cone, and keeps apart from the other */
 function hrRoam(n,dt){
   n.dwell-=dt;
@@ -2268,8 +2299,8 @@ function processHires(){
       // — find an actually-empty desk instead, preferring the same room.
       let desk=h.desk;
       if(desk.owner){
-        desk = desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&d.tier===h.desk.tier)
-            || desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired);
+        desk = desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved&&d.tier===h.desk.tier)
+            || desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved);
       }
       if(!desk){
         // floor is full — the vacancy quietly closes rather than double-seating a desk
@@ -4023,8 +4054,8 @@ function nextDay(){
 }
 function summaryLine(){if(player.suspicion>70)return 'HR is watching you closely. Cool it tomorrow.';if(player.prog>75)return 'You are close to the top. One more push.';if(player.prog<20)return 'Slow start. Clear tasks and get seen — or start thinning the competition.';return 'Steady progress. Keep balancing honest work and quiet sabotage.';}
 function stat(k,v){return `<div><span>${k}</span><b>${v}</b></div>`;}
-const SALES_DOOR={x:234,y:648,w:40,h:10,door:true};
-walls.push(SALES_DOOR);
+const SALES_DOOR={x:1240,y:460,w:44,h:10,door:true};   // level overhaul placeholder
+/* walls.push(SALES_DOOR); level overhaul: not sealed for now */
 let salesUnlocked=false;
 function unlockSales(){
   if(salesUnlocked)return;
@@ -4571,7 +4602,7 @@ function branchHealth(){
   const allies=ws.filter(n=>n.friend>=ALLY_THRESHOLD).length;
   const feuds=ws.filter(n=>n.feudWith).length/2;
   const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
-  const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired).length;
+  const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
   const broken=ws.filter(n=>stressTier(n)>=3).length;
   let h=52
     + avgMood*0.30
@@ -4988,16 +5019,24 @@ function drawLabels(){
   ctx.textAlign='left';
 }
 /* named zones, authored at 1240x760 — scaleWorld scales them */
+/* Room label-zones REBUILT from the plan. glass:true = see-through office (CEO + Senior Sales). */
 const ROOMS=[
-  {name:'MEETING ROOM', x:12,  y:12,  w:242, h:184, c:'#c9a41a'},
-  {name:'BREAK ROOM',   x:22,  y:366, w:242, h:118, c:'#4a8c5a'},
-  {name:'HR',           x:650, y:12,  w:180, h:128, c:'#c0392b'},
-  {name:"MANAGER'S OFFICE", x:670, y:370, w:160, h:100, c:'#c9a41a'},
-  {name:'KITCHEN',      x:888, y:12,  w:340, h:224, c:'#c9a41a'},
-  {name:'RECEPTION',    x:306, y:556, w:270, h:186, c:'#3b6ea5'},
-  {name:'THE ANNEX',    x:918, y:510, w:310, h:238, c:'#4a8c5a'},
-  {name:'RESTROOMS',    x:606, y:562, w:192, h:186, c:'#7c7768'},
-  {name:'SALES ROOM',   x:160, y:658, w:234, h:88,  c:'#3b6ea5'},
+  {name:'CEO OFFICE',   x:0,   y:0,   w:260, h:180, c:'#8e44ad', glass:true},
+  {name:'HR',           x:400, y:0,   w:160, h:180, c:'#c0392b'},
+  {name:'MANAGER',      x:880, y:0,   w:160, h:180, c:'#c9a41a'},
+  {name:'ASST. MANAGER',x:1040,y:0,   w:120, h:120, c:'#7c7768'},
+  {name:'ACCOUNTING',   x:600, y:0,   w:280, h:180, c:'#3b6ea5'},
+  {name:'MEETING ROOM', x:380, y:280, w:260, h:220, c:'#c9a41a'},
+  {name:'BREAK ROOM',   x:840, y:280, w:260, h:220, c:'#4a8c5a'},
+  {name:'SUPPLY CLOSET',x:640, y:340, w:200, h:100, c:'#8a6a3a'},
+  {name:'RESTROOM',     x:380, y:600, w:280, h:160, c:'#7c7768'},
+  {name:'EXEC RESTROOM',x:0,   y:280, w:240, h:140, c:'#7c7768'},
+  {name:'RECEPTION',    x:0,   y:420, w:240, h:260, c:'#3b6ea5'},
+  {name:'KITCHEN',      x:1160,y:0,   w:240, h:280, c:'#c9a41a'},
+  {name:'SENIOR SALES', x:1240,y:280, w:160, h:300, c:'#3b6ea5', glass:true},
+  {name:'SALES FLOOR',  x:1020,y:580, w:380, h:180, c:'#3b6ea5'},
+  {name:'JUNIOR SALES', x:660, y:580, w:360, h:180, c:'#4a8c5a'},
+  {name:'ELEVATOR',     x:0,   y:680, w:220, h:80,  c:'#7c7768'},
 ];
 function roomAt(x,y){
   for(const r of ROOMS) if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h) return r;
@@ -6024,7 +6063,7 @@ function renderOrg(){
     const broken=ws.filter(n=>stressTier(n)>=3).length;
     const feuds=ws.filter(n=>n.feudWith).length/2;
     const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
-    const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired).length;
+    const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
     rows.push(`<div><span>Dragging it down</span><b>${[broken?broken+' breaking':'',feuds?feuds+' feud(s)':'',strikes?strikes+' strike(s) on file':'',vacant?vacant+' empty desk(s)':''].filter(Boolean).join(' · ')||'nothing — hold this'}</b></div>`);
   }
   const ws=activeNPCs().filter(isWorker);
