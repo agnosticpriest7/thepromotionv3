@@ -4739,15 +4739,22 @@ function drawFloor(){
     ctx.fillStyle=COL.floor;ctx.fillRect(0,0,W,H);
   }
   const Z=(x,y,w,h)=>[Math.round(x*S),Math.round(y*S),Math.round(w*S),Math.round(h*S)];
-  tileFloor('wood',       ...Z(12,12,242,184), T);     // meeting room (NW corner)
-  tileFloor('wood',       ...Z(670,370,160,100),T);    // manager's office
-  tileFloor('tile_white', ...Z(888,12,340,224), T);    // kitchen (NE corner)
-  tileFloor('tile_white', ...Z(606,562,192,186),T);    // restrooms (to the south wall)
-  tileFloor('marble',     ...Z(306,556,270,186),T);    // reception
-  tileFloor('tile_lobby', ...Z(650,12,180,128), T);    // HR office
-  tileFloor('carpet_blue',...Z(22,366,242,118), T);    // break room
-  tileFloor('carpet_blue',...Z(160,658,234,88), T);    // sales room
-  tileFloor('tile_lobby', ...Z(908,500,320,248),T);    // annex (SE corner)
+  /* Floor tiles per room — REBUILT for the level overhaul. */
+  tileFloor('wood',       ...Z(0,0,260,180),    T);    // CEO office
+  tileFloor('tile_lobby', ...Z(400,0,160,180),  T);    // HR
+  tileFloor('wood',       ...Z(880,0,160,180),  T);    // manager
+  tileFloor('tile_lobby', ...Z(1040,0,120,120), T);    // asst manager
+  tileFloor('wood',       ...Z(380,280,260,220),T);    // meeting room
+  tileFloor('carpet_blue',...Z(840,280,260,220),T);    // break room
+  tileFloor('tile_white', ...Z(640,340,200,100),T);    // supply closet
+  tileFloor('tile_white', ...Z(380,600,280,160),T);    // restroom
+  tileFloor('tile_white', ...Z(0,280,240,140),  T);    // exec restroom
+  tileFloor('marble',     ...Z(0,420,240,260),  T);    // reception
+  tileFloor('tile_white', ...Z(1160,0,240,280), T);    // kitchen
+  tileFloor('carpet_blue',...Z(1240,280,160,300),T);   // senior sales
+  tileFloor('carpet_blue',...Z(1020,580,380,180),T);   // sales floor
+  tileFloor('carpet_blue',...Z(660,580,360,180),T);    // junior sales
+  tileFloor('tile_lobby', ...Z(0,680,220,80),   T);    // elevator lobby
   drawBathroom();
 }
 
@@ -4763,7 +4770,18 @@ function drawBathroom(){
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
-function drawWalls(){for(const w of walls){ctx.fillStyle='#7d745f';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle='#9a917a';ctx.fillRect(w.x,w.y,w.w,Math.min(2,w.h));ctx.fillStyle='#5c5647';ctx.fillRect(w.x,w.y+w.h-1,w.w,1);}}
+function drawWalls(){for(const w of walls){
+  if(w.glass){   // see-through office wall (CEO + Senior Sales): translucent glass over the room
+    ctx.fillStyle='rgba(150,200,225,0.26)';ctx.fillRect(w.x,w.y,w.w,w.h);
+    ctx.fillStyle='rgba(232,246,255,0.55)';ctx.fillRect(w.x,w.y,w.w,Math.max(1,Math.min(2,w.h)));
+    ctx.fillStyle='rgba(120,160,185,0.45)';ctx.fillRect(w.x,w.y+w.h-1,w.w,1);
+    /* a stud every ~2 tiles so it still reads as a wall, not open air */
+    if(w.w>w.h){ for(let sx=w.x+U1(2);sx<w.x+w.w-2;sx+=U1(40)){ctx.fillStyle='rgba(90,120,140,0.5)';ctx.fillRect(sx,w.y,2,w.h);} }
+    else { for(let sy=w.y+U1(2);sy<w.y+w.h-2;sy+=U1(40)){ctx.fillStyle='rgba(90,120,140,0.5)';ctx.fillRect(w.x,sy,w.w,2);} }
+  } else {
+    ctx.fillStyle='#7d745f';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle='#9a917a';ctx.fillRect(w.x,w.y,w.w,Math.min(2,w.h));ctx.fillStyle='#5c5647';ctx.fillRect(w.x,w.y+w.h-1,w.w,1);
+  }
+}}
 function drawChair(cx,cy){
   ctx.fillStyle='#241d16';ctx.fillRect(cx-6,cy-6,12,12);
   ctx.fillStyle='#4a4038';ctx.fillRect(cx-5,cy-5,10,10);
@@ -5038,6 +5056,14 @@ const ROOMS=[
   {name:'JUNIOR SALES', x:660, y:580, w:360, h:180, c:'#4a8c5a'},
   {name:'ELEVATOR',     x:0,   y:680, w:220, h:80,  c:'#7c7768'},
 ];
+/* Flag the wall rects on a glass room's outline so drawWalls() renders them see-through
+   (authored coords, before scaleWorld scales walls/ROOMS together). */
+ROOMS.filter(r=>r.glass).forEach(r=>{ walls.forEach(w=>{
+  const inX=w.x<r.x+r.w+6 && w.x+w.w>r.x-6, inY=w.y<r.y+r.h+6 && w.y+w.h>r.y-6;
+  const onH=(Math.abs(w.y-r.y)<12||Math.abs(w.y+w.h-(r.y+r.h))<12)&&inX;
+  const onV=(Math.abs(w.x-r.x)<12||Math.abs(w.x+w.w-(r.x+r.w))<12)&&inY;
+  if(onH||onV) w.glass=true;
+}); });
 function roomAt(x,y){
   for(const r of ROOMS) if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h) return r;
   return null;
