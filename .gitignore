@@ -12,3 +12,6 @@ Desktop.ini
 /test/tmp/
 *.log
 test/floormap.svg
+test/shots/
+test/floormap.svg
+/tmp/
