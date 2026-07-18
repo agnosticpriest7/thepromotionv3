@@ -1770,6 +1770,20 @@ function updateNPC(n,dt){
     checkStuck(n,dt,()=>{if(n.errand)n.errand=null;});
   }
 
+  /* SAFETY NET: a worker heading back to its OWN desk during floor chaos (evacuation
+     returns, a crowded row) can get physically wedged at the last few feet — the seat is
+     grid-reachable but a neighbour's body blocks the final approach. If one can't reach
+     its own seat after several seconds of not moving, settle it there. Invisible in the
+     shuffle, narrow (own desk, work phase only), and it prevents a permanent wedge. */
+  if(workPhase&&isWorker(n)&&!n.errand&&!n.seat&&n.homeDesk){
+    const s=deskSeat(n.homeDesk);
+    const near=cdist(n,s)<Math.round(18*S);
+    const mv=Math.hypot(n.x-(n._dsx==null?n.x:n._dsx), n.y-(n._dsy==null?n.y:n._dsy));
+    n._dsx=n.x;n._dsy=n.y;
+    if(!near&&mv<n.speed*0.25)n.deskStuckT=(n.deskStuckT||0)+dt;else n.deskStuckT=0;
+    if(n.deskStuckT>6){n.x=s.x-n.w/2;n.y=s.y-n.h/2;n.goal=null;n.path=null;n.deskStuckT=0;n.stuckT=0;unstickEnt(n);}
+  } else { n.deskStuckT=0; }
+
   // rigged desk springs when the owner gets back to it
   if(workPhase&&!n.errand&&n.homeDesk){
     const dk=desks.find(d=>d.owner===n.name);
@@ -1835,7 +1849,11 @@ function socialize(n){
   }
 }
 function startErrand(n){
-  if(Math.random()<0.55){const p=pick(errandPoints);n.errand={x:p.x,y:p.y,dwell:rand(2.5,5),ptype:p.type,arrived:false};}
+  /* Snap the errand point to a walkable cell. Some object pins (e.g. the coffee machine,
+     which sits against the senior-sales wall) land ON a blocker cell; A* then strands the
+     NPC a cell away — past the arrival tolerance — and it wedges. snapTarget lands them on
+     the nearest cell they can actually stand on, so "arrived" always triggers. */
+  if(Math.random()<0.55){const p=pick(errandPoints);const sp=snapTarget(p.x,p.y);n.errand={x:sp.x,y:sp.y,dwell:rand(2.5,5),ptype:p.type,arrived:false};}
   else{const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;const d=pick(others);const p=snapTarget(d.x+d.w+Math.round(18*S),d.y+d.h/2);n.errand={x:p.x,y:p.y,dwell:rand(2,4),ptype:'chat',arrived:false};}
 }
 function onErrandArrive(n,er){
@@ -3900,12 +3918,12 @@ function finishSnoop(){const dale=NPCS.find(n=>n.mgr&&n.alive);const who=activeN
 let meetingCredited=false;
 let phaseCred={};
 function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(20)&&player.x<U(270)&&player.y>U(360)&&player.y<U(500);}
-function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(886)&&player.x<U(1228)&&player.y>U(14)&&player.y<U(240);}
+function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1400)&&player.y>U(0)&&player.y<U(280);}
 function phaseCheckins(ph){
   if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
   if((ph==='Morning Break'||ph==='Afternoon Break'||ph==='Lunch / Break')&&!phaseCred[ph]&&(inBreakZone()||inKitchenZone())){phaseCred[ph]=true;player.stress=clamp(player.stress-10,0,100);player.suspicion=clamp(player.suspicion-4,0,100);toast('Break taken. Stress −10, suspicion −4');logLine('Took your break like a normal employee. Suspicion −4.','g');}
 }
-function checkMeeting(){if(currentPhase().name==='Meeting'&&!meetingCredited&&cdist(player,{x:Math.round(122*S),y:Math.round(105*S)})<Math.round(115*S)){meetingCredited=true;phaseCred['Meeting']=true;const mt=openTask('meeting');if(mt)completeTask(mt);else{player.prog=clamp(player.prog+5,0,100);player.suspicion=clamp(player.suspicion-4,0,100);player.suspicion=clamp(player.suspicion-6,0,100);toast('Seen at meeting. Promotion +5, suspicion −6');logLine('Attended the meeting, looking engaged. +5.','g');checkWin();}}}
+function checkMeeting(){if(currentPhase().name==='Meeting'&&!meetingCredited&&cdist(player,{x:Math.round(510*S),y:Math.round(390*S)})<Math.round(130*S)){meetingCredited=true;phaseCred['Meeting']=true;const mt=openTask('meeting');if(mt)completeTask(mt);else{player.prog=clamp(player.prog+5,0,100);player.suspicion=clamp(player.suspicion-4,0,100);player.suspicion=clamp(player.suspicion-6,0,100);toast('Seen at meeting. Promotion +5, suspicion −6');logLine('Attended the meeting, looking engaged. +5.','g');checkWin();}}}
 
 /* day loop */
 let lastPhase='Clock-In';
@@ -4817,10 +4835,11 @@ function fitTableSeats(){
   if(!ok('conference_table'))return;
   const mr=tableRect(meetingTable,'conference_table');
   const br=tableRect(breakTable,'conference_table','break_table');
+  const brB=tableRect(breakTableB,'conference_table','break_table');
   const kr=tableRect(kitchenTable,'conference_table','kitchen_table');
   /* blockers FIRST, then rebuild the grid, THEN place the seats — so snapTarget knows
      about the tabletop and can never drop a seat inside the furniture */
-  buildBlockers([mr,br,kr]);
+  buildBlockers([mr,br,brB,kr]);
   buildGrid();
   seatRing(mr,meetingChairs);
   seatRing(br,breakChairs.filter(c=>!c.couch));
@@ -4848,7 +4867,7 @@ function buildBlockers(tableRects){
       blockers.push({x:o.x,y:o.y,w:o.w,h:o.h});
   });
   /* the reception desk — people used to stand inside it */
-  blockers.push({x:Math.round(358*S),y:Math.round(598*S),w:Math.round(132*S),h:Math.round(42*S)});
+  blockers.push({x:Math.round(40*S),y:Math.round(524*S),w:Math.round(140*S),h:Math.round(48*S)});
 }
 function drawFurniture(table,chairs){
   /* the table sprites already come with chairs attached — drawing office_chair on top
@@ -4862,7 +4881,6 @@ function drawFurniture(table,chairs){
     return;
   }
   sprW('conference_table',table.x+table.w/2,table.y+table.h+U1(8),U1(ART_W.break_table));
-  sprAt('couch',Math.round(72*S),Math.round(400*S),'couch');   // against the north wall
 }
 /* THE FIX for "you can walk into the top of a desk": the collision box was authored
    at 64x34 while the sprite draws at ~120 wide and much taller. Snap the box onto the
@@ -5017,23 +5035,18 @@ function drawAlarm(x,y,w,h){
 function drawLabels(){
   const U=(v)=>Math.round(v*S);
   ctx.textAlign='left';
-  // kitchen counter along the north wall (the table + chairs are real furniture now)
-  ctx.fillStyle='#241d16';ctx.fillRect(U(898),U(40),U(264),U(24));ctx.fillStyle='#c3c7cc';ctx.fillRect(U(900),U(42),U(260),U(20));ctx.fillStyle='#e7e9ec';ctx.fillRect(U(900),U(42),U(260),U(4));
-  ctx.fillStyle='#8a8f96';ctx.fillRect(U(1120),U(46),U(26),U(12));ctx.fillStyle='#3a3f45';ctx.fillRect(U(940),U(48),U(14),U(10));
-  // reception desk — wire in the reception_desk sprite (it was in the art but never drawn;
-  // the front desk was a plain painted block). Fall back to the block if the art is missing.
+  /* Inline decor RE-PLACED for the new floor. Kitchen counter is now a real container
+     (drawn by drawContainers), so it's not duplicated here. */
+  // reception desk (SW reception) — real sprite, fall back to a painted block
   if(ok('reception_desk')){
-    sprAt('reception_desk',U(424),U(644),'reception_desk');
+    sprAt('reception_desk',U(110),U(566),'reception_desk');
   } else {
-    ctx.fillStyle='#241d16';ctx.fillRect(U(358),U(598),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(360),U(600),U(128),U(38));ctx.fillStyle='#c7bda0';ctx.fillRect(U(360),U(600),U(128),U(4));ctx.fillStyle='#20242a';ctx.fillRect(U(410),U(606),U(20),U(12));
+    ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
   }
-  // kitchen vending
-  ctx.fillStyle='#241d16';ctx.fillRect(U(1188),U(150),U(26),U(52));ctx.fillStyle='#8a2f2a';ctx.fillRect(U(1190),U(152),U(22),U(48));ctx.fillStyle='#20242a';ctx.fillRect(U(1193),U(156),U(16),U(20));
-  // reception waiting chairs
-  [[520,600],[520,632],[556,600],[556,632]].forEach(c=>{ctx.fillStyle='#3a3f45';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(9));ctx.fillStyle='#565c62';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(2));});
-  ctx.textAlign='left';
-  /* Room names are no longer painted on the floor where they fight the furniture — the
-     room you are standing in is captioned beside the minimap instead. */
+  // reception waiting chairs (below the desk)
+  [[40,600],[80,600],[40,636],[80,636]].forEach(c=>{ctx.fillStyle='#3a3f45';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(9));ctx.fillStyle='#565c62';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(2));});
+  // kitchen vending (NE kitchen, against the east wall)
+  ctx.fillStyle='#241d16';ctx.fillRect(U(1362),U(60),U(26),U(52));ctx.fillStyle='#8a2f2a';ctx.fillRect(U(1364),U(62),U(22),U(48));ctx.fillStyle='#20242a';ctx.fillRect(U(1367),U(66),U(16),U(20));
   ctx.textAlign='left';
 }
 /* named zones, authored at 1240x760 — scaleWorld scales them */
@@ -5420,15 +5433,15 @@ function drawLighting(){
 }
 function drawDecor(){
   const U=(v)=>Math.round(v*S);
-  // company sign above reception
-  ctx.fillStyle='#241d16';ctx.fillRect(U(356),U(572),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(358),U(574),U(132),U(10));
-  ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(424),U(582));ctx.textAlign='left';
+  // company sign above the reception desk (SW reception)
+  ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(498),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(500),U(132),U(10));
+  ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(112),U(508));ctx.textAlign='left';
   // rugs: reception + break room
-  ctx.fillStyle='rgba(59,110,165,.16)';ctx.fillRect(U(506),U(594),U(74),U(58));ctx.strokeStyle='rgba(59,110,165,.3)';ctx.strokeRect(U(506),U(594),U(74),U(58));
-  ctx.fillStyle='rgba(140,90,50,.14)';ctx.fillRect(U(60),U(392),U(190),U(86));ctx.strokeStyle='rgba(140,90,50,.25)';ctx.strokeRect(U(60),U(392),U(190),U(86));
+  ctx.fillStyle='rgba(59,110,165,.16)';ctx.fillRect(U(24),U(590),U(170),U(80));ctx.strokeStyle='rgba(59,110,165,.3)';ctx.strokeRect(U(24),U(590),U(170),U(80));
+  ctx.fillStyle='rgba(140,90,50,.14)';ctx.fillRect(U(858),U(300),U(224),U(160));ctx.strokeStyle='rgba(140,90,50,.25)';ctx.strokeRect(U(858),U(300),U(224),U(160));
   /* the whiteboard is an OBJECT (drawObjects) — drawing it here too gave us two of them */
-  // break room TV
-  ctx.fillStyle='#241d16';ctx.fillRect(U(150),U(364),U(44),U(26));ctx.fillStyle='#20242a';ctx.fillRect(U(152),U(366),U(40),U(22));ctx.fillStyle='#2f5d78';ctx.fillRect(U(154),U(368),U(36),U(16));ctx.fillStyle='#6fb7d0';ctx.fillRect(U(154),U(368),U(36),U(4));
+  // break room TV (north wall of the break room)
+  ctx.fillStyle='#241d16';ctx.fillRect(U(930),U(292),U(44),U(26));ctx.fillStyle='#20242a';ctx.fillRect(U(932),U(294),U(40),U(22));ctx.fillStyle='#2f5d78';ctx.fillRect(U(934),U(296),U(36),U(16));ctx.fillStyle='#6fb7d0';ctx.fillRect(U(934),U(296),U(36),U(4));
   // wall clock near the elevator
   {const cx=MUSTER.x, cy=MUSTER.y-U1(60);
    ctx.fillStyle='#241d16';ctx.beginPath();ctx.arc(cx,cy,U1(9),0,Math.PI*2);ctx.fill();
@@ -5437,12 +5450,8 @@ function drawDecor(){
   // scattered papers + coffee stains
   ctx.fillStyle='rgba(255,255,255,.55)';[[340,352],[610,240],[930,320],[520,520],[770,700]].forEach(p=>ctx.fillRect(U(p[0]),U(p[1]),U(7),U(5)));
   ctx.fillStyle='rgba(110,70,40,.16)';[[480,300],[660,520],[240,540]].forEach(p=>{ctx.beginPath();ctx.arc(U(p[0]),U(p[1]),U(6),0,Math.PI*2);ctx.fill();});
-  // sales room interior desks
-  [[180,690],[240,690],[300,690],[180,722],[240,722],[300,722]].forEach(p=>{const x=U(p[0]),y=U(p[1]);
-    ctx.fillStyle='#241d16';ctx.fillRect(x,y,U(36),U(20));
-    ctx.fillStyle='#b39a6d';ctx.fillRect(x+U(1),y+U(1),U(34),U(18));
-    ctx.fillStyle='#20242a';ctx.fillRect(x+U(12),y+U(3),U(12),U(8));});
-    // spare water jugs by the annex
+  /* (the decorative SW "sales room interior desks" were removed — that corner is the
+     elevator lobby now; real worker desks are drawn by drawDesks) */
 }
 const CONT_ART={cabinet:'filing_cabinet',locker:'lockers',fridge:'fridge',box:'supply_shelf'};
 const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplies'};
@@ -5457,11 +5466,13 @@ function drawContainers(){
     if(c.loot&&c.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(c.x+c.w-6,c.y-6,5,5);}
     labelBox(CONT_LABEL[c.kind]||'cabinet',cx,c.y-U1(14));
   }
-  /* manager's office furnishings */
-  sprAt('office_chair',Math.round(783*S),Math.round(455*S),'office_chair');
-  sprAt('filing_cabinet',Math.round(692*S),Math.round(452*S),'filing_cabinet');
-  /* potted plants */
-  [[288,58],[620,352],[906,470],[350,566],[686,455]].forEach(p=>{
+  /* CEO's executive desk (top-left glass office) */
+  sprAt('manager_desk',Math.round(120*S),Math.round(120*S),'manager_desk');
+  /* manager's office furnishings (Dale's office, top-centre) */
+  sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
+  sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
+  /* potted plants — CEO office, reception, meeting room, break room, sales corner */
+  [[60,150],[200,640],[600,470],[1070,470],[1380,720]].forEach(p=>{
     sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
   });
 }
@@ -5481,7 +5492,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawSalesDoor();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawSalesDoor();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();
   ctx.restore();
   drawMinimap();
   drawCompass();
