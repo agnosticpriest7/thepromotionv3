@@ -2376,31 +2376,33 @@ let intro=null;
    there and won't walk past until he's delivered the line, then lingers a moment. The
    `at` values are aligned to where each landmark actually falls on the route below
    (Annex 0.43, the three-ways beat mid-floor 0.57, Kitchen 0.75, HR 0.84, bullpen 0.96). */
+/* Beat fractions re-tuned to the new INTRO_ROUTE (POI fractions: HR~0.33, kitchen~0.74,
+   bullpen~1.0). Order follows the new walk: annex gesture on the way out, HR mid-route,
+   the three-paths spiel across the top, kitchen, then down to the bullpen. */
 const INTRO_BEATS=[
   {at:0.00,t:2.2,hold:true,say:"You must be the new intern. Up. Follow me — quick tour."},
-  {at:0.16,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.43,t:2.8,hold:true,say:"That corner — the Annex. Where they stick the new ones. You'll be here soon."},
-  {at:0.50,t:2.6,         say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
-  {at:0.57,t:2.6,hold:true,say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.61,t:2.6,         say:"Do the work. Run a clean floor long enough and the board hands it to you."},
-  {at:0.65,t:2.6,         say:"Or get someone in power to owe you. Make yourself useful to the right person."},
+  {at:0.07,t:2.6,hold:true,say:"That corner — the Annex. Where they stick the new ones. That's your desk."},
+  {at:0.15,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.24,t:2.6,         say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
+  {at:0.35,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.44,t:2.6,hold:true,say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.53,t:2.6,         say:"Do the work. Run a clean floor long enough and the board hands it to you."},
+  {at:0.61,t:2.6,         say:"Or get someone in power to owe you. Make yourself useful to the right person."},
   {at:0.69,t:2.6,         say:"Or dig up something buried. But that road's a cliff. Your funeral."},
-  {at:0.75,t:2.6,hold:true,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.84,t:2.6,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.96,t:2.4,hold:true,say:"And watch the bullpen. It's cutthroat. Guard your stapler."},
+  {at:0.76,t:2.6,hold:true,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.92,t:2.4,hold:true,say:"And down there — the bullpen. It's cutthroat. Guard your stapler."},
   {at:1.00,t:2.8,hold:true,say:"Right. That desk's yours. Two jobs. Go on — day's yours now."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
    -> past HR -> the bullpen -> your desk. Verified against the real nav grid — the middle
    traverse (wp17-20) was A*-routed below the Sales-row desks and up through the x=850
    doorway so it never clips a desk or wall. */
+/* INTRO_ROUTE rebuilt for the overhauled floor (test/genintro.js): a walkable A*-verified
+   loop from the intern desk up through the centre, past HR, across the top to the kitchen,
+   then down to the sales bullpen. All 12 points verified standable. */
 const INTRO_ROUTE=[
-  {x:110,y:570},{x:390,y:570},{x:430,y:530},{x:730,y:530},{x:750,y:510},{x:870,y:510},
-  {x:890,y:490},{x:890,y:470},{x:1050,y:470},{x:1050,y:630},{x:1050,y:510},{x:1070,y:490},
-  {x:1070,y:470},{x:1090,y:450},{x:1090,y:430},{x:1110,y:410},{x:1110,y:390},{x:1150,y:350},
-  {x:910,y:350},{x:850,y:250},{x:850,y:210},{x:890,y:210},{x:910,y:190},{x:930,y:190},
-  {x:950,y:170},{x:970,y:170},{x:990,y:150},{x:890,y:150},{x:870,y:170},{x:770,y:170},
-  {x:730,y:210},{x:610,y:210},{x:570,y:170},{x:410,y:170},{x:390,y:150},{x:370,y:150},
+  {x:730,y:650},{x:730,y:590},{x:670,y:530},{x:450,y:530},{x:450,y:370},{x:430,y:350},
+  {x:430,y:250},{x:1210,y:250},{x:1210,y:470},{x:1150,y:530},{x:1150,y:610},{x:1190,y:650},
 ];
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){

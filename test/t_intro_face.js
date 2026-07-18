@@ -7,7 +7,9 @@ while(g.intro && frames<6500){
   const p=g.player; if(!p) break;
   if(prev){
     const mdx=p.x-prev.x, mdy=p.y-prev.y, moved=Math.hypot(mdx,mdy);
-    if(moved>1.2){ // meaningfully walking
+    // real walking steps are only a few px/frame; a big jump is a warp (e.g. endIntro
+    // depositing the player at their desk), which is not "walking" and has no facing.
+    if(moved>1.2 && moved<40){ // meaningfully walking (not a teleport)
       checks++;
       const moveAng=Math.atan2(mdy,mdx), faceAng=p.face||0;
       let d=Math.abs(moveAng-faceAng); d=Math.min(d,2*Math.PI-d);
