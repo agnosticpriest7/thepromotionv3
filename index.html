@@ -458,7 +458,7 @@ const SPRITE_ROWS=[
 "..OJjJWTTWJjJO..","..NJJJWTTWJJJN..","...OPPPPPPPPO...","...OPPP..PPPO..."];
 /* ================= SPRITE ART ================= */
 const ART_PATH='Art/sprites/';
-const ART_FILES=['chars','cubicle_desk','manager_desk','conference_table','reception_desk','office_chair',
+const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','conference_table','reception_desk','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
   'elevator','stairs','fire_alarm','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
@@ -509,7 +509,13 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
    Same-origin on GitHub Pages, so getImageData never taints; if it ever does
    (e.g. file://), we fall back to the raw image — pink returns but nothing
    crashes. Permanent fix would be re-exporting those PNGs with real alpha. */
-const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'));
+/* Props whose PNGs ship with a solid magenta background instead of real alpha (Kyle's
+   newer art). Keyed the same way as the bat sheets. Safe because magenta's signature is
+   "green far below BOTH red and blue" — wood, grey metal, blue monitors and red/green
+   binders never match, so only the background is eaten. */
+const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
+  'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet']);
+const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
   try{
     const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
@@ -559,7 +565,7 @@ const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
-  cubicle_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
+  cubicle_desk:120, cubicle_desk_up:120, cubicle_desk_left:64, cubicle_desk_right:64, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:62, fridge:48, lockers:80, supply_shelf:76, whiteboard:82,
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
@@ -844,6 +850,8 @@ const CONTAINERS=[
   {x:820,y:340,w:20,h:100,label:'Supply shelf',kind:'cabinet'},
   {x:740,y:340,w:80,h:20,label:'Supply shelf',kind:'cabinet'},
   {x:1360,y:40,w:40,h:240,label:'Kitchen pantry',kind:'cabinet'},
+  {x:1170,y:50,w:44,h:54,label:'Fridge',kind:'fridge'},                 // kitchen fridge (new art)
+  {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
 ];
 const ITEMS={
   jello:{label:'a packet of Jell-O',part:true},
@@ -4909,11 +4917,21 @@ function fitDeskBoxes(){
   NPCS.forEach(n=>{n.goal=null;n.path=null;n.wp=0;unstickEnt(n);});
   unstickPlayer();
 }
+/* pick the desk sprite by which side the worker's seat is on, so desks face their worker
+   instead of all pointing the same way. Naming = the worker's approach side. */
+function deskArt(d){
+  if(d.mgrOffice)return 'manager_desk';
+  if(d.dept==='exec')return 'assistant_desk';        // CEO Assistant's wider desk
+  let s; try{ s=deskSeat(d); }catch(e){ return 'cubicle_desk'; }
+  const cx=d.x+d.w/2, cy=d.y+d.h/2, dx=s.x-cx, dy=s.y-cy;
+  if(Math.abs(dy)>=Math.abs(dx)) return dy>=0?'cubicle_desk':'cubicle_desk_up';   // seat below=down, above=up
+  return dx>=0?'cubicle_desk_right':'cubicle_desk_left';                          // seat right=right, left=left
+}
 function drawDesks(){
   fitDeskBoxes();
   for(const d of desks){
     const isMine=(d.owner==='you');
-    const art=d.mgrOffice?'manager_desk':'cubicle_desk';
+    const art=deskArt(d);
     const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
     if(!sprAt(art,cx,cyB,art)){
       ctx.fillStyle=isMine?'#c9b98a':'#c3b48c';ctx.fillRect(d.x,d.y,d.w,d.h);
