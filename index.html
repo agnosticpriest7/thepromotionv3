@@ -4798,18 +4798,69 @@ function drawBathroom(){
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
-function drawWalls(){for(const w of walls){
-  if(w.glass){   // see-through office wall (CEO + Senior Sales): translucent glass over the room
-    ctx.fillStyle='rgba(150,200,225,0.26)';ctx.fillRect(w.x,w.y,w.w,w.h);
-    ctx.fillStyle='rgba(232,246,255,0.55)';ctx.fillRect(w.x,w.y,w.w,Math.max(1,Math.min(2,w.h)));
-    ctx.fillStyle='rgba(120,160,185,0.45)';ctx.fillRect(w.x,w.y+w.h-1,w.w,1);
-    /* a stud every ~2 tiles so it still reads as a wall, not open air */
-    if(w.w>w.h){ for(let sx=w.x+U1(2);sx<w.x+w.w-2;sx+=U1(40)){ctx.fillStyle='rgba(90,120,140,0.5)';ctx.fillRect(sx,w.y,2,w.h);} }
-    else { for(let sy=w.y+U1(2);sy<w.y+w.h-2;sy+=U1(40)){ctx.fillStyle='rgba(90,120,140,0.5)';ctx.fillRect(w.x,sy,w.w,2);} }
-  } else {
-    ctx.fillStyle='#7d745f';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.fillStyle='#9a917a';ctx.fillRect(w.x,w.y,w.w,Math.min(2,w.h));ctx.fillStyle='#5c5647';ctx.fillRect(w.x,w.y+w.h-1,w.w,1);
+/* TE2-style walls: every rect gets a lighter top-CAP band (the top of the wall you see from
+   above) and a darker BASEBOARD band (the floor seam), so walls read as having height and
+   enclose the room instead of lying flat. Three surfaces, chosen per-rect by flag:
+   standard (default), bathroom (w.bath, tiled), glass (w.glass, translucent).
+   Render-only — walls[] is untouched collision/nav ground truth. */
+function drawWalls(){
+  /* ===== TUNABLES — dial these from the TV ============================== *
+   * Sizes come through U1() (=v*S/1.8) so they track the world scale.      */
+  const capH  = U1(6);        // top-cap band height (the wall's "top face")
+  const baseH = U1(4);        // baseboard / floor-seam band height
+  const capOverhang = 0;      // px the cap rises ABOVE the rect top. SHIP 0 (0 = no
+                              // placement side-effects); nudge up later to taste.
+  // standard painted-office wall
+  const STD  = {body:'#7d745f', cap:'#8f866d', capHi:'#a89e83', base:'#4f4a3c', side:'rgba(0,0,0,0.10)'};
+  // bathroom: cooler/lighter tile + faint grout grid on the body
+  const BATH = {body:'#8c9794', cap:'#aab4b0', capHi:'#c6cfca', base:'#5a6663',
+                grout:'rgba(255,255,255,0.13)', groutStep:U1(12)};
+  // glass: translucent pane brought into the same cap/baseboard kit
+  const GLASS= {body:'rgba(150,200,225,0.26)', rail:'rgba(232,246,255,0.55)',
+                railLo:'rgba(120,160,185,0.45)', stud:'rgba(90,120,140,0.5)', studStep:U1(40)};
+  /* ===================================================================== */
+
+  /* cap+baseboard must never exceed the rect — thin divider rects degrade gracefully */
+  const bands=(h)=>{ const hh=(h>0?h:0);
+    let c=Math.min(capH,  Math.floor(hh*0.5)); if(!(c>=0))c=0;
+    let b=Math.min(baseH, Math.max(0, hh-c)); if(!(b>=0))b=0;
+    return [c,b]; };
+  const thin=(v)=>Math.max(1,Math.min(2,v));
+  const R=(x,y,w,h)=>{ if(w>0&&h>0) ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
+
+  /* PASS 1 — bodies (glass panes, tile grout). Bodies first so overlaps just fill. */
+  for(const w of walls){
+    if(w.glass){ ctx.fillStyle=GLASS.body; R(w.x,w.y,w.w,w.h); continue; }
+    const pal = w.bath?BATH:STD;
+    ctx.fillStyle=pal.body; R(w.x,w.y,w.w,w.h);
+    if(w.h>w.w){ ctx.fillStyle=STD.side; R(w.x+w.w-thin(w.w),w.y,thin(w.w),w.h); }  // subtle right-face shade on uprights
+    if(w.bath){ ctx.fillStyle=pal.grout;                                            // tile grid
+      for(let gx=w.x+pal.groutStep; gx<w.x+w.w-1; gx+=pal.groutStep) R(gx,w.y,1,w.h);
+      for(let gy=w.y+pal.groutStep; gy<w.y+w.h-1; gy+=pal.groutStep) R(w.x,gy,w.w,1);
+    }
   }
-}}
+  /* PASS 2 — baseboards (bottom band), drawn over all bodies */
+  for(const w of walls){
+    const [,b]=bands(w.h); if(b<=0) continue;
+    ctx.fillStyle = w.glass?GLASS.railLo : (w.bath?BATH:STD).base;
+    R(w.x, w.y+w.h-b, w.w, b);
+  }
+  /* PASS 3 — top caps last, so junctions layer as wall-tops (no corner tiles needed) */
+  for(const w of walls){
+    const [c]=bands(w.h);
+    if(w.glass){
+      if(c>0){ ctx.fillStyle=GLASS.rail; R(w.x, w.y, w.w, c); }
+      /* a stud every ~2 tiles so it still reads as a wall, not open air (drawn full-span, last) */
+      if(w.w>w.h){ ctx.fillStyle=GLASS.stud; for(let sx=w.x+U1(2);sx<w.x+w.w-2;sx+=GLASS.studStep) R(sx,w.y,2,w.h); }
+      else       { ctx.fillStyle=GLASS.stud; for(let sy=w.y+U1(2);sy<w.y+w.h-2;sy+=GLASS.studStep) R(w.x,sy,w.w,2); }
+      continue;
+    }
+    if(c<=0) continue;
+    const pal=w.bath?BATH:STD;
+    ctx.fillStyle=pal.cap;   R(w.x, w.y-capOverhang, w.w, c+capOverhang);
+    ctx.fillStyle=pal.capHi; R(w.x, w.y-capOverhang, w.w, thin(c));          // bright lip on the very top edge
+  }
+}
 function drawChair(cx,cy){
   ctx.fillStyle='#241d16';ctx.fillRect(cx-6,cy-6,12,12);
   ctx.fillStyle='#4a4038';ctx.fillRect(cx-5,cy-5,10,10);
@@ -5096,6 +5147,17 @@ ROOMS.filter(r=>r.glass).forEach(r=>{ walls.forEach(w=>{
   const onH=(Math.abs(w.y-r.y)<12||Math.abs(w.y+w.h-(r.y+r.h))<12)&&inX;
   const onV=(Math.abs(w.x-r.x)<12||Math.abs(w.x+w.w-(r.x+r.w))<12)&&inY;
   if(onH||onV) w.glass=true;
+}); });
+/* Flag the wall rects bounding the two restroom zones so drawWalls() paints them as tiled
+   bathroom walls. Same edge-detection as the glass pass, same authored coords / pre-scaleWorld
+   timing. Glass wins: never override a wall already flagged glass. The two zones match the
+   tile_white restroom floors (main restroom + exec restroom). */
+[{x:380,y:600,w:280,h:160},{x:0,y:280,w:240,h:140}].forEach(r=>{ walls.forEach(w=>{
+  if(w.glass) return;                                   // glass wins over bathroom
+  const inX=w.x<r.x+r.w+6 && w.x+w.w>r.x-6, inY=w.y<r.y+r.h+6 && w.y+w.h>r.y-6;
+  const onH=(Math.abs(w.y-r.y)<12||Math.abs(w.y+w.h-(r.y+r.h))<12)&&inX;
+  const onV=(Math.abs(w.x-r.x)<12||Math.abs(w.x+w.w-(r.x+r.w))<12)&&inY;
+  if(onH||onV) w.bath=true;
 }); });
 function roomAt(x,y){
   for(const r of ROOMS) if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h) return r;
