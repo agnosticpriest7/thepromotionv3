@@ -389,6 +389,8 @@
           <div class="psub" id="musicStatus" style="margin:2px 0 12px;color:#7c7768;font-size:12px">status: not started</div>
           <button class="setbtn" id="setSound">🔊 Sound effects: ON</button>
           <div class="volrow"><span>SFX volume</span><button class="volbtn" id="sVolDn">−</button><b id="sVolTxt">80%</b><button class="volbtn" id="sVolUp">+</button></div>
+          <button class="setbtn" id="setPropMap">🔢 Prop map overlay: OFF</button>
+          <div class="phelp" style="margin-top:-4px">Numbers every prop (D=desks, C=shelves/cabinets, O=objects, T=tables) so you can call out which to swap. Also toggles with M / 0.</div>
           <button class="setbtn" id="restartBtn" style="background:#f7e7e4;border-color:#c0392b;color:#8f2a20;font-weight:700">⟲ RESTART GAME (day 1, from scratch)</button>
           <div class="phelp" id="restartHelp" style="margin-top:-4px">Wipes the current run. There is no save yet, so this is the same as a refresh.</div>
           <div class="phelp">Controller: in SETTINGS, use the stick or d-pad to move and <b>A</b> to press. Elsewhere in this menu — <b>X</b> toggles music, <b>Y</b> toggles sound, <b>d-pad left/right</b> adjusts music volume (on the Settings tab). LB/RB switch tabs. B closes.</div>
@@ -1398,6 +1400,7 @@ addEventListener('keydown',e=>{
     else if(e.key==='Escape')closeCraft();
     e.preventDefault();return;
   }
+  if(e.key==='m'||e.key==='M'||e.key==='0'){togglePropMap();return;}     // DEV: numbered prop overlay
   if(e.key==='q'||e.key==='Q'){invCycle();return;}                       // fan the pocket out
   if(invOpen&&(e.key==='e'||e.key==='E')&&!menuOpen&&!panelOpen){invUseSelected();return;}
   if(e.key==='e'||e.key==='E')tryInteract();
@@ -5568,13 +5571,36 @@ function render(){
     }
   }
 }
+/* DEV: numbered prop overlay so Kyle can point at a specific prop to swap. Toggle from
+   Settings ("Prop map overlay") or the M / 0 key. Chips are grouped + colour-coded:
+   D# desks (gold), C# containers (cyan), O# objects (orange), T# tables (green). The
+   numbering matches the legend in PROP-MAP.md and is stable (array order). */
+let propMap=false;
+function drawPropMap(){
+  const chip=(cx,cy,txt,bg)=>{
+    if(!isFinite(cx)||!isFinite(cy))return;
+    ctx.font='bold '+U1(13)+'px monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const tw=ctx.measureText(txt).width, w=Math.round(tw+U1(8)), h=U1(17);
+    const x=Math.round(cx-w/2), y=Math.round(cy-h/2);
+    ctx.fillStyle='rgba(0,0,0,0.62)'; ctx.fillRect(x-1,y-1,w+2,h+2);   // outline for legibility
+    ctx.fillStyle=bg;                 ctx.fillRect(x,y,w,h);
+    ctx.fillStyle='#12140f';          ctx.fillText(txt,Math.round(cx),Math.round(cy+1));
+  };
+  desks.forEach((d,i)=>chip(d.x+d.w/2, d.y+d.h/2, 'D'+(i+1), '#f0c040'));
+  CONTAINERS.forEach((c,i)=>chip(c.x+c.w/2, c.y+c.h/2, 'C'+(i+1), '#48d0da'));
+  objects.forEach((o,i)=>chip(o.x+o.w/2, o.y+o.h/2, 'O'+(i+1), '#ff8a5c'));
+  [[meetingTable,'T1'],[breakTable,'T2'],[breakTableB,'T3'],[kitchenTable,'T4']]
+    .forEach(([t,n])=>{ if(t)chip(t.x+t.w/2, t.y+t.h/2, n, '#66d078'); });
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
 function renderInner(){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,VW,VH);
   updateCamera();
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawSalesDoor();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawSalesDoor();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -7238,6 +7264,8 @@ document.getElementById('muteBtn').onclick=()=>toggleMute();
 document.getElementById('musicBtn').onclick=()=>toggleMusic();
 document.getElementById('setMusic').onclick=()=>{toggleMusic();updateSettingsUI();};
 document.getElementById('setSound').onclick=()=>{toggleMute();updateSettingsUI();};
+function togglePropMap(){propMap=!propMap;const b=document.getElementById('setPropMap');if(b)b.textContent='🔢 Prop map overlay: '+(propMap?'ON':'OFF');}
+document.getElementById('setPropMap').onclick=()=>{togglePropMap();};
 document.getElementById('startMusic').onclick=()=>forceStartMusic();
 document.getElementById('mVolDn').onclick=()=>adjMusicVol(-0.05);
 document.getElementById('mVolUp').onclick=()=>adjMusicVol(0.05);
