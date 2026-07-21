@@ -821,7 +821,7 @@ const objects=[
   {type:'alarm',x:1032,y:522,w:16,h:22,label:'Fire Alarm'},
   {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
   {type:'phones',x:1060,y:620,w:32,h:22,label:'Sales phones'},
-  {type:'supply',x:740,y:360,w:40,h:26,label:'Supplies'},
+  {type:'supply',x:708,y:402,w:40,h:26,label:'Supplies'},
   {type:'toilet',x:440,y:680,w:26,h:30,label:'Toilet (M)',rigged:false},
   {type:'toilet',x:580,y:680,w:26,h:30,label:'Toilet (W)',rigged:false},
 ];
@@ -831,7 +831,7 @@ const CONTAINERS=[
   {x:606,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
   {x:666,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
   {x:746,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
-  {x:746,y:409,w:28,h:22,label:'Supply bin',kind:'box'},
+  {x:760,y:406,w:28,h:22,label:'Supply bin',kind:'box'},
   {x:1166,y:9,w:28,h:22,label:'Kitchen bin',kind:'box'},
   {x:526,y:49,w:28,h:22,label:'HR bin',kind:'box'},
   {x:1246,y:489,w:28,h:22,label:'Senior sales bin',kind:'box'},
@@ -839,7 +839,7 @@ const CONTAINERS=[
   {x:1246,y:289,w:28,h:22,label:'Senior sales bin',kind:'box'},
   {x:1026,y:589,w:28,h:22,label:'Sales bin',kind:'box'},
   {x:1026,y:629,w:28,h:22,label:'Sales bin',kind:'box'},
-  {x:766,y:449,w:28,h:22,label:'Supply bin',kind:'box'},
+  {x:800,y:368,w:28,h:22,label:'Supply bin',kind:'box'},
   {x:766,y:309,w:28,h:22,label:'Break bin',kind:'box'},
   {x:1266,y:249,w:28,h:22,label:'Kitchen bin',kind:'box'},
   {x:560,y:0,w:20,h:120,label:'Accounting shelf',kind:'cabinet'},
@@ -966,7 +966,7 @@ function dropItemMenu(){
   items.push({label:'Cancel',act:()=>{}});
   renderMenu({title:'Your pockets',items});
 }
-const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:740,y:360,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:488,type:'water'},{x:1240,y:240,type:'coffee'},{x:700,y:600,type:'chat'}];
+const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:488,type:'water'},{x:1240,y:240,type:'coffee'},{x:700,y:600,type:'chat'}];
 
 const player={x:400,y:180,w:16,h:16,speed:1.7,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0};
 
