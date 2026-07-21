@@ -567,9 +567,9 @@ const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
-  cubicle_desk:120, cubicle_desk_up:120, cubicle_desk_left:64, cubicle_desk_right:64, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
+  cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
-  vending_machine:62, fridge:48, lockers:80, supply_shelf:76, whiteboard:82,
+  vending_machine:62, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
   break_table:190, kitchen_table:190, bush:44, grass:64,
@@ -772,8 +772,8 @@ const desks=[];
 /* Workstations REBUILT from the plan (test/gen_level.js). owner:null = empty desk.
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
-[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true},
+[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_right'},
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right'},
  {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales'},
  {x:900,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales'},
  {x:840,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales'},
@@ -789,8 +789,8 @@ const desks=[];
  {x:680,y:60,w:40,h:60,owner:'Nadia',tier:0,dept:'acct'},
  {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct'},
  {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec'},
- {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true}]
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,rigged:null,planted:null}));
+ {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'}]
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,art:d.art||null,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
@@ -4974,6 +4974,7 @@ function fitDeskBoxes(){
 /* pick the desk sprite by which side the worker's seat is on, so desks face their worker
    instead of all pointing the same way. Naming = the worker's approach side. */
 function deskArt(d){
+  if(d.art)return d.art;                              // explicit per-desk sprite override
   if(d.mgrOffice)return 'manager_desk';
   if(d.dept==='exec')return 'assistant_desk';        // CEO Assistant's wider desk
   let s; try{ s=deskSeat(d); }catch(e){ return 'cubicle_desk'; }
