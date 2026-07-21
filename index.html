@@ -775,8 +775,8 @@ const desks=[];
 [{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_left'},
  {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'},
  {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales'},
- {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales'},
- {x:900,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales'},
+ {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:900,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:1040,y:720,w:60,h:40,owner:'Chad',tier:1,dept:'sales'},
  {x:1140,y:720,w:60,h:40,owner:'Dana',tier:1,dept:'sales'},
  {x:1240,y:720,w:60,h:40,owner:'Ramesh',tier:1,dept:'sales'},
@@ -786,11 +786,11 @@ const desks=[];
  {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
  {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
  {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
- {x:680,y:60,w:40,h:60,owner:'Nadia',tier:0,dept:'acct'},
- {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct'},
- {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec'},
- {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'}]
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,art:d.art||null,rigged:null,planted:null}));
+ {x:680,y:60,w:40,h:60,owner:'Nadia',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
+ {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
+ {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec',seatSide:'up'},
+ {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right'}]
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
@@ -803,7 +803,7 @@ const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null}];
 const breakTable={x:880,y:340,w:40,h:120};
-const breakTableB={x:1020,y:340,w:40,h:120};   // second break table (level overhaul)
+const breakTableB={x:455,y:340,w:40,h:120};   // T3: a second table in the MEETING ROOM (was an unscaled floater)
 const breakChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                    {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 const kitchenTable={x:1250,y:130,w:100,h:50};
@@ -819,7 +819,7 @@ const objects=[
   {type:'coffee',x:1240,y:240,w:30,h:26,label:'Coffee',trapped:false},
   {type:'files',x:500,y:40,w:30,h:26,label:'HR Files',restricted:true},
   {type:'alarm',x:1032,y:522,w:16,h:22,label:'Fire Alarm'},
-  {type:'board',x:400,y:300,w:84,h:26,label:'Whiteboard'},
+  {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
   {type:'phones',x:1060,y:620,w:32,h:22,label:'Sales phones'},
   {type:'supply',x:740,y:360,w:40,h:26,label:'Supplies'},
   {type:'toilet',x:440,y:680,w:26,h:30,label:'Toilet (M)',rigged:false},
@@ -1136,7 +1136,9 @@ function assembleAtElevator(){
    others) — boxing the NPC in. Pick the first walkable side instead. */
 function deskSeat(d){
   const m=Math.round(26*S), cx=d.x+d.w/2, cy=d.y+d.h/2;
-  const cand=[{x:cx,y:d.y+d.h+m},{x:cx,y:d.y-m},{x:d.x+d.w+m,y:cy},{x:d.x-m,y:cy}];
+  const SIDE={down:{x:cx,y:d.y+d.h+m},up:{x:cx,y:d.y-m},right:{x:d.x+d.w+m,y:cy},left:{x:d.x-m,y:cy}};
+  let cand=[SIDE.down,SIDE.up,SIDE.right,SIDE.left];
+  if(d.seatSide&&SIDE[d.seatSide]) cand=[SIDE[d.seatSide]].concat(cand);   // per-desk standing-side override
   try{ for(const p of cand){ if(walkableAt(p.x,p.y)) return p; } }catch(e){}
   return cand[0];
 }
@@ -5560,8 +5562,12 @@ function drawContainers(){
     if(c.loot&&c.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(c.x+c.w-6,c.y-6,5,5);}
     labelBox(CONT_LABEL[c.kind]||'cabinet',cx,c.y-U1(14));
   }
-  /* CEO's executive desk (top-left glass office) */
+  /* CEO's executive office (top-left glass office): desk + furnishings */
   sprAt('manager_desk',Math.round(120*S),Math.round(120*S),'manager_desk');
+  sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
+  sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
+  sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
+  sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
   /* manager's office furnishings (Dale's office, top-centre) */
   sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
   sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
@@ -7238,7 +7244,7 @@ function scaleWorld(){
   WINDOWS.forEach(scaleBox);
   INTRO_ROUTE.forEach(scaleBox);
   breakChairs.filter(c=>c.couch).forEach(scaleBox);
-  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(kitchenTable);
+  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(breakTableB); scaleBox(kitchenTable);
   scaleBox(EXIT);
   scaleBox(MUSTER);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
