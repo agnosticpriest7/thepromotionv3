@@ -2390,19 +2390,22 @@ let intro=null;
 /* Beat fractions re-tuned to the new INTRO_ROUTE (POI fractions: HR~0.33, kitchen~0.74,
    bullpen~1.0). Order follows the new walk: annex gesture on the way out, HR mid-route,
    the three-paths spiel across the top, kitchen, then down to the bullpen. */
+/* Tour re-ordered to the new route (test/genintro2.js): elevator -> CEO -> HR -> Asst.
+   Manager (the opening) -> kitchen -> senior sales -> sales floor -> junior clump -> your
+   desk. POI fractions: CEO~0.22, HR~0.33, Asst-Mgr~0.58, kitchen~0.63, senior~0.74,
+   sales~0.80, junior~0.94, desk 1.0. */
 const INTRO_BEATS=[
-  {at:0.00,t:2.2,hold:true,say:"You must be the new intern. Up. Follow me — quick tour."},
-  {at:0.07,t:2.6,hold:true,say:"That corner — the Annex. Where they stick the new ones. That's your desk."},
-  {at:0.15,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.24,t:2.6,         say:"Two little jobs a shift. Clear them, nobody bothers you, and you climb. Slowly."},
-  {at:0.35,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.44,t:2.6,hold:true,say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.53,t:2.6,         say:"Do the work. Run a clean floor long enough and the board hands it to you."},
-  {at:0.61,t:2.6,         say:"Or get someone in power to owe you. Make yourself useful to the right person."},
-  {at:0.69,t:2.6,         say:"Or dig up something buried. But that road's a cliff. Your funeral."},
-  {at:0.76,t:2.6,hold:true,say:"Kitchen's up here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.92,t:2.4,hold:true,say:"And down there — the bullpen. It's cutthroat. Guard your stapler."},
-  {at:1.00,t:2.8,hold:true,say:"Right. That desk's yours. Two jobs. Go on — day's yours now."},
+  {at:0.00,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
+  {at:0.10,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.22,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
+  {at:0.33,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.45,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.58,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
+  {at:0.63,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.74,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
+  {at:0.80,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
+  {at:0.94,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
+  {at:1.00,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
    -> past HR -> the bullpen -> your desk. Verified against the real nav grid — the middle
@@ -2412,8 +2415,11 @@ const INTRO_BEATS=[
    loop from the intern desk up through the centre, past HR, across the top to the kitchen,
    then down to the sales bullpen. All 12 points verified standable. */
 const INTRO_ROUTE=[
-  {x:730,y:650},{x:730,y:590},{x:670,y:530},{x:450,y:530},{x:450,y:370},{x:430,y:350},
-  {x:430,y:250},{x:1210,y:250},{x:1210,y:470},{x:1150,y:530},{x:1150,y:610},{x:1190,y:650},
+  {x:150,y:710},{x:150,y:650},{x:210,y:590},{x:210,y:510},{x:270,y:450},{x:270,y:250},
+  {x:230,y:210},{x:490,y:210},{x:530,y:250},{x:750,y:250},{x:770,y:230},{x:1070,y:230},
+  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1150,y:550},{x:1150,y:610},{x:1130,y:590},
+  {x:1130,y:550},{x:990,y:550},{x:990,y:570},{x:970,y:570},{x:930,y:610},{x:890,y:610},
+  {x:870,y:630},{x:730,y:630},
 ];
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){
@@ -5374,6 +5380,8 @@ const LIGHT_BANKS=[
   {x:312, y:372, w:320, h:376, on:false, t:0, flick:0},   // S: reception
   {x:632, y:372, w:300, h:376, on:false, t:0, flick:0},   // SE: restrooms + manager
   {x:932, y:372, w:296, h:376, on:false, t:0, flick:0},   // SE-E: annex
+  {x:1228,y:12,  w:172, h:360, on:false, t:0, flick:0},   // NE-far: kitchen-east + senior-sales top (world widened to 1400)
+  {x:1228,y:372, w:172, h:376, on:false, t:0, flick:0},   // SE-far: senior sales + east sales floor
 ];
 let lightsUp=false, lightSeq=-1, lightSeqT=0, deadBank=1, lightsDoneToday=false;   // deadBank = the panel that never got fixed
 /* window bands: the ONLY way to tell what time it is */
@@ -5422,7 +5430,7 @@ function tickLights(dt){
   if(lightSeq>=0){
     lightSeqT-=dt;
     if(lightSeqT<=0){
-      const order=lightsUp?[0,4,1,5,2,6,3,7]:[0,4,1,5,2,6,3,7];
+      const order=lightsUp?[0,4,1,5,2,6,3,7,8,9]:[0,4,1,5,2,6,3,7,8,9];
       if(lightSeq<order.length){
         const b=LIGHT_BANKS[order[lightSeq]];
         b.on=lightsUp;
