@@ -772,8 +772,8 @@ const desks=[];
 /* Workstations REBUILT from the plan (test/gen_level.js). owner:null = empty desk.
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
-[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_right'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right'},
+[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_left'},
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'},
  {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales'},
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales'},
  {x:900,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales'},
@@ -4797,13 +4797,13 @@ function drawFloor(){
 
 function drawBathroom(){
   const U=(v)=>Math.round(v*S);
-  /* sinks along the top of each side */
-  [[622,592],[652,592],[746,592],[776,592]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
-  /* one urinal in the men's — the TOILETS are objects (drawObjects), not decor.
-     drawing them here as well is what gave us three toilets per stall. */
-  sprAt('urinal',U(672),U(722),'urinal');
+  /* Restroom REBUILT for the overhauled floor: the room is authored (380,600,280,160).
+     Fixtures were still at old coords and spilled east into the sales bullpen. Sinks line
+     the north wall (2 per side), one urinal in the men's. Toilets (M/W) are objects. */
+  [[410,632],[455,632],[560,632],[605,632]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
+  sprAt('urinal',U(400),U(706),'urinal');   // men's, against the left wall
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
-  ctx.fillText('M',U(650),U(650));ctx.fillText('W',U(756),U(650));ctx.textAlign='left';
+  ctx.fillText('M',U(445),U(662));ctx.fillText('W',U(590),U(662));ctx.textAlign='left';
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
