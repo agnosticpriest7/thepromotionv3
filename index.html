@@ -4809,67 +4809,88 @@ function drawBathroom(){
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
-/* TE2-style walls: every rect gets a lighter top-CAP band (the top of the wall you see from
-   above) and a darker BASEBOARD band (the floor seam), so walls read as having height and
-   enclose the room instead of lying flat. Three surfaces, chosen per-rect by flag:
-   standard (default), bathroom (w.bath, tiled), glass (w.glass, translucent).
-   Render-only — walls[] is untouched collision/nav ground truth. */
+/* TE2-style walls with real visual THICKNESS, rendered independently of the thin collision
+   rect. Each walls[] rect is treated as the wall's BASE LINE (floor seam / footprint); the
+   drawn wall is intentionally chunkier than the rect and spills beyond its bounds.
+   - Horizontal rect (w>=h): body rises UP-SCREEN (toward smaller y) by WALL_T from the base
+     line. Camera-facing front edge stays at the collision line; the mass extends "back".
+     Lit top cap along the far/top edge, shaded front face, dark floor-seam at the base.
+   - Vertical rect (h>w): the ribbon is the shaded front face (room-facing long side); a lit
+     top surface overhangs up-left by WALL_TV; cap lip along the top edge; seam on the shadow side.
+   Three surfaces by flag: standard (default), bathroom (w.bath, tiled + grout), glass
+   (w.glass, translucent + studs). Glass wins if both.
+   Render-only — walls[] / collision / nav grid are untouched. */
 function drawWalls(){
-  /* ===== TUNABLES — dial these from the TV ============================== *
-   * Sizes come through U1() (=v*S/1.8) so they track the world scale.      */
-  const capH  = U1(6);        // top-cap band height (the wall's "top face")
-  const baseH = U1(4);        // baseboard / floor-seam band height
-  const capOverhang = 0;      // px the cap rises ABOVE the rect top. SHIP 0 (0 = no
-                              // placement side-effects); nudge up later to taste.
-  // standard painted-office wall
-  const STD  = {body:'#7d745f', cap:'#8f866d', capHi:'#a89e83', base:'#4f4a3c', side:'rgba(0,0,0,0.10)'};
-  // bathroom: cooler/lighter tile + faint grout grid on the body
-  const BATH = {body:'#8c9794', cap:'#aab4b0', capHi:'#c6cfca', base:'#5a6663',
-                grout:'rgba(255,255,255,0.13)', groutStep:U1(12)};
-  // glass: translucent pane brought into the same cap/baseboard kit
-  const GLASS= {body:'rgba(150,200,225,0.26)', rail:'rgba(232,246,255,0.55)',
-                railLo:'rgba(120,160,185,0.45)', stud:'rgba(90,120,140,0.5)', studStep:U1(40)};
-  /* ===================================================================== */
+  /* ===== TUNABLES — dial live on the TV. Sizes go through U1() (=v*S/1.8) to track scale. */
+  const WALL_T  = U1(26);   // horizontal wall: how far the body rises up-screen from the seam
+  const WALL_TV = U1(12);   // vertical wall: how far the lit top surface overhangs up-left of the rect
+  const capH    = U1(8);    // lit top-cap band thickness (horizontal)
+  const seamH   = U1(3);    // dark floor-seam shadow at the base
+  // front = camera-facing face (shaded); cap = lit top surface; capHi = bright lip; seam = floor shadow
+  const STD  = {front:'#6f6752', cap:'#9c9276', capHi:'#bcb28f', seam:'#3d382c', edge:'rgba(0,0,0,0.16)'};
+  const BATH = {front:'#828e8a', cap:'#b7c1bc', capHi:'#d6ded9', seam:'#4a5552', edge:'rgba(0,0,0,0.14)',
+                grout:'rgba(255,255,255,0.11)', groutStep:U1(13)};
+  const GLASS= {body:'rgba(150,200,225,0.24)', cap:'rgba(232,246,255,0.55)', seam:'rgba(120,160,185,0.5)',
+                stud:'rgba(90,120,140,0.5)', studStep:U1(40)};
+  /* ===================================================================================== */
 
-  /* cap+baseboard must never exceed the rect — thin divider rects degrade gracefully */
-  const bands=(h)=>{ const hh=(h>0?h:0);
-    let c=Math.min(capH,  Math.floor(hh*0.5)); if(!(c>=0))c=0;
-    let b=Math.min(baseH, Math.max(0, hh-c)); if(!(b>=0))b=0;
-    return [c,b]; };
-  const thin=(v)=>Math.max(1,Math.min(2,v));
-  const R=(x,y,w,h)=>{ if(w>0&&h>0) ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
+  const F=v=>isFinite(v);
+  const R=(x,y,w,h)=>{ if(w>0&&h>0&&F(x)&&F(y)&&F(w)&&F(h)) ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h)); };
+  const thin=v=>Math.max(1,Math.min(2,v));
+  /* front-face rect of a wall (the tall camera-facing band). Base line = bottom of the rect. */
+  function face(w){
+    if(w.w>=w.h){ const t=Math.max(w.h,Math.min(WALL_T,4000)), frontY=w.y+w.h;
+      return {horiz:true, x:w.x, y:frontY-t, w:w.w, h:t, frontY}; }
+    return {horiz:false, x:w.x, y:w.y, w:w.w, h:w.h, frontY:w.y+w.h};   // vertical: the ribbon itself
+  }
+  /* draw furthest-back walls first (painter's) so nearer walls occlude cleanly */
+  const order=walls.map((w,i)=>({w,i,k:w.y+w.h})).sort((a,b)=>a.k-b.k||a.i-b.i);
 
-  /* PASS 1 — bodies (glass panes, tile grout). Bodies first so overlaps just fill. */
-  for(const w of walls){
-    if(w.glass){ ctx.fillStyle=GLASS.body; R(w.x,w.y,w.w,w.h); continue; }
-    const pal = w.bath?BATH:STD;
-    ctx.fillStyle=pal.body; R(w.x,w.y,w.w,w.h);
-    if(w.h>w.w){ ctx.fillStyle=STD.side; R(w.x+w.w-thin(w.w),w.y,thin(w.w),w.h); }  // subtle right-face shade on uprights
-    if(w.bath){ ctx.fillStyle=pal.grout;                                            // tile grid
-      for(let gx=w.x+pal.groutStep; gx<w.x+w.w-1; gx+=pal.groutStep) R(gx,w.y,1,w.h);
-      for(let gy=w.y+pal.groutStep; gy<w.y+w.h-1; gy+=pal.groutStep) R(w.x,gy,w.w,1);
-    }
-  }
-  /* PASS 2 — baseboards (bottom band), drawn over all bodies */
-  for(const w of walls){
-    const [,b]=bands(w.h); if(b<=0) continue;
-    ctx.fillStyle = w.glass?GLASS.railLo : (w.bath?BATH:STD).base;
-    R(w.x, w.y+w.h-b, w.w, b);
-  }
-  /* PASS 3 — top caps last, so junctions layer as wall-tops (no corner tiles needed) */
-  for(const w of walls){
-    const [c]=bands(w.h);
+  /* PASS 1 — bodies / front faces (+ glass panes, grout, seams) */
+  for(const {w} of order){
+    const g=face(w);
     if(w.glass){
-      if(c>0){ ctx.fillStyle=GLASS.rail; R(w.x, w.y, w.w, c); }
-      /* a stud every ~2 tiles so it still reads as a wall, not open air (drawn full-span, last) */
-      if(w.w>w.h){ ctx.fillStyle=GLASS.stud; for(let sx=w.x+U1(2);sx<w.x+w.w-2;sx+=GLASS.studStep) R(sx,w.y,2,w.h); }
-      else       { ctx.fillStyle=GLASS.stud; for(let sy=w.y+U1(2);sy<w.y+w.h-2;sy+=GLASS.studStep) R(w.x,sy,w.w,2); }
+      if(g.horiz){ ctx.fillStyle=GLASS.body; R(g.x,g.y,g.w,g.h); }
+      else       { ctx.fillStyle=GLASS.body; R(g.x-WALL_TV,g.y,g.w+WALL_TV,g.h); }
+      ctx.fillStyle=GLASS.seam; R(g.x, g.frontY-seamH, g.w, seamH);
       continue;
     }
-    if(c<=0) continue;
-    const pal=w.bath?BATH:STD;
-    ctx.fillStyle=pal.cap;   R(w.x, w.y-capOverhang, w.w, c+capOverhang);
-    ctx.fillStyle=pal.capHi; R(w.x, w.y-capOverhang, w.w, thin(c));          // bright lip on the very top edge
+    const P=w.bath?BATH:STD;
+    ctx.fillStyle=P.front; R(g.x,g.y,g.w,g.h);                       // shaded front face
+    if(w.bath){ ctx.fillStyle=P.grout;                              // tile grout on the face
+      for(let gx=g.x+P.groutStep; gx<g.x+g.w-1; gx+=P.groutStep) R(gx,g.y,1,g.h);
+      for(let gy=g.y+P.groutStep; gy<g.y+g.h-1; gy+=P.groutStep) R(g.x,gy,g.w,1);
+    }
+    if(g.horiz){
+      ctx.fillStyle=P.edge; R(g.x+g.w-thin(g.w),g.y,thin(g.w),g.h);  // right-edge depth
+      ctx.fillStyle=P.seam; R(g.x, g.frontY-seamH, g.w, seamH);      // floor-seam shadow
+    } else {
+      ctx.fillStyle=P.edge; R(g.x+g.w-thin(g.w),g.y,thin(g.w),g.h);  // shadow on the room side (east)
+      ctx.fillStyle=P.seam; R(g.x, g.frontY-seamH, g.w, seamH);      // seam at the base (south end)
+    }
+  }
+  /* PASS 2 — lit top caps / top surfaces, drawn last so junctions read as wall-tops */
+  for(const {w} of order){
+    const g=face(w);
+    if(w.glass){
+      const c=Math.min(capH,g.h);
+      if(g.horiz){ ctx.fillStyle=GLASS.cap; R(g.x,g.y,g.w,c);
+        ctx.fillStyle=GLASS.stud; for(let sx=g.x+U1(2);sx<g.x+g.w-2;sx+=GLASS.studStep) R(sx,g.y,2,g.h); }
+      else { ctx.fillStyle=GLASS.cap; R(g.x-WALL_TV,g.y,WALL_TV,g.h);
+        ctx.fillStyle=GLASS.stud; for(let sy=g.y+U1(2);sy<g.y+g.h-2;sy+=GLASS.studStep) R(g.x,sy,g.w,2); }
+      continue;
+    }
+    const P=w.bath?BATH:STD;
+    if(g.horiz){
+      const c=Math.min(capH,g.h);
+      ctx.fillStyle=P.cap;   R(g.x,g.y,g.w,c);          // lit top cap band (far edge)
+      ctx.fillStyle=P.capHi; R(g.x,g.y,g.w,thin(c));    // bright lip on the very top
+    } else {
+      /* vertical: lit top surface overhangs up-left of the ribbon */
+      ctx.fillStyle=P.cap;   R(g.x-WALL_TV, g.y, WALL_TV, g.h);
+      ctx.fillStyle=P.capHi; R(g.x-WALL_TV, g.y, thin(WALL_TV), g.h);   // bright far edge
+      ctx.fillStyle=P.capHi; R(g.x-WALL_TV, g.y, WALL_TV+g.w, thin(capH)); // bright lip along the top edge
+    }
   }
 }
 function drawChair(cx,cy){
