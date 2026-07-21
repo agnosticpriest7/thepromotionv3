@@ -185,6 +185,8 @@ function drawMap(ctx, cell) {
 const WALL_TOL    = 6;    // ignore sprite/wall overlaps shallower than this
 const OVERLAP_TOL = 8;    // ignore prop/prop overlaps shallower than this (adjacent props touch)
 const FLOAT_TOL   = 26;   // WARN a wall-prop floating further than this from its wall
+const FLUSH_TOL   = 26;   // a prop within this of ANY wall (glass counts) reads as "against a wall".
+                          // ~sprite inset: a flush appliance's centred sprite sits up to ~21u off the wall rect.
 const NEAR_WALL   = 150;  // only judge flush/float when a wall is within this of the prop
 const DOOR_MIN = 30, DOOR_MAX = 60, DOOR_BAND = 22;  // door-gap detection
 
@@ -256,25 +258,26 @@ function lint(ctx) {
       }
     }
 
-    // 3) location: out-of-bounds / embedded-in-wall = FAIL; not-in-a-named-room (corridor?) = WARN
+    // nearest wall INCLUDING glass — a prop flush against a glass office wall is still "placed"
+    let nearWall = null;
+    for (const wl of walls) { const g = rectGap(fp, wl); if (!nearWall || g < nearWall.g) nearWall = { wl, g }; }
+    const flush = !!(nearWall && nearWall.g <= FLUSH_TOL);
+    const inRoom = !!pointInRoom(cc.x, cc.y, rooms);
+
+    // 3) location: out-of-bounds / embedded-in-wall = FAIL; adrift (not in a room AND not against
+    //    a wall) = WARN. Props flush to a wall in a corridor read as placed, so they don't flag.
     const outOfBounds = cc.x < 0 || cc.x > WORLD_W || cc.y < 0 || cc.y > WORLD_H;
     let inWall = false;
     for (const wl of walls) { if (wl.glass) continue;
       if (cc.x > wl.left && cc.x < wl.right && cc.y > wl.top && cc.y < wl.bottom) { inWall = true; break; } }
     if (outOfBounds)   fails.push(`FAIL out-of-bounds     ${tag}  collision centre outside the 1400x760 world`);
     else if (inWall)   fails.push(`FAIL embedded-in-wall  ${tag}  collision centre sits inside a wall rect`);
-    else if (!pointInRoom(cc.x, cc.y, rooms))
-      warns.push(`WARN not-in-room       ${p.id} ${p.label} @cc(${cc.x},${cc.y})  no named room (corridor/edge — confirm intended)`);
+    else if (!inRoom && !flush)
+      warns.push(`WARN adrift            ${p.id} ${p.label} @cc(${cc.x},${cc.y})  not in a room and ${nearWall?nearWall.g+'u from':'far from any'} nearest wall (corridor float — confirm intended)`);
 
-    // 4) flush vs float (WARN) — only for wall-hugging props (containers)
-    if (p.arr === 'containers') {
-      let near = null;
-      for (const wl of walls) { if (wl.glass) continue;
-        const g = rectGap(fp, wl);
-        if (!near || g < near.g) near = { wl, g }; }
-      if (near && near.g > FLOAT_TOL && near.g <= NEAR_WALL)
-        warns.push(`WARN floating          ${p.id} ${p.label}  gap ${near.g}u to nearest wall#${near.wl.i} (flush≈0)`);
-    }
+    // 4) floating (WARN) — an IN-ROOM container that should hug a wall but drifted off it (glass counts)
+    if (p.arr === 'containers' && inRoom && !flush && nearWall && nearWall.g <= NEAR_WALL)
+      warns.push(`WARN floating          ${p.id} ${p.label}  gap ${nearWall.g}u to nearest wall#${nearWall.wl.i} (flush≈0)`);
 
     // 5) blocks a doorway (WARN)
     for (const d of doors) {
