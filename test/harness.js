@@ -521,7 +521,9 @@ const EPILOGUE = `
       ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]), meetingTable:pick('meetingTable',null),
       breakTable:pick('breakTable',null), kitchenTable:pick('kitchenTable',null),
       EXIT:pick('EXIT',null), MUSTER:pick('MUSTER',null), HR_OFFICE:pick('HR_OFFICE',null),
-      SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]) }; });
+      SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]),
+      breakTableB:pick('breakTableB',null),
+      ART_W:pick('ART_W',{}), OBJ_ART:pick('OBJ_ART',{}), CONT_ART:pick('CONT_ART',{}) }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });
@@ -534,6 +536,7 @@ const EPILOGUE = `
   def(F,'activeNPCs',function(){ return (typeof activeNPCs!=='undefined')?activeNPCs:null; });
   def(F,'branchHealth',function(){ return (typeof branchHealth!=='undefined')?branchHealth:null; });
   def(F,'tryPromote',function(){ return (typeof tryPromote!=='undefined')?tryPromote:null; });
+  def(F,'deskArt',   function(){ return (typeof deskArt!=='undefined')?deskArt:null; });
   G.fn = F;
   globalThis.__g = G;
 })();

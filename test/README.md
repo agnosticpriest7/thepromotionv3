@@ -16,6 +16,38 @@ node test/t_menu_load.js          # save round-trip (build → save → load →
 
 Both exit `0` on GREEN, `1` on RED — usable as a CI/pre-push gate.
 
+```bash
+node test/placement.js            # ASCII floor map + sprite-aware placement linter
+```
+
+### Placement check (`placement.js`)
+
+Props are authored as `x,y,w,h` *collision* rects, but sprites draw **larger** than the box
+and offset from it (`sprAt` centres on `cx`, bottoms at `cyBottom`, rises up-screen), so
+placement edits land blind. This makes placement visible + checkable in text — run it after
+any edit that adds/moves a prop, desk, container, or wall, or changes `ART_W`/sprite art/room
+layout. Exits `0` on 0 FAIL, `1` otherwise. All coords printed in **authored** space (pre-`S`).
+
+**Reading the map:** a top-down character grid of the authored 1400×760 world at 20u/cell,
+y down the left, x-hundreds on the ruler. `#` = wall, `~` = glass wall, `.` = room floor,
+blank = exterior. Every prop stamps a **stable letter at its true DRAWN footprint** (not its
+collision box — that's the whole point): `D` desk, `P/W/C/U/F/A/B/H/T` printer/water/coffee/
+supply/files/alarm/board/phones/toilet, `c/x/L/G` cabinet/bin-shelf/lockers/fridge. Prop
+letters **overlay** walls, so a cabinet whose sprite pokes into a `#` shows its letter sitting
+in the wall line — that's a placement error you can *see*. The `ROOMS` legend lists each room's
+authored rect.
+
+**The five linter checks** (FAIL = fix like a soak failure; WARN = confirm intended):
+1. **sprite-thru-wall** (FAIL) — footprint pokes through the far face of an *interior* wall.
+2. **sprite-overlap** (FAIL) — footprint overlaps another prop's footprint past tolerance.
+3. **out-of-bounds / embedded-in-wall** (FAIL) / **not-in-room** (WARN) — by collision centre.
+4. **floating** (WARN) — a wall-hugging container's gap to its nearest wall (flush ≈ 0).
+5. **blocks-doorway** (WARN) — footprint covers a 44u door gap.
+
+Tolerances are tunable constants at the top of `lint()`. It reads the game's exported globals
+(the harness epilogue now also exposes `ART_W`/`OBJ_ART`/`CONT_ART`/`deskArt`); intrinsic sprite
+dimensions come straight from the `Art/sprites/*.png` IHDR since the `Image` stub is 64×64.
+
 **Session-start ritual (HANDOFF-2):** run `t_regress.js` before editing to confirm
 the build is clean; after any change, re-run `t_regress.js` + `t_menu_load.js`.
 

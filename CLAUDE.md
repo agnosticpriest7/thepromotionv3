@@ -10,13 +10,13 @@ The one habit that matters: **run it, don't read it.** Almost every real bug sho
 One change per branch → soak + save round-trip → placement check → review → **only then** merge to `main`.
 ```bash
 node test/t_regress.js       # 150k-frame baseline soak (~5 in-game days); default frame count is 150000
+node test/placement.js       # ASCII floor map + sprite-aware placement linter (0 FAIL to pass)
 node test/t_menu_load.js     # save round-trip (build → save → load → keep ticking)
 ```
-Both exit `0` GREEN / `1` RED. Green soak = **not broken**; clean placement = **not overlapping**; **neither means "looks right on the TV."** That verdict is Kyle's — never merge on green alone if the change is visual.
+All exit `0` GREEN / `1` RED. Green soak = **not broken**; clean placement = **not overlapping**; **neither means "looks right on the TV."** That verdict is Kyle's — never merge on green alone if the change is visual.
 
 ### 2. Placement gate
-After any edit that adds/moves a **prop, desk, container, or wall**, or changes **`ART_W`**, sprite art, or **room layout**, the placement check must pass (0 FAIL) before the change is done.
-> **TODO — no committed placement linter yet.** The soak's *seat/desk/rank agreement* check is the only automated placement guard in the harness today. Until a real ASCII-map + overlap linter lands in `test/`, verify placement with an ad-hoc script (ASCII flood-fill from MUSTER + per-desk `deskSeat` walkable/reachable check) **and** an eyeball on the deployed build. Add the linter to the harness when able, then wire its exact command in here.
+After any edit that adds/moves a **prop, desk, container, or wall**, or changes **`ART_W`**, sprite art, or **room layout**, run `node test/placement.js` and clear it to **0 FAIL** before the change is done. It stamps each prop's *true drawn footprint* (not its collision box) on an ASCII map and lints for sprite-through-wall, prop overlaps, out-of-bounds/embedded, floating, and blocked doorways. WARNs are "confirm intended," FAILs are fix-first. (See `test/README.md` for how to read the map.)
 
 ### 3. Testing hygiene
 The harness recompiles `index.html`'s `<script>` live on every run (that *is* the rebuild + `node --check`) — just re-run it after every change. Keep the raw script's **`const`/`let` intact — never `var`-ify to test**; that hides duplicate-declaration errors that are fatal in the browser. The canvas stub **throws on non-finite coordinates**, so keep all draw math finite.
