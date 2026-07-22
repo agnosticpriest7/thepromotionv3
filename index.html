@@ -805,7 +805,7 @@ const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null}];
 const breakTable={x:880,y:340,w:40,h:120};
-const breakTableB={x:455,y:340,w:40,h:120};   // T3: a second table in the MEETING ROOM (was an unscaled floater)
+const breakTableB={x:540,y:250,w:40,h:120};   // T3: a second table in the MEETING ROOM, stacked directly above the main table
 const breakChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                    {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 const kitchenTable={x:1250,y:130,w:100,h:50};
@@ -831,10 +831,11 @@ const objects=[
   {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
   {type:'alarm',x:1250,y:15,w:16,h:22,label:'Fire Alarm'},       // kitchen
   {type:'alarm',x:410,y:15,w:16,h:22,label:'Fire Alarm'},        // west wing (HR)
-  {type:'water',x:1365,y:640,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor
+  {type:'water',x:1088,y:586,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor — by the north door
   {type:'water',x:30,y:540,w:24,h:30,label:'Water cooler',trapped:false},     // reception waiting area
   {type:'printer',x:430,y:140,w:34,h:26,label:'Printer',jammed:false},        // west-wing shared printer (HR)
-  {type:'toilet',x:60,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom
+  {type:'toilet',x:60,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom — left side
+  {type:'toilet',x:180,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},   // exec restroom — right side
 ];
 /* Bins (contraband/loot) + shelves REBUILT from the plan (test/gen_level.js). */
 const CONTAINERS=[
@@ -4819,7 +4820,7 @@ function drawBathroom(){
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
   ctx.fillText('M',U(445),U(662));ctx.fillText('W',U(590),U(662));ctx.textAlign='left';
   /* EXEC restroom (0,280,240,140): sinks on the north wall (the toilet is an object). */
-  [[150,314],[195,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
+  [[45,314],[90,314],[150,314],[195,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // two sinks per side
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
@@ -5161,8 +5162,7 @@ function drawLabels(){
   } else {
     ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
   }
-  // reception waiting chairs (below the desk)
-  [[40,600],[80,600],[40,636],[80,636]].forEach(c=>{ctx.fillStyle='#3a3f45';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(9));ctx.fillStyle='#565c62';ctx.fillRect(U(c[0]),U(c[1]),U(9),U(2));});
+  // reception waiting room — real couch + chairs are drawn in drawDecor now
   // kitchen vending (NE kitchen, against the east wall)
   ctx.fillStyle='#241d16';ctx.fillRect(U(1362),U(60),U(26),U(52));ctx.fillStyle='#8a2f2a';ctx.fillRect(U(1364),U(62),U(22),U(48));ctx.fillStyle='#20242a';ctx.fillRect(U(1367),U(66),U(16),U(20));
   ctx.textAlign='left';
@@ -5575,17 +5575,16 @@ function drawDecor(){
   // company sign above the reception desk (SW reception)
   ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(498),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(500),U(132),U(10));
   ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(112),U(508));ctx.textAlign='left';
-  // rugs: reception + break room
-  ctx.fillStyle='rgba(59,110,165,.16)';ctx.fillRect(U(24),U(590),U(170),U(80));ctx.strokeStyle='rgba(59,110,165,.3)';ctx.strokeRect(U(24),U(590),U(170),U(80));
+  // rug: break room only (the blue reception rug was removed)
   ctx.fillStyle='rgba(140,90,50,.14)';ctx.fillRect(U(858),U(300),U(224),U(160));ctx.strokeStyle='rgba(140,90,50,.25)';ctx.strokeRect(U(858),U(300),U(224),U(160));
   /* the whiteboard is an OBJECT (drawObjects) — drawing it here too gave us two of them */
-  // break room TV (north wall of the break room)
-  ctx.fillStyle='#241d16';ctx.fillRect(U(930),U(292),U(44),U(26));ctx.fillStyle='#20242a';ctx.fillRect(U(932),U(294),U(40),U(22));ctx.fillStyle='#2f5d78';ctx.fillRect(U(934),U(296),U(36),U(16));ctx.fillStyle='#6fb7d0';ctx.fillRect(U(934),U(296),U(36),U(4));
-  // wall clock near the elevator
-  {const cx=MUSTER.x, cy=MUSTER.y-U1(60);
-   ctx.fillStyle='#241d16';ctx.beginPath();ctx.arc(cx,cy,U1(9),0,Math.PI*2);ctx.fill();
-   ctx.fillStyle='#f4f4f0';ctx.beginPath();ctx.arc(cx,cy,U1(7),0,Math.PI*2);ctx.fill();
-   ctx.strokeStyle='#241d16';ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx,cy-U1(5));ctx.stroke();ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+U1(4),cy+U1(1));ctx.stroke();}
+  // reception waiting room: a couch + two chairs (the old painted-square fallback chairs were removed)
+  sprAt('couch',U(66),U(662),'couch');
+  sprAt('office_chair',U(140),U(650),'office_chair');
+  sprAt('office_chair',U(175),U(650),'office_chair');
+  // HR office desk, centred in the room (decor)
+  sprAt('cubicle_desk',U(480),U(120),'cubicle_desk');
+  sprAt('office_chair',U(480),U(146),'office_chair');
   // scattered papers + coffee stains
   ctx.fillStyle='rgba(255,255,255,.55)';[[340,352],[610,240],[930,320],[520,520],[770,700]].forEach(p=>ctx.fillRect(U(p[0]),U(p[1]),U(7),U(5)));
   ctx.fillStyle='rgba(110,70,40,.16)';[[480,300],[660,520],[240,540]].forEach(p=>{ctx.beginPath();ctx.arc(U(p[0]),U(p[1]),U(6),0,Math.PI*2);ctx.fill();});
@@ -5658,7 +5657,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawSalesDoor();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -5670,8 +5669,8 @@ function drawElevator(){
   sprAt('elevator',e.x,e.y+U1(10),'elevator');
   ctx.fillStyle='rgba(42,39,33,.7)';ctx.font='bold '+U1(11)+'px monospace';ctx.textAlign='center';
   ctx.fillText('ELEVATOR',e.x,e.y+U1(24));
-  sprAt('stairs',e.x,e.y+U1(150),'stairs');           // stacked below the lifts, not on top of them
-  ctx.fillText('STAIRS',e.x,e.y+U1(162));
+  sprAt('stairs',e.x+U1(158),e.y+U1(10),'stairs');    // beside the lifts, in the lobby (not out on the grass)
+  ctx.fillText('STAIRS',e.x+U1(158),e.y+U1(24));
   ctx.textAlign='left';
 }
 
