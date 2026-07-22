@@ -1131,14 +1131,26 @@ function scheduleDrill(){drillPending=Math.random()<0.18;drillMin=rand(9*60,15*6
 function assembleAtElevator(){
   let i=0;
   const gx=Math.round(15*S), gy=Math.round(15*S);
+  /* Staggered morning arrival — the mirror image of the staggered clock-out (goHome). Held
+     off-screen (gone=true, so every "is present" filter already skips them) until arriveAt,
+     then they step out of the lift and walk to their desk. Day 1 keeps everyone present so
+     Dale's orientation tour isn't touring empty desks. The manager always opens the floor. */
+  const stagger=(day>1);
   activeNPCs().forEach(n=>{
     if(n.boss)return;
     n.wentHome=false;n.gone=false;n.leaving=false;n.leaveAt=undefined;
     n.hrSettled=false;n.hrDeskT=rand(13,17);n.lastBeat=-1;n.dwell=0;
-    n.x=clamp(MUSTER.x+((i%5)-2)*gx,18,W-34);
-    n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,H-34);
     n.goal=null;n.path=null;n.errand=null;n.seat=null;n.mission=null;n.wp=0;n.repathT=0;n.stuckT=0;
-    unstickEnt(n);
+    if(stagger&&!n.mgr){
+      n.arriveAt=DAY_START+((n.id*7)%18);   // 8:00–8:17, id-based like leaveAt
+      n.arrived=false;n.gone=true;           // "still commuting" — off-screen and excluded until arriveAt
+      n.x=-400;n.y=-400;
+    } else {
+      n.arriveAt=DAY_START;n.arrived=true;
+      n.x=clamp(MUSTER.x+((i%5)-2)*gx,18,W-34);
+      n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,H-34);
+      unstickEnt(n);
+    }
     i++;
   });
   player.x=ELEVATOR.x+Math.round(4*S);player.y=ELEVATOR.y+Math.round(26*S);
@@ -1664,8 +1676,8 @@ function hrMorning(n,dt){
 function npcTarget(n){
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
-  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(122*S),y:Math.round(105*S)};
-  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(138*S),y:Math.round(430*S)};
+  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(490*S),y:Math.round(455*S)};   // meeting room (380,280,260,220)
+  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
   if(ph==='Clock-Out')return MUSTER;
   if(n.homeDesk)return deskSeat(n.homeDesk);
   return {x:Math.round(430*S),y:Math.round(250*S)};
@@ -1687,6 +1699,18 @@ function goHome(n,dt){
   }
 }
 function updateNPC(n,dt){
+  /* staggered morning arrival: while still commuting, stay off-screen; at arriveAt, step out
+     of the lift and proceed normally. (arrived===false only on the days assembleAtElevator
+     staggered them; everyone else has arrived===true/undefined and skips this.) */
+  if(n.arrived===false&&!n.boss){
+    if(clock>=n.arriveAt){
+      n.arrived=true;n.gone=false;
+      n.x=clamp(ELEVATOR.x+((n.id%5)-2)*Math.round(11*S),18,W-34);
+      n.y=clamp(ELEVATOR.y+Math.round(22*S)+(n.id%3)*Math.round(9*S),18,H-34);
+      n.lastX=n.x;n.lastY=n.y;n.goal=null;n.path=null;n.wp=0;n.stuckT=0;
+      unstickEnt(n);
+    } else return;
+  }
   if(n.wentHome||n.gone)return;
   if(entStuck(n))unstickEnt(n);          // a resized desk / a rebuilt grid must never trap anyone
   if(!intro&&!alarmActive&&!meltEvent&&currentPhase().name==='Clock-Out'&&!n.boss&&!n.receptionist){
@@ -1704,14 +1728,14 @@ function updateNPC(n,dt){
     /* she used to be furniture. Now she files in from the lift, works the desk, and leaves. */
     const ph=currentPhase().name;
     if(n.bubble){n.bubble.t-=dt;if(n.bubble.t<=0)n.bubble=null;}
-    const post={x:Math.round(424*S),y:Math.round(586*S)};
+    const post={x:Math.round(110*S),y:Math.round(506*S)};   // behind the reception desk (drawn at 110,566), centred
     if(ph==='Clock-Out'){goHome(n,dt);return;}
     if(cdist(n,post)>Math.round(20*S)){
       setGoal(n,post.x,post.y);followPath(n);checkStuck(n,dt,null);
       return;
     }
     n.goal=null;n.path=null;
-    n.face=-Math.PI/2;
+    n.face=Math.PI/2;   // face DOWN, toward the desk front / visitors
     if(!n.bubble&&Math.random()<0.0016)n.bubble={t:2.4,text:pick(['Paper Supply Co!','Please hold.','He is IN a meeting.','Sign here please.','You have a visitor.','Transferring you now.'])};
     return;
   }
@@ -3951,7 +3975,7 @@ function finishSnoop(){const dale=NPCS.find(n=>n.mgr&&n.alive);const who=activeN
 /* meeting attendance */
 let meetingCredited=false;
 let phaseCred={};
-function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(20)&&player.x<U(270)&&player.y>U(360)&&player.y<U(500);}
+function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(840)&&player.x<U(1100)&&player.y>U(280)&&player.y<U(500);}   // the NEW break room (840,280,260,220); the old one used to overlap reception
 function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1400)&&player.y>U(0)&&player.y<U(280);}
 function phaseCheckins(ph){
   if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
@@ -7488,7 +7512,8 @@ function npcSnap(n){ return { id:n.id,name:n.name,dept:n.dept,x:n.x,y:n.y,alive:
   mood:n.mood,stress:n.stress,speed:n.speed,career:n.career,ptype:n.ptype,profiled:!!n.profiled,
   resist:n.resist||{},strikes:n.strikes||0,mistakes:n.mistakes||0,meltdowns:n.meltdowns||0,tier:n.tier,
   friend:n.friend,friends:(n.friends||[]).slice(),feudWith:n.feudWith||null,supported:!!n.supported,
-  suspectsYou:!!n.suspectsYou,caughtToday:n.caughtToday||0,homeDeskOwner:n.homeDesk?n.homeDesk.owner:null }; }
+  suspectsYou:!!n.suspectsYou,caughtToday:n.caughtToday||0,homeDeskOwner:n.homeDesk?n.homeDesk.owner:null,
+  arrived:n.arrived!==false,arriveAt:(typeof n.arriveAt==='number'?n.arriveAt:DAY_START) }; }
 function deskSnap(d){ return { owner:d.owner,tier:d.tier,x:d.x,y:d.y,rigged:d.rigged||null,planted:d.planted||null,
   loot:(d.loot&&d.loot.slice)?d.loot.slice():null }; }
 
@@ -7530,6 +7555,7 @@ function applySnapshot(s){
       strikes:ns.strikes,mistakes:ns.mistakes,meltdowns:ns.meltdowns,tier:ns.tier,friend:ns.friend,
       friends:(ns.friends||[]).slice(),feudWith:ns.feudWith,supported:ns.supported,suspectsYou:ns.suspectsYou,
       caughtToday:ns.caughtToday,homeDesk:ns.homeDeskOwner?desks.find(d=>d.owner===ns.homeDeskOwner)||n.homeDesk:n.homeDesk,
+      arrived:ns.arrived!==false,arriveAt:(typeof ns.arriveAt==='number'?ns.arriveAt:DAY_START),
       path:null,goal:null,wp:0,seat:null,bubble:null,chat:null,mission:null,prankBuild:null,
       lastX:ns.x,lastY:ns.y,stuckT:0,moving:false,animT:0,melFx:0,alertFx:0 });
     restored.push(n); });
