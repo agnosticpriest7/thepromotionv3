@@ -463,7 +463,7 @@ const ART_PATH='Art/sprites/';
 const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','conference_table','reception_desk','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
-  'elevator','stairs','fire_alarm','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
+  'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -516,7 +516,8 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
    "green far below BOTH red and blue" — wood, grey metal, blue monitors and red/green
    binders never match, so only the background is eaten. */
 const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
-  'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet']);
+  'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
+  'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine']);
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
   try{
@@ -569,9 +570,10 @@ const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
-  vending_machine:62, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
+  vending_machine:80, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
+  wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   break_table:190, kitchen_table:190, bush:44, grass:64,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
@@ -854,7 +856,7 @@ const CONTAINERS=[
   {x:560,y:0,w:20,h:120,label:'Accounting shelf',kind:'cabinet'},
   {x:860,y:0,w:20,h:120,label:'Manager shelf',kind:'cabinet'},
   {x:0,y:180,w:20,h:100,label:'Exec shelf',kind:'cabinet'},
-  {x:1200,y:0,w:200,h:40,label:'Kitchen counter',kind:'cabinet'},
+  {x:1200,y:0,w:200,h:40,label:'Kitchen counter',kind:'cabinet',art:'kitchen_counter'},
   {x:400,y:0,w:160,h:20,label:'HR shelf',kind:'cabinet'},
   {x:880,y:0,w:160,h:20,label:'Manager shelf',kind:'cabinet'},
   {x:1140,y:60,w:20,h:60,label:'Asst mgr shelf',kind:'cabinet'},
@@ -863,6 +865,7 @@ const CONTAINERS=[
   {x:1360,y:40,w:40,h:200,label:'Kitchen pantry',kind:'cabinet'},
   {x:1170,y:50,w:44,h:54,label:'Fridge',kind:'fridge'},                 // kitchen fridge (new art)
   {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
+  {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
 ];
 const ITEMS={
   jello:{label:'a packet of Jell-O',part:true},
@@ -5561,6 +5564,14 @@ function drawLighting(){
 }
 function drawDecor(){
   const U=(v)=>Math.round(v*S);
+  /* wall-mounted safety + clocks (office-manager amenity pass; decor, non-blocking) */
+  sprAt('wall_clock',U(510),U(300),'wall_clock');                 // meeting room
+  sprAt('wall_clock',U(1050),U(300),'wall_clock');                // break room
+  sprAt('wall_clock',U(120),U(440),'wall_clock');                 // reception
+  sprAt('first_aid',U(1085),U(302),'first_aid');                  // break room
+  sprAt('first_aid',U(35),U(454),'first_aid');                    // reception
+  sprAt('fire_extinguisher',U(1345),U(72),'fire_extinguisher');   // kitchen
+  sprAt('fire_extinguisher',U(1090),U(540),'fire_extinguisher');  // sales/annex corridor (by the alarm)
   // company sign above the reception desk (SW reception)
   ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(498),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(500),U(132),U(10));
   ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(112),U(508));ctx.textAlign='left';
@@ -5581,11 +5592,11 @@ function drawDecor(){
   /* (the decorative SW "sales room interior desks" were removed — that corner is the
      elevator lobby now; real worker desks are drawn by drawDesks) */
 }
-const CONT_ART={cabinet:'filing_cabinet',locker:'lockers',fridge:'fridge',box:'supply_shelf'};
-const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplies'};
+const CONT_ART={cabinet:'filing_cabinet',locker:'lockers',fridge:'fridge',box:'supply_shelf',vending:'vending_machine'};
+const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplies',vending:'vending'};
 function drawContainers(){
   for(const c of CONTAINERS){
-    const art=CONT_ART[c.kind]||'filing_cabinet';
+    const art=c.art||CONT_ART[c.kind]||'filing_cabinet';   // c.art = per-container sprite override
     const cx=c.x+c.w/2, cyB=c.y+c.h+U1(4);
     if(!sprAt(art,cx,cyB,art)){
       ctx.fillStyle='#241d16';ctx.fillRect(c.x,c.y,c.w,c.h);
