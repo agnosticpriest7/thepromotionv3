@@ -824,6 +824,15 @@ const objects=[
   {type:'supply',x:708,y:402,w:40,h:26,label:'Supplies'},
   {type:'toilet',x:440,y:680,w:26,h:30,label:'Toilet (M)',rigged:false},
   {type:'toilet',x:580,y:680,w:26,h:30,label:'Toilet (W)',rigged:false},
+  /* office-manager amenity pass: fire-alarm coverage, a sales-floor cooler, a west-wing
+     printer, and a toilet for the exec restroom (its sinks are drawn in drawBathroom). */
+  {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
+  {type:'alarm',x:1250,y:15,w:16,h:22,label:'Fire Alarm'},       // kitchen
+  {type:'alarm',x:410,y:15,w:16,h:22,label:'Fire Alarm'},        // west wing (HR)
+  {type:'water',x:1365,y:640,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor
+  {type:'water',x:30,y:540,w:24,h:30,label:'Water cooler',trapped:false},     // reception waiting area
+  {type:'printer',x:430,y:140,w:34,h:26,label:'Printer',jammed:false},        // west-wing shared printer (HR)
+  {type:'toilet',x:60,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom
 ];
 /* Bins (contraband/loot) + shelves REBUILT from the plan (test/gen_level.js). */
 const CONTAINERS=[
@@ -4806,6 +4815,8 @@ function drawBathroom(){
   sprAt('urinal',U(400),U(706),'urinal');   // men's, against the left wall
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
   ctx.fillText('M',U(445),U(662));ctx.fillText('W',U(590),U(662));ctx.textAlign='left';
+  /* EXEC restroom (0,280,240,140): sinks on the north wall (the toilet is an object). */
+  [[150,314],[195,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
