@@ -835,8 +835,8 @@ const objects=[
   {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
   {type:'phones',x:1030,y:668,w:32,h:22,label:'Sales phones'},   // moved into the freed Sales-bin slot
   {type:'supply',x:708,y:402,w:40,h:26,label:'Supplies'},
-  {type:'toilet',x:440,y:680,w:26,h:30,label:'Toilet (M)',rigged:false},
-  {type:'toilet',x:580,y:680,w:26,h:30,label:'Toilet (W)',rigged:false},
+  {type:'toilet',x:457,y:676,w:26,h:30,label:'Toilet (M)',rigged:false},
+  {type:'toilet',x:572,y:676,w:26,h:30,label:'Toilet (W)',rigged:false},
   /* office-manager amenity pass: fire-alarm coverage, a sales-floor cooler, a west-wing
      printer, and a toilet for the exec restroom (its sinks are drawn in drawBathroom). */
   {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
@@ -845,8 +845,8 @@ const objects=[
   {type:'water',x:1088,y:586,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor — by the north door
   {type:'water',x:30,y:540,w:24,h:30,label:'Water cooler',trapped:false},     // reception waiting area
   {type:'printer',x:430,y:140,w:34,h:26,label:'Printer',jammed:false},        // west-wing shared printer (HR)
-  {type:'toilet',x:60,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom — left side
-  {type:'toilet',x:180,y:380,w:26,h:30,label:'Toilet (Exec)',rigged:false},   // exec restroom — right side
+  {type:'toilet',x:35,y:372,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom — left stall
+  {type:'toilet',x:182,y:372,w:26,h:30,label:'Toilet (Exec)',rigged:false},   // exec restroom — right stall
 ];
 /* Bins (contraband/loot) + shelves REBUILT from the plan (test/gen_level.js). */
 const CONTAINERS=[
@@ -4868,17 +4868,27 @@ function drawFloor(){
   drawBathroom();
 }
 
+/* Restrooms REMODELLED (Kyle's plan): sinks line the north wall, urinals get a side divider,
+   and every toilet sits in a proper stall flanked by stall_v partitions. Toilets are objects
+   (drawn by drawObjects); everything here is decor, drawn before them so the toilets sit "in"
+   the stalls. Dividers are visual only — no collision — so nobody can get boxed away from a
+   fixture. Footprints were pre-verified to fit each room without overlap. */
 function drawBathroom(){
   const U=(v)=>Math.round(v*S);
-  /* Restroom REBUILT for the overhauled floor: the room is authored (380,600,280,160).
-     Fixtures were still at old coords and spilled east into the sales bullpen. Sinks line
-     the north wall (2 per side), one urinal in the men's. Toilets (M/W) are objects. */
-  [[410,632],[455,632],[560,632],[605,632]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
-  sprAt('urinal',U(400),U(706),'urinal');   // men's, against the left wall
+  const div=(x,y)=>sprAt('stall_v',U(x),U(y),'stall_v');   // a vertical stall partition
+  /* ===== CENTRAL RESTROOM (380,600,280,160) — Men's (left) / Women's (right) ===== */
+  [[412,628],[452,628],[566,628],[606,628]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
+  sprAt('urinal',U(398),U(698),'urinal'); div(427,706);       // men's urinal + its side wall
+  div(519,706); div(519,752);                                 // M/W partition (two stacked)
+  div(445,712); div(495,712);                                 // toilet-M stall
+  div(560,712); div(610,712);                                 // toilet-W stall
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
-  ctx.fillText('M',U(445),U(662));ctx.fillText('W',U(590),U(662));ctx.textAlign='left';
-  /* EXEC restroom (0,280,240,140): sinks on the north wall (the toilet is an object). */
-  [[45,314],[90,314],[150,314],[195,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // two sinks per side
+  ctx.fillText('M',U(455),U(662));ctx.fillText('W',U(585),U(662));ctx.textAlign='left';
+  /* ===== EXEC RESTROOM (0,280,240,140) — two stalls flanking a centre urinal ===== */
+  [[40,314],[85,314],[155,314],[200,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
+  sprAt('urinal',U(120),U(404),'urinal');                     // centre urinal
+  div(28,410); div(76,410);                                   // left stall
+  div(165,410); div(212,410);                                 // right stall
 }
 
 function tint(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h);}
