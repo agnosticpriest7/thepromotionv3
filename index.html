@@ -4876,13 +4876,13 @@ function drawFloor(){
    fixture. Footprints were pre-verified to fit each room without overlap. */
 function drawBathroom(){
   const U=(v)=>Math.round(v*S);
-  const div=(x,y)=>sprAt('stall_v',U(x),U(y),'stall_v');   // a vertical stall partition
+  const div=(x,y)=>sprW('stall_v',U(x),U(y),U1(20));   // a vertical stall partition (a touch shorter so it reads as a partition, not a monolith)
   /* ===== CENTRAL RESTROOM (380,600,280,160) — Men's (left) / Women's (right) ===== */
   [[412,628],[452,628],[566,628],[606,628]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
-  sprAt('urinal',U(398),U(698),'urinal'); div(427,706);       // men's urinal + its side wall
-  div(519,706); div(519,752);                                 // M/W partition (two stacked)
+  sprAt('urinal',U(398),U(700),'urinal');                     // men's urinal (its own corner — no extra wall)
   div(445,712); div(495,712);                                 // toilet-M stall
   div(560,712); div(610,712);                                 // toilet-W stall
+  /* (dropped the double-stacked M/W partition + the urinal side wall — too many bars) */
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
   ctx.fillText('M',U(455),U(662));ctx.fillText('W',U(585),U(662));ctx.textAlign='left';
   /* ===== EXEC RESTROOM (0,280,240,140) — two stalls flanking a centre urinal ===== */
