@@ -4884,9 +4884,9 @@ function drawBathroom(){
   div(560,732); div(610,732);                                 // toilet-W stall
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
   ctx.fillText('M',U(455),U(662));ctx.fillText('W',U(585),U(662));ctx.textAlign='left';
-  /* ===== EXEC RESTROOM (0,280,240,140) — two toilet chambers split by a central wall ===== */
-  [[85,314],[200,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // one sink per chamber (dropped the door-side ones)
-  /* no urinal — it was sitting inside the central dividing wall */
+  /* ===== EXEC RESTROOM (0,280,240,140) — two toilet chambers split by a central wall (x115-125) ===== */
+  [[28,314],[200,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // left sink moved to the top-left corner
+  sprAt('urinal',U(102),U(355),'urinal');                     // urinal back in the left chamber, beside (not inside) the central wall
   div(28,410); div(76,410);                                   // left stall
   div(165,410); div(212,410);                                 // right stall
 }
