@@ -5,7 +5,7 @@ const { createWorld } = require('./harness');
 const w = createWorld();
 w.startNewGame(0);
 const S = 1.8;
-const POST = { x: Math.round(130 * S), y: Math.round(95 * S) };
+const POST = { x: Math.round(120 * S), y: Math.round(58 * S) };
 const boss = () => w.g.NPCS.find(n => n.name === 'Mr. Sterling');
 const dist = (n, p) => Math.hypot(n.x - p.x, n.y - p.y);
 

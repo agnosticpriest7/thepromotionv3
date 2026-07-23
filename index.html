@@ -570,7 +570,7 @@ const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
-  vending_machine:80, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
+  vending_machine:64, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
@@ -755,7 +755,7 @@ const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a
 /* Walls REBUILT from the level-overhaul plan (test/gen_level.js): perimeter + dividers as
    rects, plus each room outline with a 44u door gap carved at every door. Authored 1400x760. */
 const walls=[
-  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1020,y:575,w:98,h:10},{x:1162,y:575,w:78,h:10},
+  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1020,y:575,w:98,h:10},{x:1162,y:575,w:78,h:10},
   {x:0,y:-5,w:260,h:10},{x:0,y:175,w:260,h:10},{x:-5,y:0,w:10,h:180},{x:255,y:0,w:10,h:38},{x:255,y:82,w:10,h:98},
   {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
@@ -877,6 +877,7 @@ const CONTAINERS=[
   {x:1170,y:50,w:44,h:54,label:'Fridge',kind:'fridge'},                 // kitchen fridge (new art)
   {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
   {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
+  {x:404,y:63,w:34,h:52,label:'HR desk',kind:'cabinet',art:'cubicle_desk_left'},   // HR desk, against the left wall — real container = collision
 ];
 const ITEMS={
   jello:{label:'a packet of Jell-O',part:true},
@@ -1127,7 +1128,7 @@ NPCS.filter(n=>n.dept==='hr').forEach((h,i)=>{
   const seeds=[68,64,60,58,42,38,34,30,18,12,8,5];
   ws.forEach((w,i)=>{w.career=seeds[i]!==undefined?seeds[i]+rand(-3,3):rand(4,20);});
 }
-const boss=NPC('Mr. Sterling','exec',null); boss.boss=true; boss.alive=true; boss.onFloor=true; boss.lapping=false; boss.x=130; boss.y=95; boss.route=[]; boss.routeIdx=0; boss.speed=0.77; NPCS.push(boss);   // the CEO now LIVES in his office (top-left glass box) and laps once a day
+const boss=NPC('Mr. Sterling','exec',null); boss.boss=true; boss.alive=true; boss.onFloor=true; boss.lapping=false; boss.x=120; boss.y=58; boss.route=[]; boss.routeIdx=0; boss.speed=0.77; NPCS.push(boss);   // the CEO now LIVES in his office (top-left glass box) and laps once a day
 let bossTriggerMin=0, bossToured=false;
 function scheduleBoss(){
   if(player.rank>=5){bossTriggerMin=DAY_START+rand(70,180);bossToured=false;return;}bossTriggerMin=rand(11*60,15*60);bossToured=false;}   // lap late-morning..mid-afternoon, so he's clearly at his desk through the morning
@@ -1716,7 +1717,7 @@ function updateNPC(n,dt){
     if(clock>=n.arriveAt){
       n.arrived=true;n.gone=false;
       n.x=clamp(ELEVATOR.x+((n.id%5)-2)*Math.round(11*S),18,W-34);
-      n.y=clamp(ELEVATOR.y+Math.round(22*S)+(n.id%3)*Math.round(9*S),18,H-34);
+      n.y=clamp(ELEVATOR.y+Math.round(16*S)+(n.id%3)*Math.round(5*S),18,H-34);   // stay clear of the new lobby south wall (y755)
       n.lastX=n.x;n.lastY=n.y;n.goal=null;n.path=null;n.wp=0;n.stuckT=0;
       unstickEnt(n);
     } else return;
@@ -1738,7 +1739,7 @@ function updateNPC(n,dt){
     /* she used to be furniture. Now she files in from the lift, works the desk, and leaves. */
     const ph=currentPhase().name;
     if(n.bubble){n.bubble.t-=dt;if(n.bubble.t<=0)n.bubble=null;}
-    const post={x:Math.round(110*S),y:Math.round(506*S)};   // behind the reception desk (drawn at 110,566), centred
+    const post={x:Math.round(110*S),y:Math.round(500*S)};   // behind the reception desk (drawn at 110,566), centred, clear of the desk blocker
     if(ph==='Clock-Out'){goHome(n,dt);return;}
     if(cdist(n,post)>Math.round(20*S)){
       setGoal(n,post.x,post.y);followPath(n);checkStuck(n,dt,null);
@@ -2567,7 +2568,7 @@ function endIntro(bailed){
   logLine(bailed?'You find your own way to your desk.':'Dale wanders off. The day is yours.','t');
   toast('Get to work. Or... get creative.');
 }
-const BOSS_POST_A={x:130,y:95};   // authored office post — behind his desk, watching the floor
+const BOSS_POST_A={x:120,y:58};   // authored office post — behind his (10%-smaller) desk, clear of its collision, watching the floor
 function updateBoss(n,dt){
   if(n.lapping){
     if(n.routeIdx>=n.route.length){endBossTour();return;}
@@ -4128,7 +4129,7 @@ function nextDay(){
   player.suspicion=clamp(player.suspicion-10,0,100);
   objects.forEach(o=>{o.jammed=false;o.trapped=false;o.wreckStage=0;});desks.forEach(d=>{d.rigged=null;d.planted=null;});
   activeNPCs().forEach(n=>{
-    if(n.boss){n.alive=true;n.onFloor=true;n.lapping=false;n.gone=false;n.x=Math.round(130*S);n.y=Math.round(95*S);n.goal=null;n.path=null;n.routeIdx=0;n.stuckT=0;return;}   // CEO opens the day in his office
+    if(n.boss){n.alive=true;n.onFloor=true;n.lapping=false;n.gone=false;n.x=Math.round(120*S);n.y=Math.round(58*S);n.goal=null;n.path=null;n.routeIdx=0;n.stuckT=0;return;}   // CEO opens the day in his office
     if(n.mgr){n.lap=0;n.maxLaps=Math.round(rand(2,3));n.routeIdx=0;n.parked=false;n.chat=null;n.chatCd=rand(6,14);n.stuckT=0;}
     else{
       n.patrolIdx=0;n.stuckT=0;
@@ -5019,6 +5020,8 @@ function buildBlockers(tableRects){
   });
   /* the reception desk — people used to stand inside it */
   blockers.push({x:Math.round(40*S),y:Math.round(524*S),w:Math.round(140*S),h:Math.round(48*S)});
+  /* the CEO's desk (decor sprite in drawContainers) — give it a solid footprint too */
+  blockers.push({x:Math.round(90*S),y:Math.round(80*S),w:Math.round(60*S),h:Math.round(38*S)});
 }
 function drawFurniture(table,chairs){
   /* the table sprites already come with chairs attached — drawing office_chair on top
@@ -5307,11 +5310,20 @@ function drawSalesDoor(){
 }
 function drawBubble(cx,anchorY,text){
   ctx.font='10px monospace';
-  const tw=ctx.measureText(text).width;
-  const bw=Math.max(30,tw+14), bh=18, bx=cx-bw/2, by=anchorY-bh-6, r=5;
+  const full=ctx.measureText(text).width;
+  const CAP=Math.min(340,VW*0.44);                        // never let a bubble span the screen
+  const nLines=full>CAP?Math.min(3,Math.ceil(full/CAP)):1;
+  const target=nLines>1?Math.ceil(full/nLines)+8:CAP;     // balance long text across the lines
+  // greedy word-wrap
+  const words=String(text).split(' '); const lines=[]; let cur='';
+  for(const w of words){ const t=cur?cur+' '+w:w;
+    if(ctx.measureText(t).width>target && cur){lines.push(cur);cur=w;} else cur=t; }
+  if(cur)lines.push(cur);
+  const lh=13;
+  let maxW=0; for(const l of lines)maxW=Math.max(maxW,ctx.measureText(l).width);
+  const bw=Math.max(30,maxW+14), bh=lines.length*lh+6, bx=cx-bw/2, by=anchorY-bh-6, r=5;
   // soft shadow
-  ctx.fillStyle='rgba(0,0,0,.18)';
-  rr(bx+1.5,by+2,bw,bh,r);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.18)';rr(bx+1.5,by+2,bw,bh,r);ctx.fill();
   // bubble body + border
   ctx.fillStyle='#ffffff';rr(bx,by,bw,bh,r);ctx.fill();
   ctx.strokeStyle='#2a2721';ctx.lineWidth=1.4;rr(bx,by,bw,bh,r);ctx.stroke();ctx.lineWidth=1;
@@ -5319,9 +5331,9 @@ function drawBubble(cx,anchorY,text){
   ctx.fillStyle='#ffffff';
   ctx.beginPath();ctx.moveTo(cx-4,by+bh-0.5);ctx.lineTo(cx+4,by+bh-0.5);ctx.lineTo(cx,by+bh+6);ctx.closePath();ctx.fill();
   ctx.strokeStyle='#2a2721';ctx.beginPath();ctx.moveTo(cx-4,by+bh);ctx.lineTo(cx,by+bh+6);ctx.lineTo(cx+4,by+bh);ctx.stroke();
-  // text
+  // text (stacked)
   ctx.fillStyle='#20242a';ctx.textAlign='center';
-  ctx.fillText(text,cx,by+12.5);
+  for(let i=0;i<lines.length;i++)ctx.fillText(lines[i],cx,by+11+i*lh);
   ctx.textAlign='left';
 }
 function rr(x,y,w,h,r){
@@ -5423,11 +5435,22 @@ function drawNPC(n){
     ctx.strokeStyle=n.mgr?'rgba(201,138,26,.25)':'rgba(192,57,43,.28)';
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,CONE_RANGE,f-CONE_HALF,f+CONE_HALF);ctx.closePath();ctx.stroke();
   }
-  if(n.bubble)drawBubble(n.x+n.w/2,headTop(n)-U1(6),n.bubble.text);
+  /* bubbles are drawn in a LATER pass (drawBubbles) so no character — the player especially —
+     can ever cover a speech bubble */
   ctx.textAlign='left';
 }
+/* speech bubbles, on top of everyone */
+function drawBubbles(){
+  for(const n of activeNPCs()){
+    if(n.wentHome||n.gone||!n.bubble)continue;
+    if(n.boss&&!n.onFloor)continue;
+    if(!inView(n.x,n.y,n.w,n.h))continue;
+    drawBubble(n.x+n.w/2,headTop(n)-U1(6),n.bubble.text);
+  }
+  if(player.bubble)drawBubble(player.x+player.w/2,headTop(player)-U1(6),player.bubble.text);
+}
 function drawPlayer(){
-  if(player.bubble){player.bubble.t-=lastDt;if(player.bubble.t<=0)player.bubble=null;else drawBubble(player.x+player.w/2,headTop(player)-U1(6),player.bubble.text);}
+  if(player.bubble){player.bubble.t-=lastDt;if(player.bubble.t<=0)player.bubble=null;}   // tick only; drawn in drawBubbles
   if(!drawChar(player,YOU_SPRITE))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);
   ctx.strokeStyle='rgba(217,165,33,.9)';ctx.strokeRect(player.x-1.5,player.y-1.5,player.w+3,player.h+3);
   /* Action progress (craft / work / channel) shown BELOW the feet, bigger and bright, so it
@@ -5627,19 +5650,18 @@ function drawDecor(){
   sprAt('first_aid',U(35),U(454),'first_aid');                    // reception
   sprAt('fire_extinguisher',U(1345),U(72),'fire_extinguisher');   // kitchen
   sprAt('fire_extinguisher',U(1090),U(540),'fire_extinguisher');  // sales/annex corridor (by the alarm)
-  // company sign above the reception desk (SW reception)
-  ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(498),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(500),U(132),U(10));
-  ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(112),U(508));ctx.textAlign='left';
+  // company sign above the reception desk (SW reception) — raised one square
+  ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(478),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(480),U(132),U(10));
+  ctx.fillStyle='#e8c23a';ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('PAPER SUPPLY CO.',U(112),U(488));ctx.textAlign='left';
   // rug: break room only (the blue reception rug was removed)
   ctx.fillStyle='rgba(140,90,50,.14)';ctx.fillRect(U(858),U(300),U(224),U(160));ctx.strokeStyle='rgba(140,90,50,.25)';ctx.strokeRect(U(858),U(300),U(224),U(160));
   /* the whiteboard is an OBJECT (drawObjects) — drawing it here too gave us two of them */
-  // reception waiting room: a couch + two chairs (the old painted-square fallback chairs were removed)
-  sprAt('couch',U(66),U(662),'couch');
-  sprAt('office_chair',U(140),U(650),'office_chair');
-  sprAt('office_chair',U(175),U(650),'office_chair');
-  // HR office desk, centred in the room (decor)
-  sprAt('cubicle_desk',U(480),U(120),'cubicle_desk');
-  sprAt('office_chair',U(480),U(146),'office_chair');
+  // reception waiting area — couch along the south wall, two chairs off to the east
+  sprAt('couch',U(70),U(662),'couch');
+  sprAt('office_chair',U(190),U(618),'office_chair');
+  sprAt('office_chair',U(190),U(656),'office_chair');
+  // HR desk is a real container now (drawn + collision by drawContainers); just its chair here
+  sprAt('office_chair',U(452),U(98),'office_chair');
   // scattered papers + coffee stains
   ctx.fillStyle='rgba(255,255,255,.55)';[[340,352],[610,240],[930,320],[520,520],[770,700]].forEach(p=>ctx.fillRect(U(p[0]),U(p[1]),U(7),U(5)));
   ctx.fillStyle='rgba(110,70,40,.16)';[[480,300],[660,520],[240,540]].forEach(p=>{ctx.beginPath();ctx.arc(U(p[0]),U(p[1]),U(6),0,Math.PI*2);ctx.fill();});
@@ -5661,7 +5683,7 @@ function drawContainers(){
     /* no name labels on containers (chests / shelves / lockers / fridge / vending) — the sprites read on their own */
   }
   /* CEO's executive office (top-left glass office): desk + furnishings */
-  sprAt('manager_desk',Math.round(120*S),Math.round(120*S),'manager_desk');
+  sprW('manager_desk',Math.round(120*S),Math.round(120*S),U1(Math.round(ART_W.manager_desk*0.9)));   // CEO desk 10% smaller (collision added in buildBlockers)
   sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
   sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
   sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
@@ -5670,7 +5692,7 @@ function drawContainers(){
   sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
   sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
   /* potted plants — CEO office, reception, meeting room, break room, sales corner */
-  [[60,150],[200,640],[600,470],[1070,470],[1380,720]].forEach(p=>{
+  [[60,150],[222,452],[600,470],[1070,470],[1380,720]].forEach(p=>{
     sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
   });
 }
@@ -5713,7 +5735,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -5721,12 +5743,12 @@ function renderInner(){
   drawMeltBanner();
 }
 function drawElevator(){
-  const e=ELEVATOR;
-  sprAt('elevator',e.x,e.y+U1(10),'elevator');
+  const e=ELEVATOR, dy=Math.round(10*S);   // lowered half a square into the lobby
+  sprAt('elevator',e.x,e.y+U1(10)+dy,'elevator');
   ctx.fillStyle='rgba(42,39,33,.7)';ctx.font='bold '+U1(11)+'px monospace';ctx.textAlign='center';
-  ctx.fillText('ELEVATOR',e.x,e.y+U1(24));
-  sprAt('stairs',e.x+U1(158),e.y+U1(10),'stairs');    // beside the lifts, in the lobby (not out on the grass)
-  ctx.fillText('STAIRS',e.x+U1(158),e.y+U1(24));
+  ctx.fillText('ELEVATOR',e.x,e.y+U1(24)+dy);
+  sprAt('stairs',e.x+U1(158),e.y+U1(10)+dy,'stairs');    // beside the lifts, in the lobby (not out on the grass)
+  ctx.fillText('STAIRS',e.x+U1(158),e.y+U1(24)+dy);
   ctx.textAlign='left';
 }
 
