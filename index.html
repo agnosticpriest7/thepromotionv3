@@ -724,7 +724,7 @@ function drawPuffs(){
 const VW=cv.width, VH=cv.height;
 const S=1.8;                                 // world scale-up for the new art
 const TILE=Math.round(20*S);
-const W=Math.round(1400*S), H=Math.round(760*S);   // 2520 x 1368 — world widened 1240->1400 for the level overhaul
+const W=Math.round(1500*S), H=Math.round(760*S);   // 2700 x 1368 — east side widened 1400->1500 (more sales + senior-sales room)
 const cam={x:0,y:0};
 const ZOOM=0.92;   // pulled back — the world is 1.8x bigger now
 function entStuck(e){
@@ -756,7 +756,7 @@ const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a
 /* Walls REBUILT from the level-overhaul plan (test/gen_level.js): perimeter + dividers as
    rects, plus each room outline with a 44u door gap carved at every door. Authored 1400x760. */
 const walls=[
-  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1074,y:575,w:166,h:10},
+  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:840,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1495,y:0,w:10,h:340},{x:1160,y:-5,w:340,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1495,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1074,y:575,w:166,h:10},
   {x:0,y:-5,w:260,h:10},{x:0,y:175,w:260,h:10},{x:-5,y:0,w:10,h:180},{x:255,y:0,w:10,h:38},{x:255,y:82,w:10,h:98},
   {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
@@ -766,7 +766,7 @@ const walls=[
   {x:640,y:335,w:18,h:10},{x:702,y:335,w:138,h:10},{x:640,y:435,w:18,h:10},{x:702,y:435,w:138,h:10},{x:635,y:340,w:10,h:100},{x:835,y:340,w:10,h:100},
   {x:380,y:595,w:58,h:10},{x:482,y:595,w:76,h:10},{x:602,y:595,w:58,h:10},{x:380,y:755,w:280,h:10},{x:375,y:600,w:10,h:160},{x:655,y:600,w:10,h:160},
   {x:0,y:275,w:38,h:10},{x:82,y:275,w:56,h:10},{x:182,y:275,w:58,h:10},{x:0,y:415,w:240,h:10},{x:-5,y:280,w:10,h:140},{x:235,y:280,w:10,h:140},
-  {x:1240,y:475,w:160,h:10},{x:1240,y:575,w:160,h:10},{x:1235,y:480,w:10,h:58},{x:1240,y:375,w:160,h:10},{x:1235,y:380,w:10,h:58},{x:1240,y:275,w:160,h:10},{x:1235,y:280,w:10,h:58},{x:1395,y:280,w:10,h:300},
+  {x:1240,y:475,w:260,h:10},{x:1240,y:575,w:260,h:10},{x:1235,y:480,w:10,h:58},{x:1240,y:375,w:260,h:10},{x:1235,y:380,w:10,h:58},{x:1240,y:275,w:260,h:10},{x:1235,y:280,w:10,h:58},{x:1495,y:280,w:10,h:300},
 ];
 const EXIT={x:60,y:720};           // the lift doors (SW elevator lobby)
 const ELEVATOR=EXIT;
@@ -794,17 +794,18 @@ const desks=[];
  {x:880,y:640,w:40,h:60,owner:null,tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:880,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
- /* Sales floor: back-to-back clump (same idea as the junior pod). Two gapless columns share a
-    central seam; workers sit on the outer left (x~1094, west pocket) and the central aisle (x~1226).
-    A 45px corridor below the clump (y710-755) lets people reach the west seats. The room is too
-    narrow for a second full clump facing a shared aisle, so Doug + a vacant sit against the east
-    wall (facing in). North entrance moved to x1200-1240 so it doesn't dump onto the clump. */
+ /* Sales floor (widened room): back-to-back pairs SPLIT into a top row and a bottom row by a
+    walkable horizontal aisle (y646-690). Desks face left/right — workers on the outer sides and
+    the central aisle (x1240-1350). Two blocks: left (Chad/Dana over Ramesh/Vera) and right
+    (Doug + vacants). The horizontal aisle + central corridor give circulation on both axes. */
  {x:1160,y:596,w:40,h:50,owner:'Chad',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:1200,y:596,w:40,h:50,owner:'Dana',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
- {x:1160,y:652,w:40,h:50,owner:'Ramesh',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
- {x:1200,y:652,w:40,h:50,owner:'Vera',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
- {x:1340,y:596,w:40,h:50,owner:'Doug',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'left'},
- {x:1340,y:652,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'left'},
+ {x:1160,y:690,w:40,h:50,owner:'Ramesh',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:1200,y:690,w:40,h:50,owner:'Vera',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:1350,y:596,w:40,h:50,owner:'Doug',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
  {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
  {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
@@ -851,7 +852,7 @@ const objects=[
   {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
   {type:'alarm',x:1250,y:15,w:16,h:22,label:'Fire Alarm'},       // kitchen
   {type:'alarm',x:410,y:15,w:16,h:22,label:'Fire Alarm'},        // west wing (HR)
-  {type:'water',x:1078,y:595,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor — moved to the left amenity area (Kyle's blue circle)
+  {type:'water',x:1050,y:460,w:24,h:30,label:'Water cooler',trapped:false},   // break room (moved off the sales floor)
   {type:'water',x:30,y:540,w:24,h:30,label:'Water cooler',trapped:false},     // reception waiting area
   {type:'printer',x:430,y:140,w:34,h:26,label:'Printer',jammed:false},        // west-wing shared printer (HR)
   {type:'toilet',x:35,y:372,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom — left stall
@@ -882,7 +883,7 @@ const CONTAINERS=[
   {x:1140,y:60,w:20,h:60,label:'Asst mgr shelf',kind:'cabinet'},
   {x:820,y:340,w:20,h:100,label:'Supply shelf',kind:'cabinet'},
   {x:740,y:340,w:80,h:20,label:'Supply shelf',kind:'cabinet'},
-  {x:1360,y:40,w:40,h:200,label:'Kitchen pantry',kind:'cabinet'},
+  {x:1455,y:40,w:40,h:200,label:'Kitchen pantry',kind:'cabinet'},
   {x:1170,y:50,w:44,h:54,label:'Fridge',kind:'fridge'},                 // kitchen fridge (new art)
   {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
   {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
@@ -4018,7 +4019,7 @@ function finishSnoop(){const dale=NPCS.find(n=>n.mgr&&n.alive);const who=activeN
 let meetingCredited=false;
 let phaseCred={};
 function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(840)&&player.x<U(1100)&&player.y>U(280)&&player.y<U(500);}   // the NEW break room (840,280,260,220); the old one used to overlap reception
-function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1400)&&player.y>U(0)&&player.y<U(280);}
+function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1500)&&player.y>U(0)&&player.y<U(280);}
 function phaseCheckins(ph){
   if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
   if((ph==='Morning Break'||ph==='Afternoon Break'||ph==='Lunch / Break')&&!phaseCred[ph]&&(inBreakZone()||inKitchenZone())){phaseCred[ph]=true;player.stress=clamp(player.stress-10,0,100);player.suspicion=clamp(player.suspicion-4,0,100);toast('Break taken. Stress −10, suspicion −4');logLine('Took your break like a normal employee. Suspicion −4.','g');}
@@ -4869,9 +4870,9 @@ function drawFloor(){
   tileFloor('tile_white', ...Z(380,600,280,160),T);    // restroom
   tileFloor('tile_white', ...Z(0,280,240,140),  T);    // exec restroom
   tileFloor('marble',     ...Z(0,420,240,260),  T);    // reception
-  tileFloor('tile_white', ...Z(1160,0,240,280), T);    // kitchen
-  tileFloor('carpet_blue',...Z(1240,280,160,300),T);   // senior sales
-  tileFloor('carpet_blue',...Z(1020,580,380,180),T);   // sales floor
+  tileFloor('tile_white', ...Z(1160,0,340,280), T);    // kitchen
+  tileFloor('carpet_blue',...Z(1240,280,260,300),T);   // senior sales
+  tileFloor('carpet_blue',...Z(1020,580,480,180),T);   // sales floor
   tileFloor('carpet_blue',...Z(660,580,360,180),T);    // junior sales
   tileFloor('tile_lobby', ...Z(0,680,220,80),   T);    // elevator lobby
   drawBathroom();

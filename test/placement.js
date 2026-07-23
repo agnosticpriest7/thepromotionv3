@@ -21,7 +21,7 @@ const path = require('path');
 const { createWorld } = require('./harness');
 
 const ART_DIR = path.join(__dirname, '..', 'Art', 'sprites');
-const WORLD_W = 1400, WORLD_H = 760;   // authored world bounds
+const WORLD_W = 1500, WORLD_H = 760;   // authored world bounds (east side widened 1400->1500)
 
 /* ---- intrinsic sprite dimensions, read straight from the PNG IHDR ----------
    The harness stubs Image at 64x64 (aspect lost), so we read the real width/
