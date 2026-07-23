@@ -517,7 +517,8 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
    binders never match, so only the background is eaten. */
 const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
-  'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine']);
+  'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
+  'stall_v','stall_h']);   // stall dividers ship with a magenta bg too (never keyed before — they weren't drawn until the restroom remodel)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
   try{
