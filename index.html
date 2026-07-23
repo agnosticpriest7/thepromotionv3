@@ -756,7 +756,7 @@ const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a
 /* Walls REBUILT from the level-overhaul plan (test/gen_level.js): perimeter + dividers as
    rects, plus each room outline with a 44u door gap carved at every door. Authored 1400x760. */
 const walls=[
-  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1020,y:575,w:98,h:10},{x:1162,y:575,w:78,h:10},
+  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:740,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1395,y:0,w:10,h:340},{x:1160,y:-5,w:240,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1395,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1074,y:575,w:166,h:10},
   {x:0,y:-5,w:260,h:10},{x:0,y:175,w:260,h:10},{x:-5,y:0,w:10,h:180},{x:255,y:0,w:10,h:38},{x:255,y:82,w:10,h:98},
   {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
@@ -794,13 +794,17 @@ const desks=[];
  {x:880,y:640,w:40,h:60,owner:null,tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:880,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
- {x:1040,y:720,w:60,h:40,owner:'Chad',tier:1,dept:'sales'},
- {x:1140,y:720,w:60,h:40,owner:'Dana',tier:1,dept:'sales'},
- {x:1240,y:720,w:60,h:40,owner:'Ramesh',tier:1,dept:'sales'},
- {x:1340,y:720,w:60,h:40,owner:'Vera',tier:1,dept:'sales'},
- {x:1140,y:580,w:60,h:40,owner:null,tier:1,dept:'sales'},
- {x:1240,y:580,w:60,h:40,owner:'Doug',tier:1,dept:'sales'},
- {x:1340,y:580,w:60,h:40,owner:null,tier:1,dept:'sales'},
+ /* Sales floor: back-to-back clump (same idea as the junior pod). Two gapless columns share a
+    central seam; workers sit on the outer left (x~1094, west pocket) and the central aisle (x~1226).
+    A 45px corridor below the clump (y710-755) lets people reach the west seats. The room is too
+    narrow for a second full clump facing a shared aisle, so Doug + a vacant sit against the east
+    wall (facing in). North entrance moved to x1200-1240 so it doesn't dump onto the clump. */
+ {x:1160,y:596,w:40,h:50,owner:'Chad',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:1200,y:596,w:40,h:50,owner:'Dana',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:1160,y:652,w:40,h:50,owner:'Ramesh',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:1200,y:652,w:40,h:50,owner:'Vera',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:1340,y:596,w:40,h:50,owner:'Doug',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'left'},
+ {x:1340,y:652,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'left'},
  {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
  {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
  {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
@@ -847,7 +851,7 @@ const objects=[
   {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
   {type:'alarm',x:1250,y:15,w:16,h:22,label:'Fire Alarm'},       // kitchen
   {type:'alarm',x:410,y:15,w:16,h:22,label:'Fire Alarm'},        // west wing (HR)
-  {type:'water',x:1088,y:586,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor — by the north door
+  {type:'water',x:1078,y:595,w:24,h:30,label:'Water cooler',trapped:false},   // sales floor — moved to the left amenity area (Kyle's blue circle)
   {type:'water',x:30,y:540,w:24,h:30,label:'Water cooler',trapped:false},     // reception waiting area
   {type:'printer',x:430,y:140,w:34,h:26,label:'Printer',jammed:false},        // west-wing shared printer (HR)
   {type:'toilet',x:35,y:372,w:26,h:30,label:'Toilet (Exec)',rigged:false},    // exec restroom — left stall
@@ -865,7 +869,7 @@ const CONTAINERS=[
   {x:1246,y:499,w:28,h:22,label:'Senior sales bin',kind:'box'},
   {x:1246,y:399,w:28,h:22,label:'Senior sales bin',kind:'box'},
   {x:1246,y:299,w:28,h:22,label:'Senior sales bin',kind:'box'},
-  {x:1030,y:610,w:28,h:22,label:'Sales bin',kind:'box'},
+  {x:1035,y:720,w:28,h:22,label:'Sales bin',kind:'box'},
   {x:800,y:368,w:28,h:22,label:'Supply bin',kind:'box'},
   {x:1060,y:400,w:28,h:22,label:'Break bin',kind:'box'},
   {x:1225,y:50,w:28,h:22,label:'Kitchen bin',kind:'box'},
