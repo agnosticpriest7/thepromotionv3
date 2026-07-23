@@ -2094,6 +2094,7 @@ function startMeltEvent(n,final){today.meltdowns++;
        animation comes later — for now: walk there, the homage track plays, themed text. */
     const pr=nearestPrinter(n);
     meltEvent.printerMode=true;
+    meltEvent.swingCap=Math.round(rand(5,8));   // 5-8 deliberate swings, then done
     if(pr){ n.errand=null; n.goal={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)}; n.printerGoal=pr; }
     playMeltdownSting(PRINTER_TRACK);
   } else {
@@ -2131,18 +2132,31 @@ function tickMeltEvent(dt){
     if(pr){
       const spot={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)};
       const atPrinter=cdist(n,spot)<Math.round(28*S);
+      const cap=meltEvent.swingCap||6;
       if(!atPrinter){
         // Walk over with the bat DOWN (normal walk sprite). Don't rebuild the errand every
         // frame, and hold the swing clock at 0 so the first swing lands clean on arrival.
         if(!(n.errand&&n.errand.ptype==='rampage'))n.errand={x:spot.x,y:spot.y,dwell:99,ptype:'rampage',arrived:false};
         n.batFrame=null; meltEvent.batT=0;
       }
+      else if((meltEvent.prHits||0)>=cap){
+        // done — bat down, standing over the wreck; let the event wind down (rant + HR)
+        n.batFrame=null; n.goal=null; n.path=null;
+        if(!(n.errand&&n.errand.ptype==='rampage'))n.errand={x:spot.x,y:spot.y,dwell:99,ptype:'rampage',arrived:true};
+        else{n.errand.arrived=true;n.errand.dwell=99;}
+        if(!meltEvent.wreckDone){meltEvent.wreckDone=true;meltEvent.t=Math.max(meltEvent.t,meltEvent.dur-2.4);}
+      }
       else {
-        n.goal=null;n.path=null;n.errand=null;
+        /* HOLD at the printer. The dwell errand is kept ALIVE (arrived) — clearing it let
+           updateNPC walk them back to their desk mid-swing, so they oscillated off the spot
+           and never landed a single hit. */
+        n.goal=null;n.path=null;
+        if(!(n.errand&&n.errand.ptype==='rampage'))n.errand={x:spot.x,y:spot.y,dwell:99,ptype:'rampage',arrived:true};
+        else{n.errand.arrived=true;n.errand.dwell=99;}
         n.face=Math.atan2((pr.y+pr.h/2-n.y),(pr.x+pr.w/2-n.x));
-        // advance the swing loop (0 windup -> 1 mid -> 2 impact -> 3 recoil), ~0.9s per swing
+        // advance the swing loop (0 windup -> 1 mid -> 2 impact -> 3 recoil), ~1.2s per swing
         meltEvent.batT=(meltEvent.batT||0)+dt;
-        const perFrame=0.22;                       // 4 frames * 0.22 ≈ 0.9s per swing
+        const perFrame=0.30;                       // slower, deliberate swing (was 0.22 = frantic)
         const totalFrames=Math.floor(meltEvent.batT/perFrame);
         n.batFrame=totalFrames%4;
         // the impact is frame 2 of each swing cycle. Fire once per swing, keyed to the
@@ -2251,7 +2265,7 @@ function meltdownCover(){return !!meltEvent;}
 function meltdown(n){
   /* 7% of meltdowns are the Office Space homage: instead of the heavy-metal freakout, the
      victim walks to the printer and executes it. Flag it here; startMeltEvent stages it. */
-  n.printerMode = Math.random()<0.50;   // TEMP: 50% for testing (ship value is 0.07)
+  n.printerMode = Math.random()<0.07;   // rare: 7% of meltdowns are the printer-execution homage
   SFX.meltdown();
   addShake(4,0.55);
   addPuff(n.x+n.w/2,n.y+4,'rgba(240,236,226,',12);
@@ -5133,7 +5147,7 @@ function drawObjects(){
       const im=ART['printer_wreck'];
       const fw=im.naturalWidth/4;
       const st=Math.max(0,Math.min(3,o.wreckStage));
-      const tw=Math.round(o.w*1.15), th=Math.round(im.naturalHeight*tw/fw);
+      const tw=Math.round(U1(ART_W.printer)*1.12), th=Math.round(im.naturalHeight*tw/fw);   // match the printer sprite's drawn size (o.w is the tiny collision box)
       if(isFinite(th)&&th>0){
         ctx.drawImage(im, Math.round(st*fw),0, Math.round(fw),im.naturalHeight,
           Math.round(cx-tw/2), Math.round(cyB-th), tw, th);
