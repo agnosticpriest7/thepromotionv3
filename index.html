@@ -787,11 +787,13 @@ const desks=[];
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
 [{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_left'},
  {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'},
- {x:960,y:600,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant)
- {x:960,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},
- {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales',art:'cubicle_desk',seatSide:'down'},   // re-oriented: faces down, no longer up
+ {x:970,y:540,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant) — up a square, tucked against east wall (x1015)
+ /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
+    Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
+ {x:840,y:640,w:40,h:60,owner:'Marcus',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
+ {x:880,y:640,w:40,h:60,owner:null,tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
- {x:900,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:880,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:1040,y:720,w:60,h:40,owner:'Chad',tier:1,dept:'sales'},
  {x:1140,y:720,w:60,h:40,owner:'Dana',tier:1,dept:'sales'},
  {x:1240,y:720,w:60,h:40,owner:'Ramesh',tier:1,dept:'sales'},
