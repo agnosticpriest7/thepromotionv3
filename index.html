@@ -1117,7 +1117,7 @@ NPCS.filter(n=>n.dept==='hr').forEach((h,i)=>{
   const seeds=[68,64,60,58,42,38,34,30,18,12,8,5];
   ws.forEach((w,i)=>{w.career=seeds[i]!==undefined?seeds[i]+rand(-3,3):rand(4,20);});
 }
-const boss=NPC('Mr. Sterling','exec',null); boss.boss=true; boss.alive=false; boss.onFloor=false; boss.route=[]; boss.routeIdx=0; boss.speed=0.77; NPCS.push(boss);
+const boss=NPC('Mr. Sterling','exec',null); boss.boss=true; boss.alive=true; boss.onFloor=true; boss.lapping=false; boss.x=130; boss.y=95; boss.route=[]; boss.routeIdx=0; boss.speed=0.77; NPCS.push(boss);   // the CEO now LIVES in his office (top-left glass box) and laps once a day
 let bossTriggerMin=0, bossToured=false;
 function scheduleBoss(){
   if(player.rank>=5){bossTriggerMin=DAY_START+rand(70,180);bossToured=false;return;}bossTriggerMin=rand(9*60,15*60);bossToured=false;}
@@ -1131,14 +1131,26 @@ function scheduleDrill(){drillPending=Math.random()<0.18;drillMin=rand(9*60,15*6
 function assembleAtElevator(){
   let i=0;
   const gx=Math.round(15*S), gy=Math.round(15*S);
+  /* Staggered morning arrival — the mirror image of the staggered clock-out (goHome). Held
+     off-screen (gone=true, so every "is present" filter already skips them) until arriveAt,
+     then they step out of the lift and walk to their desk. Day 1 keeps everyone present so
+     Dale's orientation tour isn't touring empty desks. The manager always opens the floor. */
+  const stagger=(day>1);
   activeNPCs().forEach(n=>{
     if(n.boss)return;
     n.wentHome=false;n.gone=false;n.leaving=false;n.leaveAt=undefined;
     n.hrSettled=false;n.hrDeskT=rand(13,17);n.lastBeat=-1;n.dwell=0;
-    n.x=clamp(MUSTER.x+((i%5)-2)*gx,18,W-34);
-    n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,H-34);
     n.goal=null;n.path=null;n.errand=null;n.seat=null;n.mission=null;n.wp=0;n.repathT=0;n.stuckT=0;
-    unstickEnt(n);
+    if(stagger&&!n.mgr){
+      n.arriveAt=DAY_START+((n.id*7)%18);   // 8:00–8:17, id-based like leaveAt
+      n.arrived=false;n.gone=true;           // "still commuting" — off-screen and excluded until arriveAt
+      n.x=-400;n.y=-400;
+    } else {
+      n.arriveAt=DAY_START;n.arrived=true;
+      n.x=clamp(MUSTER.x+((i%5)-2)*gx,18,W-34);
+      n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,H-34);
+      unstickEnt(n);
+    }
     i++;
   });
   player.x=ELEVATOR.x+Math.round(4*S);player.y=ELEVATOR.y+Math.round(26*S);
@@ -1664,8 +1676,8 @@ function hrMorning(n,dt){
 function npcTarget(n){
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
-  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(122*S),y:Math.round(105*S)};
-  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(138*S),y:Math.round(430*S)};
+  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(490*S),y:Math.round(455*S)};   // meeting room (380,280,260,220)
+  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
   if(ph==='Clock-Out')return MUSTER;
   if(n.homeDesk)return deskSeat(n.homeDesk);
   return {x:Math.round(430*S),y:Math.round(250*S)};
@@ -1687,6 +1699,18 @@ function goHome(n,dt){
   }
 }
 function updateNPC(n,dt){
+  /* staggered morning arrival: while still commuting, stay off-screen; at arriveAt, step out
+     of the lift and proceed normally. (arrived===false only on the days assembleAtElevator
+     staggered them; everyone else has arrived===true/undefined and skips this.) */
+  if(n.arrived===false&&!n.boss){
+    if(clock>=n.arriveAt){
+      n.arrived=true;n.gone=false;
+      n.x=clamp(ELEVATOR.x+((n.id%5)-2)*Math.round(11*S),18,W-34);
+      n.y=clamp(ELEVATOR.y+Math.round(22*S)+(n.id%3)*Math.round(9*S),18,H-34);
+      n.lastX=n.x;n.lastY=n.y;n.goal=null;n.path=null;n.wp=0;n.stuckT=0;
+      unstickEnt(n);
+    } else return;
+  }
   if(n.wentHome||n.gone)return;
   if(entStuck(n))unstickEnt(n);          // a resized desk / a rebuilt grid must never trap anyone
   if(!intro&&!alarmActive&&!meltEvent&&currentPhase().name==='Clock-Out'&&!n.boss&&!n.receptionist){
@@ -1704,14 +1728,14 @@ function updateNPC(n,dt){
     /* she used to be furniture. Now she files in from the lift, works the desk, and leaves. */
     const ph=currentPhase().name;
     if(n.bubble){n.bubble.t-=dt;if(n.bubble.t<=0)n.bubble=null;}
-    const post={x:Math.round(424*S),y:Math.round(586*S)};
+    const post={x:Math.round(110*S),y:Math.round(506*S)};   // behind the reception desk (drawn at 110,566), centred
     if(ph==='Clock-Out'){goHome(n,dt);return;}
     if(cdist(n,post)>Math.round(20*S)){
       setGoal(n,post.x,post.y);followPath(n);checkStuck(n,dt,null);
       return;
     }
     n.goal=null;n.path=null;
-    n.face=-Math.PI/2;
+    n.face=Math.PI/2;   // face DOWN, toward the desk front / visitors
     if(!n.bubble&&Math.random()<0.0016)n.bubble={t:2.4,text:pick(['Paper Supply Co!','Please hold.','He is IN a meeting.','Sign here please.','You have a visitor.','Transferring you now.'])};
     return;
   }
@@ -2384,18 +2408,19 @@ function rivalsClimb(){
 }
 const PROMOTE_OUT=75;
 
-/* CEO tour */
+/* CEO's daily lap — he steps out of his office, walks one full loop of the floor, and goes
+   back. He's a resident now (see updateBoss), so this only sets the lap in motion; his idle
+   behaviour walks him home when the route runs out. Route is authored at 1400x760 and scaled
+   here (built at runtime, after scaleWorld). Every waypoint was verified walkable + reachable
+   from the office (test connectivity check). */
 function startBossTour(){
-  boss.alive=true;boss.onFloor=true;boss.x=EXIT.x;boss.y=EXIT.y;boss.routeIdx=0;boss.goal=null;boss.path=null;boss.stuckT=0;boss.gone=false;
-  /* authored at 1240x760 like everything else, so scale it here — it's built at runtime,
-     long after scaleWorld() has run */
-  boss.route=[{x:430,y:470},{x:340,y:360},{x:250,y:230},{x:390,y:150},{x:560,y:150},
-    {x:620,y:330},{x:560,y:470},{x:250,y:520}].map(p=>({x:Math.round(p.x*S),y:Math.round(p.y*S)}));
-  boss.route.push({x:EXIT.x,y:EXIT.y});
+  boss.lapping=true;boss.routeIdx=0;boss.goal=null;boss.path=null;boss.stuckT=0;
+  boss.route=[[200,520],[180,640],[430,470],[560,470],[900,440],[1150,630],[1300,650],[1320,450],[1280,150],[950,200],[600,200],[300,250]]
+    .map(p=>({x:Math.round(p[0]*S),y:Math.round(p[1]*S)}));
   addTask({via:'npc',label:`Bring the Henderson file to ${boss.name} (CEO)`,target:boss.name,bonus:true});
-  logLine(`The CEO, ${boss.name}, is walking the floor — and wants the Henderson file. Look sharp.`,'a');toast('The CEO is on the floor');
+  logLine(`The CEO, ${boss.name}, is doing his rounds — and wants the Henderson file. Look sharp.`,'a');toast('The CEO is walking the floor');
 }
-function endBossTour(){boss.alive=false;boss.onFloor=false;const bt=tasks.find(t=>t.bonus&&!t.done);if(bt){tasks=tasks.filter(t=>t!==bt);logLine('The CEO went back upstairs. You missed the chance to impress him.','t');renderTasks();}}
+function endBossTour(){boss.lapping=false;boss.routeIdx=0;boss.goal=null;boss.path=null;const bt=tasks.find(t=>t.bonus&&!t.done);if(bt){tasks=tasks.filter(t=>t!==bt);logLine('The CEO finished his rounds and headed back to his office.','t');renderTasks();}}
 /* ---- Day 1: Dale walks you to your desk (scripted route, no physics) ---- */
 let intro=null;
 /* Dialogue beats gated on POSITION. `hold:true` marks a point of interest — Dale stops
@@ -2532,12 +2557,19 @@ function endIntro(bailed){
   logLine(bailed?'You find your own way to your desk.':'Dale wanders off. The day is yours.','t');
   toast('Get to work. Or... get creative.');
 }
+const BOSS_POST_A={x:130,y:95};   // authored office post — behind his desk, watching the floor
 function updateBoss(n,dt){
-  if(!n.onFloor)return;
-  if(n.routeIdx>=n.route.length){endBossTour();return;}
-  const wp=n.route[n.routeIdx];setGoal(n,wp.x,wp.y);followPath(n);
-  checkStuck(n,dt,()=>{n.routeIdx++;if(n.routeIdx>=n.route.length)endBossTour();});
-  if(n.routeIdx<n.route.length&&cdist(n,n.route[n.routeIdx])<Math.round(24*S)){n.routeIdx++;if(n.routeIdx>=n.route.length)endBossTour();}
+  if(n.lapping){
+    if(n.routeIdx>=n.route.length){endBossTour();return;}
+    const wp=n.route[n.routeIdx];setGoal(n,wp.x,wp.y);followPath(n);
+    checkStuck(n,dt,()=>{n.routeIdx++;});
+    if(cdist(n,wp)<Math.round(24*S)){n.routeIdx++;}
+    return;
+  }
+  /* resident: hold his post in the office (walking back to it after a lap), watching the floor */
+  const post={x:Math.round(BOSS_POST_A.x*S),y:Math.round(BOSS_POST_A.y*S)};
+  if(cdist(n,post)>Math.round(20*S)){setGoal(n,post.x,post.y);followPath(n);checkStuck(n,dt,null);}
+  else{n.goal=null;n.path=null;n.face=Math.PI/2;}
 }
 
 /* branch manager rounds */
@@ -2847,7 +2879,7 @@ function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);play
 const menu=document.getElementById('menu');let menuOpen=false;
 function nearestInteractable(){
   const pc=center(player);let best=null,bd=Math.round(44*S);
-  for(const n of activeNPCs()){if(n.boss&&!n.onFloor)continue;const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}
+  for(const n of activeNPCs()){if(n.boss&&!n.lapping)continue;const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}   // CEO only interactable while out on his lap, not sealed in his office
   for(const o of objects){const d=cdist(o,pc);if(d<bd){bd=d;best={kind:'obj',ref:o};}}
   for(const c of CONTAINERS){const d=cdist(c,pc);if(d<bd){bd=d;best={kind:'container',ref:c};}}
   for(const d of desks){if(!d.owner)continue;const c=cdist(d,pc);if(c<bd){bd=c;best={kind:'desk',ref:d};}}
@@ -3951,7 +3983,7 @@ function finishSnoop(){const dale=NPCS.find(n=>n.mgr&&n.alive);const who=activeN
 /* meeting attendance */
 let meetingCredited=false;
 let phaseCred={};
-function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(20)&&player.x<U(270)&&player.y>U(360)&&player.y<U(500);}
+function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(840)&&player.x<U(1100)&&player.y>U(280)&&player.y<U(500);}   // the NEW break room (840,280,260,220); the old one used to overlap reception
 function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1400)&&player.y>U(0)&&player.y<U(280);}
 function phaseCheckins(ph){
   if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
@@ -4086,7 +4118,7 @@ function nextDay(){
   player.suspicion=clamp(player.suspicion-10,0,100);
   objects.forEach(o=>{o.jammed=false;o.trapped=false;o.wreckStage=0;});desks.forEach(d=>{d.rigged=null;d.planted=null;});
   activeNPCs().forEach(n=>{
-    if(n.boss){n.alive=false;n.onFloor=false;return;}
+    if(n.boss){n.alive=true;n.onFloor=true;n.lapping=false;n.gone=false;n.x=Math.round(130*S);n.y=Math.round(95*S);n.goal=null;n.path=null;n.routeIdx=0;n.stuckT=0;return;}   // CEO opens the day in his office
     if(n.mgr){n.lap=0;n.maxLaps=Math.round(rand(2,3));n.routeIdx=0;n.parked=false;n.chat=null;n.chatCd=rand(6,14);n.stuckT=0;}
     else{
       n.patrolIdx=0;n.stuckT=0;
@@ -5040,18 +5072,25 @@ function drawDesks(){
     if(d.rigged){ctx.fillStyle='#c0392b';ctx.fillRect(d.x+d.w-8,d.y+4,6,6);}
     if(d.planted){ctx.fillStyle='#8e44ad';ctx.fillRect(d.x+d.w-8,d.y+14,6,6);}
     if(d.owner&&d.owner!=='you'&&d.loot&&d.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(d.x+d.w-7,d.y-6,5,5);}
-    /* the nameplate sits in the flat panel on the LEFT of the desk, not floating below it */
-    const plate=(nm,bg,fg)=>{
-      ctx.font='bold '+U1(10)+'px monospace';
-      const tw=ctx.measureText(nm).width;
-      const pw=tw+U1(8), ph=U1(13);
-      const px=Math.round(d.x+U1(4)), py=Math.round(d.y+d.h-ph-U1(5));
-      ctx.fillStyle=bg;ctx.fillRect(px,py,pw,ph);
-      ctx.strokeStyle='rgba(42,39,33,.35)';ctx.strokeRect(px+0.5,py+0.5,pw-1,ph-1);
-      ctx.fillStyle=fg;ctx.textAlign='left';ctx.fillText(nm,px+U1(4),py+ph-U1(4));
-    };
-    if(d.owner)plate((d.owner==='you')?'YOU':d.owner.split(' ')[0],'rgba(255,255,255,.92)','#2a2721');
-    else plate('VACANT','rgba(120,110,90,.85)','#f3f1ea');
+  }
+}
+/* Desk nameplates in their OWN pass, drawn after the walls so a wall can never occlude one,
+   and positioned on the actual SPRITE footprint (not the orientation-independent collision box)
+   so the plate lands on the desk for up / left / right facing sprites too — not floating off to
+   the side where it used to vanish. */
+function drawDeskPlates(){
+  for(const d of desks){
+    const art=deskArt(d);
+    const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
+    const dw=U1(ART_W[art]||40);
+    const nm=(d.owner==='you')?'YOU':(d.owner?d.owner.split(' ')[0]:'VACANT');
+    const bg=(d.owner)?'rgba(255,255,255,.92)':'rgba(120,110,90,.85)', fg=(d.owner)?'#2a2721':'#f3f1ea';
+    ctx.font='bold '+U1(10)+'px monospace';
+    const tw=ctx.measureText(nm).width, pw=tw+U1(8), ph=U1(13);
+    const px=Math.round(cx-dw/2+U1(4)), py=Math.round(cyB-ph-U1(4));   // sprite front-left, near its base
+    ctx.fillStyle=bg;ctx.fillRect(px,py,pw,ph);
+    ctx.strokeStyle='rgba(42,39,33,.35)';ctx.strokeRect(px+0.5,py+0.5,pw-1,ph-1);
+    ctx.fillStyle=fg;ctx.textAlign='left';ctx.fillText(nm,px+U1(4),py+ph-U1(4));
   }
 }
 const OBJ_ART={printer:'printer',water:'water_cooler',coffee:'coffee_machine',supply:'supply_shelf',
@@ -5089,7 +5128,8 @@ function drawObjects(){
     if(o.jammed && !(o.type==='printer'&&o.wreckStage>0)){ctx.fillStyle='#c0392b';ctx.fillRect(o.x+o.w-6,o.y-6,6,6);}
     if(o.trapped){ctx.fillStyle='#8e44ad';ctx.fillRect(o.x+o.w-6,o.y-6,6,6);}
     if(o.rigged){ctx.fillStyle='rgba(90,160,200,.35)';ctx.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);}
-    labelBox(o.label,cx,o.y-U1(18));
+    /* no label on wall safety props (fire alarms / extinguishers) — they read on their own */
+    if(o.type!=='alarm')labelBox(o.label,cx,o.y-U1(18));
   }
 }
 
@@ -5602,7 +5642,7 @@ function drawContainers(){
       ctx.fillStyle='#8a795a';ctx.fillRect(c.x+1,c.y+1,c.w-2,c.h-2);
     }
     if(c.loot&&c.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(c.x+c.w-6,c.y-6,5,5);}
-    labelBox(CONT_LABEL[c.kind]||'cabinet',cx,c.y-U1(14));
+    /* no name labels on containers (chests / shelves / lockers / fridge / vending) — the sprites read on their own */
   }
   /* CEO's executive office (top-left glass office): desk + furnishings */
   sprAt('manager_desk',Math.round(120*S),Math.round(120*S),'manager_desk');
@@ -5657,7 +5697,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawLighting();if(propMap)drawPropMap();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -7488,7 +7528,8 @@ function npcSnap(n){ return { id:n.id,name:n.name,dept:n.dept,x:n.x,y:n.y,alive:
   mood:n.mood,stress:n.stress,speed:n.speed,career:n.career,ptype:n.ptype,profiled:!!n.profiled,
   resist:n.resist||{},strikes:n.strikes||0,mistakes:n.mistakes||0,meltdowns:n.meltdowns||0,tier:n.tier,
   friend:n.friend,friends:(n.friends||[]).slice(),feudWith:n.feudWith||null,supported:!!n.supported,
-  suspectsYou:!!n.suspectsYou,caughtToday:n.caughtToday||0,homeDeskOwner:n.homeDesk?n.homeDesk.owner:null }; }
+  suspectsYou:!!n.suspectsYou,caughtToday:n.caughtToday||0,homeDeskOwner:n.homeDesk?n.homeDesk.owner:null,
+  arrived:n.arrived!==false,arriveAt:(typeof n.arriveAt==='number'?n.arriveAt:DAY_START) }; }
 function deskSnap(d){ return { owner:d.owner,tier:d.tier,x:d.x,y:d.y,rigged:d.rigged||null,planted:d.planted||null,
   loot:(d.loot&&d.loot.slice)?d.loot.slice():null }; }
 
@@ -7530,6 +7571,7 @@ function applySnapshot(s){
       strikes:ns.strikes,mistakes:ns.mistakes,meltdowns:ns.meltdowns,tier:ns.tier,friend:ns.friend,
       friends:(ns.friends||[]).slice(),feudWith:ns.feudWith,supported:ns.supported,suspectsYou:ns.suspectsYou,
       caughtToday:ns.caughtToday,homeDesk:ns.homeDeskOwner?desks.find(d=>d.owner===ns.homeDeskOwner)||n.homeDesk:n.homeDesk,
+      arrived:ns.arrived!==false,arriveAt:(typeof ns.arriveAt==='number'?ns.arriveAt:DAY_START),
       path:null,goal:null,wp:0,seat:null,bubble:null,chat:null,mission:null,prankBuild:null,
       lastX:ns.x,lastY:ns.y,stuckT:0,moving:false,animT:0,melFx:0,alertFx:0 });
     restored.push(n); });
