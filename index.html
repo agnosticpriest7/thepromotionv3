@@ -584,6 +584,7 @@ function sprAt(name,cx,cyBottom,widthKey){
 function tileFloor(name,x,y,w,h,size){
   if(!ok(name))return false;
   if(!isFinite(x)||!isFinite(y)||!isFinite(w)||!isFinite(h)||w<=0||h<=0)return false;
+  if(!inView(x,y,w,h))return true;   // off-screen floor: nothing to tile
   const im=ART[name];
   const t=size||Math.round(64*S/1.8);
   ctx.save();
@@ -739,6 +740,15 @@ function unstickEnt(e){
 function playerStuck(){return entStuck(player);}
 function unstickPlayer(){unstickEnt(player);}
 function updateCamera(){const vw=VW/ZOOM,vh=VH/ZOOM;cam.x=player.x+player.w/2-vw/2;cam.y=player.y+player.h/2-vh/2;}
+/* Viewport culling: only ~15% of the 2520x1368 world is on-screen at once, so drawing every
+   wall/desk/container/object/NPC every frame wasted ~85% of the work (and it grew as props were
+   added). Skip anything whose sprite can't touch the view. Margin covers sprites, which draw
+   larger than their box and rise up-screen. VISUAL ONLY — the sim still updates everything. */
+const CULL_M=Math.round(200*S/1.8);
+function inView(x,y,w,h){
+  const vw=VW/ZOOM, vh=VH/ZOOM;
+  return x < cam.x+vw+CULL_M && x+w > cam.x-CULL_M && y < cam.y+vh+CULL_M && y+h > cam.y-CULL_M;
+}
 const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a30',intern:'#d9a521',
   floor:'#d8d2c4',wall:'#8f8672',wallLt:'#a89e88',desk:'#9c8f6f',deskTop:'#c7bda0',chair:'#5a4632',table:'#7a5c3a'};
 
@@ -1120,7 +1130,7 @@ NPCS.filter(n=>n.dept==='hr').forEach((h,i)=>{
 const boss=NPC('Mr. Sterling','exec',null); boss.boss=true; boss.alive=true; boss.onFloor=true; boss.lapping=false; boss.x=130; boss.y=95; boss.route=[]; boss.routeIdx=0; boss.speed=0.77; NPCS.push(boss);   // the CEO now LIVES in his office (top-left glass box) and laps once a day
 let bossTriggerMin=0, bossToured=false;
 function scheduleBoss(){
-  if(player.rank>=5){bossTriggerMin=DAY_START+rand(70,180);bossToured=false;return;}bossTriggerMin=rand(9*60,15*60);bossToured=false;}
+  if(player.rank>=5){bossTriggerMin=DAY_START+rand(70,180);bossToured=false;return;}bossTriggerMin=rand(11*60,15*60);bossToured=false;}   // lap late-morning..mid-afternoon, so he's clearly at his desk through the morning
 const DRAWER_CAP=6;      // HR searches this
 const HIDDEN_CAP=4;      // taped behind the modesty panel. HR does not find this.
 const STASH_CAP=HIDDEN_CAP;
@@ -4807,9 +4817,10 @@ function drawExterior(){
     for(let ty=y0;ty<y0+h;ty+=T)for(let tx=x0+(((ty/T)|0)%2?T:0);tx<x0+w;tx+=T*2)ctx.fillRect(tx,ty,T,T);
   }
   /* shrubs hugging the outside of the walls — fixed positions, so they never crawl */
-  const pad=Math.round(30*S), step=Math.round(150*S);
-  for(let bx=-pad;bx<=W+pad;bx+=step){sprAt('bush',bx,-pad,'bush');sprAt('bush',bx+step/2,H+pad,'bush');}
-  for(let by=Math.round(60*S);by<=H;by+=step){sprAt('bush',-pad,by,'bush');sprAt('bush',W+pad,by+step/2,'bush');}
+  const pad=Math.round(30*S), step=Math.round(150*S), bs=Math.round(50*S);
+  const bush=(bx,by)=>{ if(inView(bx-bs/2,by-bs,bs,bs))sprAt('bush',bx,by,'bush'); };   // cull off-screen shrubs
+  for(let bx=-pad;bx<=W+pad;bx+=step){bush(bx,-pad);bush(bx+step/2,H+pad);}
+  for(let by=Math.round(60*S);by<=H;by+=step){bush(-pad,by);bush(W+pad,by+step/2);}
   /* a drop shadow, so the block reads as a building standing on the ground */
   const sh=Math.round(12*S);
   ctx.fillStyle='rgba(0,0,0,.20)';
@@ -4890,8 +4901,8 @@ function drawWalls(){
       return {horiz:true, x:w.x, y:frontY-t, w:w.w, h:t, frontY}; }
     return {horiz:false, x:w.x, y:w.y, w:w.w, h:w.h, frontY:w.y+w.h};   // vertical: the ribbon itself
   }
-  /* draw furthest-back walls first (painter's) so nearer walls occlude cleanly */
-  const order=walls.map((w,i)=>({w,i,k:w.y+w.h})).sort((a,b)=>a.k-b.k||a.i-b.i);
+  /* draw furthest-back walls first (painter's) so nearer walls occlude cleanly — on-screen only */
+  const order=walls.map((w,i)=>({w,i,k:w.y+w.h})).filter(o=>inView(o.w.x,o.w.y,o.w.w,o.w.h)).sort((a,b)=>a.k-b.k||a.i-b.i);
 
   /* PASS 1 — bodies / front faces (+ glass panes, grout, seams) */
   for(const {w} of order){
@@ -5061,6 +5072,7 @@ function deskArt(d){
 function drawDesks(){
   fitDeskBoxes();
   for(const d of desks){
+    if(!inView(d.x,d.y,d.w,d.h))continue;
     const isMine=(d.owner==='you');
     const art=deskArt(d);
     const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
@@ -5080,6 +5092,7 @@ function drawDesks(){
    the side where it used to vanish. */
 function drawDeskPlates(){
   for(const d of desks){
+    if(!inView(d.x,d.y,d.w,d.h))continue;
     const art=deskArt(d);
     const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
     const dw=U1(ART_W[art]||40);
@@ -5107,6 +5120,7 @@ function labelBox(txt,cx,by){
 }
 function drawObjects(){
   for(const o of objects){
+    if(!inView(o.x,o.y,o.w,o.h))continue;
     const art=OBJ_ART[o.type];
     const cx=o.x+o.w/2, cyB=o.y+o.h+U1(4);
     let drew=false;
@@ -5342,6 +5356,7 @@ function drawAlertMark(n){
 function drawNPC(n){
   if(n.wentHome||n.gone)return;
   if(n.boss&&!n.onFloor)return;
+  if(!inView(n.x,n.y,n.w,n.h))return;   // off-screen: skip the whole sprite + overlays
   {let sh=(n.melFx>0)?Math.round(Math.sin(n.melFx*40)*3):0;
    const st=stressTier(n);let jit=(st>=3&&isWorker(n))?Math.round(Math.sin(nowT*18+n.x)*2):0;
    if(n.rampage)jit=Math.round(Math.sin(nowT*40+n.x)*3);
@@ -5635,6 +5650,7 @@ const CONT_ART={cabinet:'filing_cabinet',locker:'lockers',fridge:'fridge',box:'s
 const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplies',vending:'vending'};
 function drawContainers(){
   for(const c of CONTAINERS){
+    if(!inView(c.x,c.y,c.w,c.h))continue;
     const art=c.art||CONT_ART[c.kind]||'filing_cabinet';   // c.art = per-container sprite override
     const cx=c.x+c.w/2, cyB=c.y+c.h+U1(4);
     if(!sprAt(art,cx,cyB,art)){
