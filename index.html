@@ -787,7 +787,9 @@ const desks=[];
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
 [{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_left'},
  {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'},
- {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales'},
+ {x:960,y:600,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant)
+ {x:960,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},
+ {x:860,y:660,w:60,h:40,owner:'Marcus',tier:0,dept:'sales',art:'cubicle_desk',seatSide:'down'},   // re-oriented: faces down, no longer up
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:900,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:1040,y:720,w:60,h:40,owner:'Chad',tier:1,dept:'sales'},
@@ -826,7 +828,7 @@ const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
 /* Interactive objects REBUILT from the plan pins (test/gen_level.js). Two printers + two
    waters are intentional. Toilets sit in the central Restroom. */
 const objects=[
-  {type:'printer',x:932,y:565,w:34,h:26,label:'Printer',jammed:false},   // dropped one square out of the hallway
+  {type:'printer',x:770,y:610,w:34,h:26,label:'Printer',jammed:false},   // junior-sales floor, where the intern stands
   {type:'printer',x:692,y:144,w:34,h:26,label:'Printer',jammed:false},
   {type:'water',x:760,y:488,w:24,h:30,label:'Water cooler',trapped:false},
   {type:'water',x:760,y:288,w:24,h:30,label:'Water cooler',trapped:false},
