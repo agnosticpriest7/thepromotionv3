@@ -836,8 +836,8 @@ const objects=[
   {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
   {type:'phones',x:1030,y:668,w:32,h:22,label:'Sales phones'},   // moved into the freed Sales-bin slot
   {type:'supply',x:708,y:402,w:40,h:26,label:'Supplies'},
-  {type:'toilet',x:457,y:676,w:26,h:30,label:'Toilet (M)',rigged:false},
-  {type:'toilet',x:572,y:676,w:26,h:30,label:'Toilet (W)',rigged:false},
+  {type:'toilet',x:457,y:696,w:26,h:30,label:'Toilet (M)',rigged:false},
+  {type:'toilet',x:572,y:696,w:26,h:30,label:'Toilet (W)',rigged:false},
   /* office-manager amenity pass: fire-alarm coverage, a sales-floor cooler, a west-wing
      printer, and a toilet for the exec restroom (its sinks are drawn in drawBathroom). */
   {type:'alarm',x:30,y:690,w:16,h:22,label:'Fire Alarm'},        // west egress (elevator lobby)
@@ -4878,16 +4878,15 @@ function drawBathroom(){
   const U=(v)=>Math.round(v*S);
   const div=(x,y)=>sprW('stall_v',U(x),U(y),U1(20));   // a vertical stall partition (a touch shorter so it reads as a partition, not a monolith)
   /* ===== CENTRAL RESTROOM (380,600,280,160) — Men's (left) / Women's (right) ===== */
-  [[412,628],[452,628],[566,628],[606,628]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
-  sprAt('urinal',U(398),U(700),'urinal');                     // men's urinal (its own corner — no extra wall)
-  div(445,712); div(495,712);                                 // toilet-M stall
-  div(560,712); div(610,712);                                 // toilet-W stall
-  /* (dropped the double-stacked M/W partition + the urinal side wall — too many bars) */
+  [[412,628],[606,628]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // one sink per side (dropped the ones lined up with the doors)
+  sprAt('urinal',U(398),U(700),'urinal');                     // men's urinal
+  div(445,732); div(495,732);                                 // toilet-M stall — dropped a square to the back wall
+  div(560,732); div(610,732);                                 // toilet-W stall
   ctx.fillStyle='rgba(60,70,62,.7)';ctx.font='bold '+U1(12)+'px monospace';ctx.textAlign='center';
   ctx.fillText('M',U(455),U(662));ctx.fillText('W',U(585),U(662));ctx.textAlign='left';
-  /* ===== EXEC RESTROOM (0,280,240,140) — two stalls flanking a centre urinal ===== */
-  [[40,314],[85,314],[155,314],[200,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));
-  sprAt('urinal',U(120),U(404),'urinal');                     // centre urinal
+  /* ===== EXEC RESTROOM (0,280,240,140) — two toilet chambers split by a central wall ===== */
+  [[85,314],[200,314]].forEach(p=>sprAt('sink',U(p[0]),U(p[1]),'sink'));   // one sink per chamber (dropped the door-side ones)
+  /* no urinal — it was sitting inside the central dividing wall */
   div(28,410); div(76,410);                                   // left stall
   div(165,410); div(212,410);                                 // right stall
 }
