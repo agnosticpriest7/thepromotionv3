@@ -3376,20 +3376,32 @@ function spreadGossip(n){
    You talk to a worker (the MESSENGER / vector) and pick the SUBJECT from a
    submenu. With dirt on the subject it's a sure thing and the dirt is spent;
    with no proof it's a 40% coin-flip that bites weaker. A messenger loyal to
-   the subject shuts it down (backfire, telegraphed in the submenu); a rival or
-   feuding messenger carries it 1.3x. Replaces plantGossip/spreadGossip (now
-   unused). Tuning dials: the 0.40 no-proof chance and the 16 no-proof power. */
+   the subject shuts it down (backfire, telegraphed in the submenu); a messenger
+   FEUDING with the subject carries it 1.3×, and the messenger's PERSONALITY nudges
+   how well they carry it (Socialite carries far; Zealot/Paranoid balk) — shown in
+   the submenu only once you've profiled them. Replaces plantGossip/spreadGossip
+   (now unused). Tuning dials: the 0.40 no-proof chance and the 16 no-proof power. */
+/* messenger carrier multiplier by personality — one clean rule (Socialite +30%), two balkers
+   (Zealot/Paranoid −40%), the rest neutral. Applied to the rumour's stress hit; stacks with
+   the feud 1.3×. Always in effect, but only VISIBLE in the submenu once the messenger is read. */
+function ptypeCarry(ptype){return ptype==='socialite'?1.3:(ptype==='zealot'||ptype==='paranoid')?0.6:1.0;}
+function carrierNote(v){
+  if(!v.profiled)return 'unknown carrier';                 // read them to see the dial (Watch how they work)
+  const m=ptypeCarry(v.ptype);
+  return m>1?`${PTYPE_NAME[v.ptype]} +${Math.round((m-1)*100)}%`
+       : m<1?`${PTYPE_NAME[v.ptype]} −${Math.round((1-m)*100)}%`
+       : '';                                               // profiled + neutral: no clause (correctly reads as no effect)
+}
 function pickRumorSubject(vector){
   const subjects=activeNPCs().filter(x=>isWorker(x)&&x!==vector);
   if(!subjects.length){toast('Nobody else to gossip about.');return;}
   const items=subjects.map(t=>{
     const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
     const d=dirtOn(t.name);
-    const boost=(vector.rival||vector.feudWith===t.name);
-    const risk = loyal ? `loyal to ${t.name.split(' ')[0]} — backfires`
-               : d ? 'you have proof — sticks'
-               : boost ? 'no proof — 40% · willing carrier'
-               : 'no proof — 40%';
+    const feud=(vector.feudWith===t.name);
+    let risk;
+    if(loyal){ risk=`loyal to ${t.name.split(' ')[0]} — backfires`; }
+    else { const parts=[d?'you have proof — sticks':'no proof — 40%']; if(feud)parts.push('willing carrier'); const cn=carrierNote(vector); if(cn)parts.push(cn); risk=parts.join(' · '); }
     return {label:`About ${t.name}${t.rival?' ★':''}${d?' · DIRT':''}`,risk,hot:!!d,act:()=>spreadRumorAbout(vector,t)};
   });
   items.push({label:'Cancel',act:()=>{}});
@@ -3417,12 +3429,14 @@ function spreadRumorAbout(vector,t){
   if(d){const i=player.leverage.indexOf(d);if(i>=0)player.leverage.splice(i,1);renderLeverage();}
   {const m=missions.find(x=>!x.done&&x.kind==='rumor'&&x.target===t.name);if(m)setTimeout(()=>creditMission(m,seen?0.3:0.05),400);}
   if(Math.random()<chance){
-    const boost=(vector.rival||vector.feudWith===t.name)?1.3:1.0;
-    const hit=Math.round(basePower*boost);
+    const feudBoost=(vector.feudWith===t.name)?1.3:1.0;
+    const carry=ptypeCarry(vector.ptype);
+    const hit=Math.round(basePower*feudBoost*carry);   // single round on the stacked multipliers
+    const willing=feudBoost>1||carry>1, reluctant=carry<1;
     t.stress=clamp(t.stress+hit,0,100);
     t.mood=clamp(t.mood-Math.round(hit*0.8),-100,100);
     t.bubble={t:2.4,text:'Who’s been talking?'};
-    logLine(`Spread a rumour about ${t.name.split(' ')[0]} through ${vector.name.split(' ')[0]}. It reaches them and bites${boost>1?` — ${vector.name.split(' ')[0]} was happy to carry it`:''}.${d?'':' (no proof, but it stuck)'}`,'w');
+    logLine(`Spread a rumour about ${t.name.split(' ')[0]} through ${vector.name.split(' ')[0]}. It reaches them and bites${willing?` — ${vector.name.split(' ')[0]} was happy to carry it`:reluctant?` — ${vector.name.split(' ')[0]} carried it half-heartedly`:''}.${d?'':' (no proof, but it stuck)'}`,'w');
     toast(`Rumour about ${t.name.split(' ')[0]} landed. Stress +${hit}`);
     addSuspicion(hrSeesPlayer()?18:6,'Rumour-mongering');
     /* The MESSENGER is a willing carrier — they don't turn on you for passing gossip about
