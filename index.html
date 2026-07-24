@@ -1048,7 +1048,7 @@ const PRANKS=[
   {id:'calendar', small:true, for:'climber',   label:'Quietly delete a meeting from their calendar'},
   {id:'gaslight_s',small:true,for:'paranoid',  label:'Move one thing on their desk'},
   {id:'stain',    small:true, for:'peacock',   label:'Coffee-stain their jacket'},
-  {id:'well',     small:true, for:'socialite', label:'Poison the Well (a small rumour)'},
+  {id:'well',     small:true, for:'socialite', label:'Poison the Well (a slow-built rumour)'},
   /* --- EXPERT: multi-stage, rare parts, categorical payoff --- */
   {id:'violation',small:false,for:'zealot',    label:'Forge a compliance violation in their name'},
   {id:'memo',     small:false,for:'climber',   label:'Forge a disloyal reply-all to Dale'},
@@ -3187,7 +3187,7 @@ function buildOptions(t){
       else {
         let stepLabel;
         const pst=partsStatus(pb.type);
-        if(pb.stage===0&&pb.type==='well'&&!player.leverage.some(l=>l.target===own.name))stepLabel=`Need intel on ${own.name} first`;
+        if(pb.stage===0&&pb.type==='well'&&!player.leverage.some(l=>l.target===own.name))stepLabel=`Need a document on ${own.name} first — it won't be spent`;
         else if(pb.stage===0&&pb.type!=='well'&&pb.type!=='calendar'&&!invHas('kit_'+pb.type))stepLabel=`Need ${ITEMS['kit_'+pb.type].label} — craft at your desk`;
         else stepLabel=`Work the ${PRANK_SHORT[pb.type]} (stage ${pb.stage+1}/${pb.tier})`;
         const blocked=present||stepLabel.startsWith('Need');
@@ -3662,7 +3662,7 @@ const KIT_DOES={
   gaslight_s:'One small thing moves. They notice. Nobody else does.',
   stain:'A full coffee, tipped. Their work, ruined, publicly.',
   calendar:'A meeting vanishes from their calendar. They miss it.',
-  well:'A small rumour, started well. It spreads on its own.',
+  well:'The patient cousin of "Spread a rumour" — the same poison, seeded over several trips to their desk instead of floated in one breath in a corridor. It needs a document on them, but unlike the spoken rumour it does NOT spend it: the dirt is the seed, and the well keeps festering.',
   violation:'A compliance violation with their name on it. A Zealot will report themselves.',
   memo:'A reply-all they never sent, calling Dale a liability. A Climber cannot survive that.',
   gaslight:'Three plants, three days. A Paranoid stops trusting their own memory.',
@@ -3846,7 +3846,7 @@ function startPrankBuild(own,type){
 function prankStageMsg(pb,own){
   if(pb.type==='gaslight')return `You move another small thing on ${own.name}'s desk`;
   if(pb.stage===1&&PARTS[pb.type].length)return `You set up the ${PRANK_SHORT[pb.type]} at ${own.name}'s desk`;
-  if(pb.type==='well')return `You seed a poisonous rumor about ${own.name}`;
+  if(pb.type==='well')return `You feed another whisper into the slow-building rumour about ${own.name}`;
   return `You work on the ${PRANK_SHORT[pb.type]} at ${own.name}'s desk`;
 }
 function advancePrankStage(own){
@@ -3855,7 +3855,7 @@ function advancePrankStage(own){
   if(present){toast('They are right there — wait until they leave.');return;}
   if(hrSeesPlayer()){addSuspicion(22,'HR caught you tampering with a desk');logLine('HR spotted you mid-prank. You back off.','b');return;}
   if(pb.stage===0){
-    if(pb.type==='well'){if(!player.leverage.some(l=>l.target===own.name)){toast('You need intel on them to seed the rumour.');return;}}
+    if(pb.type==='well'){if(!player.leverage.some(l=>l.target===own.name)){toast('You need a document on them to seed the well — it won\'t be spent, just planted.');return;}}
     else if(pb.type!=='calendar'){const kid='kit_'+pb.type;if(!invHas(kid)){toast(`You need ${ITEMS[kid].label} — gather parts and craft it at your desk.`);return;}invTake(kid);renderLeverage();}
   }
   pb.stage++;addSuspicion(4,'Tampering, unseen');
