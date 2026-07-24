@@ -7055,9 +7055,9 @@ const RANK_TRACKS=[
   ['Promising_Lead','Pipeline_Anxiety','Quota_Pending','FollowUp_Required'],   // 1 JUNIOR SALES
   ['Terms_Accepted','Quota_Season','Warm_Lead','Closing_Soon'],   // 2 SALES
   ['Top_Performer','Territory_Claimed','Commission_Dispute','Preferred_Client'],   // 3 SENIOR SALES
-  [],   // 4 ASSISTANT MANAGER
-  [],   // 5 MANAGER
-  [],   // 6 CEO
+  ['Acting_Authority','Escalation_Required','Pending_Approval','Per_my_last_Email'],   // 4 ASSISTANT MANAGER
+  ['Operational_Control','Closed_Door_Policy','Final_Approval','Management_Discretion'],   // 5 MANAGER
+  ['Per_My_Last_Layoff','The_Door_Is_Always_Closed','Lets_Circle_Back_Never','Competitive_Compensation_Package'],   // 6 CEO
 ];
 function tracksForRank(r){for(let i=Math.min(r,RANK_TRACKS.length-1);i>=0;i--)if(RANK_TRACKS[i]&&RANK_TRACKS[i].length)return {rank:i,names:RANK_TRACKS[i]};return {rank:0,names:RANK_TRACKS[0]};}
 let musicRank=0, lastMusicRank=-1;
