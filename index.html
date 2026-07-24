@@ -7034,7 +7034,23 @@ const logEl=document.getElementById('log');
 const LOUD={g:1,b:1,a:1};
 function logLine(txt,cls){if(LOUD[cls])pushAlert(txt,cls==='a'?'w':cls);else pushTicker(txt);const d=document.createElement('div');d.innerHTML=`<span class="t">${fmtTime(clock)}</span> <span class="${cls==='a'?'w':(cls||'')}">${txt}</span>`;if(logEl.firstChild)logEl.insertBefore(d,logEl.firstChild);else logEl.appendChild(d);logEl.scrollTop=0;}
 /* ---- background music: OGG first (Xbox Edge lacks proprietary mp3 codec), mp3 fallback ---- */
-const TRACK_NAMES=['Another_Productive_Day','Compliance_Is_Happiness','Fluorescent_Hours','Productivity_Is_Mandatory'];
+/* ── Soundtrack, one playlist per rank ────────────────────────────────────────────────────
+   Drop the audio into Music/ (OGG preferred — Xbox Edge has no mp3 codec; add a same-named
+   .mp3 as a fallback) and list the file's BASE name (no extension) in that rank's array below.
+   A rank with no tracks yet FALLS BACK to the nearest lower rank that has some, so a promotion
+   keeps playing your current music until that rank's own set exists. Index = RANKS index. */
+const RANK_TRACKS=[
+  ['Another_Productive_Day','Compliance_Is_Happiness','Fluorescent_Hours','Productivity_Is_Mandatory'],  // 0 INTERN
+  [],   // 1 JUNIOR SALES      — add track base-names here
+  [],   // 2 SALES
+  [],   // 3 SENIOR SALES
+  [],   // 4 ASSISTANT MANAGER
+  [],   // 5 MANAGER
+  [],   // 6 CEO
+];
+function tracksForRank(r){for(let i=Math.min(r,RANK_TRACKS.length-1);i>=0;i--)if(RANK_TRACKS[i]&&RANK_TRACKS[i].length)return {rank:i,names:RANK_TRACKS[i]};return {rank:0,names:RANK_TRACKS[0]};}
+let musicRank=0, lastMusicRank=-1;
+let TRACK_NAMES=RANK_TRACKS[0];
 const TRACK_EXTS=['ogg','mp3'];
 let trackOrder=[],trackIdx=0,extIdx=0,musicOn=true,musicStarted=false,musicStatus='not started',mediaEl=null,failStreak=0,musicSrcNode=null,musicGainNode=null;
 function trackUrl(){return 'Music/'+TRACK_NAMES[trackOrder[trackIdx]]+'.'+TRACK_EXTS[extIdx];}
@@ -7121,6 +7137,17 @@ function toggleMusic(){
   if(!musicOn){stopMusicNode();musicStarted=false;setStatus('off');}
   else{failStreak=0;musicStart();}
 }
+/* Swap the soundtrack when your rank's resolved set changes (promotion, or loading a save at a
+   higher rank). Falls back through tracksForRank, so ranks without their own music never go silent
+   and never restart the same set. Driven by a rank-watch in loop(). */
+function syncMusicToRank(r){
+  const set=tracksForRank(r);
+  if(set.rank===musicRank)return;                       // already on this set (incl. an unchanged fallback)
+  musicRank=set.rank; TRACK_NAMES=set.names; shuffleTracks();
+  if(musicOn&&musicStarted)playTrack();                 // switch now if the soundtrack is already going
+  else setStatus('soundtrack queued: '+(RANKS[set.rank]||('rank '+set.rank))+' set');
+}
+function musicState(){return {rank:musicRank,names:TRACK_NAMES,sets:RANK_TRACKS};}   // inspect/test hook
 /* ---- THE SHIFT PRINTER: a real recording. The synth stays as a fallback in case
        the file is missing, so the schedule always makes a noise. ---- */
 /* I cannot see your repo, so try the sane places in order. First one that plays, wins. */
@@ -7364,6 +7391,7 @@ let last=performance.now();
 let worldFrozen=false, healthT=0;
 function loop(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;lastDt=dt;nowT+=dt;
+  if(player.rank!==lastMusicRank){lastMusicRank=player.rank;syncMusicToRank(player.rank);}   // rank changed → swap the soundtrack set
   if(typeof screen!=='undefined' && screen!=='play'){
     pollGamepad(dt);                 // menu navigation only
     requestAnimationFrame(loop);
