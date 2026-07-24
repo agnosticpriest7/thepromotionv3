@@ -20,6 +20,14 @@ Both exit `0` on GREEN, `1` on RED — usable as a CI/pre-push gate.
 node test/placement.js            # ASCII floor map + sprite-aware placement linter
 ```
 
+Targeted feature tests (each exits `0`/`1`; no game code, assert against the shipped build):
+
+```bash
+node test/t_leverage.js           # leverage chips (source glyph + strength) + pick-the-document frame/plant
+node test/t_rumor_carrier.js      # rumour carrier math + every risk-string variant + the — Gossip — menu
+node test/t_rumor_supply.js       # rumour spread paths (loyal / overhear) + supply once-per-day
+```
+
 ### Placement check (`placement.js`)
 
 Props are authored as `x,y,w,h` *collision* rects, but sprites draw **larger** than the box
