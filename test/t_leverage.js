@@ -45,9 +45,11 @@ ck('plant removes the chosen doc (A)', !P.leverage.includes(A));
 ck('plant leaves the OTHER untouched (C survives)', P.leverage.includes(C) && P.leverage.length === 1);
 ck('desk.planted === the chosen doc', desk.planted === A);
 
-// ---- the pickers surface the FULL flavour label (the detail the chip trims) ----------------
+// ---- the pickers surface the FULL flavour label (needs a real choice, else it auto-spends) --
 let cap = null; const realRM = S.renderMenu; S.renderMenu = (o) => { cap = o; };
-P.leverage.length = 0; P.leverage.push({ label: 'dirt on Vera: pads timesheets', target: 'Vera', power: 34, src: 'desk' });
+P.leverage.length = 0;
+P.leverage.push({ label: 'dirt on Vera: pads timesheets', target: 'Vera', power: 34, src: 'desk' });
+P.leverage.push({ label: 'HR file: Doug', target: 'Doug', power: 42, src: 'hrfile' });   // 2nd, distinct → a real choice → the picker shows
 S.pickFrameDoc(workers[0]);
 let pit = cap.items.find(i => /dirt on Vera: pads timesheets/.test(i.label));
 ck('frame picker shows the full flavour label', !!pit);
@@ -55,6 +57,35 @@ ck('frame picker shows the strength word (solid)', !!pit && pit.risk === 'solid'
 const desk2 = g.layout.desks.find(x => x.owner && !x.planted);
 if (desk2) { S.pickPlantDoc(desk2); pit = cap.items.find(i => /dirt on Vera: pads timesheets/.test(i.label)); }
 ck('plant picker shows the full flavour label', !!pit);
+S.renderMenu = realRM;
+
+// ---- duplicate suppression (shared pickDocument): a picker only when the choice is real -----
+// interchangeable = matching POWER *and* TARGET. equal power but DIFFERENT target is NOT
+// interchangeable — the picker must appear there, or burning one silently kills dirtOn() on the
+// other person (the blackmail gate). single doc / same-power-same-target auto-spend with no menu.
+let capS = null; S.renderMenu = (o) => { capS = o; };
+const framee = workers[0];
+function frameWith(docs) { P.leverage.length = 0; docs.forEach(d => P.leverage.push(d)); P.suspicion = 40; capS = null; S.pickFrameDoc(framee); }
+// single doc → auto-spend, no menu (frame/plant lose their old single-row picker — intended)
+frameWith([{ label: 'gossip re: Doug', target: 'Doug', power: 20, src: 'gossip' }]);
+ck('frame single doc: no menu (auto-spent)', capS === null);
+ck('frame single doc: the doc was spent', P.leverage.length === 0);
+// equal power + SAME target → interchangeable → suppressed
+frameWith([{ label: 'front-desk gossip re: Doug', target: 'Doug', power: 20, src: 'gossip' }, { label: 'front-desk gossip re: Doug', target: 'Doug', power: 20, src: 'gossip' }]);
+ck('frame identical (same power + target): no menu', capS === null);
+ck('frame identical: one spent, one left', P.leverage.length === 1);
+// equal power + DIFFERENT target → NOT interchangeable → picker appears (the target-check case)
+const dougDoc = { label: 'gossip re: Doug', target: 'Doug', power: 20, src: 'gossip' };
+const veraDoc = { label: 'gossip re: Vera', target: 'Vera', power: 20, src: 'gossip' };
+frameWith([dougDoc, veraDoc]);
+ck('frame equal-power DIFFERENT target: picker APPEARS (protects the target choice)', !!capS && capS.items.length >= 3);
+ck('frame picker: nothing spent yet (awaiting the choice)', P.leverage.length === 2);
+capS.items.find(i => /gossip re: Doug/.test(i.label)).act();
+ck('frame: chose Doug → Doug spent, Vera survives (blackmail on Vera intact)', !P.leverage.includes(dougDoc) && P.leverage.includes(veraDoc) && P.leverage.length === 1);
+// plant is routed through the same helper: equal-power different-target still opens a picker
+const d3 = g.layout.desks.find(x => x.owner && !x.planted);
+if (d3) { P.leverage.length = 0; P.leverage.push({ label: 'gossip re: Doug', target: 'Doug', power: 20, src: 'gossip' }, { label: 'gossip re: Vera', target: 'Vera', power: 20, src: 'gossip' }); capS = null; S.pickPlantDoc(d3); }
+ck('plant equal-power different-target: picker APPEARS', !!capS && capS.items.length >= 3);
 S.renderMenu = realRM;
 
 // ---- the CEO endgame glyph is a per-item field and survives the save round-trip ------------
