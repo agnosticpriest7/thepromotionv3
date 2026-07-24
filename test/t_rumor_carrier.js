@@ -41,22 +41,32 @@ ck('feud + Socialite → 71 (×1.69, single round, not compounded)', hitFor({ pt
 ck('Zealot → 25 (×0.6)', hitFor({ ptype: 'zealot' }) === 25);
 ck('Paranoid → 25 (×0.6)', hitFor({ ptype: 'paranoid' }) === 25);
 
-// ---- submenu risk strings: every variant (capture renderMenu) ------------------------------
+// ---- submenu: carrier is in the TITLE (#1), rows carry only subject-varying info -----------
 let cap = null; const realRM = S.renderMenu; S.renderMenu = (o) => { cap = o; };
-function riskFor(o) {
+function subFor(o) {
   P.leverage.length = 0; if (o.dirt) P.leverage.push({ label: 'd', target: T.name, power: 42, src: 'hrfile' });
   V.profiled = o.profiled; V.ptype = o.ptype; V.feudWith = o.feud ? T.name : null;
   V.friends = o.loyal ? [T.name] : []; T.friends = [];
   S.pickRumorSubject(V);
   const it = cap.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label));
-  return it ? it.risk : '(none)';
+  return { risk: it ? it.risk : '(none)', title: cap.title };
 }
-ck('risk: unread → "unknown carrier"', riskFor({ profiled: false, ptype: 'socialite' }) === 'no proof — 40% · unknown carrier', riskFor({ profiled: false, ptype: 'socialite' }));
-ck('risk: profiled Socialite', riskFor({ profiled: true, ptype: 'socialite' }) === 'no proof — 40% · Socialite +30%', riskFor({ profiled: true, ptype: 'socialite' }));
-ck('risk: profiled Climber (neutral → no carrier clause)', riskFor({ profiled: true, ptype: 'climber' }) === 'no proof — 40%', riskFor({ profiled: true, ptype: 'climber' }));
-ck('risk: profiled Zealot + feud (willing carrier + balk)', riskFor({ profiled: true, ptype: 'zealot', feud: true }) === 'no proof — 40% · willing carrier · Zealot −40%', riskFor({ profiled: true, ptype: 'zealot', feud: true }));
-ck('risk: dirt + profiled Socialite', riskFor({ profiled: true, ptype: 'socialite', dirt: true }) === 'you have proof — sticks · Socialite +30%', riskFor({ profiled: true, ptype: 'socialite', dirt: true }));
-ck('risk: loyal messenger → backfires (terminal, no carrier note)', /^loyal to .* — backfires$/.test(riskFor({ profiled: true, ptype: 'socialite', loyal: true })), riskFor({ profiled: true, ptype: 'socialite', loyal: true }));
+let r;
+r = subFor({ profiled: false, ptype: 'socialite' });
+ck('row drops carrier → base only', r.risk === 'no proof — 40%', r.risk);
+ck('title: unread → "(unknown carrier)"', /\(unknown carrier\)/.test(r.title), r.title);
+r = subFor({ profiled: true, ptype: 'socialite' });
+ck('row base (Socialite)', r.risk === 'no proof — 40%', r.risk);
+ck('title: profiled Socialite → "(Socialite +30%)"', /\(Socialite \+30%\)/.test(r.title), r.title);
+r = subFor({ profiled: true, ptype: 'climber' });
+ck('title: profiled neutral → NO carrier parenthetical', !/\(/.test(r.title), r.title);
+r = subFor({ profiled: true, ptype: 'zealot', feud: true });
+ck('row keeps the subject-varying feud note (willing carrier)', r.risk === 'no proof — 40% · willing carrier', r.risk);
+ck('title: profiled Zealot → "(Zealot −40%)"', /\(Zealot −40%\)/.test(r.title), r.title);
+r = subFor({ profiled: true, ptype: 'socialite', dirt: true });
+ck('row: dirt → "you have proof — sticks" (carrier not on row)', r.risk === 'you have proof — sticks', r.risk);
+r = subFor({ profiled: true, ptype: 'socialite', loyal: true });
+ck('loyal → backfires (row); carrier still in title', /^loyal to .* — backfires$/.test(r.risk) && /\(Socialite \+30%\)/.test(r.title), r.risk + ' | ' + r.title);
 S.renderMenu = realRM;
 
 // ---- the — Gossip — menu block: the three verbs grouped, exactly once, no old labels -------
@@ -77,10 +87,47 @@ V.profiled = true; V.ptype = 'socialite'; V.feudWith = null; V.friends = []; P.l
 menu.items[iS].act();
 let it = cap2 && cap2.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label));
 ck('Gossip-block Spread item → subject picker', !!it);
-ck('...picker carries the carrier note (profiled Socialite +30%)', !!it && /Socialite \+30%/.test(it.risk), it && it.risk);
+ck('...carrier note is in the TITLE (profiled Socialite +30%)', !!cap2 && /\(Socialite \+30%\)/.test(cap2.title), cap2 && cap2.title);
+ck('...and the row carries only subject-varying info (base)', !!it && it.risk === 'no proof — 40%', it && it.risk);
 V.profiled = false; menu.items[iS].act();
-it = cap2 && cap2.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label));
-ck('...unread messenger → "unknown carrier" through the block', !!it && /unknown carrier/.test(it.risk), it && it.risk);
+ck('...unread messenger → "(unknown carrier)" in the title through the block', !!cap2 && /\(unknown carrier\)/.test(cap2.title), cap2 && cap2.title);
+S.renderMenu = realRM;
+
+// ---- MULTI-DOCUMENT (#3): two docs on one subject → pick which one is spent -----------------
+// Same bug class as frame/plant: dirtOn() returned the first-acquired doc, so a rumour spent
+// whichever you got first regardless of strength. Now you choose (or a legacy call takes strongest).
+let capD = null; S.renderMenu = (o) => { capD = o; };
+function twoDocs() {
+  P.leverage.length = 0;
+  const gossip = { label: 'gossip re: ' + T.name, target: T.name, power: 22, src: 'gossip' };  // acquired FIRST
+  const hrfile = { label: 'HR file: ' + T.name, target: T.name, power: 42, src: 'hrfile' };     // acquired SECOND
+  P.leverage.push(gossip, hrfile);
+  V.profiled = true; V.ptype = 'climber'; V.feudWith = null; V.friends = []; T.friends = [];
+  T.stress = 0; T.meltCd = 999; T.x = P.x + 5000; T.y = P.y;   // far → no overhear, so stress == the hit
+  return { gossip, hrfile };
+}
+let d2 = twoDocs();
+S.pickRumorSubject(V);
+let row = capD.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label));
+ck('multi-doc: subject row still labelled · DIRT', !!row && /· DIRT/.test(row.label), row && row.label);
+ck('multi-doc: row risk flags "2 docs — choose"', !!row && /2 docs — choose/.test(row.risk), row && row.risk);
+row.act();                                              // opens the document picker
+const gRow = capD.items.find(i => /gossip re:/.test(i.label));
+const hRow = capD.items.find(i => /HR file:/.test(i.label));
+ck('doc picker lists both, with strengths (hearsay / damning)', !!gRow && gRow.risk === 'hearsay' && !!hRow && hRow.risk === 'damning', (gRow && gRow.risk) + ' / ' + (hRow && hRow.risk));
+hRow.act();                                             // choose the HR file (42), acquired SECOND
+ck('choosing the HR file spends it (42-power hit)', T.stress === 42, 'stress=' + T.stress);
+ck('...HR file removed, the gossip survives', !P.leverage.includes(d2.hrfile) && P.leverage.includes(d2.gossip) && P.leverage.length === 1);
+// reverse: choose the gossip → spends the gossip, leaves the HR file
+d2 = twoDocs(); S.pickRumorSubject(V);
+row = capD.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label)); row.act();
+capD.items.find(i => /gossip re:/.test(i.label)).act();
+ck('choosing the gossip spends it (22-power hit)', T.stress === 22, 'stress=' + T.stress);
+ck('...gossip removed, the HR file survives', !P.leverage.includes(d2.gossip) && P.leverage.includes(d2.hrfile) && P.leverage.length === 1);
+// legacy call with no doc argument defaults to the STRONGEST (not the first-acquired)
+d2 = twoDocs();
+S.spreadRumorAbout(V, T);
+ck('legacy spreadRumorAbout(no doc) → STRONGEST (42), not first-acquired gossip (22)', T.stress === 42 && !P.leverage.includes(d2.hrfile) && P.leverage.includes(d2.gossip), 'stress=' + T.stress);
 S.renderMenu = realRM;
 
 console.log(`\nRUMOUR CARRIER + GOSSIP MENU: ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
