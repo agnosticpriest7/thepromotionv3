@@ -88,6 +88,33 @@ if (d3) { P.leverage.length = 0; P.leverage.push({ label: 'gossip re: Doug', tar
 ck('plant equal-power different-target: picker APPEARS', !!capS && capS.items.length >= 3);
 S.renderMenu = realRM;
 
+// ---- snitch routed through pickDocument: choose WHO to report (was locked to last-acquired) --
+// The HR/Dale/CEO snitch items were fed by lastBySrc(), which returned the most-recently-acquired
+// matching doc — same acquisition-order-decides-spending bug, and the target was baked into the
+// label so you couldn't report anyone else. Now: a picker over all matching docs.
+const hr = g.NPCS.find(n => n.alive && n.dept === 'hr');
+ck('an HR NPC exists to snitch to', !!hr);
+if (hr) {
+  let capH = null; S.renderMenu = (o) => { capH = o; };
+  const hrSnitch = () => S.buildOptions({ kind: 'npc', ref: hr }).items.find(i => /Snitch to HR/.test(i.label));
+  // two docs on different people → a picker to choose WHO (not locked to the last-acquired)
+  const aDoc = { label: 'gossip re: Alpha', target: 'Alpha', power: 20, src: 'gossip' };   // acquired FIRST, weaker
+  const bDoc = { label: 'note re: Beta', target: 'Beta', power: 24, src: 'desk' };          // acquired SECOND, stronger
+  P.leverage.length = 0; P.leverage.push(aDoc, bDoc);
+  let snitch = hrSnitch();
+  ck('snitch item present (holding gossip/desk docs)', !!snitch);
+  capH = null; snitch.act();
+  ck('snitch: opens a picker to choose who to report', !!capH && capH.items.length >= 3);
+  ck('snitch picker strongest-first (Beta before Alpha)', /Beta/.test(capH.items[0].label), capH.items[0].label);
+  capH.items.find(i => /Alpha/.test(i.label)).act();   // report Alpha (the older, weaker doc)
+  ck('snitch: chosen doc (Alpha) spent, Beta survives', !P.leverage.includes(aDoc) && P.leverage.includes(bDoc) && P.leverage.length === 1);
+  // single matching doc → auto-report, no picker
+  P.leverage.length = 0; P.leverage.push({ label: 'gossip re: Gamma', target: 'Gamma', power: 20, src: 'gossip' });
+  snitch = hrSnitch(); capH = null; snitch.act();
+  ck('snitch single doc: no picker (auto-reported)', capH === null && P.leverage.length === 0);
+  S.renderMenu = realRM;
+}
+
 // ---- the CEO endgame glyph is a per-item field and survives the save round-trip ------------
 P.leverage.length = 0;
 P.leverage.push({ label: 'Sterling replies', target: 'Mr. Sterling', power: 100, src: 'hrfile', glyph: '👑' });
