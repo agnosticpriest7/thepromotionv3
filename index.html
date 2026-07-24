@@ -166,6 +166,9 @@
   #tracker .trk.fading{opacity:0;transform:translateX(24px)}
   #tracker .trkhead{color:#b7b1a2;font-size:9.5px;letter-spacing:1.5px;padding:0 2px}
   #toast{position:absolute;top:62px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:80%;text-align:center;z-index:8;border-radius:4px}
+  #nowPlaying{position:absolute;right:12px;bottom:12px;background:rgba(26,24,20,.82);color:#f0e9d8;font-family:var(--mono);font-size:13px;letter-spacing:.4px;padding:7px 13px;opacity:0;transition:opacity .55s;pointer-events:none;z-index:7;max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px}
+  #nowPlaying .nn{color:#d9a521;margin-right:7px}
+  @media (pointer:coarse){#nowPlaying{bottom:106px}}   /* clear the on-screen action button on touch */
 
   #modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20}
   #modal .mbox{background:var(--panel);border:1px solid var(--ink);max-width:460px;padding:26px;box-shadow:4px 4px 0 rgba(0,0,0,.3)}
@@ -355,6 +358,7 @@
       <div id="menu"><h4 id="menuTitle">—</h4></div>
       <div id="tracker"></div>
       <div id="toast"></div>
+      <div id="nowPlaying"></div>
       <div id="hint">WASD / Arrows move · E interact · Tab menu &nbsp;|&nbsp; Gamepad: LS move · A interact · Y pockets · Start menu &nbsp;|&nbsp; Touch: on-screen pad</div>
       <div id="dpad">
         <button class="db up" data-dir="w" aria-label="up">▲</button>
@@ -7050,16 +7054,16 @@ const RANK_TRACKS=[
   ['Another_Productive_Day','Compliance_Is_Happiness','Fluorescent_Hours','Productivity_Is_Mandatory'],  // 0 INTERN
   ['Promising_Lead','Pipeline_Anxiety','Quota_Pending','FollowUp_Required'],   // 1 JUNIOR SALES
   ['Terms_Accepted','Quota_Season','Warm_Lead','Closing_Soon'],   // 2 SALES
-  [],   // 3 SENIOR SALES
-  [],   // 4 ASSISTANT MANAGER
-  [],   // 5 MANAGER
-  [],   // 6 CEO
+  ['Top_Performer','Territory_Claimed','Commission_Dispute','Preferred_Client'],   // 3 SENIOR SALES
+  ['Acting_Authority','Escalation_Required','Pending_Approval','Per_my_last_Email'],   // 4 ASSISTANT MANAGER
+  ['Operational_Control','Closed_Door_Policy','Final_Approval','Management_Discretion'],   // 5 MANAGER
+  ['Per_My_Last_Layoff','The_Door_Is_Always_Closed','Lets_Circle_Back_Never','Competitive_Compensation_Package'],   // 6 CEO
 ];
 function tracksForRank(r){for(let i=Math.min(r,RANK_TRACKS.length-1);i>=0;i--)if(RANK_TRACKS[i]&&RANK_TRACKS[i].length)return {rank:i,names:RANK_TRACKS[i]};return {rank:0,names:RANK_TRACKS[0]};}
 let musicRank=0, lastMusicRank=-1;
 let TRACK_NAMES=RANK_TRACKS[0];
 const TRACK_EXTS=['ogg','mp3'];
-let trackOrder=[],trackIdx=0,extIdx=0,musicOn=true,musicStarted=false,musicStatus='not started',mediaEl=null,failStreak=0,musicSrcNode=null,musicGainNode=null;
+let trackOrder=[],trackIdx=0,extIdx=0,musicOn=true,musicStarted=false,musicStatus='not started',mediaEl=null,failStreak=0,musicSrcNode=null,musicGainNode=null,nowPlayingName=null,nowPlayT=null;
 function trackUrl(){return 'Music/'+TRACK_NAMES[trackOrder[trackIdx]]+'.'+TRACK_EXTS[extIdx];}
 function shuffleTracks(){trackOrder=TRACK_NAMES.map((t,i)=>i);for(let i=trackOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[trackOrder[i],trackOrder[j]]=[trackOrder[j],trackOrder[i]];}trackIdx=0;}
 function advanceTrack(){trackIdx++;if(trackIdx>=trackOrder.length)shuffleTracks();}
@@ -7081,7 +7085,7 @@ function ensureMediaEl(){
     mediaEl.preload='auto';
     mediaEl.volume=musicVol;
     mediaEl.addEventListener('ended',()=>{failStreak=0;advanceTrack();playTrack();});
-    mediaEl.addEventListener('playing',()=>{musicStarted=true;failStreak=0;setStatus('playing: '+TRACK_NAMES[trackOrder[trackIdx]]+' ['+TRACK_EXTS[extIdx]+']');});
+    mediaEl.addEventListener('playing',()=>{musicStarted=true;failStreak=0;const nm=TRACK_NAMES[trackOrder[trackIdx]];setStatus('playing: '+nm+' ['+TRACK_EXTS[extIdx]+']');if(nm!==nowPlayingName){nowPlayingName=nm;showNowPlaying(nm);}});
     mediaEl.addEventListener('error',()=>{
       const code=mediaEl.error?mediaEl.error.code:0;
       onMusicFail('media error '+code+' ('+(MEDIA_ERR[code]||'?')+')');
@@ -7155,6 +7159,15 @@ function syncMusicToRank(r){
   else setStatus('soundtrack queued: '+(RANKS[set.rank]||('rank '+set.rank))+' set');
 }
 function musicState(){return {rank:musicRank,names:TRACK_NAMES,sets:RANK_TRACKS};}   // inspect/test hook
+function prettyTrack(n){return String(n||'').replace(/_/g,' ').trim();}   // 'Top_Performer' -> 'Top Performer'
+/* "now playing" — the track name briefly appears bottom-right with a ♪, when a new song starts */
+function showNowPlaying(name){
+  const el=document.getElementById('nowPlaying'); if(!el)return;
+  el.innerHTML='<span class="nn">♪</span>'+prettyTrack(name);
+  el.style.opacity=1;
+  clearTimeout(nowPlayT);
+  nowPlayT=setTimeout(()=>{el.style.opacity=0;},4500);   // hold ~4.5s, then fade (.55s)
+}
 /* ---- THE SHIFT PRINTER: a real recording. The synth stays as a fallback in case
        the file is missing, so the schedule always makes a noise. ---- */
 /* I cannot see your repo, so try the sane places in order. First one that plays, wins. */
