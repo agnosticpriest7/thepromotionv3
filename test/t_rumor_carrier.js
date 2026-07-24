@@ -109,6 +109,7 @@ const hrfile = { label: 'HR file: ' + T.name, target: T.name, power: 42, src: 'h
 seed([gossip, hrfile]);
 let row = subjectRow();
 ck('different-power: row flags "2 docs — choose"', /2 docs — choose/.test(row.risk), row.risk);
+ck('subject row shows the STRONGEST doc badge (📁 damning ●●●, not · DIRT)', /📁/.test(row.label) && /●●●/.test(row.label) && !/DIRT/.test(row.label), row.label);
 capD = null; row.act();
 ck('different-power: a picker opened', !!capD && capD.items.length >= 3);
 ck('different-power: STRONGEST FIRST (HR file before gossip)', /HR file:/.test(capD.items[0].label) && /gossip re:/.test(capD.items[1].label), capD.items[0].label + ' | ' + capD.items[1].label);
@@ -121,6 +122,7 @@ const dup2 = { label: 'front-desk gossip re: ' + T.name, target: T.name, power: 
 seed([dup1, dup2]);
 row = subjectRow();
 ck('identical docs: NO "docs — choose" flag on the row', !/docs — choose/.test(row.risk), row.risk);
+ck('subject row shows the gossip badge (💬 hearsay ●○○)', /💬/.test(row.label) && /●○○/.test(row.label), row.label);
 capD = null; row.act();
 ck('identical docs: NO picker opened (auto-spent one)', capD === null);
 ck('identical docs: exactly one spent, one left', P.leverage.length === 1);
