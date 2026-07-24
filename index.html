@@ -3243,6 +3243,7 @@ function buildOptions(t){
       ...((d.mgrOffice&&player.rank>=5)?[
         {label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())},
         {label:`Hire for an empty desk  (${career.hireReqs||0} req${(career.hireReqs||0)===1?'':'s'})`,disabled:!((career.hireReqs||0)>0),risk:(career.hireReqs||0)>0?'spends a requisition':'land a client first',act:()=>hireWorker()},
+        {label:'Promote a worker…',risk:'needs a free chair',act:()=>renderMenu(promoteMenu())},
       ]:[]),
       (()=>{const dk=openTask('desk');return dk?{label:'Do the work (task)',risk:'good',act:()=>completeTask(dk)}:{label:'Grind busywork (+2, slow)',risk:'tedious',act:()=>doBusywork()};})(),
       {label:'Craft a prank kit…',risk:'from parts',act:()=>craftMenu()},
@@ -4884,6 +4885,57 @@ function hireWorker(){
   logLine(`You filed a hire against an open requisition. They start in two days — ${career.hireReqs} requisition(s) left.`,'g');
   toast('Hire filed — they start in two days');
   return true;
+}
+/* ===== MANAGER VERB: PROMOTE (branch: manager-promote) =====
+   Patronage, seat-gated. The vacancy race (openReq/standingOf/resolveReqs) normally decides who
+   fills an open chair; a manager-directed promotion OVERRIDES it — an explicit power of the rank,
+   not a nudge to standingOf. A genuinely free chair must exist at the next tier (never created).
+   Seating goes through moveToDeskFor() — the seat-safe primitive HR itself uses — so the org chart
+   and the desk layout can never disagree; the vacated old chair backfills on the usual day+2, the
+   same -6 the hire loop is there to clear. Kyle's call: ANY worker can be promoted, but allies are
+   cheaper — an ally promotion deepens the alliance and costs nothing, while moving up someone who
+   is NOT in your corner is politically visible (+suspicion). The floor always notices (a small
+   mood dip): they saw who got it. */
+const PROMOTE_MOOD=25, PROMOTE_FRIEND_ALLY=15, PROMOTE_FRIEND_NONALLY=5, PROMOTE_FLOOR_DIP=4, PROMOTE_NONALLY_SUSPICION=8;
+function promotable(n){                                   // caller must refreshRanks() first
+  if(!isWorker(n)||!n.alive||n.gone)return false;
+  const t=npcRank(n)+1;
+  if(t!==1&&t!==2)return false;                           // JUNIOR->SALES, SALES->SENIOR; nothing above SENIOR but your chair
+  if(seatsFree[t]<=0)return false;                        // the tier is at capacity
+  return desks.some(d=>!d.owner&&!d.mgrOffice&&!d.retired&&(d.tier|0)===t);   // a physical free chair at that tier
+}
+function promoteWorker(n){
+  if(player.rank<5){toast('Only the manager can hand out promotions.');return false;}
+  refreshRanks();
+  if(!promotable(n)){toast(`No ${NPC_RANKS[(npcRank(n)+1)]||'higher'} chair is free to promote them into.`);return false;}
+  const target=npcRank(n)+1, ally=n.friend>=ALLY_THRESHOLD;
+  const oldDesk=desks.find(d=>d.owner===n.name);
+  n.tier=target;
+  moveToDeskFor(n);                                       // seat-safe move into the free target-tier chair
+  n.career=Math.max(n.career||0, target*20+10);           // standing now matches the badge, so refreshRanks won't bounce them
+  if(oldDesk&&!oldDesk.owner&&!oldDesk.mgrOffice)pendingHires.push({desk:oldDesk,dept:n.dept,onDay:day+2});   // the chair they left backfills
+  refreshRanks();
+  n.mood=clamp(n.mood+PROMOTE_MOOD,-100,100);
+  n.stress=clamp(n.stress-10,0,100);
+  n.friend=clamp(n.friend+(ally?PROMOTE_FRIEND_ALLY:PROMOTE_FRIEND_NONALLY),0,100);
+  n.bubble={t:3,text:pick(['A raise? Really?','I will not forget this.','Finally.'])};
+  activeNPCs().forEach(o=>{if(isWorker(o)&&o!==n&&!o.gone)o.mood=clamp(o.mood-PROMOTE_FLOOR_DIP,-100,100);});
+  if(!ally)addSuspicion(PROMOTE_NONALLY_SUSPICION,'You moved up someone who is not in your corner — the floor is asking why');
+  logLine(`You promoted ${n.name} to ${NPC_RANKS[target]}.${ally?' They are yours now.':' They did not expect it from you.'}`,'g');
+  toast(`${n.name.split(' ')[0]} → ${NPC_RANKS[target]}`);
+  return true;
+}
+function promoteMenu(){
+  refreshRanks();
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone).sort((a,b)=>npcRank(b)-npcRank(a)||(b.friend||0)-(a.friend||0));
+  const items=ws.filter(promotable).map(n=>{
+    const t=npcRank(n)+1, ally=n.friend>=ALLY_THRESHOLD;
+    return {label:`Promote ${n.name.split(' ')[0]} → ${NPC_RANKS[t]}${ally?' (ally)':''}`,
+            risk:ally?'patronage':'not an ally — +suspicion', hot:!ally, act:()=>promoteWorker(n)};
+  });
+  if(!items.length)items.push({label:'No chair is free at the next tier — free a seat first.',disabled:true});
+  items.push({label:'← Back',act:()=>{}});
+  return {title:'PROMOTE A WORKER — a free chair required',items};
 }
 function branchHealth(){
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
