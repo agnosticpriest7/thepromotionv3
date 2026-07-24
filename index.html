@@ -3240,7 +3240,10 @@ function buildOptions(t){
   if(t.kind==='desk'){
     const d=t.ref;
     if(d.owner==='you')return {title:d.mgrOffice?'Manager’s office':'Your desk',items:[
-      ...((d.mgrOffice&&player.rank>=5)?[{label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())}]:[]),
+      ...((d.mgrOffice&&player.rank>=5)?[
+        {label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())},
+        {label:`Hire for an empty desk  (${career.hireReqs||0} req${(career.hireReqs||0)===1?'':'s'})`,disabled:!((career.hireReqs||0)>0),risk:(career.hireReqs||0)>0?'spends a requisition':'land a client first',act:()=>hireWorker()},
+      ]:[]),
       (()=>{const dk=openTask('desk');return dk?{label:'Do the work (task)',risk:'good',act:()=>completeTask(dk)}:{label:'Grind busywork (+2, slow)',risk:'tedious',act:()=>doBusywork()};})(),
       {label:'Craft a prank kit…',risk:'from parts',act:()=>craftMenu()},
       ...player.inv.filter(id=>CONSUMABLE[id]).map(id=>({label:`Have ${ITEMS[id].label} (${ITEMS[id].use})`,risk:'safe',act:()=>{invTake(id);useConsumable(id);renderLeverage();}})),
@@ -4863,6 +4866,23 @@ function landClient(){
   player.stress=clamp(player.stress+3,0,100);checkPlayerMeltdown();
   logLine(`You closed a sale. The numbers went up, and the branch has justified another hire — a requisition is open (${career.hireReqs}).`,'g');
   toast(`Client landed. Requisition open · branch health +${CLIENT_HEALTH}`);
+  return true;
+}
+/* The verb's second half: spend a requisition to hire. Reuses fireNPC's day+2 backfill plumbing
+   (pendingHires). The seat is chosen NOW — a genuinely vacant, non-reserved, non-office desk not
+   already promised to another pending hire — and processHires() re-finds one at landing if it was
+   taken in the meantime, so a hire can never double-seat a desk. A requisition is only spent when
+   a seat is actually available, so it is never burned into thin air. */
+function hireWorker(){
+  if(player.rank<5){toast('Only the manager can hire.');return false;}
+  if((career.hireReqs||0)<1){toast('No open requisition — land a client on the phones first.');return false;}
+  const promised=new Set(pendingHires.map(h=>h.desk));
+  const desk=desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved&&!promised.has(d));
+  if(!desk){toast('Every empty desk already has a hire on the way.');return false;}
+  career.hireReqs--;
+  pendingHires.push({desk,dept:desk.dept||'sales',onDay:day+2});
+  logLine(`You filed a hire against an open requisition. They start in two days — ${career.hireReqs} requisition(s) left.`,'g');
+  toast('Hire filed — they start in two days');
   return true;
 }
 function branchHealth(){
@@ -6606,6 +6626,7 @@ function renderOrg(){
     rows.push('<div class="tier">YOUR BRANCH</div>');
     rows.push(`<div><span>Branch health (day avg)</span><b style="color:${col}">${M.h}/100 · need ${M.target}</b></div>`);
     rows.push(`<div><span>Good days running</span><b style="color:${col}">${M.streak}/${M.need}${career.meritReady?' — READY':''}</b></div>`);
+    rows.push(`<div><span>Open requisitions</span><b>${career.hireReqs||0}${(career.hireReqs||0)>0?' — hire from your desk':' — land a client'}</b></div>`);
     // where the number comes from, RIGHT NOW (the instantaneous branchHealth, decomposed)
     rows.push(`<div><span>Where it comes from — now</span><b>${bd.empty?'floor empty':bd.health+'/100'}</b></div>`);
     healthLedgerRowsOrg(bd).forEach(r=>rows.push(r));
