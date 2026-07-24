@@ -132,6 +132,10 @@
   #orgRows .vac{color:var(--bad);font-weight:700}
   #orgRows .riv{color:var(--bad)}
   #orgRows b{font-weight:400;color:var(--muted)}
+  #orgRows .hlrow{font-size:12.5px;padding:3px 0}
+  #orgRows .hlrow span{padding-left:12px}
+  #orgRows .hlrow b{font-weight:700}
+  #orgRows .hlnote{font-size:11px;font-style:italic;color:var(--muted);border-bottom:0;padding-top:2px}
   #log{font-size:13px;line-height:1.6}
   #log div{border-bottom:1px dotted var(--line);padding:4px 0}
   #log .t{color:var(--muted)} #log .g{color:var(--good)} #log .b{color:var(--bad)} #log .w{color:var(--warn)}
@@ -3103,7 +3107,9 @@ function buildOptions(t){
       items.push({label:n.mission?'Already doing your bidding':'Force them to sabotage someone…',disabled:!!n.mission,risk:'their stress',act:()=>pickHitTarget(n,true)});
       items.push({label:'Force them to take your heat',risk:'their stress',act:()=>blackmailBlame(n)});
     }
-    return {title:`${n.name} · ${deptName(n.dept)}${n.profiled?' · '+PTYPE_NAME[n.ptype]:''}${n.rival?' · RIVAL':''}${n.friend>=ALLY_THRESHOLD?' · ALLY':''}${dirtOn(n.name)?' · DIRT HELD':''}  (mood ${Math.round(n.mood)} / stress ${Math.round(n.stress)} / friend ${Math.round(n.friend)})`,items};
+    const fr=Math.round(n.friend);
+    const frTxt=n.friend>=ALLY_THRESHOLD?`friend ${fr} — ALLY ✓ (+2.5 branch health)`:`friend ${fr}/${ALLY_THRESHOLD} — ${ALLY_THRESHOLD-fr} more to become an ally`;
+    return {title:`${n.name} · ${deptName(n.dept)}${n.profiled?' · '+PTYPE_NAME[n.ptype]:''}${n.rival?' · RIVAL':''}${n.friend>=ALLY_THRESHOLD?' · ALLY':''}${dirtOn(n.name)?' · DIRT HELD':''}  (mood ${Math.round(n.mood)} / stress ${Math.round(n.stress)} / ${frTxt})`,items};
   }
   if(t.kind==='obj'){
     const o=t.ref;
@@ -4808,6 +4814,80 @@ function branchHealth(){
     - (today?today.fired.length*16:0);
   return Math.round(clamp(h,0,100));
 }
+/* READ-ONLY legibility (branch: manager-legibility). The player used to see only the final
+   branchHealth() number with no way to learn where it came from — a ten-term formula behind a
+   single integer. healthBreakdown() re-derives that formula term by term for display. It changes
+   NOTHING: `raw` is the identical expression to branchHealth() above (same order), so
+   healthBreakdown().health === branchHealth() in every state (t_legibility asserts this). Each
+   term carries its live count and its point contribution so the UI can show which terms help and
+   which hurt. `banked`/`resets` flag the asymmetry a player must know: allies never decay, mood
+   halves nightly. `warming` = workers climbing toward ALLY_THRESHOLD but not counting yet. */
+function healthBreakdown(){
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
+  if(!ws.length)return {empty:true, base:52, raw:0, health:0, workers:0, allies:0, warming:0, terms:[]};
+  const avgMood=ws.reduce((a,n)=>a+n.mood,0)/ws.length;          // -100..100
+  const avgStress=ws.reduce((a,n)=>a+n.stress,0)/ws.length;      // 0..100
+  const allies=ws.filter(n=>n.friend>=ALLY_THRESHOLD).length;
+  const feuds=ws.filter(n=>n.feudWith).length/2;
+  const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
+  const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
+  const broken=ws.filter(n=>stressTier(n)>=3).length;
+  const meltdowns=today?today.meltdowns:0;
+  const fired=today?today.fired.length:0;
+  const warming=ws.filter(n=>n.friend>=30&&n.friend<ALLY_THRESHOLD).length;
+  // point contributions — coefficients identical to branchHealth() above
+  const terms=[
+    {key:'base',   label:'Base',        count:null,      pts:52,               always:true},
+    {key:'allies', label:'Allies',      count:allies,    pts:allies*2.5,       always:true, banked:true},
+    {key:'stress', label:'Stress',      count:Math.round(avgStress), pts:-avgStress*0.42, always:true, avg:true},
+    {key:'mood',   label:'Mood',        count:Math.round(avgMood),   pts:avgMood*0.30,    resets:true, avg:true},
+    {key:'feuds',  label:'Feuds',       count:feuds,     pts:-feuds*5},
+    {key:'vacant', label:'Empty desks', count:vacant,    pts:-vacant*6},
+    {key:'strikes',label:'Strikes',     count:strikes,   pts:-strikes*4},
+    {key:'broken', label:'On the edge', count:broken,    pts:-broken*7},
+    {key:'melt',   label:'Meltdowns',   count:meltdowns, pts:-meltdowns*9},
+    {key:'fired',  label:'Walked out',  count:fired,     pts:-fired*16},
+  ];
+  const raw=52 + avgMood*0.30 - avgStress*0.42 + allies*2.5 - feuds*5 - strikes*4 - vacant*6 - broken*7 - meltdowns*9 - fired*16;
+  return {empty:false, base:52, raw, health:Math.round(clamp(raw,0,100)), workers:ws.length, allies, warming, terms};
+}
+/* Which terms to show, and how (branch: manager-legibility). Curated for a TV: Base/Allies/Stress
+   always (Allies stays visible even at 0 so the missing lever is obvious); every other term only
+   when it is actually firing. Mood shows only once its contribution is worth a point. */
+function hlShown(t){
+  if(t.always)return true;
+  if(t.key==='mood')return Math.abs(t.pts)>=0.5;
+  return (t.count||0)>0;
+}
+function hlVisible(bd){return bd.terms.filter(hlShown);}
+function hlRow(t,bd){
+  const p=Math.round(t.pts), sign=t.pts>=0?'+':'−';
+  const cnt=(t.key==='base')?'':(t.avg?`(${t.count} avg)`:`(${t.count})`);
+  let note='';
+  if(t.key==='allies'){
+    if(bd.allies===0)note=bd.warming>0?` — ${bd.warming} warming, none at 45 yet`:' — none at 45 yet';
+    else if(bd.warming>0)note=` — ${bd.warming} warming`;
+  }
+  const col=t.pts>0?'#4a8c5a':(t.pts<0?'#c0392b':'#7c7768');
+  return {label:`${t.label}${cnt?' '+cnt:''}${note}`, val:`${sign}${Math.abs(p)}`, col};
+}
+/* org-tab idiom: <div><span>label</span><b>value</b></div> */
+function healthLedgerRowsOrg(bd){
+  if(bd.empty)return [];
+  return hlVisible(bd).map(t=>{const r=hlRow(t,bd);
+    return `<div class="hlrow"><span>  ${r.label}</span><b style="color:${r.col}">${r.val}</b></div>`;});
+}
+/* paths-card idiom: a small boxed ledger */
+function healthLedgerHTMLPaths(bd){
+  const S='display:flex;justify-content:space-between;gap:8px;font-size:12px;line-height:1.55';
+  if(bd.empty)return `<div style="margin-top:6px;padding:6px 8px;background:#fbf9f3;border:1px solid #e6dfce;border-radius:4px;font-size:12px">Floor is empty right now — nobody to measure (0/100).</div>`;
+  const rows=hlVisible(bd).map(t=>{const r=hlRow(t,bd);
+    return `<div style="${S}"><span>${r.label}</span><b style="color:${r.col}">${r.val}</b></div>`;}).join('');
+  return `<div style="margin-top:6px;padding:6px 8px;background:#fbf9f3;border:1px solid #e6dfce;border-radius:4px">
+    <div style="font-weight:700;font-size:11px;letter-spacing:.3px;margin-bottom:2px">RIGHT NOW — ${bd.health}/100 · where it comes from</div>
+    ${rows}
+    <div style="opacity:.72;font-size:11px;font-style:italic;margin-top:3px">Friendships stick; mood resets every night — build allies.</div></div>`;
+}
 /* THE BUG THIS FIXES: health was judged at 5pm, when the floor has already emptied out
    and there is nobody left to measure. It always came out 0, so the Merit ending and
    Dale-fails-upward could never trigger. A branch is judged on the DAY, not on the
@@ -6419,11 +6499,15 @@ function renderPeople(){
       bits.push(`hardened (${scars}) — has already survived: ${seen||'—'}. The same trick will not work twice.`);
     }
     const bar=(lab,val,col)=>`<div class="pbar"><span>${lab}</span><div class="tr"><div class="fl" style="width:${Math.round(val)}%;background:${col}"></div></div><b style="font-size:11px">${Math.round(val)}</b></div>`;
+    // Friendship bar carries the ALLY_THRESHOLD line: a tick at 45, amber below / green at-or-above,
+    // and a fr/45 readout — so the step function that scores nothing until 45 is finally visible.
+    const frBar=(o)=>{const fr=Math.round(o.friend), ally=o.friend>=ALLY_THRESHOLD;
+      return `<div class="pbar"><span>${ally?'Ally ✓':'Friendship'}</span><div class="tr" style="position:relative"><div class="fl" style="width:${fr}%;background:${ally?'#4a8c5a':'#c98a1a'}"></div><div title="ally at ${ALLY_THRESHOLD}" style="position:absolute;top:-2px;bottom:-2px;left:${ALLY_THRESHOLD}%;width:2px;background:#333;opacity:.6"></div></div><b style="font-size:11px">${ally?fr:fr+'/'+ALLY_THRESHOLD}</b></div>`;};
     return `<div class="pcard"><div class="pname">${w.name.split(' ')[0]} — ${npcRankName(w)}${tags}</div>
       <div class="psub">${type}</div>
       <div class="psub" style="color:${tierN>=2?'#c0392b':(tierN===1?'#8a5a12':'#7c7768')}">${tierTxt}</div>
       ${bar('Stress',w.stress,w.stress>70?'#c0392b':'#c98a1a')}
-      ${bar('Friendship',w.friend,'#4a8c5a')}
+      ${frBar(w)}
       ${bar('Their climb',Math.min(99,w.career||0),'#3b6ea5')}
       ${bits.length?('<div class="pfx">'+bits.join(' · ')+'</div>'):''}
     </div>`;
@@ -6442,15 +6526,14 @@ function renderOrg(){
   if(player.rank>=5&&!career.ceoDone){
     const M=meritStatus();
     const col=M.h>=M.target?'#4a8c5a':(M.h>=M.target-15?'#d9a521':'#c0392b');
+    const bd=healthBreakdown();
     rows.push('<div class="tier">YOUR BRANCH</div>');
-    rows.push(`<div><span>Branch health</span><b style="color:${col}">${M.h}/100 · need ${M.target}</b></div>`);
+    rows.push(`<div><span>Branch health (day avg)</span><b style="color:${col}">${M.h}/100 · need ${M.target}</b></div>`);
     rows.push(`<div><span>Good days running</span><b style="color:${col}">${M.streak}/${M.need}${career.meritReady?' — READY':''}</b></div>`);
-    const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
-    const broken=ws.filter(n=>stressTier(n)>=3).length;
-    const feuds=ws.filter(n=>n.feudWith).length/2;
-    const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
-    const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
-    rows.push(`<div><span>Dragging it down</span><b>${[broken?broken+' breaking':'',feuds?feuds+' feud(s)':'',strikes?strikes+' strike(s) on file':'',vacant?vacant+' empty desk(s)':''].filter(Boolean).join(' · ')||'nothing — hold this'}</b></div>`);
+    // where the number comes from, RIGHT NOW (the instantaneous branchHealth, decomposed)
+    rows.push(`<div><span>Where it comes from — now</span><b>${bd.empty?'floor empty':bd.health+'/100'}</b></div>`);
+    healthLedgerRowsOrg(bd).forEach(r=>rows.push(r));
+    rows.push('<div class="hlnote"><span>Friendships stick; mood resets every night — build allies.</span><b></b></div>');
   }
   const ws=activeNPCs().filter(isWorker);
   const yt=youTier();
@@ -6496,10 +6579,11 @@ function renderPaths(){
   if(career.meritReady) meritFx='<b style="color:#4a8c5a">✓ Streak complete — the board is watching. Reach 100% promotion to take it.</b>';
   else if(!isMgr) meritFx=`🔒 Locked until MANAGER (you are ${rankName}). Good days only start counting once you run the floor.`;
   else meritFx=`Today's branch health <b>${m.h}/${m.target}</b>. Days held at ≥${m.target}: <b>${m.streak||0}/${m.need}</b>. Drop below and the streak resets.`;
+  const meritLedger=isMgr?healthLedgerHTMLPaths(healthBreakdown()):'';
   const meritCard=`<div class="pcard"><div class="pname">MERIT — the honest climb${career.meritReady?' <span class="aly">READY</span>':''}</div>
     <div class="psub">Make Manager, then keep branch health ≥${m.target} for ${m.need} days. The board hands you the job.</div>
     ${bar('Good days',meritPct,career.meritReady?'#4a8c5a':'#3b6ea5')}
-    <div class="pfx">${meritFx}</div></div>`;
+    <div class="pfx">${meritFx}</div>${meritLedger}</div>`;
 
   /* LOYALTY — Dale's arc; fake title at beat 12; finish → he recommends you */
   const arcLen=DALE_ARC.length, step=dale.step||0;
