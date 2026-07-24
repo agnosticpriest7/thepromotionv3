@@ -3049,11 +3049,14 @@ function buildOptions(t){
           logLine(`You watched ${n.name.split(' ')[0]} for a while. They are a ${PTYPE_NAME[n.ptype]}.`,'w');
           toast(`${n.name.split(' ')[0]} read: ${PTYPE_NAME[n.ptype]}`);
         })}]:[]),
-      {label:'Eavesdrop (gossip about someone else)',risk:'safe',act:()=>eavesdrop(n)},
       {label:'Compliment (mood + / friendship +)',risk:'safe',act:()=>{n.mood=clamp(n.mood+18,-100,100);n.friend=clamp(n.friend+8,0,100);toast(`${n.name} cheered up.`);checkAlly(n);}},
+      /* ── Social/gossip verbs, grouped: acquire (eavesdrop) / spend (rumour) / repair (clear name) ── */
+      {label:'— Gossip —',disabled:true},
+      {label:'Eavesdrop — pick up dirt on someone else',risk:'safe',act:()=>eavesdrop(n)},
+      ...(activeNPCs().filter(x=>isWorker(x)&&x!==n).length?[{label:'Spread a rumour about someone else…',risk:seen?seenTag():'through them',hot:seen,act:()=>pickRumorSubject(n)}]:[]),
+      {label:'Clear their name — end the gossip about them',risk:'safe',act:()=>{n.stress=clamp(n.stress-22,0,100);n.mood=clamp(n.mood+14,-100,100);n.friend=clamp(n.friend+10,0,100);n.bubble={t:2,text:'Thanks!'};logLine(`Stuck up for ${n.name} and cleared the air. They warm to you.`,'g');toast(`${n.name} is grateful.`);checkAlly(n);}},
       ...missionItems(n),
       ...feudItems(n),
-      {label:'Clear their name (debunk gossip)',risk:'safe',act:()=>{n.stress=clamp(n.stress-22,0,100);n.mood=clamp(n.mood+14,-100,100);n.friend=clamp(n.friend+10,0,100);n.bubble={t:2,text:'Thanks!'};logLine(`Stuck up for ${n.name} and cleared the air. They warm to you.`,'g');toast(`${n.name} is grateful.`);checkAlly(n);}},
       ...finisherItems(n),
       ...((n.mistakes>=1)?[{label:`Report their ${n.mistakes} mistake(s) to Dale`,risk:'they take a warning',act:()=>reportMistakes(n)}]:[]),
       ...((n.friend>=ALLY_THRESHOLD)?[]:[]),
@@ -3067,13 +3070,7 @@ function buildOptions(t){
         ? {label:`Write ${n.name.split(' ')[0]} up (formal warning)`,risk:'they will remember this',hot:true,act:()=>disciplineNPC(n,del)}
         : {label:'Complete task here',risk:'good',act:()=>completeTask(del)});
     }
-    {
-      // messenger = the worker in front of you; you pick the SUBJECT from a submenu.
-      const others=activeNPCs().filter(x=>isWorker(x)&&x!==n);
-      if(others.length){
-        items.push({label:'Spread a rumour (pick who it’s about)…',risk:seen?seenTag():'through them',hot:seen,act:()=>pickRumorSubject(n)});
-      }
-    }
+    /* Spread-a-rumour moved up into the — Gossip — block. */
     if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?seenTag():'very risky',hot:seen,act:()=>frame(n)});
     if(n.friend>=ALLY_THRESHOLD){
       items.push({label:'— Ally favors —',disabled:true});
