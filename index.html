@@ -4210,7 +4210,7 @@ function endDay(){
 function nightLine(){
   if(career.meritReady)return 'Sterling\u2019s office light is still on. He is on the phone to someone, and he keeps saying your name.';
   if(player.rank>=5){
-    const h=branchHealth();
+    const h=healthToday();   // night flavor reflects the DAY's average, not the empty-floor 5pm reading
     if(h>=MERIT_TARGET)return 'Nobody cried today. Nobody was walked out. The lights went off at 4:45 and the work was done. You did that.';
     if(h<40)return 'You can hear somebody in the stairwell again. This floor is coming apart in your hands.';
   }
@@ -4842,7 +4842,7 @@ function scoreTheDay(){
     return h;
   }
   if(player.rank<5||career.ceoDone)return null;
-  const h=branchHealth();
+  const h=healthToday();   // judge the merit streak on the all-day AVERAGE, not the empty-floor 5pm instant (matches the AM path above)
   if(h>=MERIT_TARGET){
     career.goodDays=(career.goodDays||0)+1;
     if(career.goodDays>=MERIT_DAYS){
@@ -6921,7 +6921,7 @@ function ladderSteps(){
       steps.push({done:g.ok, text:`Keep doing his favours — he likes you ${Math.round(dale.favor)}/30`});
       break;
     case 'MANAGER': {
-      const h=branchHealth();
+      const h=healthToday();   // show the number the day is judged on (the average), not the live instant
       steps.push({head:'THE HONEST WAY — LET HIM TAKE THE CREDIT'});
       steps.push({done:h>=DALE_OUT_TARGET, text:`Run the floor WELL as his deputy — branch health ${h}/${DALE_OUT_TARGET}`});
       steps.push({done:(career.daleDays||0)>=DALE_OUT_DAYS, text:`Hold it ${DALE_OUT_DAYS} days (${career.daleDays||0}/${DALE_OUT_DAYS}) — head office promotes DALE for your work, and his chair empties`});
