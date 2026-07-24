@@ -2310,13 +2310,14 @@ function meltdown(n){
   startMeltEvent(n, false);   // a meltdown NEVER fires anybody. It only breaks them open.
 }
 let pendingHires=[];
-function fireNPC(n){
+function fireNPC(n,by){
   n.alive=false;today.fired.push(n.name.split(' ')[0]);
   const tier=npcRank(n);
   {const sv=activeNPCs().filter(w=>isWorker(w)&&w!==n);if(sv.length){const up=pick(sv);up.career=(up.career||0)+8;logLine(`${up.name.split(' ')[0]} quietly absorbs ${n.name.split(' ')[0]}'s accounts. A step up.`,'t');}}
   if(n.prankBuild){logLine(`Your ${PRANK_SHORT[n.prankBuild.type]} on ${n.name} is wasted — they got walked out before it sprang.`,'w');n.prankBuild=null;}
-  pushAlertBox(`${n.name.split(' ')[0]} was walked out of the building. Two strikes. Their desk is empty.`,'b');
-  logLine(`${n.name} was walked out by HR. Two strikes.`,'t');
+  const mgr=(by==='manager');   // manager dismissal (one strike + discretion) vs HR's automatic two-strike walk
+  pushAlertBox(`${n.name.split(' ')[0]} was walked out of the building. ${mgr?'Dismissed by management.':'Two strikes.'} Their desk is empty.`,'b');
+  logLine(`${n.name} was walked out ${mgr?'— dismissed by management':'by HR. Two strikes'}.`,'t');
   mournFriends(n);                       // the two people who liked them will remember
   const desk=desks.find(d=>d.owner===n.name);
   if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;
@@ -2360,6 +2361,57 @@ function mournFriends(n){
       logLine(`${f.name.split(' ')[0]} sat next to ${n.name.split(' ')[0]} for years. Nobody said anything about it.`,'t');
     }
   });
+}
+/* ================= MANAGER VERB: DISMISSAL (branch: manager-fire) ==========
+   The first real management verb, from the corner office. HR auto-fires at two strikes
+   (npcStrike -> fireNPC); the manager may act one step earlier, on a single DOCUMENTED
+   strike. It is paperwork, not whim — the grounds are surfaced in the menu, and a clean
+   file cannot be fired. fireNPC() does all the load-bearing work and none of it is routed
+   around: -16 health today, vacates the desk + day+2 backfill, hands off the accounts,
+   mournFriends, opens the requisition. Two guards keep it honest without softening it:
+     • a walkout rattles the whole room — a smaller morale dip to every OTHER survivor (the
+       two close friends already take mournFriends' bigger hit), so a cull is priced. One
+       genuine drag still nets positive; three in a week craters the floor.
+     • a fire you engineered can trace back — if you manufactured the strike yourself (a
+       planted document or a prank set youDidThis), it costs suspicion, like any sabotage
+       that surfaces (+25, matching resolveAudit). */
+const FIRE_FLOOR_MOOD=8, FIRE_FLOOR_STRESS=5;   // the rest of the floor; friends get mournFriends' -20/+10
+const FIRE_TRACE_SUSPICION=25;                  // matches resolveAudit's charge when tampering traces to you
+function fireGrounds(n){return (n.strikes||0)>=1;}
+function floorAftershock(departed){
+  const mourned=new Set(activeNPCs().filter(o=>isWorker(o)&&o.friends&&o.friends.includes(departed.name)).map(o=>o.name));
+  activeNPCs().forEach(o=>{
+    if(!isWorker(o)||o===departed||o.gone||mourned.has(o.name))return;
+    o.mood=clamp(o.mood-FIRE_FLOOR_MOOD,-100,100);
+    o.stress=clamp(o.stress+FIRE_FLOOR_STRESS,0,100);
+  });
+  logLine('A walkout puts the whole floor on edge. Heads stay down, and nobody quite settles for the rest of the day.','w');
+}
+function managerFire(n){
+  if(!n||!isWorker(n)||!n.alive||n.gone)return false;
+  if(player.rank<5){toast('Only the manager can walk someone out.');return false;}
+  if(!fireGrounds(n)){toast(`${n.name.split(' ')[0]} has a clean file — no grounds.`);return false;}
+  const traced=youDidThis(n);                    // you manufactured the strike (plant / prank)
+  logLine(`You walked ${n.name} out on ${n.strikes} strike${n.strikes>1?'s':''}. The file is in order.`,'b');
+  fireNPC(n,'manager');                           // every cost intact: -16 today, vacate, backfill, mournFriends, req
+  floorAftershock(n);                             // the rest of the floor takes the smaller dip
+  if(traced){
+    addSuspicion(FIRE_TRACE_SUSPICION,'A worker you set up was walked out on your say-so');
+    logLine('You built the case against them yourself, and someone has started to wonder how convenient that was.','b');
+  }
+  return true;
+}
+/* the office desk submenu: only workers with a documented strike, grounds shown */
+function fireMenu(){
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone).sort((a,b)=>(b.strikes||0)-(a.strikes||0));
+  const items=ws.filter(fireGrounds).map(n=>({
+    label:`Dismiss ${n.name.split(' ')[0]} — ${n.strikes} strike${n.strikes>1?'s':''} on file`,
+    risk:youDidThis(n)?'traces to you':'documented grounds', hot:youDidThis(n),
+    act:()=>managerFire(n)
+  }));
+  if(!items.length)items.push({label:'Nobody has a strike on file — you need documented grounds to dismiss.',disabled:true});
+  items.push({label:'← Back',act:()=>{}});
+  return {title:'DISMISS A WORKER — grounds required',items};
 }
 const HIRE_NAMES=['Gary','Susan','Trent','Nadia','Boris','Kelsey','Franklin','Yuki','Omar','Lonnie','Petra','Silas','Meredith','Cliff',
   'Rosa','Devon','Imani','Hassan','Bridget','Curtis','Anika','Grigor','Lucia','Terrence','Fiona','Malik','Deborah','Rafael',
@@ -3186,7 +3238,9 @@ function buildOptions(t){
   }
   if(t.kind==='desk'){
     const d=t.ref;
-    if(d.owner==='you')return {title:'Your desk',items:[(()=>{const dk=openTask('desk');return dk?{label:'Do the work (task)',risk:'good',act:()=>completeTask(dk)}:{label:'Grind busywork (+2, slow)',risk:'tedious',act:()=>doBusywork()};})(),
+    if(d.owner==='you')return {title:d.mgrOffice?'Manager’s office':'Your desk',items:[
+      ...((d.mgrOffice&&player.rank>=5)?[{label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())}]:[]),
+      (()=>{const dk=openTask('desk');return dk?{label:'Do the work (task)',risk:'good',act:()=>completeTask(dk)}:{label:'Grind busywork (+2, slow)',risk:'tedious',act:()=>doBusywork()};})(),
       {label:'Craft a prank kit…',risk:'from parts',act:()=>craftMenu()},
       ...player.inv.filter(id=>CONSUMABLE[id]).map(id=>({label:`Have ${ITEMS[id].label} (${ITEMS[id].use})`,risk:'safe',act:()=>{invTake(id);useConsumable(id);renderLeverage();}})),
       {label:`Desk storage  (pockets ${player.inv.length}/${INV_CAP} · drawer ${player.deskItems.length}/${DRAWER_CAP} · hidden ${player.deskHidden.length}/${HIDDEN_CAP})`,risk:'move things somewhere safe',act:()=>openDesk()},
