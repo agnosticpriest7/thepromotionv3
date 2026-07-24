@@ -2759,6 +2759,14 @@ function tickCones(dt){
 function checkAlly(n){if(n.friend>=ALLY_THRESHOLD&&!n._wasAlly){n._wasAlly=true;logLine(`${n.name} is now an ally. You can ask them to do your dirty work.`,'g');toast(`${n.name} is now an ally`);}}
 function dirtOn(name){return player.leverage.find(l=>l.target===name);}
 function removeDirt(name){player.leverage=player.leverage.filter(l=>l.target!==name);renderLeverage();}
+/* Leverage legibility: a document's power is its bite. Surface it as a coarse read, not a raw
+   number — hearsay (gossip/notes) < solid (desk snoop/plots) < damning (the HR files). */
+function levTier(power){power=power||18;return power>=42?3:power>=27?2:1;}
+function levPips(power){const t=levTier(power);return '●●●'.slice(0,t)+'○○○'.slice(0,3-t);}   // ●○○ / ●●○ / ●●●
+function levTierWord(power){const t=levTier(power);return t===3?'damning':t===2?'solid':'hearsay';}
+function levGlyph(src){return src==='hrfile'?'📁':src==='desk'?'📄':'💬';}   // gossip / desk / HR file
+function levGlyphOf(l){return l.glyph||levGlyph(l.src);}   // per-item override (the CEO endgame file isn't a routine 📁)
+function shortTarget(name){name=String(name||'?');const w=name.split(' ');return (w.length>1&&/^(mr|ms|mrs|dr|miss)\.?$/i.test(w[0]))?w[1]:w[0];}   // "Dale Brackett"->Dale, "Mr. Sterling"->Sterling
 function pickHitTarget(actor,coerced){
   const targets=activeNPCs().filter(x=>isWorker(x)&&x!==actor);
   const items=targets.map(t=>({label:`Send after ${t.name}${t.rival?' ★':''}`,risk:coerced?'their stress':'their risk',act:()=>assignMission(actor,t.name,coerced)}));
@@ -3071,7 +3079,7 @@ function buildOptions(t){
         : {label:'Complete task here',risk:'good',act:()=>completeTask(del)});
     }
     /* Spread-a-rumour moved up into the — Gossip — block. */
-    if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?seenTag():'very risky',hot:seen,act:()=>frame(n)});
+    if(hasLev()&&player.suspicion>15)items.push({label:`Frame ${n.name}`,risk:seen?seenTag():'very risky',hot:seen,act:()=>pickFrameDoc(n)});
     if(n.friend>=ALLY_THRESHOLD){
       items.push({label:'— Ally favors —',disabled:true});
       items.push({label:n.mission?'Already on a job for you':'Send them to sabotage someone…',disabled:!!n.mission,risk:'their risk',act:()=>pickHitTarget(n,false)});
@@ -3191,7 +3199,7 @@ function buildOptions(t){
       ...((d.loot&&d.loot.length&&!present)?[{label:`Search their drawers (${d.loot.length} thing${d.loot.length>1?'s':''} in there)`,risk:rk,hot:seen,act:()=>startAct(3,'Going through their drawers',()=>openDeskLoot(d))}]:[]),
       {label:'Swipe something they love',disabled:present,risk:rk,hot:present||seen,act:()=>startAct(3,'Pocketing it',()=>swipePrized(d,own,present))},
       {label:d.rigged?'Already rigged':'Rig their setup (prank)',disabled:!!d.rigged||present,risk:rk,hot:seen,act:()=>startAct(5,'Rigging their setup',()=>rigDesk(d))},
-      {label:!player.leverage.length?'Plant evidence (need dirt)':d.planted?'Evidence already planted':'Plant evidence to frame them',disabled:!player.leverage.length||!!d.planted||present,risk:rk,hot:present||seen,act:()=>startAct(5,'Planting evidence',()=>plantEvidence(d))},
+      {label:!player.leverage.length?'Plant evidence (need dirt)':d.planted?'Evidence already planted':'Plant evidence to frame them',disabled:!player.leverage.length||!!d.planted||present,risk:rk,hot:present||seen,act:()=>pickPlantDoc(d)},
       ...prankItems,
     ]};
   }
@@ -3470,7 +3478,17 @@ function snitchItem(item,authority){
     addSuspicion(4+Math.min(20,career.snitchCount*3),'You keep turning up at HR with tales');
   } else { logLine('Nothing came of the report.','t'); addSuspicion(4,'You were seen carrying tales'); }
 }
-function frame(n){player.leverage.pop();renderLeverage();const moved=Math.min(player.suspicion,30);player.suspicion=clamp(player.suspicion-moved,0,100);n.stress=clamp(n.stress+moved,0,100);n.mood=clamp(n.mood-15,-100,100);logLine(`Framed ${n.name}. Redirected ${moved} suspicion onto them.`,'w');toast(`Suspicion −${moved} (onto ${n.name})`);if(hrSeesPlayer())addSuspicion(15,'HR half-caught the frame-up');}
+/* pick WHICH document to plant on the frame-up (was: silently pop the last item) */
+function pickFrameDoc(n){
+  if(!hasLev()){toast('No leverage to plant.');return;}
+  const items=player.leverage.map(l=>({label:levGlyphOf(l)+' '+l.label,risk:levTierWord(l.power),hot:levTier(l.power)===3,act:()=>frame(n,l)}));
+  items.push({label:'Cancel',act:()=>{}});
+  renderMenu({title:`Frame ${n.name} — which document?`,items});
+}
+function frame(n,item){
+  if(!item)item=player.leverage[player.leverage.length-1];
+  const idx=player.leverage.indexOf(item);if(idx>=0)player.leverage.splice(idx,1);renderLeverage();
+  const moved=Math.min(player.suspicion,30);player.suspicion=clamp(player.suspicion-moved,0,100);n.stress=clamp(n.stress+moved,0,100);n.mood=clamp(n.mood-15,-100,100);logLine(`Framed ${n.name} with "${item?item.label:'a document'}". Redirected ${moved} suspicion onto them.`,'w');toast(`Suspicion −${moved} (onto ${n.name})`);if(hrSeesPlayer())addSuspicion(15,'HR half-caught the frame-up');}
 function rigToilet(o){
   const seen=seenByAnyone();
   o.rigged=true;
@@ -3987,9 +4005,17 @@ function prankMiss(target,type,tier){
   else if(t==='socialite'){logLine(`${target.name} turned being pranked into a story. The office is on alert now.`,'w');addSuspicion(8+tier*3,'Word spreads that pranks are happening');}
 }
 function rigDesk(d){d.rigged=d.owner;logLine(`Rigged ${d.owner}'s desk. A surprise waits for their return.`,'w');addSuspicion(hrSeesPlayer()?24:9,hrSeesPlayer()?'HR caught you at a desk':'Desk sabotage, unseen');witnessReact();}
-function plantEvidence(d){{const m=missions.find(x=>!x.done&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
-  if(!player.leverage.length||d.planted)return;
-  const item=player.leverage.pop();renderLeverage();d.planted=item;
+/* pick WHICH document to plant in this desk (was: silently pop the last item) */
+function pickPlantDoc(d){
+  if(!hasLev()||d.planted)return;
+  const items=player.leverage.map(l=>({label:levGlyphOf(l)+' '+l.label,risk:levTierWord(l.power),hot:levTier(l.power)===3,act:()=>startAct(5,'Planting evidence',()=>plantEvidence(d,l))}));
+  items.push({label:'Cancel',act:()=>{}});
+  renderMenu({title:`Plant in ${d.owner}'s desk — which document?`,items});
+}
+function plantEvidence(d,item){{const m=missions.find(x=>!x.done&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
+  if(!item)item=player.leverage[player.leverage.length-1];
+  if(!item||d.planted)return;
+  const idx=player.leverage.indexOf(item);if(idx>=0)player.leverage.splice(idx,1);renderLeverage();d.planted=item;
   logLine(`Planted "${item.label}" in ${d.owner}'s desk. Now you just need HR to check it.`,'w');toast('Evidence planted');
   addSuspicion(hrSeesPlayer()?18:5,hrSeesPlayer()?'HR saw you at their desk':'Planted evidence, unseen');
 }
@@ -4257,7 +4283,7 @@ function catfishFileItems(){
   if(!player.hasKeycard)return [{label:'Sterling\u2019s replies are in here — you need a keycard',disabled:true}];
   return [{label:'Pull Sterling\u2019s replies out of the archive',risk:'the last thing you will ever need',hot:true,
     act:()=>startAct(6,'Downloading the correspondence',()=>{
-      player.leverage.push({label:'Sterling\u2019s private replies to a fake employee',target:'Mr. Sterling',power:100,src:'hrfile'});
+      player.leverage.push({label:'Sterling\u2019s private replies to a fake employee',target:'Mr. Sterling',power:100,src:'hrfile',glyph:'\ud83d\udc51'});   // the endgame trigger \u2014 not a routine file
       renderLeverage();
       catfish.stage=3;
       SFX.promote();
@@ -6961,7 +6987,7 @@ function renderTasks(){
   });
 }
 function esc(s){return String(s).replace(/"/g,'&quot;');}
-function renderLeverage(){renderInvBar();const el=document.getElementById('levChips');if(!el)return;el.innerHTML='';if(player.workPass){const wp=document.createElement('span');wp.className='lchip';wp.style.borderColor='#4a8c5a';wp.style.color='#356544';wp.style.background='#eef6ef';wp.textContent='✓ shift covered';el.appendChild(wp);}if(player.hasKeycard){const k=document.createElement('span');k.className='lchip';k.style.borderColor='#4a8c5a';k.style.color='#356544';k.style.background='#eef6ef';k.textContent='🔑 HR keycard';el.appendChild(k);}player.inv.forEach(id=>{const c=document.createElement('span');c.className='lchip exposed';c.textContent='🧰 '+ITEMS[id].label;el.appendChild(c);});player.deskItems.forEach(id=>{const c=document.createElement('span');c.className='lchip hid';c.textContent='🗄 (drawer) '+ITEMS[id].label;el.appendChild(c);});if(!player.leverage.length){if(!player.hasKeycard&&!player.inv.length&&!player.workPass)el.innerHTML='<span class="empty">none yet — eavesdrop, snoop a desk, or crack the HR files</span>';return;}player.leverage.forEach(l=>{const s=document.createElement('span');s.className='lchip '+(l.hidden?'hid':'exposed');s.textContent=(l.hidden?'🔒 ':'')+l.label;el.appendChild(s);});}
+function renderLeverage(){renderInvBar();const el=document.getElementById('levChips');if(!el)return;el.innerHTML='';if(player.workPass){const wp=document.createElement('span');wp.className='lchip';wp.style.borderColor='#4a8c5a';wp.style.color='#356544';wp.style.background='#eef6ef';wp.textContent='✓ shift covered';el.appendChild(wp);}if(player.hasKeycard){const k=document.createElement('span');k.className='lchip';k.style.borderColor='#4a8c5a';k.style.color='#356544';k.style.background='#eef6ef';k.textContent='🔑 HR keycard';el.appendChild(k);}player.inv.forEach(id=>{const c=document.createElement('span');c.className='lchip exposed';c.textContent='🧰 '+ITEMS[id].label;el.appendChild(c);});player.deskItems.forEach(id=>{const c=document.createElement('span');c.className='lchip hid';c.textContent='🗄 (drawer) '+ITEMS[id].label;el.appendChild(c);});if(!player.leverage.length){if(!player.hasKeycard&&!player.inv.length&&!player.workPass)el.innerHTML='<span class="empty">none yet — eavesdrop, snoop a desk, or crack the HR files</span>';return;}player.leverage.forEach(l=>{const s=document.createElement('span');s.className='lchip '+(l.hidden?'hid':'exposed');s.title=l.label+' ('+levTierWord(l.power)+')';s.textContent=(l.hidden?'🔒 ':'')+levGlyphOf(l)+' '+shortTarget(l.target)+' '+levPips(l.power);el.appendChild(s);});}
 const logEl=document.getElementById('log');
 /* The office feed (under the minimap) is ambient: gossip, errands, weather.
    Anything that HAPPENS TO YOU goes to the loud bar at the bottom instead, where it
