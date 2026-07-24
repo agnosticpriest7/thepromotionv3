@@ -138,12 +138,13 @@
 
   #menu{position:absolute;display:none;background:var(--panel);border:1px solid var(--ink);min-width:250px;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:8}
   #menu h4{margin:0;padding:10px 13px;font-size:13.5px;background:var(--ink);color:#fff;letter-spacing:.5px}
-  #menu button{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
+  #menu button{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
   #menu button:hover{background:#e9e5d8}
   #menu button:disabled{color:#9a9484;cursor:default;font-size:11px;letter-spacing:1.5px}
-  #menu button .r{float:right;color:var(--muted);font-size:12px}
+  #menu button .lab{flex:1 1 auto;min-width:0}
+  #menu button .r{flex:0 0 auto;white-space:nowrap;text-align:right;color:var(--muted);font-size:12px}
   #menu button .r.hot{color:var(--bad)}
-  #menu button.menuClose{text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;background:#eceae2}
+  #menu button.menuClose{justify-content:center;text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;background:#eceae2}
   #menu button.menuClose:hover{background:#ddd8c8;color:var(--ink)}
   #hint{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(42,39,33,.86);color:#fff;padding:7px 15px;font-size:12px;pointer-events:none;letter-spacing:.3px;border-radius:3px}
   #tracker{display:none}   /* the floor is not a to-do list. It all lives in the JOURNAL now. */
@@ -2758,6 +2759,7 @@ function tickCones(dt){
 }
 function checkAlly(n){if(n.friend>=ALLY_THRESHOLD&&!n._wasAlly){n._wasAlly=true;logLine(`${n.name} is now an ally. You can ask them to do your dirty work.`,'g');toast(`${n.name} is now an ally`);}}
 function dirtOn(name){return player.leverage.find(l=>l.target===name);}
+function dirtsOn(name){return player.leverage.filter(l=>l.target===name);}   // ALL docs on a person (dirtOn returns only the first)
 function removeDirt(name){player.leverage=player.leverage.filter(l=>l.target!==name);renderLeverage();}
 /* Leverage legibility: a document's power is its bite. Surface it as a coarse read, not a raw
    number — hearsay (gossip/notes) < solid (desk snoop/plots) < damning (the HR files). */
@@ -2939,7 +2941,7 @@ function gpMenuActivate(){const b=menuBtns[gpSel];if(b&&!b.disabled&&b.onclick)b
 function renderMenu(o){
   menu.innerHTML='';const title=document.createElement('h4');menu.appendChild(title);title.textContent=o.title;
   menuBtns=[];gpSel=0;
-  o.items.forEach(it=>{const b=document.createElement('button');b.innerHTML=it.label+(it.risk?`<span class="r ${it.hot?'hot':''}">${it.risk}</span>`:'');b.disabled=!!it.disabled;b.onclick=()=>{SFX.select();closeMenu();it.act&&it.act();};menu.appendChild(b);menuBtns.push(b);});
+  o.items.forEach(it=>{const b=document.createElement('button');b.innerHTML=`<span class="lab">${it.label}</span>`+(it.risk?`<span class="r ${it.hot?'hot':''}">${it.risk}</span>`:'');b.disabled=!!it.disabled;b.onclick=()=>{SFX.select();closeMenu();it.act&&it.act();};menu.appendChild(b);menuBtns.push(b);});
   /* a tappable way out for touch/mouse (gamepad still uses B, keyboard Esc) */
   {const cb=document.createElement('button');cb.className='menuClose';cb.textContent='✕ Close';cb.onclick=()=>{SFX.close();closeMenu();};menu.appendChild(cb);}
   while(menuBtns.length&&menuBtns[gpSel]&&menuBtns[gpSel].disabled)gpSel++;
@@ -3405,17 +3407,35 @@ function pickRumorSubject(vector){
   if(!subjects.length){toast('Nobody else to gossip about.');return;}
   const items=subjects.map(t=>{
     const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
-    const d=dirtOn(t.name);
+    const ds=dirtsOn(t.name);                       // every doc on this subject, not just the first
     const feud=(vector.feudWith===t.name);
-    let risk;
-    if(loyal){ risk=`loyal to ${t.name.split(' ')[0]} — backfires`; }
-    else { const parts=[d?'you have proof — sticks':'no proof — 40%']; if(feud)parts.push('willing carrier'); const cn=carrierNote(vector); if(cn)parts.push(cn); risk=parts.join(' · '); }
-    return {label:`About ${t.name}${t.rival?' ★':''}${d?' · DIRT':''}`,risk,hot:!!d,act:()=>spreadRumorAbout(vector,t)};
+    let risk, act;
+    if(loyal){ risk=`loyal to ${t.name.split(' ')[0]} — backfires`; act=()=>spreadRumorAbout(vector,t); }
+    else {
+      /* rows carry only what varies by SUBJECT (loyalty / proof / feud). the messenger's carrier
+         trait is fixed for the whole submenu, so it lives in the title (see below). */
+      const parts=[ds.length?'you have proof — sticks':'no proof — 40%'];
+      if(feud)parts.push('willing carrier');
+      if(ds.length>1)parts.push(`${ds.length} docs — choose`);   // pick which one to spend
+      risk=parts.join(' · ');
+      act=ds.length>1 ? ()=>pickRumorDoc(vector,t,ds) : ()=>spreadRumorAbout(vector,t,ds[0]||null);
+    }
+    return {label:`About ${t.name}${t.rival?' ★':''}${ds.length?' · DIRT':''}`,risk,hot:ds.length>0,act};
   });
   items.push({label:'Cancel',act:()=>{}});
-  renderMenu({title:`${vector.name.split(' ')[0]} — spread a rumour about who?`,items});
+  const cn=carrierNote(vector);   // messenger's carrier trait: in the title, not repeated on every row
+  renderMenu({title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — spread a rumour about who?`,items});
 }
-function spreadRumorAbout(vector,t){
+/* more than one document on the same subject: choose which to spend (same pattern as frame/plant).
+   Was a bug — dirtOn() returned the first-acquired doc, so a rumour spent whichever you got first
+   regardless of strength (e.g. burned the HR file when you meant the throwaway gossip). */
+function pickRumorDoc(vector,t,ds){
+  const items=ds.map(dc=>({label:levGlyphOf(dc)+' '+dc.label,risk:levTierWord(dc.power),hot:levTier(dc.power)===3,act:()=>spreadRumorAbout(vector,t,dc)}));
+  items.push({label:'Cancel',act:()=>{}});
+  const cn=carrierNote(vector);
+  renderMenu({title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — which document on ${t.name.split(' ')[0]}?`,items});
+}
+function spreadRumorAbout(vector,t,doc){
   if(!vector||!t||!vector.alive||!t.alive)return;
   const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
   if(loyal){
@@ -3431,7 +3451,10 @@ function spreadRumorAbout(vector,t){
     return;
   }
   const seen=seenByAnyone();
-  const d=dirtOn(t.name);
+  /* which document is spent: the menu passes an explicit choice (or null for no-proof). a legacy
+     call with no doc argument defaults to the STRONGEST match — deterministic, replacing the old
+     dirtOn() first-acquired accident. */
+  const d=(doc!==undefined)?doc:(dirtsOn(t.name).slice().sort((a,b)=>(b.power||0)-(a.power||0))[0]||null);
   const chance=d?1.0:0.40;                 // proof lands for sure; hearsay is a 40% coin-flip
   const basePower=d?(d.power||18):16;      // hearsay bites weaker
   if(d){const i=player.leverage.indexOf(d);if(i>=0)player.leverage.splice(i,1);renderLeverage();}
