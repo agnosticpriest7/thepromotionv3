@@ -3423,6 +3423,7 @@ function pickRumorSubject(vector){
   const items=subjects.map(t=>{
     const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
     const ds=dirtsOn(t.name);                       // every doc on this subject (all share this target)
+    const best=ds.length?ds.reduce((a,b)=>(b.power||0)>(a.power||0)?b:a):null;   // strongest doc, shown as its leverage badge (glyph + pips)
     const feud=(vector.feudWith===t.name);
     let risk, act;
     if(loyal){ risk=`loyal to ${t.name.split(' ')[0]} — backfires`; act=()=>spreadRumorAbout(vector,t); }
@@ -3435,7 +3436,7 @@ function pickRumorSubject(vector){
         ? ()=>pickDocument(ds,{title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — which document on ${t.name.split(' ')[0]}?`,onPick:doc=>spreadRumorAbout(vector,t,doc)})
         : ()=>spreadRumorAbout(vector,t,null);
     }
-    return {label:`About ${t.name}${t.rival?' ★':''}${ds.length?' · DIRT':''}`,risk,hot:ds.length>0,act};
+    return {label:`About ${t.name}${t.rival?' ★':''}${best?` · ${levGlyphOf(best)} ${levPips(best.power)}`:''}`,risk,hot:ds.length>0,act};
   });
   items.push({label:'Cancel',act:()=>{}});
   renderMenu({title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — spread a rumour about who?`,items});
