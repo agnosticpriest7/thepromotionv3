@@ -3195,6 +3195,7 @@ function buildOptions(t){
          This is where they get closed out. */
       if(pt)items.push({label:pt.label+' (task, 6s)',risk:'good',act:()=>startAct(6,'On the phone',()=>{player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();completeTask(pt);})});
       items.push({label:'Cold-call sprint (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'Cold-calling',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Calls made. Promotion +4');tryPromote();})});
+      if(player.rank>=5)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
       return {title:'Sales phones',items};
     }
     if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';return {title:'Whiteboard',items:[inMtg?{label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})}:(openTask('board')?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:'Study the sales chart (look keen)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}})]};}
@@ -4667,7 +4668,7 @@ function daleFavorItems(n){
   return [{label:f.taskLabel,risk:'time you will never get back',act:()=>startAct(s.secs||6,'Being a good friend',()=>completeDaleFavor(),n)}];
 }
 function updateRank(){tryPromote();}
-const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[]};
+const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0};
 /* the day's ledger — reset every morning, read out every evening */
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
 function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
@@ -4846,6 +4847,24 @@ function dalePromotedUp(){
    on the door. Dale gets promoted for your work. It is the most honest way to take his
    chair, and it will make you want to put your fist through a wall. */
 const DALE_OUT_TARGET=64, DALE_OUT_DAYS=2;
+/* ===== MANAGER: HEADCOUNT — LANDING CLIENTS (branch: manager-hire-requisition) =====
+   branchHealth() charges -6 for every empty desk, but until now pendingHires was only ever
+   populated by a firing or a promotion shuffle — the player was charged for a vacancy they had
+   no verb to fix. Landing a client is that verb's first half. A single call (Kyle's call — not a
+   multi-stage build) does two things: it opens a REQUISITION the manager can later spend on a
+   hire (career.hireReqs; these bank and never expire, Kyle's call), and it books a little
+   REVENUE straight into branch health — the formula's first revenue-flavoured input, matching
+   the merit line "the numbers went UP". Revenue PERSISTS and is capped small (Kyle's call). */
+const CLIENT_HEALTH=3, REVENUE_CAP=12;             // +3 per client, banked, capped
+function landClient(){
+  if(player.rank<5){toast('Only the manager runs headcount.');return false;}
+  career.hireReqs=(career.hireReqs||0)+1;
+  career.revenue=clamp((career.revenue||0)+CLIENT_HEALTH,0,REVENUE_CAP);
+  player.stress=clamp(player.stress+3,0,100);checkPlayerMeltdown();
+  logLine(`You closed a sale. The numbers went up, and the branch has justified another hire — a requisition is open (${career.hireReqs}).`,'g');
+  toast(`Client landed. Requisition open · branch health +${CLIENT_HEALTH}`);
+  return true;
+}
 function branchHealth(){
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
   if(!ws.length)return 0;
@@ -4865,7 +4884,8 @@ function branchHealth(){
     - vacant*6
     - broken*7
     - (today?today.meltdowns*9:0)
-    - (today?today.fired.length*16:0);
+    - (today?today.fired.length*16:0)
+    + (career.revenue||0);         // landed-client revenue: the branch's first revenue-flavoured input (persists, capped)
   return Math.round(clamp(h,0,100));
 }
 /* READ-ONLY legibility (branch: manager-legibility). The player used to see only the final
@@ -4901,8 +4921,9 @@ function healthBreakdown(){
     {key:'broken', label:'On the edge', count:broken,    pts:-broken*7},
     {key:'melt',   label:'Meltdowns',   count:meltdowns, pts:-meltdowns*9},
     {key:'fired',  label:'Walked out',  count:fired,     pts:-fired*16},
+    {key:'revenue',label:'Client wins', count:null,      pts:(career.revenue||0), banked:true},
   ];
-  const raw=52 + avgMood*0.30 - avgStress*0.42 + allies*2.5 - feuds*5 - strikes*4 - vacant*6 - broken*7 - meltdowns*9 - fired*16;
+  const raw=52 + avgMood*0.30 - avgStress*0.42 + allies*2.5 - feuds*5 - strikes*4 - vacant*6 - broken*7 - meltdowns*9 - fired*16 + (career.revenue||0);
   return {empty:false, base:52, raw, health:Math.round(clamp(raw,0,100)), workers:ws.length, allies, warming, terms};
 }
 /* Which terms to show, and how (branch: manager-legibility). Curated for a TV: Base/Allies/Stress
@@ -4911,6 +4932,7 @@ function healthBreakdown(){
 function hlShown(t){
   if(t.always)return true;
   if(t.key==='mood')return Math.abs(t.pts)>=0.5;
+  if(t.key==='revenue')return t.pts>0;              // a pool value, not a count — show whenever revenue is booked
   return (t.count||0)>0;
 }
 function hlVisible(bd){return bd.terms.filter(hlShown);}
