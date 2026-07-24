@@ -3402,38 +3402,43 @@ function carrierNote(v){
        : m<1?`${PTYPE_NAME[v.ptype]} −${Math.round((1-m)*100)}%`
        : '';                                               // profiled + neutral: no clause (correctly reads as no effect)
 }
+/* Shared document picker (rumour / frame / plant). A picker is worth a d-pad press only when the
+   choice is REAL. Two docs are INTERCHANGEABLE when they match on POWER *and* TARGET — equal power
+   alone isn't enough at the frame/plant sites, where the candidate set is all leverage and a doc's
+   TARGET gates the blackmail option on that person (dirtOn(name)); burning your only Doug doc to
+   frame Marcus would silently destroy Doug blackmail. If every candidate is interchangeable, spend
+   the strongest and skip the menu. Otherwise show the picker, strongest-first. */
+function allInterchangeable(cands){return cands.length>=1 && cands.every(d=>(d.power||0)===(cands[0].power||0) && d.target===cands[0].target);}
+function pickDocument(cands,o){
+  const sorted=cands.slice().sort((a,b)=>(b.power||0)-(a.power||0));   // strongest first
+  if(allInterchangeable(sorted)){ o.onPick(sorted[0]); return; }       // no real choice — spend one, no menu
+  const items=sorted.map(d=>({label:levGlyphOf(d)+' '+d.label,risk:levTierWord(d.power),hot:levTier(d.power)===3,act:()=>o.onPick(d)}));
+  items.push({label:'Cancel',act:()=>{}});
+  renderMenu({title:o.title,items});
+}
 function pickRumorSubject(vector){
   const subjects=activeNPCs().filter(x=>isWorker(x)&&x!==vector);
   if(!subjects.length){toast('Nobody else to gossip about.');return;}
+  const cn=carrierNote(vector);   // messenger's carrier trait: in the title, not repeated on every row
   const items=subjects.map(t=>{
     const loyal=(vector.friends||[]).includes(t.name)||(t.friends||[]).includes(vector.name);
-    const ds=dirtsOn(t.name);                       // every doc on this subject, not just the first
+    const ds=dirtsOn(t.name);                       // every doc on this subject (all share this target)
     const feud=(vector.feudWith===t.name);
     let risk, act;
     if(loyal){ risk=`loyal to ${t.name.split(' ')[0]} — backfires`; act=()=>spreadRumorAbout(vector,t); }
     else {
-      /* rows carry only what varies by SUBJECT (loyalty / proof / feud). the messenger's carrier
-         trait is fixed for the whole submenu, so it lives in the title (see below). */
       const parts=[ds.length?'you have proof — sticks':'no proof — 40%'];
       if(feud)parts.push('willing carrier');
-      if(ds.length>1)parts.push(`${ds.length} docs — choose`);   // pick which one to spend
+      if(ds.length>1 && !allInterchangeable(ds))parts.push(`${ds.length} docs — choose`);   // flag only when the choice is real
       risk=parts.join(' · ');
-      act=ds.length>1 ? ()=>pickRumorDoc(vector,t,ds) : ()=>spreadRumorAbout(vector,t,ds[0]||null);
+      act=ds.length
+        ? ()=>pickDocument(ds,{title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — which document on ${t.name.split(' ')[0]}?`,onPick:doc=>spreadRumorAbout(vector,t,doc)})
+        : ()=>spreadRumorAbout(vector,t,null);
     }
     return {label:`About ${t.name}${t.rival?' ★':''}${ds.length?' · DIRT':''}`,risk,hot:ds.length>0,act};
   });
   items.push({label:'Cancel',act:()=>{}});
-  const cn=carrierNote(vector);   // messenger's carrier trait: in the title, not repeated on every row
   renderMenu({title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — spread a rumour about who?`,items});
-}
-/* more than one document on the same subject: choose which to spend (same pattern as frame/plant).
-   Was a bug — dirtOn() returned the first-acquired doc, so a rumour spent whichever you got first
-   regardless of strength (e.g. burned the HR file when you meant the throwaway gossip). */
-function pickRumorDoc(vector,t,ds){
-  const items=ds.map(dc=>({label:levGlyphOf(dc)+' '+dc.label,risk:levTierWord(dc.power),hot:levTier(dc.power)===3,act:()=>spreadRumorAbout(vector,t,dc)}));
-  items.push({label:'Cancel',act:()=>{}});
-  const cn=carrierNote(vector);
-  renderMenu({title:`${vector.name.split(' ')[0]}${cn?` (${cn})`:''} — which document on ${t.name.split(' ')[0]}?`,items});
 }
 function spreadRumorAbout(vector,t,doc){
   if(!vector||!t||!vector.alive||!t.alive)return;
@@ -3518,9 +3523,7 @@ function snitchItem(item,authority){
 /* pick WHICH document to plant on the frame-up (was: silently pop the last item) */
 function pickFrameDoc(n){
   if(!hasLev()){toast('No leverage to plant.');return;}
-  const items=player.leverage.map(l=>({label:levGlyphOf(l)+' '+l.label,risk:levTierWord(l.power),hot:levTier(l.power)===3,act:()=>frame(n,l)}));
-  items.push({label:'Cancel',act:()=>{}});
-  renderMenu({title:`Frame ${n.name} — which document?`,items});
+  pickDocument(player.leverage,{title:`Frame ${n.name} — which document?`,onPick:l=>frame(n,l)});
 }
 function frame(n,item){
   if(!item)item=player.leverage[player.leverage.length-1];
@@ -4045,9 +4048,7 @@ function rigDesk(d){d.rigged=d.owner;logLine(`Rigged ${d.owner}'s desk. A surpri
 /* pick WHICH document to plant in this desk (was: silently pop the last item) */
 function pickPlantDoc(d){
   if(!hasLev()||d.planted)return;
-  const items=player.leverage.map(l=>({label:levGlyphOf(l)+' '+l.label,risk:levTierWord(l.power),hot:levTier(l.power)===3,act:()=>startAct(5,'Planting evidence',()=>plantEvidence(d,l))}));
-  items.push({label:'Cancel',act:()=>{}});
-  renderMenu({title:`Plant in ${d.owner}'s desk — which document?`,items});
+  pickDocument(player.leverage,{title:`Plant in ${d.owner}'s desk — which document?`,onPick:l=>startAct(5,'Planting evidence',()=>plantEvidence(d,l))});
 }
 function plantEvidence(d,item){{const m=missions.find(x=>!x.done&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
   if(!item)item=player.leverage[player.leverage.length-1];

@@ -93,41 +93,43 @@ V.profiled = false; menu.items[iS].act();
 ck('...unread messenger → "(unknown carrier)" in the title through the block', !!cap2 && /\(unknown carrier\)/.test(cap2.title), cap2 && cap2.title);
 S.renderMenu = realRM;
 
-// ---- MULTI-DOCUMENT (#3): two docs on one subject → pick which one is spent -----------------
-// Same bug class as frame/plant: dirtOn() returned the first-acquired doc, so a rumour spent
-// whichever you got first regardless of strength. Now you choose (or a legacy call takes strongest).
+// ---- MULTI-DOC + DUPLICATE SUPPRESSION: a picker only when the choice is real ---------------
+// A subject's docs all share that target, so "interchangeable" collapses to equal power here.
 let capD = null; S.renderMenu = (o) => { capD = o; };
-function twoDocs() {
-  P.leverage.length = 0;
-  const gossip = { label: 'gossip re: ' + T.name, target: T.name, power: 22, src: 'gossip' };  // acquired FIRST
-  const hrfile = { label: 'HR file: ' + T.name, target: T.name, power: 42, src: 'hrfile' };     // acquired SECOND
-  P.leverage.push(gossip, hrfile);
+function seed(docs) {
+  P.leverage.length = 0; docs.forEach(d => P.leverage.push(d));
   V.profiled = true; V.ptype = 'climber'; V.feudWith = null; V.friends = []; T.friends = [];
   T.stress = 0; T.meltCd = 999; T.x = P.x + 5000; T.y = P.y;   // far → no overhear, so stress == the hit
-  return { gossip, hrfile };
 }
-let d2 = twoDocs();
-S.pickRumorSubject(V);
-let row = capD.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label));
-ck('multi-doc: subject row still labelled · DIRT', !!row && /· DIRT/.test(row.label), row && row.label);
-ck('multi-doc: row risk flags "2 docs — choose"', !!row && /2 docs — choose/.test(row.risk), row && row.risk);
-row.act();                                              // opens the document picker
-const gRow = capD.items.find(i => /gossip re:/.test(i.label));
-const hRow = capD.items.find(i => /HR file:/.test(i.label));
-ck('doc picker lists both, with strengths (hearsay / damning)', !!gRow && gRow.risk === 'hearsay' && !!hRow && hRow.risk === 'damning', (gRow && gRow.risk) + ' / ' + (hRow && hRow.risk));
-hRow.act();                                             // choose the HR file (42), acquired SECOND
-ck('choosing the HR file spends it (42-power hit)', T.stress === 42, 'stress=' + T.stress);
-ck('...HR file removed, the gossip survives', !P.leverage.includes(d2.hrfile) && P.leverage.includes(d2.gossip) && P.leverage.length === 1);
-// reverse: choose the gossip → spends the gossip, leaves the HR file
-d2 = twoDocs(); S.pickRumorSubject(V);
-row = capD.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label)); row.act();
-capD.items.find(i => /gossip re:/.test(i.label)).act();
-ck('choosing the gossip spends it (22-power hit)', T.stress === 22, 'stress=' + T.stress);
-ck('...gossip removed, the HR file survives', !P.leverage.includes(d2.gossip) && P.leverage.includes(d2.hrfile) && P.leverage.length === 1);
-// legacy call with no doc argument defaults to the STRONGEST (not the first-acquired)
-d2 = twoDocs();
+function subjectRow() { S.pickRumorSubject(V); return capD.items.find(i => new RegExp('About ' + T.name.split(' ')[0]).test(i.label)); }
+
+// (a) DIFFERENT power → picker appears, strongest first, chosen spent, the other left
+const gossip = { label: 'gossip re: ' + T.name, target: T.name, power: 22, src: 'gossip' };  // acquired FIRST
+const hrfile = { label: 'HR file: ' + T.name, target: T.name, power: 42, src: 'hrfile' };     // acquired SECOND
+seed([gossip, hrfile]);
+let row = subjectRow();
+ck('different-power: row flags "2 docs — choose"', /2 docs — choose/.test(row.risk), row.risk);
+capD = null; row.act();
+ck('different-power: a picker opened', !!capD && capD.items.length >= 3);
+ck('different-power: STRONGEST FIRST (HR file before gossip)', /HR file:/.test(capD.items[0].label) && /gossip re:/.test(capD.items[1].label), capD.items[0].label + ' | ' + capD.items[1].label);
+capD.items.find(i => /HR file:/.test(i.label)).act();   // choose the strongest (which was acquired SECOND)
+ck('different-power: chosen HR file spent, gossip left', !P.leverage.includes(hrfile) && P.leverage.includes(gossip) && P.leverage.length === 1);
+
+// (b) IDENTICAL power+target → NO picker, one spent, one left, and no row flag
+const dup1 = { label: 'front-desk gossip re: ' + T.name, target: T.name, power: 20, src: 'gossip' };
+const dup2 = { label: 'front-desk gossip re: ' + T.name, target: T.name, power: 20, src: 'gossip' };
+seed([dup1, dup2]);
+row = subjectRow();
+ck('identical docs: NO "docs — choose" flag on the row', !/docs — choose/.test(row.risk), row.risk);
+capD = null; row.act();
+ck('identical docs: NO picker opened (auto-spent one)', capD === null);
+ck('identical docs: exactly one spent, one left', P.leverage.length === 1);
+ck('identical docs: the hit still landed (power 20)', T.stress === 20, 'stress=' + T.stress);
+
+// legacy no-doc call still defaults to STRONGEST (deterministic)
+seed([gossip, hrfile]);
 S.spreadRumorAbout(V, T);
-ck('legacy spreadRumorAbout(no doc) → STRONGEST (42), not first-acquired gossip (22)', T.stress === 42 && !P.leverage.includes(d2.hrfile) && P.leverage.includes(d2.gossip), 'stress=' + T.stress);
+ck('legacy spreadRumorAbout(no doc) → strongest (42), gossip survives', T.stress === 42 && !P.leverage.includes(hrfile) && P.leverage.includes(gossip), 'stress=' + T.stress);
 S.renderMenu = realRM;
 
 console.log(`\nRUMOUR CARRIER + GOSSIP MENU: ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
