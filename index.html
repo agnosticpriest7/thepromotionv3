@@ -803,7 +803,7 @@ const desks=[];
  /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
     Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
  {x:840,y:640,w:40,h:60,owner:'Marcus',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
- {x:880,y:640,w:40,h:60,owner:null,tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:880,y:640,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing duplicate, not a real vacancy (kept out of branchHealth's vacant count)
  {x:840,y:700,w:40,h:60,owner:'Priya',tier:0,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:880,y:700,w:40,h:60,owner:'Otis',tier:0,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  /* Sales floor (widened room): back-to-back pairs SPLIT into a top row and a bottom row by a
@@ -815,9 +815,9 @@ const desks=[];
  {x:1160,y:690,w:40,h:50,owner:'Ramesh',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
  {x:1200,y:690,w:40,h:50,owner:'Vera',tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
  {x:1350,y:596,w:40,h:50,owner:'Doug',tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
- {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
- {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_right',seatSide:'left'},
- {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',art:'cubicle_desk_left',seatSide:'right'},
+ {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing — SEATS[1]=5 is full, this chair can never be filled
+ {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // set-dressing (SEATS[1] full)
+ {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing (SEATS[1] full)
  {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
  {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
  {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
