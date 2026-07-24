@@ -526,11 +526,18 @@ function keyOutMagenta(img){
     const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
     if(!w||!h) return img;
     const c=document.createElement('canvas'); c.width=w; c.height=h;
-    const x=c.getContext('2d'); x.drawImage(img,0,0);
+    /* willReadFrequently forces a CPU-backed canvas. Without it, some GPU-composited canvases
+       (notably Xbox Edge) hand back an all-ZERO buffer from getImageData — and the putImageData
+       below then ERASES the sprite we just drew, so keyed props (desks, shelves, cabinets…) came
+       out blank on the Xbox while rendering fine on mobile. */
+    const x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(img,0,0);
     const id=x.getImageData(0,0,w,h), d=id.data;
+    let any=false;
     for(let i=0;i<d.length;i+=4){
-      if(d[i]-d[i+1]>60 && d[i+2]-d[i+1]>60) d[i+3]=0;   // magenta: green far below red & blue
+      if(d[i]||d[i+1]||d[i+2]||d[i+3]) any=true;          // did the readback return real pixels?
+      if(d[i]-d[i+1]>60 && d[i+2]-d[i+1]>60) d[i+3]=0;    // magenta: green far below red & blue
     }
+    if(!any) return img;   // readback came back empty — do NOT clobber the canvas; draw the raw image
     x.putImageData(id,0,0);
     c.complete=true; c.naturalWidth=w; c.naturalHeight=h;    // quack like an Image for ok()/draw*
     return c;
