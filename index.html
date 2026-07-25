@@ -172,6 +172,15 @@
   #toast{position:absolute;top:62px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;font-size:15px;opacity:0;transition:opacity .3s;pointer-events:none;max-width:80%;text-align:center;z-index:8;border-radius:4px}
   #nowPlaying{position:absolute;right:12px;bottom:12px;background:rgba(26,24,20,.82);color:#f0e9d8;font-family:var(--mono);font-size:13px;letter-spacing:.4px;padding:7px 13px;opacity:0;transition:opacity .55s;pointer-events:none;z-index:7;max-width:60vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px}
   #nowPlaying .nn{color:#d9a521;margin-right:7px}
+  #delegTray{display:none;position:absolute;left:12px;top:70px;z-index:7;width:212px;background:rgba(26,24,20,.86);border:1px solid #4a463c;border-radius:5px;padding:6px 8px;font-size:11px;color:#e6e2d6;pointer-events:none}
+  #delegTray .dghead{font:700 10px var(--mono);letter-spacing:2px;color:#d9a521;margin-bottom:4px}
+  #delegTray .dgt{display:flex;gap:6px;align-items:baseline;padding:2px 0;border-top:1px dotted #3a372f}
+  #delegTray .dgt:first-of-type{border-top:0}
+  #delegTray .dgt .dk{font:700 10px var(--mono);color:#c9a41a;min-width:52px}
+  #delegTray .dgt .df{opacity:.82;line-height:1.2}
+  #delegTray .dgnone{opacity:.5;font-style:italic}
+  #delegTray .dggate{margin-top:5px;padding-top:4px;border-top:1px solid #4a463c;font-size:10.5px;letter-spacing:.3px}
+  @media (pointer:coarse){#delegTray{top:auto;bottom:106px}}
   @media (pointer:coarse){#nowPlaying{bottom:106px}}   /* clear the on-screen action button on touch */
 
   #modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:20}
@@ -363,6 +372,7 @@
       <div id="tracker"></div>
       <div id="toast"></div>
       <div id="nowPlaying"></div>
+      <div id="delegTray"></div>
       <div id="hint">WASD / Arrows move · E interact · Tab menu &nbsp;|&nbsp; Gamepad: LS move · A interact · Y pockets · Start menu &nbsp;|&nbsp; Touch: on-screen pad</div>
       <div id="dpad">
         <button class="db up" data-dir="w" aria-label="up">▲</button>
@@ -4199,9 +4209,10 @@ function advanceClock(dt){
   clock+=MIN_PER_SEC*dt;
   const ph=currentPhase().name;
   if(ph!==lastPhase){
+    delegExpireDue();   // jobs from the block that just ended, never handed out, are misses
     logLine(`— ${ph} —`,'t');
     if(!intro){playShiftPrinter();toast(`— ${ph} —`);}
-    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();}
+    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();}
     if(lastPhase==='Clock-In'&&!phaseCred['Clock-In'])addSuspicion(6,'Late clock-in noted');
     if(lastPhase==='Meeting'&&!meetingCredited)missMeeting();
     if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase)){
@@ -4288,6 +4299,7 @@ function nightLine(){
 }
 function nextDay(){
   day++;clock=DAY_START;lastPhase='Clock-In';meetingCredited=false;phaseCred={};player.channel=null;player.workCh=null;player.act=null;player.hasKeycard=false;player.coffeeFor=null;career.snitchCount=0;player.eavesCd=0;
+  delegRollDay();   // fresh delegation tray for the new day; clean-completion count and the rolling demerit window carry over
   player.suspicion=clamp(player.suspicion-10,0,100);
   objects.forEach(o=>{o.jammed=false;o.trapped=false;o.wreckStage=0;});desks.forEach(d=>{d.rigged=null;d.planted=null;});
   activeNPCs().forEach(n=>{
@@ -4727,6 +4739,7 @@ function tryPromote(){
   else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
   else movePlayerDesk();                // worker ranks: the room that matches the badge
   if(next>=2)unlockSales();
+  renderDeleg();                        // the delegation tray appears at AM, hides again above it
   logLine(`PROMOTED: you are now ${RANKS[next]}.`,'g');toast('Promoted: '+RANKS[next]);
   if(RANKS[next]==='MANAGER'){
     /* the last rung needs saying out loud */
@@ -4742,6 +4755,7 @@ function setRankDown(){
     SFX.demote();player.rank--;player.prog=30;
     logLine('Demoted to '+RANKS[player.rank]+'. They moved your things while you were in the meeting.','b');
     if(player.rank===4)claimAsstOffice(); else movePlayerDesk();   // back down the corridor (or into the asst office)
+    renderDeleg();
   }
 }
 function removeDale(){
@@ -5085,6 +5099,52 @@ function healthToday(){
 }
 function meritStatus(){
   return {h:healthToday(), streak:career.goodDays||0, need:MERIT_DAYS, target:MERIT_TARGET};
+}
+/* ============================================================================
+   AM DELEGATION LAYER (Milestone D1) — B1: the task queue
+   The Assistant Manager's merit verb is getting work done THROUGH other people. Jobs arrive into a
+   tray during work phases (offered, never a forced quota); each expires at the end of the phase it
+   arrived in, and an unhandled job is a MISS. The assign interaction, personality-matched outcomes,
+   the boss-channel demerit escalation, and the DELEG_TARGET gate land in later branches — this one
+   is the queue, its expiry, the save state, and the on-screen tray. Dormant unless you are the AM.
+   ========================================================================== */
+const DELEG_TARGET=12;              // clean delegated completions that open the Manager route
+const DELEG_RESET=3.0;              // demerits in the rolling 2-day window that reset the streak
+const DELEG_KINDS=['grind','credit','solo','visible','social'];
+const DELEG_FLAVOUR={grind:'reconcile the order backlog',credit:'a client-facing win — named on the report',
+  solo:'a quiet desk audit, no exposure',visible:'front-desk cover, present at the meeting',social:'chase four people for signatures'};
+const DELEG_PHASE_TASKS={510:2,645:2,765:2,855:3};   // Regular Work phase.start (min) -> jobs arriving; ~9/day
+let deleg={q:[],done:0,dem:[],seq:0};   // q: live jobs; done: clean completions; dem: rolling demerit window; seq: id counter
+function delegActive(){return player.rank===4&&!career.mgrGone;}   // Assistant Manager only, until the chair opens
+function delegReset(){deleg={q:[],done:0,dem:[],seq:0};}
+function delegPruneDem(){deleg.dem=deleg.dem.filter(e=>e.d>=day-1);}          // rolling 2 days: today + yesterday
+function delegDemerit(v,reason){deleg.dem.push({d:day,v:v});delegPruneDem();} // boss-channel penalty + escalation land in B3
+function delegWindow(){delegPruneDem();return Math.round(deleg.dem.reduce((a,e)=>a+e.v,0)*10)/10;}
+function delegArrive(){
+  if(!delegActive())return;
+  const p=currentPhase(), n=DELEG_PHASE_TASKS[p.start]||0;
+  for(let i=0;i<n;i++)deleg.q.push({id:++deleg.seq,kind:pick(DELEG_KINDS),phase:p.start,exp:p.end,to:null,state:'open'});
+  if(n){logLine(`${n} job${n>1?'s':''} for the floor landed on your desk — hand them out before the block ends.`,'a');renderDeleg();}
+}
+function delegExpireDue(){
+  let missed=0;
+  deleg.q.forEach(t=>{if(t.state==='open'&&clock>=t.exp){t.state='expired';missed++;delegDemerit(0.5,'a delegated job expired unassigned');}});
+  deleg.q=deleg.q.filter(t=>t.state==='open');   // drop resolved jobs; the misses are already counted
+  if(missed){logLine(`${missed} job${missed>1?'s':''} went out the door undone — a miss on each.`,'w');renderDeleg();}
+}
+function delegRollDay(){deleg.q=[];delegPruneDem();}   // new day: fresh tray; done + the rolling window persist
+/* minimal tray (B1). The interactive version — pick a job, walk it to a worker — lands with the
+   assign verb; for now it shows what arrived, what is still open, and the two gate numbers. */
+function renderDeleg(){
+  const el=document.getElementById('delegTray'); if(!el)return;
+  if(!delegActive()){el.style.display='none';el.innerHTML='';return;}
+  const open=deleg.q.filter(t=>t.state==='open');
+  const rows=open.map(t=>`<div class="dgt"><span class="dk">${t.kind.toUpperCase()}</span><span class="df">${DELEG_FLAVOUR[t.kind]}</span></div>`).join('')
+    ||'<div class="dgt dgnone">tray clear</div>';
+  const win=delegWindow();
+  el.innerHTML=`<div class="dghead">DELEGATE</div>${rows}`+
+    `<div class="dggate">clean <b>${deleg.done}/${DELEG_TARGET}</b> · demerits <b style="color:${win>=DELEG_RESET?'#c0392b':(win>=DELEG_RESET-1?'#d9a521':'#7fae83')}">${win}/${DELEG_RESET}</b></div>`;
+  el.style.display='block';
 }
 /* judged at 5pm, every day you are the manager */
 function scoreTheDay(){
@@ -7959,7 +8019,7 @@ logLine('Intern at Paper Supply Co. Rise on tasks — or sabotage rivals into me
    ============================================================================ */
 
 /* ---------- Store: the only code that knows where saves live -------------- */
-const SAVE_VERSION = 1, SAVE_SLOTS = 3;
+const SAVE_VERSION = 2, SAVE_SLOTS = 3;   // v2: AM delegation state (deleg). Older saves refuse to load, by design.
 const Store = {
   key(s){ return 'promo:slot:' + s; },
   save(s, o){ try{ localStorage.setItem(this.key(s), JSON.stringify(o)); return true; }catch(e){ console.warn('save fail',e); return false; } },
@@ -7995,6 +8055,7 @@ function buildSnapshot(over, outcome){ return {
   daleArcAnnounced, salesUnlocked,
   tasks:JSON.parse(JSON.stringify(tasks)), favors:JSON.parse(JSON.stringify(favors)),
   missions:JSON.parse(JSON.stringify(missions)), pendingHires:JSON.parse(JSON.stringify(pendingHires)),
+  deleg:JSON.parse(JSON.stringify(deleg)),
   scheduler:{ bossTriggerMin, auditMin, drillPending, drillMin, meetingCredited, lastPhase },
   over:!!over, outcome:outcome||null }; }
 
@@ -8031,11 +8092,12 @@ function applySnapshot(s){
   tasks=JSON.parse(JSON.stringify(s.tasks||[])); favors=JSON.parse(JSON.stringify(s.favors||[]));
   missions=JSON.parse(JSON.stringify(s.missions||[])); npcFeuds=[];
   pendingHires=JSON.parse(JSON.stringify(s.pendingHires||[]));
+  deleg=JSON.parse(JSON.stringify(s.deleg||{q:[],done:0,dem:[],seq:0}));
   if(s.scheduler){ bossTriggerMin=s.scheduler.bossTriggerMin; auditMin=s.scheduler.auditMin;
     drillPending=s.scheduler.drillPending; drillMin=s.scheduler.drillMin;
     meetingCredited=s.scheduler.meetingCredited; lastPhase=s.scheduler.lastPhase; }
   buildGrid(); refreshRanks&&refreshRanks(); clearSeats&&clearSeats();
-  renderLeverage&&renderLeverage(); renderTasks&&renderTasks(); renderTracker&&renderTracker();
+  renderLeverage&&renderLeverage(); renderTasks&&renderTasks(); renderTracker&&renderTracker(); renderDeleg&&renderDeleg();
   if(salesUnlocked&&typeof SALES_DOOR!=='undefined')SALES_DOOR.open=true;
   gameOver=!!s.over; intro=null; paused=false;
   return true;
