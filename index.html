@@ -4739,7 +4739,7 @@ function gateFor(nextIdx){
     case 'ASSISTANT MANAGER': return {ok:career.daleFavor>=2||dale.favor>=30,hint:"Dale has to like you — humour him, or start running his errands"};
     case 'MANAGER': return {ok:career.mgrGone||dale.titled,
       hint:dale.active?"you are Dale's man now — finish his arc and he hands you the top job directly"
-        :`the manager's chair must be empty. Dig HR dirt on Dale and report him to the CEO twice — OR just run this floor well and let head office promote him for it (health ${healthToday()}/${DALE_UP_TARGET}, ${career.daleUpDays||0}/${DALE_UP_DAYS} days)`};
+        :`the manager's chair must be empty. Dig HR dirt on Dale and report him to the CEO twice — OR delegate so well the office runs itself and head office kicks him upstairs (${deleg.done||0}/${DELEG_TARGET} clean)`};
     case 'CEO':
       if(career.meritReady)return {ok:true,hint:''};
       return {ok:career.vpFavor>=1,hint:'THREE WAYS UP — (1) '+catfishStatus()+'  ...OR (2) '+daleStatus()+'  ...OR (3) run this branch WELL: health '+healthToday()+'/'+MERIT_TARGET+', '+(career.goodDays||0)+'/'+MERIT_DAYS+' good days'};
