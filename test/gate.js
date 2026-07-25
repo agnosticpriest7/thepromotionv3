@@ -19,6 +19,7 @@ const TESTS = [
   't_manager_seat.js',    // Manager is not counted as a senior chair (no phantom demotion / 4-3 panel)
   't_hr_freeze.js',       // Manager: no auto hire/promote/backfill — every headcount move is yours
   't_legibility.js',
+  't_health_rebalance.js', // health measures how the floor RUNS (stress/feuds/desks/mistakes); friendship is leverage
   't_merit.js',
   't_night_decay.js',     // player suspicion + stress halve at the day rollover (don't carry over in full)
   't_rumor_supply.js',
