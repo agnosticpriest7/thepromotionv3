@@ -2322,20 +2322,39 @@ function meltdown(n){
   startMeltEvent(n, false);   // a meltdown NEVER fires anybody. It only breaks them open.
 }
 let pendingHires=[];
+/* ===== THE ONE HOOK EVERY NPC-REMOVAL PATH MUST GO THROUGH =====
+   When a person the player has been investing against leaves — fired, promoted out, or (Dale) moved
+   upstairs — sweep every dangling investment and CLOSE it with a feed line. Feed line is the DEFAULT;
+   there is deliberately NO consolation payout here — an NPC leaving must never be profitable, or
+   getting your own targets fired becomes an income stream. (Dale is the single exception, and gets a
+   richer treatment on top of this later.) The gate's investment invariant asserts this ran: after any
+   removal, no player-held investment may reference a gone NPC. Add new investment types HERE. */
+function npcLeaving(n){
+  if(!n)return;
+  const who=n.name.split(' ')[0];
+  if(n.prankBuild){logLine(`Your ${PRANK_SHORT[n.prankBuild.type]} on ${who} is wasted — they are gone before it sprang.`,'w');n.prankBuild=null;}
+  if(dirtsOn(n.name).length){removeDirt(n.name);logLine(`Whatever you had on ${who} left the building with them. A dead file.`,'t');}
+  activeNPCs().forEach(o=>{if(o!==n&&o.mission&&o.mission.target===n.name){o.mission=null;o.bubble={t:2,text:'...never mind, then.'};logLine(`${o.name.split(' ')[0]}'s job on ${who} dies with the target.`,'t');}});
+  if(n.mission)n.mission=null;                       // they were your puppet; the job goes with them
+  const jobs=(typeof deleg!=='undefined')?deleg.q.filter(t=>t.state==='assigned'&&t.to===n.name):[];
+  if(jobs.length){jobs.forEach(t=>{t.state='miss';delegDemerit(0.5,'the worker you gave it to is gone');});logLine(`${jobs.length} job${jobs.length>1?'s':''} you handed ${who} leaves with them — a miss.`,'w');renderDeleg&&renderDeleg();}
+  if(career.championed&&career.championed.includes(n.name)){career.championed=career.championed.filter(x=>x!==n.name);logLine(`${who} is gone — whatever you were doing to move them along is settled now.`,'t');}
+  if(n.rival)pickNewRival();
+  if(n.mgr&&dale.active&&!dale.done){dale.active=false;logLine('Dale is gone. Whatever you were building with him — that road closed when he left.','b');renderTasks&&renderTasks();}
+}
 function fireNPC(n,by){
   n.alive=false;today.fired.push(n.name.split(' ')[0]);
   const tier=npcRank(n);
   {const sv=activeNPCs().filter(w=>isWorker(w)&&w!==n);if(sv.length){const up=pick(sv);up.career=(up.career||0)+8;logLine(`${up.name.split(' ')[0]} quietly absorbs ${n.name.split(' ')[0]}'s accounts. A step up.`,'t');}}
-  if(n.prankBuild){logLine(`Your ${PRANK_SHORT[n.prankBuild.type]} on ${n.name} is wasted — they got walked out before it sprang.`,'w');n.prankBuild=null;}
   const mgr=(by==='manager');   // manager dismissal (one strike + discretion) vs HR's automatic two-strike walk
   pushAlertBox(`${n.name.split(' ')[0]} was walked out of the building. ${mgr?'Dismissed by management.':'Two strikes.'} Their desk is empty.`,'b');
   logLine(`${n.name} was walked out ${mgr?'— dismissed by management':'by HR. Two strikes'}.`,'t');
+  npcLeaving(n);                         // sweep every dangling investment against them (prank/dirt/mission/delegation/champion/rival)
   mournFriends(n);                       // the two people who liked them will remember
   const desk=desks.find(d=>d.owner===n.name);
   if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;
     if(!desk.mgrOffice)pendingHires.push({desk,dept:n.dept,onDay:day+2});   // nobody backfills the corner office
   }
-  if(n.rival)pickNewRival();
   n.tier=0;
   openReq(tier,n);                       // the chair is EMPTY. It is not yours yet.
   checkWin();
@@ -2504,9 +2523,8 @@ function promoteRivalAway(n){
   const tier=npcRank(n);
   n.alive=false;n.onFloor=false;n.tier=0;
   openReq(tier,n);                       // they went UP a floor. Their chair is empty.
-  if(n.prankBuild){logLine(`Your ${PRANK_SHORT[n.prankBuild.type]} on ${n.name} is wasted — they got promoted out from under you.`,'w');n.prankBuild=null;}
+  npcLeaving(n);                         // sweep dangling investments against them (prank/dirt/mission/delegation/champion/rival)
   const desk=desks.find(d=>d.owner===n.name);if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;pendingHires.push({desk,dept:n.dept,onDay:day+2});}
-  if(n.rival){n.rival=false;pickNewRival();}
 }
 function rivalsClimb(){
   const ws=activeNPCs().filter(isWorker);
@@ -3107,6 +3125,7 @@ function buildOptions(t){
          act:()=>startAct(4,'Talking them up to Dale',()=>{
            const gain=10+Math.round(career.daleFavor*3)+(n.friend>=ALLY_THRESHOLD?4:0);
            n.career=(n.career||0)+gain;
+           if(!career.championed.includes(n.name))career.championed.push(n.name);   // tracked so npcLeaving can close it if they leave first
            n.mood=clamp(n.mood+12,-100,100);
            n.friend=clamp(n.friend+10,0,100);
            player.prog=clamp(player.prog-6,0,100);
@@ -4708,7 +4727,7 @@ function daleFavorItems(n){
   return [{label:f.taskLabel,risk:'time you will never get back',act:()=>startAct(s.secs||6,'Being a good friend',()=>completeDaleFavor(),n)}];
 }
 function updateRank(){tryPromote();}
-const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0};
+const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0,championed:[]};
 /* the day's ledger — reset every morning, read out every evening */
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
 function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
@@ -4765,6 +4784,7 @@ function removeDale(){
   const m=NPCS.find(n=>n.mgr&&n.alive);
   if(!m)return;
   m.alive=false;career.mgrGone=true;
+  npcLeaving(m);                         // close the loyalty arc + sweep dirt on Dale
   /* his nameplate came off the door with him */
   if(MGR_DESK){MGR_DESK.owner=null;MGR_DESK.loot=null;MGR_DESK.rigged=null;MGR_DESK.planted=null;}
   logLine('Dale has been "reassigned to a struggling branch." His office stands empty. The manager\'s chair is open.','w');
@@ -4862,6 +4882,7 @@ function dalePromotedUp(){
   const m=NPCS.find(n=>n.mgr&&n.alive);
   if(!m)return;
   m.alive=false;career.mgrGone=true;career.daleWentUp=true;
+  npcLeaving(m);                         // close the loyalty arc + sweep dirt on Dale (the cheap default; D refines this)
   if(MGR_DESK){MGR_DESK.owner=null;MGR_DESK.loot=null;MGR_DESK.rigged=null;MGR_DESK.planted=null;}
   logLine('Dale Brackett has been promoted to Regional. His last words on this floor were "I want you all to remember where you came from." The manager\u2019s chair is empty, and you did not lay a finger on him.','g');
   activeNPCs().forEach(o=>{if(isWorker(o)){o.bubble={t:3.4,text:pick(['HE got promoted?','For what, exactly?','...unbelievable.','Of course he did.'])};o.mood=clamp(o.mood-6,-100,100);}});
