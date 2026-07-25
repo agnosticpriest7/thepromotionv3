@@ -178,6 +178,8 @@
   #delegTray .dgt:first-of-type{border-top:0}
   #delegTray .dgt .dk{font:700 10px var(--mono);color:#c9a41a;min-width:52px}
   #delegTray .dgt .df{opacity:.82;line-height:1.2}
+  #delegTray .dgt.dgon .dk{color:#7fae83}
+  #delegTray .dgt.dgon .df{color:#7fae83;opacity:1}
   #delegTray .dgnone{opacity:.5;font-style:italic}
   #delegTray .dggate{margin-top:5px;padding-top:4px;border-top:1px solid #4a463c;font-size:10.5px;letter-spacing:.3px}
   @media (pointer:coarse){#delegTray{top:auto;bottom:106px}}
@@ -3050,6 +3052,8 @@ function buildOptions(t){
          and it is the only way to the Merit ending. It is also, deliberately, slow, dull
          and thankless, which is the joke. */
       ...((player.rank>=4&&isWorker(n))?[
+        ...((delegActive()&&!delegWorkerBusy(n.name)&&delegOpen().length)?[{label:`Delegate a job to ${n.name.split(' ')[0]}…  (${delegOpen().length} on the tray)`,risk:'management',act:()=>renderMenu(delegAssignMenu(n))}]:[]),
+        ...((delegActive()&&delegWorkerBusy(n.name))?[{label:`${n.name.split(' ')[0]} is on a job for you`,disabled:true}]:[]),
         ...(player.rank>=5?[{label:`Send ${n.name.split(' ')[0]} home early (stress −45)`,risk:'costs you their afternoon',
           act:()=>startAct(2.5,'Signing them out',()=>{
             n.stress=clamp(n.stress-45,0,100);
@@ -5126,11 +5130,69 @@ function delegArrive(){
   for(let i=0;i<n;i++)deleg.q.push({id:++deleg.seq,kind:pick(DELEG_KINDS),phase:p.start,exp:p.end,to:null,state:'open'});
   if(n){logLine(`${n} job${n>1?'s':''} for the floor landed on your desk — hand them out before the block ends.`,'a');renderDeleg();}
 }
-function delegExpireDue(){
-  let missed=0;
-  deleg.q.forEach(t=>{if(t.state==='open'&&clock>=t.exp){t.state='expired';missed++;delegDemerit(0.5,'a delegated job expired unassigned');}});
-  deleg.q=deleg.q.filter(t=>t.state==='open');   // drop resolved jobs; the misses are already counted
-  if(missed){logLine(`${missed} job${missed>1?'s':''} went out the door undone — a miss on each.`,'w');renderDeleg();}
+/* one clean match per personality — the intel you gathered to ruin people is the intel you need
+   to lead them. A wrong assignment fails IN CHARACTER (see delegResolve), never with a red X. */
+const DELEG_MATCH={grind:'zealot',credit:'climber',solo:'paranoid',visible:'peacock',social:'socialite'};
+const DELEG_BOTCH_STRESS=18;   // a zealot handed work they can't hold takes it out of their own hide
+const DELEG_MATCH_RELIEF=8;    // a good fit lifts the worker a little
+function delegMatch(t,w){return w&&DELEG_MATCH[t.kind]===w.ptype;}
+function delegOpen(){return deleg.q.filter(t=>t.state==='open');}
+function delegWorkerBusy(name){return deleg.q.some(t=>t.state==='assigned'&&t.to===name);}
+/* hand a queued job to a worker. A worker holds ONE job at a time. Paranoid mismatch refuses on the
+   spot (back to the tray with less time). Everything else is taken now and RESOLVES at phase end. */
+function delegAssign(t,w){
+  if(!delegActive()||!t||t.state!=='open')return false;
+  if(!w||!isWorker(w)||!w.alive||w.gone)return false;
+  if(delegWorkerBusy(w.name)){toast(`${w.name.split(' ')[0]} already has a job from you.`);return false;}
+  if(w.ptype==='paranoid'&&!delegMatch(t,w)){
+    w.friend=clamp(w.friend-10,0,100);
+    w.bubble={t:3,text:pick(['Why aren’t YOU doing this?','This isn’t my job.','...why me, exactly?'])};
+    t.exp=Math.max(clock,clock+(t.exp-clock)*0.5);   // returns to the tray with reduced time
+    logLine(`${w.name.split(' ')[0]} looked at the job, then at you, and asked why you weren’t doing it yourself. It is back on your desk with less time on it.`,'w');
+    renderDeleg();
+    return 'refused';
+  }
+  t.to=w.name;t.state='assigned';
+  w.bubble={t:2,text:pick(['On it.','Sure.','Leave it with me.'])};
+  logLine(`You handed ${w.name.split(' ')[0]} a job — ${DELEG_FLAVOUR[t.kind]}.`,'a');
+  renderDeleg();
+  return true;
+}
+/* resolve one assigned job by the worker's personality. Returns 'clean'|'botch'|'steal'|'miss'. */
+function delegResolve(t,w){
+  if(!w||!w.alive||w.gone){t.state='miss';delegDemerit(0.5,'the worker you gave it to is gone');return 'miss';}
+  if(delegMatch(t,w)){
+    t.state='done';deleg.done++;
+    w.mood=clamp(w.mood+DELEG_MATCH_RELIEF,-100,100);w.stress=clamp(w.stress-6,0,100);
+    logLine(`${w.name.split(' ')[0]} was the right hands for it — done, and done well. (${deleg.done}/${DELEG_TARGET})`,'g');
+    return 'clean';
+  }
+  switch(w.ptype){
+    case 'zealot':   // never refuses; takes work they can't hold, and pays for it in stress
+      t.state='done-unclean';w.stress=clamp(w.stress+DELEG_BOTCH_STRESS,0,100);
+      delegDemerit(1.0,'a job landed on someone who could not really carry it');
+      logLine(`${w.name.split(' ')[0]} took it without a word and got it done — and looks worse for it. That one is on you.`,'w');
+      return 'botch';
+    case 'climber':  // completes perfectly and makes sure the right people know it was them
+      t.state='done-unclean';w.career=(w.career||0)+4;
+      logLine(`${w.name.split(' ')[0]} delivered — and made very sure the credit landed on them. The floor is fine. You got nothing for it.`,'w');
+      return 'steal';   // completes, but NOT clean and NOT a demerit — the infuriating one
+    default:           // peacock (unseen work) / socialite (no friend on it): quietly never happens
+      t.state='miss';delegDemerit(0.5,'the job quietly never got done');
+      logLine(`${w.name.split(' ')[0]} took the job and it just... never quite got done. A miss.`,'w');
+      return 'miss';
+  }
+}
+function delegExpireDue(){   // at phase end: unassigned jobs expire, assigned jobs resolve in character
+  let missed=0,cleaned=0,other=0;
+  deleg.q.forEach(t=>{
+    if(clock<t.exp)return;
+    if(t.state==='open'){t.state='expired';missed++;delegDemerit(0.5,'a delegated job expired unassigned');}
+    else if(t.state==='assigned'){const r=delegResolve(t,activeNPCs().find(n=>n.name===t.to));if(r==='clean')cleaned++;else if(r==='miss')missed++;else other++;}
+  });
+  deleg.q=deleg.q.filter(t=>t.state==='open'||t.state==='assigned');   // keep only still-live jobs
+  if(missed){logLine(`${missed} job${missed>1?'s':''} went undone — a miss on each.`,'w');}
+  if(missed||cleaned||other)renderDeleg();
 }
 function delegRollDay(){deleg.q=[];delegPruneDem();}   // new day: fresh tray; done + the rolling window persist
 /* minimal tray (B1). The interactive version — pick a job, walk it to a worker — lands with the
@@ -5138,13 +5200,27 @@ function delegRollDay(){deleg.q=[];delegPruneDem();}   // new day: fresh tray; d
 function renderDeleg(){
   const el=document.getElementById('delegTray'); if(!el)return;
   if(!delegActive()){el.style.display='none';el.innerHTML='';return;}
-  const open=deleg.q.filter(t=>t.state==='open');
-  const rows=open.map(t=>`<div class="dgt"><span class="dk">${t.kind.toUpperCase()}</span><span class="df">${DELEG_FLAVOUR[t.kind]}</span></div>`).join('')
-    ||'<div class="dgt dgnone">tray clear</div>';
+  const live=deleg.q.filter(t=>t.state==='open'||t.state==='assigned');
+  const rows=live.map(t=>{
+    const who=t.state==='assigned'?`→ ${t.to.split(' ')[0]}`:DELEG_FLAVOUR[t.kind];
+    return `<div class="dgt${t.state==='assigned'?' dgon':''}"><span class="dk">${t.kind.toUpperCase()}</span><span class="df">${who}</span></div>`;
+  }).join('')||'<div class="dgt dgnone">tray clear</div>';
   const win=delegWindow();
   el.innerHTML=`<div class="dghead">DELEGATE</div>${rows}`+
     `<div class="dggate">clean <b>${deleg.done}/${DELEG_TARGET}</b> · demerits <b style="color:${win>=DELEG_RESET?'#c0392b':(win>=DELEG_RESET-1?'#d9a521':'#7fae83')}">${win}/${DELEG_RESET}</b></div>`;
   el.style.display='block';
+}
+/* the assign submenu: pick a queued job to hand this worker. Intel is a prerequisite for the READ —
+   without a profile the fit is a guess (the assignment still works; you just don't know the odds).
+   Delegation is legitimate work, so it carries no "seen" risk. */
+function delegAssignMenu(w){
+  const items=delegOpen().map(t=>{
+    const read=w.profiled?(delegMatch(t,w)?'good fit':`wrong fit for a ${PTYPE_NAME[w.ptype]}`):'unread — a guess';
+    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:read,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
+  });
+  if(!items.length)items.push({label:'Nothing on the tray to hand out right now.',disabled:true});
+  items.push({label:'← Back',act:()=>{}});
+  return {title:`Give ${w.name.split(' ')[0]} a job${w.profiled?' · '+PTYPE_NAME[w.ptype]:' · unread'}`,items};
 }
 /* judged at 5pm, every day you are the manager */
 function scoreTheDay(){

@@ -83,5 +83,72 @@ function driveDay(rank) {
   ck('SAVE_VERSION bumped: a v1 save refuses to load', save.applySnapshot({ v: 1 }) === false);
 }
 
-console.log(`\nAM DELEGATION — B1 (queue): ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
+/* ================= B2 — the assign verb, affinity, and the five in-character outcomes ========= */
+function amWorld() { const w = createWorld({ seed: 7 }); w.startNewGame(0); const S = w.sandbox, G = w.g; G.player.rank = 4; return { w, S, G }; }
+function aWorker(G, S) { return G.NPCS.find(n => S.isWorker(n) && n.alive && !n.gone); }
+function mkTask(G, kind) { const t = { id: ++G.deleg.seq, kind, phase: 510, exp: G.clock, to: null, state: 'open' }; G.deleg.q.push(t); return t; }
+
+// --- a clean MATCH of each of the five kinds completes and counts ---
+for (const [kind, ptype] of [['grind', 'zealot'], ['credit', 'climber'], ['solo', 'paranoid'], ['visible', 'peacock'], ['social', 'socialite']]) {
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = ptype; wk.stress = 30;
+  const t = mkTask(G, kind); const done0 = G.deleg.done;
+  const ok = S.delegAssign(t, wk) === true && t.state === 'assigned';
+  S.delegExpireDue();
+  ck(`MATCH ${kind}→${ptype}: clean completion (done ${done0}→${done0 + 1})`, ok && t.state === 'done' && G.deleg.done === done0 + 1, 'state=' + t.state);
+}
+
+// --- one job per worker ---
+{
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'zealot';
+  const a = mkTask(G, 'grind'), b = mkTask(G, 'grind');
+  ck('first assign succeeds', S.delegAssign(a, wk) === true);
+  ck('a worker holds ONE job at a time (second assign blocked)', S.delegAssign(b, wk) === false && b.state === 'open');
+}
+
+// --- the five in-character MISMATCH outcomes ---
+{ // zealot: completes, takes extra stress, botch (+1.0), NOT clean
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'zealot'; wk.stress = 30;
+  const t = mkTask(G, 'credit'); const d0 = G.deleg.done, s0 = wk.stress, w0 = S.delegWindow();
+  S.delegAssign(t, wk); S.delegExpireDue();
+  ck('zealot mismatch: completes with a stress delta, not clean', t.state === 'done-unclean' && G.deleg.done === d0 && wk.stress > s0, `Δstress=${wk.stress - s0}`);
+  ck('zealot mismatch: counts as a botch (+1.0)', S.delegWindow() === w0 + 1.0, 'win ' + w0 + '→' + S.delegWindow());
+}
+{ // climber: completes-but-steals-credit -> no merit, no demerit
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'climber'; wk.career = 10;
+  const t = mkTask(G, 'grind'); const d0 = G.deleg.done, c0 = wk.career, w0 = S.delegWindow();
+  S.delegAssign(t, wk); S.delegExpireDue();
+  ck('climber mismatch: completes but NO merit credit', t.state === 'done-unclean' && G.deleg.done === d0);
+  ck('climber mismatch: no demerit, and they took the credit (career up)', S.delegWindow() === w0 && wk.career > c0);
+}
+{ // paranoid: refuses on the spot, back to the tray, friend hit
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'paranoid'; wk.friend = 40;
+  const t = mkTask(G, 'grind'); const f0 = wk.friend;
+  ck('paranoid mismatch: refuses, job returns to the tray', S.delegAssign(t, wk) === 'refused' && t.state === 'open');
+  ck('paranoid mismatch: costs friend-points', wk.friend < f0, `Δfriend=${wk.friend - f0}`);
+}
+{ // peacock: unseen back-office work silently never happens -> miss
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'peacock';
+  const t = mkTask(G, 'grind'); const d0 = G.deleg.done, w0 = S.delegWindow();
+  S.delegAssign(t, wk); S.delegExpireDue();
+  ck('peacock mismatch: silent-miss (+0.5), no completion', t.state === 'miss' && G.deleg.done === d0 && S.delegWindow() === w0 + 0.5);
+}
+{ // socialite: no friend on it -> deadline lapses -> miss
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'socialite';
+  const t = mkTask(G, 'grind'); const w0 = S.delegWindow();
+  S.delegAssign(t, wk); S.delegExpireDue();
+  ck('socialite mismatch: deadline lapse = miss (+0.5)', t.state === 'miss' && S.delegWindow() === w0 + 0.5);
+}
+
+// --- intel is a prerequisite for the READ: the fit is hidden until you've profiled them ---
+{
+  const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'zealot'; wk.profiled = false;
+  mkTask(G, 'grind');
+  const hidden = S.delegAssignMenu(wk).items.find(i => /GRIND/.test(i.label));
+  ck('unprofiled worker: the fit is a guess', hidden && hidden.risk === 'unread — a guess', hidden && hidden.risk);
+  wk.profiled = true;
+  const shown = S.delegAssignMenu(wk).items.find(i => /GRIND/.test(i.label));
+  ck('profiled worker: the good fit is surfaced', shown && shown.risk === 'good fit', shown && shown.risk);
+}
+
+console.log(`\nAM DELEGATION — B1+B2 (queue + assign): ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
 process.exit(fail === 0 ? 0 : 1);
