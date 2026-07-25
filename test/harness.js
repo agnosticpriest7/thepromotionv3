@@ -459,6 +459,8 @@ function createWorld(opts) {
     for (const t of dq) { if (t.state === 'assigned' && !alive(t.to)) { record('delegation assigned to gone ' + t.to); break; } }
     // a worker you were championing who has left
     for (const nm of ((G.career && G.career.championed) || [])) { if (!alive(nm)) { record('championing gone ' + nm); break; } }
+    // a queued candidate hire whose "bad blood" points at a worker who has since left
+    for (const h of (G.pendingHires || [])) { if (h.cand && h.cand.feudTarget && inCast(h.cand.feudTarget) && !alive(h.cand.feudTarget)) { record('pending hire feud-target gone ' + h.cand.feudTarget); break; } }
     // Dale's loyalty arc left active with no live manager
     if (G.dale && G.dale.active && !G.dale.done && !cast.some(n => n.mgr && n.alive)) record('Dale arc active but Dale gone');
   }

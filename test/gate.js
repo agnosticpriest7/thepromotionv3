@@ -18,6 +18,7 @@ const TESTS = [
   't_demote.js',          // manager Demote verb + promote-menu candidate/requirement clarity
   't_manager_seat.js',    // Manager is not counted as a senior chair (no phantom demotion / 4-3 panel)
   't_hr_freeze.js',       // Manager: no auto hire/promote/backfill — every headcount move is yours
+  't_hiring_depth.js',    // candidate slate: vet/ask/vouch, feud teeth, unprofiled arrival (v3 saved state)
   't_legibility.js',
   't_health_rebalance.js', // health measures how the floor RUNS (stress/feuds/desks/mistakes); friendship is leverage
   't_merit.js',
