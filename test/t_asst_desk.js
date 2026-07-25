@@ -18,7 +18,7 @@ ck('it starts empty and reserved', !!asstDesk && asstDesk.reserved === true && !
 // youTier: rank 4 is its own thing; 3 and 5 unchanged
 G.player.rank = 4; ck('youTier(rank 4) = -1 (not a senior chair)', S.youTier() === -1);
 G.player.rank = 3; ck('youTier(rank 3) = 2 (senior)', S.youTier() === 2);
-G.player.rank = 5; ck('youTier(rank 5) = 2 (manager, unchanged)', S.youTier() === 2);
+G.player.rank = 5; ck('youTier(rank 5) = -1 (manager office, not a senior chair)', S.youTier() === -1);
 
 // THE FIX: promoting to ASSISTANT MANAGER seats the player in the office
 G.player.rank = 3; G.player.prog = 100; S.movePlayerDesk();

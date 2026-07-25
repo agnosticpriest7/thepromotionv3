@@ -15,6 +15,7 @@ const TESTS = [
   't_hire.js',
   't_manager_fire.js',
   't_demote.js',          // manager Demote verb + promote-menu candidate/requirement clarity
+  't_manager_seat.js',    // Manager is not counted as a senior chair (no phantom demotion / 4-3 panel)
   't_legibility.js',
   't_merit.js',
   't_night_decay.js',     // player suspicion + stress halve at the day rollover (don't carry over in full)

@@ -6701,7 +6701,11 @@ const NPC_RANKS=['JUNIOR SALES','SALES','SENIOR SALES'];
    That is what makes a vacancy worth manufacturing. */
 const SEATS={2:3, 1:5};   // 3 senior chairs, 5 sales chairs — one sales chair is open on day 1
 function youTier(){
-  if(player.rank>=5)return 2;      // MANAGER — corner office (kept in the senior count, unchanged)
+  if(player.rank>=5)return -1;     // MANAGER / CEO — corner office, NOT a senior chair. Returning 2
+                                   // counted you as a 4th senior (held(tier2)=4 > SEATS[2]=3), so on
+                                   // becoming Manager refreshRanks() demoted a real senior to make room
+                                   // — an unwanted "X is back down to SALES/JUNIOR" walk-down — and the
+                                   // org panel showed you as a phantom 4/3 senior. AM already returns -1.
   if(player.rank===4)return -1;    // ASSISTANT MANAGER — own office, NOT a senior chair
   if(player.rank===3)return 2;     // SENIOR SALES
   if(player.rank===2)return 1;     // SALES
