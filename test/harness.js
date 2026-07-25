@@ -524,6 +524,7 @@ const EPILOGUE = `
   def(G,'career',   function(){ return (typeof career!=='undefined')?career:null; });
   def(G,'today',    function(){ return (typeof today!=='undefined')?today:null; });
   def(G,'pendingHires', function(){ return (typeof pendingHires!=='undefined')?pendingHires:null; });
+  def(G,'deleg',    function(){ return (typeof deleg!=='undefined')?deleg:null; });
   def(G,'dale',     function(){ return (typeof dale!=='undefined')?dale:null; });
   def(G,'catfish',  function(){ return (typeof catfish!=='undefined')?catfish:null; });
   def(G,'layout',   function(){ var pick=function(n,d){ try{ return eval(n); }catch(e){ return d; } };
