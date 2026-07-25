@@ -150,5 +150,45 @@ for (const [kind, ptype] of [['grind', 'zealot'], ['credit', 'climber'], ['solo'
   ck('profiled worker: the good fit is surfaced', shown && shown.risk === 'good fit', shown && shown.risk);
 }
 
-console.log(`\nAM DELEGATION — B1+B2 (queue + assign): ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
+/* ================= B3 — boss-channel escalation + the AM→Manager gate ======================== */
+const DELEG_TARGET = 12;   // const in the game; mirrored here
+
+// --- demerits escalate note -> write-up -> reset, all on the boss channel (promotion progress),
+//     never HR suspicion, and never a demotion ---
+{
+  const { S, G } = amWorld();
+  G.player.prog = 90; G.player.suspicion = 12; G.deleg.done = 5;
+  const rank0 = G.player.rank, susp0 = G.player.suspicion;
+  // 1.0 -> NOTE
+  let p = G.player.prog; S.delegDemerit(1.0, 't'); S.delegEscalate();
+  ck('note (1.0): promotion docked, not suspicion, no demotion', G.deleg.esc === 1 && G.player.prog < p && G.player.suspicion === susp0 && G.player.rank === rank0, `progΔ=${G.player.prog - p}`);
+  // 2.0 -> WRITE-UP
+  p = G.player.prog; S.delegDemerit(1.0, 't'); S.delegEscalate();
+  ck('write-up (2.0): bigger progress dock, still no demotion/suspicion', G.deleg.esc === 2 && G.player.prog < p && G.player.rank === rank0 && G.player.suspicion === susp0, `progΔ=${G.player.prog - p}`);
+  // 3.0 -> RESET (clean streak wiped)
+  S.delegDemerit(1.0, 't'); S.delegEscalate();
+  ck('reset (3.0): the clean streak is wiped', G.deleg.esc === 3 && G.deleg.done === 0);
+  ck('escalation never touched HR suspicion', G.player.suspicion === susp0, `Δ=${G.player.suspicion - susp0}`);
+}
+
+// --- reaching DELEG_TARGET opens the AM->Manager route ---
+{
+  const { S, G } = amWorld();
+  G.deleg.done = DELEG_TARGET - 1;                   // one clean completion short
+  const wk = aWorker(G, S); wk.ptype = 'zealot';
+  const t = mkTask(G, 'grind'); S.delegAssign(t, wk); S.delegExpireDue();   // the 12th clean match
+  ck('12 clean completions sets career.mgrGone', G.career.mgrGone === true, 'done=' + G.deleg.done + ' mgrGone=' + G.career.mgrGone);
+  ck('the MANAGER gate is now open', S.gateFor(G.RANKS.indexOf('MANAGER')).ok === true);
+  ck('delegation goes dormant once the chair is open', S.delegActive() === false);
+}
+
+// --- the old AM branch-health-holds are gone ---
+{
+  const { S, G } = amWorld();
+  ck('daleFailsUpward removed', S.daleFailsUpward === undefined);
+  ck('daleUpstairs removed', S.daleUpstairs === undefined);
+  ck('scoreTheDay no longer scores at ASSISTANT MANAGER', S.scoreTheDay() === null);
+}
+
+console.log(`\nAM DELEGATION — B1+B2+B3 (queue + assign + gate): ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
 process.exit(fail === 0 ? 0 : 1);
