@@ -828,8 +828,8 @@ const desks=[];
  {x:680,y:60,w:40,h:60,owner:'Nadia',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
  {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec',seatSide:'up'},
- {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right'}]
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
+ {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right'}]   // the ASSISTANT MANAGER office desk — claimed at rank 4
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
@@ -4338,6 +4338,27 @@ function claimManagerOffice(){
   toast('The corner office is yours.');
   SFX.promote();
 }
+/* ASSISTANT MANAGER gets their own office (the ASST. MANAGER room desk, authored reserved). It is
+   NOT a senior chair \u2014 youTier() returns -1 at rank 4 so the seat counter does not think you are
+   still in the bullpen. The worker chair you leave opens the seat-safe way (retire if the room is
+   already over its chairs, otherwise a day+1 backfill), and the office desk stays reserved:true so
+   no hire or promotion ever fills it. Mirrors claimManagerOffice. */
+function claimAsstOffice(){
+  const d=desks.find(x=>x.asstOffice);
+  if(!d||d.owner==='you')return;
+  const cur=desks.find(x=>x.owner==='you'&&x!==d);       // the chair you are leaving
+  if(cur){
+    cur.owner=null;cur.rigged=null;cur.planted=null;cur.loot=null;
+    const inRoom=NPCS.filter(n=>n.alive&&isWorker(n)&&(n.tier|0)===cur.tier).length;
+    if(!cur.mgrOffice&&!cur.reserved&&cur.tier>=1&&inRoom>=(SEATS[cur.tier]||99))cur.retired=true;   // more desks than chairs
+    else if(!cur.mgrOffice&&!cur.reserved)pendingHires.push({desk:cur,dept:cur.dept||'sales',onDay:day+1});   // your old chair opens
+  }
+  d.owner='you';d.loot=null;                             // office stays reserved:true \u2014 off the seat market
+  buildGrid();
+  logLine('You moved into the assistant manager\u2019s office \u2014 a door that closes, and a nameplate on it. Your old desk is somebody else\u2019s chance now.','g');
+  toast('The assistant manager\u2019s office is yours.');
+  SFX.promote();
+}
 function myDesk(){return desks.find(d=>d.owner==='you');}
 /* ================= ENDGAME: THE CATFISH ================= */
 /* You cannot out-work the CEO. You have to destroy him. */
@@ -4593,7 +4614,7 @@ function completeDaleFavor(){
       dale.titled=true;                 // the fake title comes with it
       if(RANKS[4]!=='ASSISTANT TO THE MANAGER')RANKS[4]='ASSISTANT TO THE MANAGER';
       career.reserved={1:0,2:0};        // clear any stale seat reservations
-      movePlayerDesk();                 // seat you in the room that matches the badge
+      claimAsstOffice();                // seat you in the assistant manager's office
       logLine('Dale did not just recommend you — he pulled you up the ladder by the collar. Three rungs, skipped. The floor watched, and nobody could say a word.','w');
     }
     logLine('Dale walked into Sterling\u2019s office and recommended you for CEO. He called you his best friend. He was not joking.','g');
@@ -4702,9 +4723,10 @@ function tryPromote(){
   }
   if(g.consume)g.consume();
   player.rank=next;player.prog=0;career.gateShown={};SFX.promote();
-  movePlayerDesk();                     // you get moved into the room that matches the badge
+  if(next>=5)claimManagerOffice();      // MANAGER: the corner office
+  else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
+  else movePlayerDesk();                // worker ranks: the room that matches the badge
   if(next>=2)unlockSales();
-  if(next>=5)claimManagerOffice();      // MANAGER: take Dale's office
   logLine(`PROMOTED: you are now ${RANKS[next]}.`,'g');toast('Promoted: '+RANKS[next]);
   if(RANKS[next]==='MANAGER'){
     /* the last rung needs saying out loud */
@@ -4719,7 +4741,7 @@ function setRankDown(){
   if(player.rank>0){
     SFX.demote();player.rank--;player.prog=30;
     logLine('Demoted to '+RANKS[player.rank]+'. They moved your things while you were in the meeting.','b');
-    movePlayerDesk();                  // and back down the corridor you go
+    if(player.rank===4)claimAsstOffice(); else movePlayerDesk();   // back down the corridor (or into the asst office)
   }
 }
 function removeDale(){
@@ -6464,7 +6486,9 @@ const NPC_RANKS=['JUNIOR SALES','SALES','SENIOR SALES'];
    That is what makes a vacancy worth manufacturing. */
 const SEATS={2:3, 1:5};   // 3 senior chairs, 5 sales chairs — one sales chair is open on day 1
 function youTier(){
-  if(player.rank>=3)return 2;      // SENIOR SALES or above
+  if(player.rank>=5)return 2;      // MANAGER — corner office (kept in the senior count, unchanged)
+  if(player.rank===4)return -1;    // ASSISTANT MANAGER — own office, NOT a senior chair
+  if(player.rank===3)return 2;     // SENIOR SALES
   if(player.rank===2)return 1;     // SALES
   if(player.rank===1)return 0;     // JUNIOR SALES
   return -1;                       // INTERN — not on the ladder yet
@@ -6574,9 +6598,9 @@ function movePlayerDesk(){
        org chart and the desk layout can never disagree. */
     const workersInRoom=NPCS.filter(n=>n.alive&&isWorker(n)&&(n.tier|0)===cur.tier).length;
     const cap=SEATS[cur.tier]||99;
-    if(!cur.mgrOffice && cur.tier>=1 && workersInRoom>=cap){
+    if(!cur.mgrOffice && !cur.asstOffice && cur.tier>=1 && workersInRoom>=cap){
       cur.retired=true;   // more desks than chairs — this one goes dark
-    } else if(!cur.mgrOffice){
+    } else if(!cur.mgrOffice && !cur.asstOffice && !cur.reserved){
       pendingHires.push({desk:cur,dept:'sales',onDay:day+1});
     }
   }
