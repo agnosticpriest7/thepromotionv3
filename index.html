@@ -7060,10 +7060,14 @@ function missionItems(n){
   const against=missionsAgainst(n.name);    // someone asked you to hit THEM
   if(mine){
     if(mine.kind==='fetch'){
-      const has=player.inv.includes(mine.need);
+      const has=player.inv.includes(mine.need);   // display state at open time…
       out.push({label:`Deliver ${ITEMS[mine.need].label}`,risk:has?'ready!':'need the item',hot:!has,act:()=>{
-        if(!has){toast(`You need ${ITEMS[mine.need].label} first.`);return;}
-        const i=player.inv.indexOf(mine.need);player.inv.splice(i,1);renderLeverage();
+        // …but the ACTION must check LIVE inventory. If you opened this menu before grabbing the
+        // item (the natural flow — they ask, you go fetch), a captured `has` would refuse the
+        // delivery forever until the menu was reopened. Check the pocket now, at click time.
+        const i=player.inv.indexOf(mine.need);
+        if(i<0){toast(`You need ${ITEMS[mine.need].label} first.`);return;}
+        player.inv.splice(i,1);renderLeverage();
         n.stress=clamp(n.stress-10,0,100);
         creditMission(mine,0);
       }});
@@ -7072,7 +7076,9 @@ function missionItems(n){
       const known=t&&t.profiled;
       const tn=mine.target.split(' ')[0];
       out.push({label:known?`Report back on ${tn}`:`Report back on ${tn} — read them first`,risk:known?'ready!':`go to ${tn}, "Watch how they work"`,hot:!known,act:()=>{
-        if(!known){toast(`Go to ${tn} and pick "Watch how they work" to read them, then come back.`);return;}
+        // same live-re-check: you may have profiled the target after opening this menu.
+        const t2=activeNPCs().find(x=>x.name===mine.target);
+        if(!t2||!t2.profiled){toast(`Go to ${tn} and pick "Watch how they work" to read them, then come back.`);return;}
         creditMission(mine,0);
       }});
     } else {
