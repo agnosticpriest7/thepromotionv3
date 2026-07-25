@@ -144,10 +144,11 @@ for (const [kind, ptype] of [['grind', 'zealot'], ['credit', 'climber'], ['solo'
   const { S, G } = amWorld(); const wk = aWorker(G, S); wk.ptype = 'zealot'; wk.profiled = false;
   mkTask(G, 'grind');
   const hidden = S.delegAssignMenu(wk).items.find(i => /GRIND/.test(i.label));
-  ck('unprofiled worker: the fit is a guess', hidden && hidden.risk === 'unread — a guess', hidden && hidden.risk);
+  ck('unprofiled worker: the fit is a guess', hidden && /unread/.test(hidden.risk), hidden && hidden.risk);
   wk.profiled = true;
   const shown = S.delegAssignMenu(wk).items.find(i => /GRIND/.test(i.label));
-  ck('profiled worker: the good fit is surfaced', shown && shown.risk === 'good fit', shown && shown.risk);
+  ck('profiled worker: the good fit is surfaced', shown && /good fit/.test(shown.risk), shown && shown.risk);
+  ck('the job names its target personality (legibility)', shown && /for a Zealot/.test(shown.risk), shown && shown.risk);
 }
 
 /* ================= B3 — boss-channel escalation + the AM→Manager gate ======================== */

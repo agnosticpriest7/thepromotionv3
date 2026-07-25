@@ -5302,7 +5302,8 @@ function renderDeleg(){
   if(!delegActive()){el.style.display='none';el.innerHTML='';return;}
   const live=deleg.q.filter(t=>t.state==='open'||t.state==='assigned');
   const rows=live.map(t=>{
-    const who=t.state==='assigned'?`→ ${t.to.split(' ')[0]}`:DELEG_FLAVOUR[t.kind];
+    // show which personality each job SUITS (the fixed grind→zealot… mapping) so the tray reads at a glance
+    const who=t.state==='assigned'?`→ ${t.to.split(' ')[0]}`:`suits a ${PTYPE_NAME[DELEG_MATCH[t.kind]]}`;
     return `<div class="dgt${t.state==='assigned'?' dgon':''}"><span class="dk">${t.kind.toUpperCase()}</span><span class="df">${who}</span></div>`;
   }).join('')||'<div class="dgt dgnone">tray clear</div>';
   const win=delegWindow();
@@ -5315,8 +5316,9 @@ function renderDeleg(){
    Delegation is legitimate work, so it carries no "seen" risk. */
 function delegAssignMenu(w){
   const items=delegOpen().map(t=>{
-    const read=w.profiled?(delegMatch(t,w)?'good fit':`wrong fit for a ${PTYPE_NAME[w.ptype]}`):'unread — a guess';
-    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:read,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
+    const suit=PTYPE_NAME[DELEG_MATCH[t.kind]];   // the personality this job kind is built for (fixed rule)
+    const fit=w.profiled?(delegMatch(t,w)?'good fit':'wrong fit'):'unread — profile them';
+    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:`for a ${suit} · ${fit}`,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
   });
   if(!items.length)items.push({label:'Nothing on the tray to hand out right now.',disabled:true});
   items.push({label:'← Back',act:()=>{}});

@@ -6,6 +6,7 @@ const path = require('path');
 const TESTS = [
   'placement.js',
   't_delegate.js',
+  't_deleg_legibility.js', // delegation jobs name which personality they suit (tray + assign menu)
   't_dale_delegate.js',   // Dale-arc vs delegation-gate collision (documents current behaviour)
   't_loyalty_ceo.js',     // loyalty route driven end-to-end through the real arc -> CEO win lands
   't_npc_leaving.js',     // the NPC-leaves investment sweep + gate invariant
