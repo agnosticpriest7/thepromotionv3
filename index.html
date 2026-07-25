@@ -813,8 +813,8 @@ const desks=[];
 /* Workstations REBUILT from the plan (test/gen_level.js). owner:null = empty desk.
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
-[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',art:'cubicle_desk_left'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_left'},
+[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',intern:true,art:'cubicle_desk_left'},
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left'},
  {x:970,y:570,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant) — tucked against east wall (x1015)
  /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
     Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
@@ -841,7 +841,7 @@ const desks=[];
  {x:720,y:60,w:40,h:60,owner:'Vaughn',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Colette',tier:0,dept:'exec',seatSide:'up'},
  {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right'}]   // the ASSISTANT MANAGER office desk — claimed at rank 4
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
@@ -6716,8 +6716,11 @@ function movePlayerDesk(){
   const want=youTier();
   if(want<0)return;
   const cur=desks.find(d=>d.owner==='you');
-  if(cur&&cur.tier===want)return;               // already in the right room
-  let d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired&&x.tier===want);   // a free desk in the right room
+  // The INTERN desk is tier 0, same number as JUNIOR SALES — but it's the intern nook, not a
+  // junior chair. Without the !cur.intern guard, promotion to Junior sees "already at tier 0" and
+  // never moves the player out of the corner. So an intern desk never counts as "already there".
+  if(cur&&cur.tier===want&&!cur.intern)return;  // already in the right room
+  let d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired&&!x.intern&&x.tier===want);   // a free desk in the right room (never the intern nook)
   if(!d){
     /* The room is full (a firing's backfill collided with your promotion, or a rival
        never vacated). A real promotion still moves you in — so we make space by moving
@@ -6752,7 +6755,7 @@ function movePlayerDesk(){
     if(!cur.mgrOffice && !cur.asstOffice && cur.tier>=1 && workersInRoom>=cap){
       cur.retired=true;   // more desks than chairs — this one goes dark
     } else if(!cur.mgrOffice && !cur.asstOffice && !cur.reserved){
-      pendingHires.push({desk:cur,dept:'sales',onDay:day+1});
+      pendingHires.push({desk:cur,dept:'sales',onDay:day+1});   // the nook backfills — "where they put the new ones"
     }
   }
   d.owner='you';d.loot=null;d.tier=want;        // stamp the tier so the desk always matches the badge
