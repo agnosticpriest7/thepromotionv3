@@ -61,7 +61,7 @@ freeSalesSeat();
   ck('promote on LOYALTY succeeds', S.promoteWorker(jr) === true);
   ck('worker moved up exactly one tier', S.npcRank(jr) === oldTier + 1, 'tier=' + S.npcRank(jr));
   ck('seated at a desk of the new tier', (() => { const d = G.desks.find(x => x.owner === jr.name); return !!d && (d.tier | 0) === oldTier + 1; })());
-  ck('the vacated old chair is queued for backfill', !!oldDesk && G.pendingHires.some(h => h.desk === oldDesk));
+  ck('the vacated old chair stays OPEN (HR does not auto-backfill while you manage)', !!oldDesk && oldDesk.owner === null && !G.pendingHires.some(h => h.desk === oldDesk));
   ck('a promotion costs NO suspicion (no HR scrutiny)', G.player.suspicion === susp0, 'Δ=' + (G.player.suspicion - susp0));
   ck('the floor takes a small mood dip (-4)', !bystander || bystander.mood === byMood0 - 4, bystander ? 'Δ=' + (bystander.mood - byMood0) : 'n/a');
 }

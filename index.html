@@ -365,6 +365,7 @@
         <div class="tb-meter"><span>SUSPICION <i id="susTxt">0%</i></span><div class="track"><div class="fill" id="susBar"></div></div></div>
         <div class="tb-meter"><span>STRESS <i id="strTxt">0%</i></span><div class="track"><div class="fill" id="strBar"></div></div></div>
         <div class="tb-meter"><span>PROMOTION <i id="progTxt">0%</i></span><div class="track"><div class="fill" id="progBar"></div></div></div>
+        <div class="tb-meter" id="meritMeter" style="display:none"><span>MERIT → CEO <i id="meritTxt"></i></span><div class="track"><div class="fill" id="meritBar"></div></div></div>
         <button id="musicBtn" title="music">♪</button>
         <button id="muteBtn" title="sound">🔊</button>
         <button id="menuBtn">MENU</button>
@@ -2353,7 +2354,7 @@ function fireNPC(n,by){
   mournFriends(n);                       // the two people who liked them will remember
   const desk=desks.find(d=>d.owner===n.name);
   if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;
-    if(!desk.mgrOffice)pendingHires.push({desk,dept:n.dept,onDay:day+2});   // nobody backfills the corner office
+    if(!desk.mgrOffice&&!hrFrozen())pendingHires.push({desk,dept:n.dept,onDay:day+2});   // nobody backfills the corner office; and HR doesn't backfill at all while you manage
   }
   n.tier=0;
   openReq(tier,n);                       // the chair is EMPTY. It is not yours yet.
@@ -2571,16 +2572,21 @@ function promoteRivalAway(n){
   n.alive=false;n.onFloor=false;n.tier=0;
   openReq(tier,n);                       // they went UP a floor. Their chair is empty.
   npcLeaving(n);                         // sweep dangling investments against them (prank/dirt/mission/delegation/champion/rival)
-  const desk=desks.find(d=>d.owner===n.name);if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;pendingHires.push({desk,dept:n.dept,onDay:day+2});}
+  const desk=desks.find(d=>d.owner===n.name);if(desk){desk.owner=null;desk.rigged=null;desk.planted=null;if(!hrFrozen())pendingHires.push({desk,dept:n.dept,onDay:day+2});}
 }
+/* While you are the MANAGER, HR stops moving people on its own: no rivals climb upstairs, no open
+   chair auto-fills, and a vacated desk (from a fire, a demotion, or a promotion) is NOT auto-backfilled.
+   Every headcount move is yours — you hire to fill an empty desk, or it stays empty (and drags branch
+   health). It makes the manager seat an active job, not a spectator's. (Kyle's call — "freeze all".) */
+function hrFrozen(){return player.rank>=5;}
 function rivalsClimb(){
   const ws=activeNPCs().filter(isWorker);
   ws.forEach(w=>w.career=(w.career||0)+rand(2,5)+(w.rival?2:0));
   refreshRanks();
   /* a SENIOR who has run out of room here gets taken upstairs — and their chair empties.
-     This is the churn that gives a patient, honest player a way in. */
+     This is the churn that gives a patient, honest player a way in. (Frozen while you manage.) */
   const top=ws.filter(w=>npcRank(w)===2&&(w.career||0)>=PROMOTE_OUT).sort((a,b)=>b.career-a.career)[0];
-  if(top&&Math.random()<0.7){
+  if(!hrFrozen()&&top&&Math.random()<0.7){
     logLine(`${top.name} was promoted up a floor. Head office wanted them. That chair is now empty.`,'a');
     toast(`${top.name} went upstairs.`);
     promoteRivalAway(top);
@@ -4437,7 +4443,7 @@ function claimAsstOffice(){
     cur.owner=null;cur.rigged=null;cur.planted=null;cur.loot=null;
     const inRoom=NPCS.filter(n=>n.alive&&isWorker(n)&&(n.tier|0)===cur.tier).length;
     if(!cur.mgrOffice&&!cur.reserved&&cur.tier>=1&&inRoom>=(SEATS[cur.tier]||99))cur.retired=true;   // more desks than chairs
-    else if(!cur.mgrOffice&&!cur.reserved)pendingHires.push({desk:cur,dept:cur.dept||'sales',onDay:day+1});   // your old chair opens
+    else if(!cur.mgrOffice&&!cur.reserved&&!hrFrozen())pendingHires.push({desk:cur,dept:cur.dept||'sales',onDay:day+1});   // your old chair opens (not while you manage — you fill it)
   }
   d.owner='you';d.loot=null;                             // office stays reserved:true \u2014 off the seat market
   buildGrid();
@@ -5018,7 +5024,7 @@ function promoteWorker(n){
   n.tier=t;
   moveToDeskFor(n);                                       // seat-safe move into the free target chair
   n.career=Math.max(n.career||0, t*20+10);                // standing matches the new badge, so refreshRanks won't bounce them
-  if(oldDesk&&!oldDesk.owner&&!oldDesk.mgrOffice)pendingHires.push({desk:oldDesk,dept:n.dept,onDay:day+2});   // the chair they left backfills (its own -6 until then)
+  if(oldDesk&&!oldDesk.owner&&!oldDesk.mgrOffice&&!hrFrozen())pendingHires.push({desk:oldDesk,dept:n.dept,onDay:day+2});   // the chair they left backfills — but not while you manage (you hire to fill it)
   refreshRanks();
   n.mood=clamp(n.mood+PROMOTE_MOOD,-100,100);
   n.stress=clamp(n.stress-10,0,100);
@@ -6843,6 +6849,7 @@ function openReq(tier,who){
 }
 /* decided at 5pm, every day */
 function resolveReqs(){
+  if(hrFrozen()){career.reqs=[];return;}   // Manager: HR does not auto-fill chairs — open seats stay yours to fill
   if(!career.reqs||!career.reqs.length)return;
   const reqs=career.reqs; career.reqs=[];
   reqs.forEach(r=>{
@@ -7113,7 +7120,7 @@ function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=n
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);
-}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' (BLOCKED: '+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';}
+}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' (BLOCKED: '+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
 /* ================= MISSIONS: favors, dirty jobs, betrayal, and office feuds ================= */
 /* friendship-only economy — never promotion points */
 const MISSION_KINDS=[
@@ -8146,7 +8153,15 @@ function pollGamepad(dt){
       if(pressed(g,14))adjMusicVol(-0.05);
       if(pressed(g,15))adjMusicVol(0.05);
     } else {
-      if(Math.abs(ay)>0.4){const pb=document.getElementById('tab-'+panelTab);if(pb)pb.scrollTop+=ay*14;}
+      /* PATHS / ORG / PEOPLE / LEVERAGE / LOG: scroll the tab body. The analog stick worked, but on
+         a TV controller people use the D-PAD — so let it scroll too (held = continuous). This is why
+         the Paths list couldn't be scrolled to on the couch. */
+      const pb=document.getElementById('tab-'+panelTab);
+      if(pb){
+        if(Math.abs(ay)>0.4)pb.scrollTop+=ay*14;
+        if(btn(g,12))pb.scrollTop-=16;   // d-pad up
+        if(btn(g,13))pb.scrollTop+=16;   // d-pad down
+      }
     }
     for(let i=0;i<16;i++)gpad.prev[i]=btn(g,i);
     return;
