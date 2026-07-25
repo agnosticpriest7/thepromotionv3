@@ -4319,10 +4319,14 @@ function nightLine(){
   if(today.tasks===0)return 'You did nothing today and nobody noticed. That is either a warning or a strategy.';
   return summaryLine();
 }
+const NIGHT_DECAY=0.5;   // overnight the player sheds ~half their heat and stress — a night's sleep, not a clean slate
 function nextDay(){
   day++;clock=DAY_START;lastPhase='Clock-In';meetingCredited=false;phaseCred={};player.channel=null;player.workCh=null;player.act=null;player.hasKeycard=false;player.coffeeFor=null;career.snitchCount=0;player.eavesCd=0;
   delegRollDay();   // fresh delegation tray for the new day; clean-completion count and the rolling demerit window carry over
-  player.suspicion=clamp(player.suspicion-10,0,100);
+  /* Suspicion and stress don't carry over in full: a day's accumulation halves overnight (was a flat
+     −10 on suspicion and no stress relief at all). NPCs decay separately below, per the isolation mechanic. */
+  player.suspicion=clamp(player.suspicion*NIGHT_DECAY,0,100);
+  player.stress=clamp(player.stress*NIGHT_DECAY,0,100);
   objects.forEach(o=>{o.jammed=false;o.trapped=false;o.wreckStage=0;});desks.forEach(d=>{d.rigged=null;d.planted=null;});
   activeNPCs().forEach(n=>{
     if(n.boss){n.alive=true;n.onFloor=true;n.lapping=false;n.gone=false;n.x=Math.round(120*S);n.y=Math.round(58*S);n.goal=null;n.path=null;n.routeIdx=0;n.stuckT=0;return;}   // CEO opens the day in his office
