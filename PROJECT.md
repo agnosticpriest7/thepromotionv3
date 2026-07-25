@@ -379,6 +379,18 @@ add Steam Input config, then Steamworks. Don't rewrite; ship what exists.
 
 ## 8. Known Issues / Open Items
 
+- **Loyalty payoff — promise/delivery mismatch (design call, awaiting a Stacie playtest).** Beat 16
+  of Dale's arc reads as a CEO promotion ("Dale walked into Sterling's office and recommended you
+  for CEO," "Sterling is expecting you"), but mechanically it only *opens the gates* — it sets
+  `dale.titled` (Manager gate) and `career.vpFavor` (CEO gate) and leapfrogs a low-rank player to
+  **Assistant Manager**, then never fills `player.prog`. Verified end-to-end by `test/t_loyalty_ceo`:
+  after the full arc you sit at AM and must still grind **two more full progress bars** (AM→Manager,
+  Manager→CEO) to actually take the chair. The catfish ending, by contrast, self-completes (sets
+  `player.prog=100` from an already-Manager position). Not a dead-end — the route completes once you
+  do the work — but the fiction over-promises. Three ways to reconcile, Kyle's call after Stacie
+  plays: **(1)** reword the beat-16 text to promise *permission*, not *position* (cheapest);
+  **(2)** self-complete like catfish (set prog and drive the climb); **(3)** leapfrog to **Manager**
+  instead of AM (one rung, not the top). Leaving the payoff code alone until then.
 - **Merit (honest) CEO path — beatability unconfirmed.** A cold bot could not hold branch health
   at ≥ 70 for 3 days as Manager (feuds accumulate; mood decays nightly and only allies lift it).
   It *may* be winnable by a human who actively mediates feuds and builds alliances, but nobody has
