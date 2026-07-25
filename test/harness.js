@@ -442,6 +442,27 @@ function createWorld(opts) {
     if (R && (G.player.rank < 0 || G.player.rank >= R.length)) record(`player.rank ${G.player.rank} out of range 0..${R.length - 1}`);
   }
 
+  // INVESTMENT INVARIANT: after any NPC removal, no player-held investment may reference a gone NPC.
+  // A removal path that forgets npcLeaving() fails loudly here instead of shipping a silent dead-end.
+  function checkInvestments() {
+    if (G.gameOver) return;   // the endgame removes NPCs on the way out; investments no longer matter
+    const cast = G.NPCS || [];
+    const inCast = name => cast.some(x => x.name === name);
+    const alive = name => cast.some(x => x.name === name && x.alive && !x.gone);
+    const record = (msg) => { stats.investmentViolations++; if (!stats.firstInvestmentViolation) stats.firstInvestmentViolation = msg + ' @day' + G.day; };
+    // dirt held on a named cast member who is no longer alive
+    for (const l of (G.player.leverage || [])) { if (l.target && inCast(l.target) && !alive(l.target)) { record('dirt on gone NPC ' + l.target); break; } }
+    // a live worker's coerced/asked mission that targets a gone NPC
+    for (const n of cast) { if (n.alive && !n.gone && n.mission && n.mission.target && !alive(n.mission.target)) { record('mission targets gone ' + n.mission.target); break; } }
+    // a delegated job still assigned to a gone worker
+    const dq = (G.deleg && G.deleg.q) || [];
+    for (const t of dq) { if (t.state === 'assigned' && !alive(t.to)) { record('delegation assigned to gone ' + t.to); break; } }
+    // a worker you were championing who has left
+    for (const nm of ((G.career && G.career.championed) || [])) { if (!alive(nm)) { record('championing gone ' + nm); break; } }
+    // Dale's loyalty arc left active with no live manager
+    if (G.dale && G.dale.active && !G.dale.done && !cast.some(n => n.mgr && n.alive)) record('Dale arc active but Dale gone');
+  }
+
   function step() {
     flushImageLoads();   // fire onloads from images created during the previous frame
     virtualNow += DT_MS;
@@ -466,7 +487,7 @@ function createWorld(opts) {
       for (let i = 0; i < frames; i++) {
         step();
         stats.frames++;
-        if (stats.frames % ENTITY_CHECK_EVERY === 0) checkEntities(stats.frames);
+        if (stats.frames % ENTITY_CHECK_EVERY === 0) { checkEntities(stats.frames); checkInvestments(); }
         if (G.day !== lastDay) {
           lastDay = G.day;
           stats.daysElapsed = G.day - startDay;
@@ -499,6 +520,7 @@ function newStats() {
     nonFiniteEntities: 0, firstNonFiniteEntity: null,
     stuckNPCs: 0, stuckNames: null,
     seatViolations: 0, firstSeatViolation: null,
+    investmentViolations: 0, firstInvestmentViolation: null,   // player investment referencing a gone NPC
     endedEarly: false, endReason: null,
   };
 }
