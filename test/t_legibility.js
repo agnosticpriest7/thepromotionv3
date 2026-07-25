@@ -34,15 +34,15 @@ function check(name) {
 G.player.rank = 5;
 check('natural');
 
-// 2) seed allies (friend >= 45) + some "warming" workers (30..44)
+// 2) friendship is NO LONGER a health term (Branch 1 rebalance) — seeding allies must not move health
 const ws = workers();
-ws.slice(0, 3).forEach(n => n.friend = 60);
-ws.slice(3, 6).forEach(n => n.friend = 38);
-const bd2 = check('allies+warming');
-ck('curated ledger always shows Base, Allies, Stress',
-  ['base', 'allies', 'stress'].every(k => S.hlVisible(bd2).some(t => t.key === k)));
-ck('allies term counts the >=45 workers', bd2.terms.find(t => t.key === 'allies').count >= 3, 'allies=' + bd2.allies);
-ck('warming counts the 30..44 workers', bd2.warming >= 3, 'warming=' + bd2.warming);
+const h0 = S.branchHealth();
+ws.forEach(n => n.friend = 60);                  // everyone an ally
+const bd2 = check('everyone an ally');
+ck('the ledger always shows Base + the Calm/stress lever',
+  ['base', 'calm'].every(k => S.hlVisible(bd2).some(t => t.key === k)));
+ck('there is NO allies term in the health ledger (friendship is leverage now)', !bd2.terms.some(t => t.key === 'allies'));
+ck('making everyone an ally does not move branch health', S.branchHealth() === h0, `${h0} -> ${S.branchHealth()}`);
 
 // 3) seed a feud pair, strikes, a vacated desk, a meltdown and a firing
 const a = ws[0], b = ws[1];

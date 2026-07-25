@@ -3145,15 +3145,42 @@ function buildOptions(t){
             logLine(`You took ${n.name.split(' ')[0]}'s pile onto your own desk. They noticed. So did the floor.`,'g');
             checkAlly(n);checkPlayerMeltdown();
           })},
-        ...(n.feudWith?[{label:`Sit them down with ${n.feudWith.split(' ')[0]} (end the feud)`,risk:'8s, awkward',
+        ...(n.feudWith?[{label:`Sit them down with ${n.feudWith.split(' ')[0]} (end the feud)`,risk:'easier if they like you',
           act:()=>startAct(8,'Mediating',()=>{
+            /* Mediation is LEVERAGE now: it lands reliably between people who trust you and can fail
+               outright with someone who doesn't. (friendship demoted from health to influence.) */
             const o=activeNPCs().find(x=>x.name===n.feudWith);
-            n.feudWith=null;
-            if(o){o.feudWith=null;o.mood=clamp(o.mood+20,-100,100);o.stress=clamp(o.stress-15,0,100);o.friend=clamp(o.friend+8,0,100);o.bubble={t:3,text:'...fine. Fine.'};}
-            n.mood=clamp(n.mood+20,-100,100);n.stress=clamp(n.stress-15,0,100);n.friend=clamp(n.friend+8,0,100);
-            n.bubble={t:3,text:'We are adults about it now.'};
-            logLine(`You sat ${n.name.split(' ')[0]} and ${o?o.name.split(' ')[0]:'them'} down and made them talk. It was excruciating. It worked.`,'g');
+            const minFriend=Math.min(n.friend||0, o?(o.friend||0):100);
+            const chance=clamp(0.25 + 0.75*(minFriend/60), 0.1, 1);
+            if(Math.random()<chance){
+              n.feudWith=null;
+              if(o){o.feudWith=null;o.mood=clamp(o.mood+20,-100,100);o.stress=clamp(o.stress-15,0,100);o.friend=clamp(o.friend+8,0,100);o.bubble={t:3,text:'...fine. Fine.'};}
+              n.mood=clamp(n.mood+20,-100,100);n.stress=clamp(n.stress-15,0,100);n.friend=clamp(n.friend+8,0,100);
+              n.bubble={t:3,text:'We are adults about it now.'};
+              logLine(`You sat ${n.name.split(' ')[0]} and ${o?o.name.split(' ')[0]:'them'} down and made them talk. It was excruciating. It worked.`,'g');
+            } else {
+              const cold=((n.friend||0)<=(o?(o.friend||0):100))?n:(o||n);
+              cold.stress=clamp(cold.stress+6,0,100);cold.bubble={t:3,text:pick(['This is not your business.','Stay out of it.','...why do you even care?'])};
+              logLine(`You tried to mediate ${n.name.split(' ')[0]} and ${o?o.name.split(' ')[0]:'them'} — but they don't trust you enough to let it go. The feud holds.`,'w');
+              toast('Mediation failed — they need to like you more.');
+            }
           })}]:[]),
+        ...((isWorker(n)&&stressTier(n)>=2)?[{label:`Suggest ${n.name.split(' ')[0]} take five (ease their stress)`,risk:n.friend>=ALLY_THRESHOLD?'they trust you':'they might not take it well',
+          act:()=>{
+            /* A stressed worker takes the break IF you're on good terms; a paranoid who dislikes you
+               hears "we're building a case." Stress is the dominant health lever, so this is friendship
+               paying rent as management. */
+            if((n.friend||0)>=30){
+              n.stress=clamp(n.stress-18,0,100);n.mood=clamp(n.mood+6,-100,100);n.bubble={t:2.6,text:pick(['Yeah... okay.','Good call.','I needed that.'])};
+              logLine(`${n.name.split(' ')[0]} took the break you suggested and came back steadier.`,'g');toast(`${n.name.split(' ')[0]} eased up.`);
+            } else if(n.ptype==='paranoid'){
+              n.stress=clamp(n.stress+10,0,100);n.friend=clamp(n.friend-6,0,100);n.suspectsYou=true;n.bubble={t:3,text:pick(['Why are you watching me?','Building a case, are you?','I am FINE.'])};
+              logLine(`You suggested ${n.name.split(' ')[0]} take a break. A paranoid who doesn't trust you hears "we're documenting you." It backfired.`,'b');toast(`${n.name.split(' ')[0]} took it the wrong way.`);
+            } else {
+              n.stress=clamp(n.stress-6,0,100);n.bubble={t:2.4,text:pick(['...maybe.','I guess.'])};
+              logLine(`${n.name.split(' ')[0]} half-listened. A little less wound up.`,'t');
+            }
+          }}]:[]),
         ...(((n.strikes||0)>0&&player.rank>=5)?[{label:`Tear up ${n.name.split(' ')[0]}'s strike (clear their file)`,risk:'HR will not like it',
           act:()=>startAct(3,'Losing the paperwork',()=>{
             n.strikes=Math.max(0,(n.strikes||0)-1);
@@ -5055,27 +5082,29 @@ function promoteMenu(){
   items.push({label:'← Back',act:()=>{}});
   return {title:'PROMOTE A WORKER — loyalty or merit, and a free chair',items};
 }
+/* Branch health reads as HOW WELL THE FLOOR RUNS, not how much everyone likes you. A calm, full,
+   feud-free floor scores high on its own — STRESS is the engine (low average stress lifts the score),
+   and the stressed TAIL (broken), active feuds, empty desks, and mistakes pull it down. Friendship is
+   NO LONGER MEASURED here: it became leverage (allies look away, accept delegation, make mediation
+   land, vouch for hires). The old formula could only be raised by grinding mood+allies; this one is
+   raised by managing. (Branch 1 rebalance; the target itself is retuned separately.) */
 function branchHealth(){
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
   if(!ws.length)return 0;
-  const avgMood=ws.reduce((a,n)=>a+n.mood,0)/ws.length;          // -100..100
-  const avgStress=ws.reduce((a,n)=>a+n.stress,0)/ws.length;      // 0..100
-  const allies=ws.filter(n=>n.friend>=ALLY_THRESHOLD).length;
+  const avgStress=ws.reduce((a,n)=>a+n.stress,0)/ws.length;      // 0..100 — the dominant lever
   const feuds=ws.filter(n=>n.feudWith).length/2;
   const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
   const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
   const broken=ws.filter(n=>stressTier(n)>=3).length;
-  let h=52
-    + avgMood*0.30
-    - avgStress*0.42
-    + allies*2.5
-    - feuds*5
-    - strikes*4
-    - vacant*6
-    - broken*7
-    - (today?today.meltdowns*9:0)
+  let h=40
+    + (100-avgStress)*0.42     // a calm floor: avgStress 0 -> +42, avgStress 100 -> +0
+    - broken*8                 // stress DISTRIBUTION — people on the edge
+    - feuds*8                  // active feuds
+    - vacant*6                 // unfilled desks
+    - strikes*5                // mistakes on file
+    - (today?today.meltdowns*12:0)
     - (today?today.fired.length*16:0)
-    + (career.revenue||0);         // landed-client revenue: the branch's first revenue-flavoured input (persists, capped)
+    + (career.revenue||0);     // client wins (persists, capped) — the one banked operational bonus
   return Math.round(clamp(h,0,100));
 }
 /* READ-ONLY legibility (branch: manager-legibility). The player used to see only the final
@@ -5088,52 +5117,44 @@ function branchHealth(){
    halves nightly. `warming` = workers climbing toward ALLY_THRESHOLD but not counting yet. */
 function healthBreakdown(){
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
-  if(!ws.length)return {empty:true, base:52, raw:0, health:0, workers:0, allies:0, warming:0, terms:[]};
-  const avgMood=ws.reduce((a,n)=>a+n.mood,0)/ws.length;          // -100..100
+  if(!ws.length)return {empty:true, base:40, raw:0, health:0, workers:0, allies:0, warming:0, terms:[]};
   const avgStress=ws.reduce((a,n)=>a+n.stress,0)/ws.length;      // 0..100
-  const allies=ws.filter(n=>n.friend>=ALLY_THRESHOLD).length;
   const feuds=ws.filter(n=>n.feudWith).length/2;
   const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
   const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
   const broken=ws.filter(n=>stressTier(n)>=3).length;
   const meltdowns=today?today.meltdowns:0;
   const fired=today?today.fired.length:0;
-  const warming=ws.filter(n=>n.friend>=30&&n.friend<ALLY_THRESHOLD).length;
+  const allies=ws.filter(n=>n.friend>=ALLY_THRESHOLD).length;    // info only now — friendship is leverage, not a health term
+  const calm=(100-avgStress)*0.42;
   // point contributions — coefficients identical to branchHealth() above
   const terms=[
-    {key:'base',   label:'Base',        count:null,      pts:52,               always:true},
-    {key:'allies', label:'Allies',      count:allies,    pts:allies*2.5,       always:true, banked:true},
-    {key:'stress', label:'Stress',      count:Math.round(avgStress), pts:-avgStress*0.42, always:true, avg:true},
-    {key:'mood',   label:'Mood',        count:Math.round(avgMood),   pts:avgMood*0.30,    resets:true, avg:true},
-    {key:'feuds',  label:'Feuds',       count:feuds,     pts:-feuds*5},
+    {key:'base',   label:'Base',        count:null,      pts:40,          always:true},
+    {key:'calm',   label:'Calm floor',  count:Math.round(avgStress), pts:calm, always:true, avg:true},
+    {key:'broken', label:'On the edge', count:broken,    pts:-broken*8},
+    {key:'feuds',  label:'Feuds',       count:feuds,     pts:-feuds*8},
     {key:'vacant', label:'Empty desks', count:vacant,    pts:-vacant*6},
-    {key:'strikes',label:'Strikes',     count:strikes,   pts:-strikes*4},
-    {key:'broken', label:'On the edge', count:broken,    pts:-broken*7},
-    {key:'melt',   label:'Meltdowns',   count:meltdowns, pts:-meltdowns*9},
+    {key:'strikes',label:'Strikes',     count:strikes,   pts:-strikes*5},
+    {key:'melt',   label:'Meltdowns',   count:meltdowns, pts:-meltdowns*12},
     {key:'fired',  label:'Walked out',  count:fired,     pts:-fired*16},
     {key:'revenue',label:'Client wins', count:null,      pts:(career.revenue||0), banked:true},
   ];
-  const raw=52 + avgMood*0.30 - avgStress*0.42 + allies*2.5 - feuds*5 - strikes*4 - vacant*6 - broken*7 - meltdowns*9 - fired*16 + (career.revenue||0);
-  return {empty:false, base:52, raw, health:Math.round(clamp(raw,0,100)), workers:ws.length, allies, warming, terms};
+  const raw=40 + calm - broken*8 - feuds*8 - vacant*6 - strikes*5 - meltdowns*12 - fired*16 + (career.revenue||0);
+  return {empty:false, base:40, raw, health:Math.round(clamp(raw,0,100)), workers:ws.length, allies, warming:0, terms};
 }
 /* Which terms to show, and how (branch: manager-legibility). Curated for a TV: Base/Allies/Stress
    always (Allies stays visible even at 0 so the missing lever is obvious); every other term only
    when it is actually firing. Mood shows only once its contribution is worth a point. */
 function hlShown(t){
-  if(t.always)return true;
-  if(t.key==='mood')return Math.abs(t.pts)>=0.5;
+  if(t.always)return true;                          // base + the calm/stress lever
   if(t.key==='revenue')return t.pts>0;              // a pool value, not a count — show whenever revenue is booked
   return (t.count||0)>0;
 }
 function hlVisible(bd){return bd.terms.filter(hlShown);}
 function hlRow(t,bd){
   const p=Math.round(t.pts), sign=t.pts>=0?'+':'−';
-  const cnt=(t.key==='base')?'':(t.avg?`(${t.count} avg)`:`(${t.count})`);
+  const cnt=(t.key==='base')?'':(t.key==='calm'?`(${t.count} avg stress)`:(t.avg?`(${t.count} avg)`:`(${t.count})`));
   let note='';
-  if(t.key==='allies'){
-    if(bd.allies===0)note=bd.warming>0?` — ${bd.warming} warming, none at 45 yet`:' — none at 45 yet';
-    else if(bd.warming>0)note=` — ${bd.warming} warming`;
-  }
   const col=t.pts>0?'#4a8c5a':(t.pts<0?'#c0392b':'#7c7768');
   return {label:`${t.label}${cnt?' '+cnt:''}${note}`, val:`${sign}${Math.abs(p)}`, col};
 }
@@ -5152,7 +5173,7 @@ function healthLedgerHTMLPaths(bd){
   return `<div style="margin-top:6px;padding:6px 8px;background:#fbf9f3;border:1px solid #e6dfce;border-radius:4px">
     <div style="font-weight:700;font-size:11px;letter-spacing:.3px;margin-bottom:2px">RIGHT NOW — ${bd.health}/100 · where it comes from</div>
     ${rows}
-    <div style="opacity:.72;font-size:11px;font-style:italic;margin-top:3px">Friendships stick; mood resets every night — build allies.</div></div>`;
+    <div style="opacity:.72;font-size:11px;font-style:italic;margin-top:3px">Health is how the floor RUNS: keep stress low, feuds settled, desks filled. Friendship is leverage now, not a number.</div></div>`;
 }
 /* THE BUG THIS FIXES: health was judged at 5pm, when the floor has already emptied out
    and there is nobody left to measure. It always came out 0, so the Merit ending and
@@ -6947,7 +6968,7 @@ function renderOrg(){
     // where the number comes from, RIGHT NOW (the instantaneous branchHealth, decomposed)
     rows.push(`<div><span>Where it comes from — now</span><b>${bd.empty?'floor empty':bd.health+'/100'}</b></div>`);
     healthLedgerRowsOrg(bd).forEach(r=>rows.push(r));
-    rows.push('<div class="hlnote"><span>Friendships stick; mood resets every night — build allies.</span><b></b></div>');
+    rows.push('<div class="hlnote"><span>Health is how the floor RUNS — low stress, no feuds, full desks. Friendship is leverage, not a number.</span><b></b></div>');
   }
   const ws=activeNPCs().filter(isWorker);
   const yt=youTier();
