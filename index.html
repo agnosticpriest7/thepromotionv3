@@ -4927,9 +4927,9 @@ function hireWorker(){
   const desk=desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved&&!promised.has(d));
   if(!desk){toast('Every empty desk already has a hire on the way.');return false;}
   career.hireReqs--;
-  pendingHires.push({desk,dept:desk.dept||'sales',onDay:day+2});
-  logLine(`You filed a hire against an open requisition. They start in two days — ${career.hireReqs} requisition(s) left.`,'g');
-  toast('Hire filed — they start in two days');
+  pendingHires.push({desk,dept:desk.dept||'sales',onDay:day+1});
+  logLine(`You filed a hire against an open requisition. They start tomorrow — ${career.hireReqs} requisition(s) left.`,'g');
+  toast('Hire filed — they start tomorrow');
   return true;
 }
 /* ===== MANAGER VERB: PROMOTE (branch: manager-promote) =====
@@ -5933,9 +5933,13 @@ function drawNPC(n){
   ctx.textAlign='center';
   const marks=(n.rival?'★':'')+((isWorker(n)&&n.friend>=ALLY_THRESHOLD)?'+':'')+((isWorker(n)&&n.profiled)?PTYPE_LETTER[n.ptype]:'');
   if(marks){
+    const mx=n.x+n.w/2, my=headTop(n)-U1(4), o=Math.max(1,U1(2));
     ctx.font='bold '+U1(12)+'px monospace';
-    ctx.fillStyle=n.rival?'#c0392b':'#4a8c5a';
-    ctx.fillText(marks,n.x+n.w/2,headTop(n)-U1(4));
+    // dark outline so the mark reads on the light carpet (was bare green on pale grey — invisible)
+    ctx.fillStyle='rgba(16,18,13,0.92)';
+    for(let dx=-o;dx<=o;dx+=o)for(let dy=-o;dy<=o;dy+=o)if(dx||dy)ctx.fillText(marks,mx+dx,my+dy);
+    ctx.fillStyle=n.rival?'#ff5545':'#5fd47a';
+    ctx.fillText(marks,mx,my);
   }
   if(isWorker(n)&&stressTier(n)>=2){
     ctx.font='bold '+U1(11)+'px monospace';
