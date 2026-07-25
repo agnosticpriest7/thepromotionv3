@@ -72,6 +72,7 @@ ck('a pending hire was queued', G.pendingHires.length === phBefore + 1);
 const ph = G.pendingHires[G.pendingHires.length - 1];
 ck('the hire targets a genuinely vacant, non-reserved, non-office desk',
   !!ph && ph.desk && !ph.desk.owner && !ph.desk.mgrOffice && !ph.desk.retired && !ph.desk.reserved);
+ck('the requisition hire lands NEXT day (onDay = day+1)', !!ph && ph.onDay === G.day + 1, 'onDay=' + (ph && ph.onDay) + ' day=' + G.day);
 
 // --- requisitions (and revenue) survive a save round-trip ---
 C.hireReqs = 5; C.revenue = 9;
