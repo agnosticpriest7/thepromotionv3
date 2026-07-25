@@ -2340,6 +2340,8 @@ function npcLeaving(n){
   const jobs=(typeof deleg!=='undefined')?deleg.q.filter(t=>t.state==='assigned'&&t.to===n.name):[];
   if(jobs.length){jobs.forEach(t=>{t.state='miss';delegDemerit(0.5,'the worker you gave it to is gone');});logLine(`${jobs.length} job${jobs.length>1?'s':''} you handed ${who} leaves with them — a miss.`,'w');renderDeleg&&renderDeleg();}
   if(career.championed&&career.championed.includes(n.name)){career.championed=career.championed.filter(x=>x!==n.name);logLine(`${who} is gone — whatever you were doing to move them along is settled now.`,'t');}
+  if(typeof pendingHires!=='undefined')pendingHires.forEach(h=>{if(h.cand&&h.cand.feudTarget===n.name)h.cand.feudTarget=null;});   // a candidate's "bad blood" points at a named worker — dead when they leave
+  if(typeof hireSlate!=='undefined'&&hireSlate)hireSlate.cands.forEach(c=>{if(c.feudTarget===n.name)c.feudTarget=null;if(c.knownBy===n.name)c.knownBy=null;});
   if(n.rival)pickNewRival();
   if(n.mgr&&dale.active&&!dale.done){dale.active=false;logLine('Dale is gone. Whatever you were building with him — that road closed when he left.','b');renderTasks&&renderTasks();}
 }
@@ -2523,8 +2525,9 @@ function freshName(){
 }
 /* anyone born after scaleWorld() has to be scaled by hand, or they arrive half-size,
    half-speed, and holding a broken desk reference */
-function spawnScaled(name,dept,desk){
+function spawnScaled(name,dept,desk,opts){
   const n=NPC(name,dept,desk);
+  if(opts&&opts.ptype)n.ptype=opts.ptype;             // a vetted hire arrives as the personality you picked
   n.sprite=freeSprite(isFemaleName(name)?'f':'m');   // a face nobody on this floor is wearing
   n.tier=desk?(desk.tier|0):0;                        // a hire takes the rank of the chair they fill, not always Junior
   n.career=rand(4,14) + (n.tier*20);                  // and enough standing to plausibly hold it
@@ -2555,6 +2558,19 @@ function processHires(){
       if(!desk){
         // floor is full — the vacancy quietly closes rather than double-seating a desk
         logLine('HR meant to hire, but there is nowhere to put anyone. The req lapses.','t');
+        return false;
+      }
+      if(h.cand){
+        // A candidate the player chose off the hiring slate — arrives as the personality they vetted,
+        // but UNPROFILED (a new hire is intel you don't have — not delegation-ready until you profile
+        // them). A vouch settles them in fast; unvetted "bad blood" can flare into a feud on day one.
+        const c=h.cand;
+        desk.owner=c.name;
+        const n=spawnScaled(c.name,h.dept,desk,{ptype:c.ptype}); n.profiled=false; today.hired.push(c.name.split(' ')[0]);
+        if(c.vouched){n.mood=clamp(n.mood+18,-100,100);n.stress=clamp(n.stress-12,0,100);}
+        if(c.feudTarget){const t=activeNPCs().find(x=>x.name===c.feudTarget&&isWorker(x)&&!x.gone);
+          if(t&&Math.random()<0.6){startFeud(n,t);logLine(`${c.name.split(' ')[0]} and ${t.name.split(' ')[0]} took one look at each other — old history. A feud, on day one.`,'b');}}
+        logLine(`${c.name} started today${c.vouched?' — vouched for, and settled right in':''}.`,'g');
         return false;
       }
       const name=freshName();
@@ -3355,7 +3371,7 @@ function buildOptions(t){
     if(d.owner==='you')return {title:d.mgrOffice?'Manager’s office':'Your desk',items:[
       ...((d.mgrOffice&&player.rank>=5)?[
         {label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())},
-        {label:`Hire for an empty desk  (${career.hireReqs||0} req${(career.hireReqs||0)===1?'':'s'})`,disabled:!((career.hireReqs||0)>0),risk:(career.hireReqs||0)>0?'spends a requisition':'land a client first',act:()=>hireWorker()},
+        {label:`Hire for an empty desk…  (${career.hireReqs||0} req${(career.hireReqs||0)===1?'':'s'})`,disabled:!((career.hireReqs||0)>0),risk:(career.hireReqs||0)>0?'review candidates':'land a client first',act:()=>renderMenu(hireCandidateMenu())},
         {label:'Promote a worker…',risk:'needs a free chair',act:()=>renderMenu(promoteMenu())},
         {label:'Demote a worker…',risk:'one rung down',act:()=>renderMenu(demoteMenu())},
       ]:[]),
@@ -5012,6 +5028,73 @@ function hireWorker(){
   logLine(`You filed a hire against an open requisition. They start tomorrow — ${career.hireReqs} requisition(s) left.`,'g');
   toast('Hire filed — they start tomorrow');
   return true;
+}
+/* ===== HIRING DEPTH (branch: hiring-depth) =====
+   Vacancies are player-driven and an empty desk already costs branch health, so every hire is a real
+   decision: take who's here now, or hold the seat open and eat the drag while you wait for someone
+   better. A slate of 3 candidates, each a resume line that GESTURES at a type (never states it — a
+   new hire is intel you don't have, so they arrive unprofiled and are not delegation-ready), with
+   optional bad blood with a named worker (a bad hire is worse than the vacancy) and the option to ask
+   someone here who knows them (an ally vouches → they settle fast). One decision per seat. */
+const RESUME={
+  zealot:  ['Head down, never says no — lives at the desk.','Grinds through anything you hand them.','First in, last out. A machine.'],
+  climber: ['Great on the report — makes sure the win has their name on it.','Ambitious. Very. You always know where they stand.','Closes, and tells everyone they closed.'],
+  paranoid:['Careful. Keeps records. Does not love being watched.','Trusts slowly, reads the room twice.','Quiet — notices everything, says little.'],
+  peacock: ['Fantastic in the room, needs an audience.','Presents beautifully — do not bury them in back-office work.','Big personality, bigger on a stage.'],
+  socialite:['Everyone will love them — knows everybody in a week.','The floor lights up. So does the gossip.','Impossible not to like; works the room, not the queue.'],
+};
+function affinityKind(ptype){for(const k in DELEG_MATCH)if(DELEG_MATCH[k]===ptype)return k;return null;}
+function makeCandidate(){
+  const ptype=pick(PTYPES);
+  const c={name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
+  if(ws.length&&Math.random()<0.35)c.feudTarget=pick(ws).name;      // ~1/3 carry history with someone here — the teeth
+  if(ws.length&&Math.random()<0.55)c.knownBy=pick(ws).name;         // someone here who can vouch or warn
+  return c;
+}
+let hireSlate=null;   // {deskIdx, cands:[...]} — TRANSIENT (regenerated per open); only the CHOSEN candidate is saved
+function openHireDesk(){const promised=new Set(pendingHires.map(h=>h.desk));return desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved&&!promised.has(d));}
+function askAboutCandidate(c){
+  const kb=activeNPCs().find(x=>x.name===c.knownBy);
+  c.known=true;
+  const fn=c.name.split(' ')[0], type=PTYPE_NAME[c.ptype];
+  if(kb&&kb.friend>=ALLY_THRESHOLD){
+    if(!c.feudTarget)c.vouched=true;
+    logLine(`${kb.name.split(' ')[0]}: "${fn}? ${c.feudTarget?`Good — but they and ${c.feudTarget.split(' ')[0]} have history. Watch that.`:`Solid. I'd vouch for them.`}" — a ${type}.`,'g');
+  } else {
+    logLine(`${kb?kb.name.split(' ')[0]:'Someone'}: "${fn}? ${c.feudTarget?`Don't sit them near ${c.feudTarget.split(' ')[0]}.`:pick(["Fine, as long as nobody's watching.","Knows their stuff.","They'll do."])}" — a ${type}.`,'w');
+  }
+  toast(`${fn}: ${type}${c.feudTarget?' · bad blood':''}${c.vouched?' · vouched':''}`);
+  renderMenu(hireCandidateMenu());
+}
+function hireCandidate(c){
+  if((career.hireReqs||0)<1){toast('No requisition.');return;}
+  const desk=hireSlate?desks[hireSlate.deskIdx]:null;
+  if(!desk||desk.owner){toast('That desk is no longer open.');hireSlate=null;return;}
+  career.hireReqs--;
+  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched}});
+  logLine(`You hired ${c.name}. They start tomorrow.${c.vouched?' Comes vouched — they will settle fast.':(c.known?'':' You did not vet them — could go either way.')} ${career.hireReqs} requisition(s) left.`,'g');
+  toast(`Hired ${c.name.split(' ')[0]} — starts tomorrow`);
+  hireSlate=null;renderTasks();
+}
+function hireCandidateMenu(){
+  if(player.rank<5)return {title:'Hire',items:[{label:'Only the manager can hire.',disabled:true}]};
+  if((career.hireReqs||0)<1)return {title:'HIRE — no requisition',items:[{label:'Land a client on the phones first to open a requisition.',disabled:true},{label:'← Back',act:()=>{}}]};
+  const desk=openHireDesk();
+  if(!desk)return {title:'HIRE — no open desk',items:[{label:'Every empty desk already has a hire on the way.',disabled:true},{label:'← Back',act:()=>{}}]};
+  const idx=desks.indexOf(desk);
+  if(!hireSlate||hireSlate.deskIdx!==idx)hireSlate={deskIdx:idx,cands:[makeCandidate(),makeCandidate(),makeCandidate()]};
+  const items=[];
+  hireSlate.cands.forEach(c=>{
+    const aff=affinityKind(c.ptype);
+    const reveal=c.known?` — reads ${PTYPE_NAME[c.ptype]}${aff?', good at '+aff.toUpperCase():''}${c.feudTarget?' · BAD BLOOD w/ '+c.feudTarget.split(' ')[0]:''}${c.vouched?' · VOUCHED':''}`:'';
+    items.push({label:`Hire ${c.name.split(' ')[0]} — "${c.resume}"${reveal}`, risk:c.known?(c.feudTarget?'history here — risky':'a known quantity'):'unread — a gamble', hot:c.vouched, act:()=>hireCandidate(c)});
+    if(c.knownBy&&!c.known&&activeNPCs().some(x=>x.name===c.knownBy))
+      items.push({label:`   ↳ Ask ${c.knownBy.split(' ')[0]} about ${c.name.split(' ')[0]}`, risk:'they worked together', act:()=>askAboutCandidate(c)});
+  });
+  items.push({label:'Hold the seat open — wait for a better slate',risk:'the empty desk costs −6 health/day',act:()=>{hireSlate=null;toast('Seat held open. Come back for a fresh slate.');}});
+  items.push({label:'← Back',act:()=>{hireSlate=null;}});
+  return {title:`HIRE — one open ${NPC_RANKS[desk.tier|0]||'chair'}, pick who fills it`,items};
 }
 /* ===== MANAGER VERB: PROMOTE (branch: manager-promote) =====
    Patronage, seat-gated. The vacancy race (openReq/standingOf/resolveReqs) normally decides who
@@ -8225,7 +8308,7 @@ logLine('Intern at Paper Supply Co. Rise on tasks — or sabotage rivals into me
    ============================================================================ */
 
 /* ---------- Store: the only code that knows where saves live -------------- */
-const SAVE_VERSION = 2, SAVE_SLOTS = 3;   // v2: AM delegation state (deleg). Older saves refuse to load, by design.
+const SAVE_VERSION = 3, SAVE_SLOTS = 3;   // v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
 const Store = {
   key(s){ return 'promo:slot:' + s; },
   save(s, o){ try{ localStorage.setItem(this.key(s), JSON.stringify(o)); return true; }catch(e){ console.warn('save fail',e); return false; } },
@@ -8298,6 +8381,9 @@ function applySnapshot(s){
   tasks=JSON.parse(JSON.stringify(s.tasks||[])); favors=JSON.parse(JSON.stringify(s.favors||[]));
   missions=JSON.parse(JSON.stringify(s.missions||[])); npcFeuds=[];
   pendingHires=JSON.parse(JSON.stringify(s.pendingHires||[]));
+  // the desk object is deep-copied junk after JSON round-trip; re-link it from the stable index so a
+  // pending candidate hire lands on the LIVE desk, not a dead copy.
+  pendingHires.forEach(h=>{ if(typeof h.deskIdx==='number'&&desks[h.deskIdx])h.desk=desks[h.deskIdx]; });
   deleg=JSON.parse(JSON.stringify(s.deleg||{q:[],done:0,dem:[],seq:0,esc:0}));
   if(s.scheduler){ bossTriggerMin=s.scheduler.bossTriggerMin; auditMin=s.scheduler.auditMin;
     drillPending=s.scheduler.drillPending; drillMin=s.scheduler.drillMin;
