@@ -16,6 +16,7 @@ const TESTS = [
   't_manager_fire.js',
   't_legibility.js',
   't_merit.js',
+  't_night_decay.js',     // player suspicion + stress halve at the day rollover (don't carry over in full)
   't_rumor_supply.js',
   't_fetch_mission.js',   // coworker fetch/friendship missions deliver (live inventory re-check)
   't_music.js',
