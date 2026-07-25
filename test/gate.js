@@ -14,6 +14,7 @@ const TESTS = [
   't_promote.js',
   't_hire.js',
   't_manager_fire.js',
+  't_demote.js',          // manager Demote verb + promote-menu candidate/requirement clarity
   't_legibility.js',
   't_merit.js',
   't_night_decay.js',     // player suspicion + stress halve at the day rollover (don't carry over in full)
