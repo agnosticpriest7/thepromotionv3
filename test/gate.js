@@ -10,6 +10,7 @@ const TESTS = [
   't_loyalty_ceo.js',     // loyalty route driven end-to-end through the real arc -> CEO win lands
   't_npc_leaving.js',     // the NPC-leaves investment sweep + gate invariant
   't_asst_desk.js',
+  't_intern_desk.js',     // Intern->Junior actually relocates the player out of the nook
   't_promote.js',
   't_hire.js',
   't_manager_fire.js',
