@@ -2444,6 +2444,53 @@ function fireMenu(){
   items.push({label:'← Back',act:()=>{}});
   return {title:'DISMISS A WORKER — grounds required',items};
 }
+/* ================= MANAGER VERB: DEMOTION ==================================
+   Discretionary (no strike needed, no suspicion — it's a management call, not sabotage). One rung
+   down, and ONLY if a chair is open at the lower tier — if there's no room below, you can't demote.
+   The demoted worker takes a stress + mood hit and their standing drops to the lower band so the
+   org chart won't bounce them straight back up. Their old chair opens (yours to refill). */
+const DEMOTE_STRESS=14, DEMOTE_MOOD=18;
+function demoteTarget(n){                                   // the open lower chair to send them to, or null
+  if(!isWorker(n)||!n.alive||n.gone)return null;
+  const t=npcRank(n)-1;
+  if(t<0)return null;                                      // a junior is already at the bottom
+  if(t>=1&&seatsFree[t]<=0)return null;                    // the lower (capped) tier is full
+  return desks.find(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved&&(d.tier|0)===t)||null;   // a real, open desk there
+}
+function managerDemote(n){
+  if(player.rank<5){toast('Only the manager can demote.');return false;}
+  if(!isWorker(n)||!n.alive||n.gone||npcRank(n)<1){toast('There is no lower chair to send them to.');return false;}
+  refreshRanks();
+  const t=npcRank(n)-1, dest=demoteTarget(n);
+  if(!dest){toast(`No open ${NPC_RANKS[t]} chair — nowhere to demote them.`);return false;}
+  const oldDesk=desks.find(d=>d.owner===n.name);
+  if(oldDesk){oldDesk.owner=null;oldDesk.rigged=null;oldDesk.planted=null;oldDesk.loot=null;}
+  dest.owner=n.name;dest.loot=rollLoot('desk');
+  n.tier=t;n.homeDesk=dest;
+  n.career=(t===2?58:t===1?42:20);                          // standing drops to the lower band (won't auto-bounce back)
+  const seat=deskSeat(dest);n.x=Math.round(seat.x-n.w/2);n.y=Math.round(seat.y-n.h/2);n.goal=null;n.path=null;n.wp=0;unstickEnt(n);
+  n.stress=clamp(n.stress+DEMOTE_STRESS,0,100);
+  n.mood=clamp(n.mood-DEMOTE_MOOD,-100,100);
+  n.bubble={t:3,text:pick(['...seriously?','This is humiliating.','I earned that chair.'])};
+  if(SFX.demote)SFX.demote();
+  refreshRanks();buildGrid();
+  logLine(`You demoted ${n.name} to ${NPC_RANKS[t]}. They packed up a rung lower, in front of everyone.`,'b');
+  toast(`${n.name.split(' ')[0]} → ${NPC_RANKS[t]} (demoted)`);
+  return true;
+}
+/* the office desk submenu: any Sales/Senior worker; the ones with no open chair below are shown but blocked */
+function demoteMenu(){
+  refreshRanks();
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&npcRank(n)>=1).sort((a,b)=>npcRank(b)-npcRank(a)||(a.career||0)-(b.career||0));
+  const items=ws.map(n=>{
+    const t=npcRank(n)-1, ok=!!demoteTarget(n);
+    return {label:`Demote ${n.name.split(' ')[0]} (${NPC_RANKS[npcRank(n)]} → ${NPC_RANKS[t]})`, disabled:!ok,
+            risk:ok?'a rung down':`no open ${NPC_RANKS[t]} chair`, act:ok?(()=>managerDemote(n)):undefined};
+  });
+  if(!items.length)items.push({label:'Only Sales and Senior can be demoted — the juniors are already at the bottom.',disabled:true});
+  items.push({label:'← Back',act:()=>{}});
+  return {title:'DEMOTE A WORKER — one rung down, needs an open chair below',items};
+}
 const HIRE_NAMES=['Gary','Susan','Trent','Nadia','Boris','Kelsey','Franklin','Yuki','Omar','Lonnie','Petra','Silas','Meredith','Cliff',
   'Rosa','Devon','Imani','Hassan','Bridget','Curtis','Anika','Grigor','Lucia','Terrence','Fiona','Malik','Deborah','Rafael',
   'Ingrid','Tobias','Naomi','Errol','Camille','Dmitri','Hazel','Ruben','Josephine','Wendell','Aisha','Barrett'];
@@ -3277,6 +3324,7 @@ function buildOptions(t){
         {label:'Dismiss a worker…',risk:'grounds required',act:()=>renderMenu(fireMenu())},
         {label:`Hire for an empty desk  (${career.hireReqs||0} req${(career.hireReqs||0)===1?'':'s'})`,disabled:!((career.hireReqs||0)>0),risk:(career.hireReqs||0)>0?'spends a requisition':'land a client first',act:()=>hireWorker()},
         {label:'Promote a worker…',risk:'needs a free chair',act:()=>renderMenu(promoteMenu())},
+        {label:'Demote a worker…',risk:'one rung down',act:()=>renderMenu(demoteMenu())},
       ]:[]),
       (()=>{const dk=openTask('desk');return dk?{label:'Do the work (task)',risk:'good',act:()=>completeTask(dk)}:{label:'Grind busywork (+2, slow)',risk:'tedious',act:()=>doBusywork()};})(),
       {label:'Craft a prank kit…',risk:'from parts',act:()=>craftMenu()},
@@ -4983,13 +5031,21 @@ function promoteWorker(n){
 }
 function promoteMenu(){
   refreshRanks();
-  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone).sort((a,b)=>npcRank(b)-npcRank(a)||(b.career||0)-(a.career||0));
-  const items=ws.filter(promotable).map(n=>{
-    const t=npcRank(n)+1, r=promoteRoutes(n);
-    return {label:`Promote ${n.name.split(' ')[0]} → ${NPC_RANKS[t]}`,
-            risk:r.loyal?(r.merit?'loyal + earned':'patronage'):'on merit', act:()=>promoteWorker(n)};
+  // Show every worker who HAS a rung above (Junior + Sales); the ones who aren't ready are listed
+  // too, disabled, with exactly what they're missing — a free chair, and/or loyalty/record.
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&npcRank(n)<2).sort((a,b)=>npcRank(b)-npcRank(a)||(b.career||0)-(a.career||0));
+  const items=ws.map(n=>{
+    const t=npcRank(n)+1, r=promoteRoutes(n), seat=promoteSeatOpen(t), need=(npcRank(n)===1?55:28), fr=Math.round(n.friend||0), cr=Math.round(n.career||0);
+    if(promotable(n))
+      return {label:`Promote ${n.name.split(' ')[0]} → ${NPC_RANKS[t]}`,
+              risk:r.loyal?(r.merit?'loyal + earned':'patronage'):'on merit', act:()=>promoteWorker(n)};
+    let miss;
+    if(!seat&&!(r.loyal||r.merit)) miss=`a free ${NPC_RANKS[t]} chair + ally (friend ${fr}/${ALLY_THRESHOLD}) or record (career ${cr}/${need})`;
+    else if(!seat)                 miss=`a free ${NPC_RANKS[t]} chair to open`;
+    else                           miss=`ally them (friend ${fr}/${ALLY_THRESHOLD}) or grow their record (career ${cr}/${need})`;
+    return {label:`${n.name.split(' ')[0]} → ${NPC_RANKS[t]}`, disabled:true, risk:'needs '+miss};
   });
-  if(!items.length)items.push({label:'Nobody is eligible — needs a free chair AND either loyalty (ally) or a strong record.',disabled:true});
+  if(!items.length)items.push({label:'Nobody has a rung above them but your own chair.',disabled:true});
   items.push({label:'← Back',act:()=>{}});
   return {title:'PROMOTE A WORKER — loyalty or merit, and a free chair',items};
 }
