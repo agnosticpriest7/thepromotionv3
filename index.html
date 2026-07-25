@@ -4240,7 +4240,6 @@ function advanceClock(dt){
 function endDay(){
   if(paused||gameOver)return;
   resolveReqs();                     // who got the empty chair? Decided now.
-  const daleUp=daleFailsUpward();    // is head office about to promote your boss for your work?
   const merit=scoreTheDay();
   logLine(summaryLine(),'t');
   paused=true;
@@ -4262,9 +4261,9 @@ function endDay(){
     stat('Allies',allies),
     stat('On the edge',wobbly?`${wobbly} coworker(s)`:'nobody'),
     stat('Your rival',rivalN?`${rivalN.name.split(' ')[0]} — ${Math.min(99,Math.round(rivalN.career||0))}%`:'none left'),
-    ...(daleUp!==null?[
-      stat('BRANCH HEALTH (day avg)',`${daleUp}/100  (need ${DALE_UP_TARGET})`),
-      stat('Head office is watching',`${career.daleUpDays||0} / ${DALE_UP_DAYS} days${career.mgrGone?"  — THEY PROMOTED DALE":''}`),
+    ...((player.rank===4&&!career.mgrGone)?[
+      stat('DELEGATED CLEAN',`${deleg.done} / ${DELEG_TARGET}`),
+      stat('Demerits (2-day)',`${delegWindow()} / ${DELEG_RESET}${delegWindow()>=DELEG_RESET?'  — STREAK RESET':''}`),
     ]:[]),
     ...(merit!==null?[
       stat('BRANCH HEALTH (day avg)',`${merit}/100  (need ${MERIT_TARGET})`),
@@ -4857,26 +4856,8 @@ function tickDaleCredit(dt){
   logLine(pick(DALE_CREDIT),'t');
   m.bubble={t:3,text:pick(['I built this team.','It is about culture.','My people.'])};
 }
-function daleFailsUpward(){
-  if(player.rank!==4||career.mgrGone||dale.done)return null;   // Assistant Manager only
-  const m=NPCS.find(n=>n.mgr&&n.alive);
-  if(!m)return null;
-  const h=healthToday();
-  if(h>=DALE_UP_TARGET){
-    career.daleUpDays=(career.daleUpDays||0)+1;
-    if(career.daleUpDays>=DALE_UP_DAYS){
-      logLine('Head office looked at this branch — the numbers, the morale, the fact that nobody has cried in a fortnight — and they promoted DALE. He is being moved up a floor. He spent the afternoon telling everyone he built this team.','a');
-      toast('Dale has been promoted. For your work.');
-      dalePromotedUp();
-      return h;
-    }
-    logLine(`The branch is holding steady (${h}). Head office has started asking who is actually running this floor. ${career.daleUpDays}/${DALE_UP_DAYS}.`,'g');
-  } else {
-    if(career.daleUpDays)logLine(`The floor slipped (${h}). Head office stopped looking. Back to zero.`,'t');
-    career.daleUpDays=0;
-  }
-  return h;
-}
+/* daleFailsUpward() (the AM branch-health-hold, DALE_UP 60/2) removed in D1 B3 — the AM->Manager
+   verb is DELEGATION now (delegMeritMet -> dalePromotedUp). */
 function dalePromotedUp(){
   const m=NPCS.find(n=>n.mgr&&n.alive);
   if(!m)return;
@@ -5118,12 +5099,48 @@ const DELEG_KINDS=['grind','credit','solo','visible','social'];
 const DELEG_FLAVOUR={grind:'reconcile the order backlog',credit:'a client-facing win — named on the report',
   solo:'a quiet desk audit, no exposure',visible:'front-desk cover, present at the meeting',social:'chase four people for signatures'};
 const DELEG_PHASE_TASKS={510:2,645:2,765:2,855:3};   // Regular Work phase.start (min) -> jobs arriving; ~9/day
-let deleg={q:[],done:0,dem:[],seq:0};   // q: live jobs; done: clean completions; dem: rolling demerit window; seq: id counter
+const DELEG_NOTE=1.0, DELEG_WRITEUP=2.0;   // rolling-window demerit levels: note -> write-up -> reset (DELEG_RESET 3.0)
+let deleg={q:[],done:0,dem:[],seq:0,esc:0};   // q: live jobs; done: clean completions; dem: rolling demerit window; seq: id counter; esc: how far this stretch has escalated
 function delegActive(){return player.rank===4&&!career.mgrGone;}   // Assistant Manager only, until the chair opens
-function delegReset(){deleg={q:[],done:0,dem:[],seq:0};}
+function delegReset(){deleg={q:[],done:0,dem:[],seq:0,esc:0};}
 function delegPruneDem(){deleg.dem=deleg.dem.filter(e=>e.d>=day-1);}          // rolling 2 days: today + yesterday
 function delegDemerit(v,reason){deleg.dem.push({d:day,v:v});delegPruneDem();} // boss-channel penalty + escalation land in B3
 function delegWindow(){delegPruneDem();return Math.round(deleg.dem.reduce((a,e)=>a+e.v,0)*10)/10;}
+/* demerits route to the BOSS/SLACK channel (promotion progress + Dale's write-up path), never HR
+   suspicion — a dropped ball is management incompetence, not wrongdoing. Escalation over the rolling
+   2-day window: note (a rank-scaled progress dock), then a write-up, then the merit window closes and
+   the clean streak resets. Each stage fires once per stretch; a stretch clears when demerits age out. */
+function delegEscalate(){
+  const win=delegWindow();
+  if(win<DELEG_NOTE){deleg.esc=0;return;}
+  deleg.esc=deleg.esc||0;
+  if(win>=DELEG_RESET&&deleg.esc<3){
+    deleg.esc=3;
+    const lost=deleg.done; deleg.done=0;
+    logLine(`Dale has "concerns about your judgement." The delegated work has been a shambles and head office has stopped looking at you to run anything. Your clean streak${lost?` (${lost})`:''} is gone.`,'b');
+    toast('Merit streak reset — too many dropped balls');
+  } else if(win>=DELEG_WRITEUP&&deleg.esc<2){
+    deleg.esc=2;
+    const dock=Math.max(0,player.rank-1)*6;   // a formal warning, and a bigger bite out of your climb — NOT a demotion
+    player.prog=clamp(player.prog-dock,0,100);
+    logLine(`Twice this week the floor’s work slipped on your watch. Dale puts it in writing — a formal warning, and it goes on your climb. Promotion progress −${dock}.`,'b');
+    toast(`Written up — delegation slipping. Promotion −${dock}`);
+  } else if(win>=DELEG_NOTE&&deleg.esc<1){
+    deleg.esc=1;
+    const dock=Math.max(0,player.rank-1)*3;   // boss channel: your climb, not your record, rank-scaled
+    player.prog=clamp(player.prog-dock,0,100);
+    logLine(`Dale noticed a job or two slip through the cracks. It goes on your climb, not your record — promotion progress −${dock}.`,'a');
+    toast(`Delegation slipped. Promotion −${dock}`);
+  }
+}
+/* DELEG_TARGET clean completions and the org draws the obvious conclusion: the floor runs without
+   the man whose name is on the door, so they promote HIM (his office is that efficient) and his
+   chair empties. Reuses dalePromotedUp -> career.mgrGone, which opens the MANAGER gate. */
+function delegMeritMet(){
+  if(career.mgrGone)return;
+  logLine('Head office looked at how smoothly this floor runs without anyone above you lifting a finger, and drew the obvious conclusion.','a');
+  dalePromotedUp();
+}
 function delegArrive(){
   if(!delegActive())return;
   const p=currentPhase(), n=DELEG_PHASE_TASKS[p.start]||0;
@@ -5165,6 +5182,7 @@ function delegResolve(t,w){
     t.state='done';deleg.done++;
     w.mood=clamp(w.mood+DELEG_MATCH_RELIEF,-100,100);w.stress=clamp(w.stress-6,0,100);
     logLine(`${w.name.split(' ')[0]} was the right hands for it — done, and done well. (${deleg.done}/${DELEG_TARGET})`,'g');
+    if(deleg.done>=DELEG_TARGET&&!career.mgrGone)delegMeritMet();   // the AM->Manager gate
     return 'clean';
   }
   switch(w.ptype){
@@ -5192,9 +5210,10 @@ function delegExpireDue(){   // at phase end: unassigned jobs expire, assigned j
   });
   deleg.q=deleg.q.filter(t=>t.state==='open'||t.state==='assigned');   // keep only still-live jobs
   if(missed){logLine(`${missed} job${missed>1?'s':''} went undone — a miss on each.`,'w');}
+  delegEscalate();   // boss-channel escalation on the rolling window (note -> write-up -> reset)
   if(missed||cleaned||other)renderDeleg();
 }
-function delegRollDay(){deleg.q=[];delegPruneDem();}   // new day: fresh tray; done + the rolling window persist
+function delegRollDay(){deleg.q=[];delegPruneDem();delegEscalate();}   // new day: fresh tray; done + the rolling window persist; a cleared window ends the escalation stretch
 /* minimal tray (B1). The interactive version — pick a job, walk it to a worker — lands with the
    assign verb; for now it shows what arrived, what is still open, and the two gate numbers. */
 function renderDeleg(){
@@ -5224,19 +5243,8 @@ function delegAssignMenu(w){
 }
 /* judged at 5pm, every day you are the manager */
 function scoreTheDay(){
-  /* ASSISTANT MANAGER: run it well for two days and they take Dale upstairs */
-  if(player.rank===4&&!career.mgrGone){
-    const h=healthToday();
-    if(h>=DALE_OUT_TARGET){
-      career.daleDays=(career.daleDays||0)+1;
-      if(career.daleDays>=DALE_OUT_DAYS)daleUpstairs();
-      else logLine(`The floor is running well — health ${h}. Dale keeps walking past and saying "we". That is ${career.daleDays} of ${DALE_OUT_DAYS}.`,'g');
-    } else {
-      if(career.daleDays)logLine(`Branch health fell to ${h}. Head office stopped looking. Back to zero.`,'b');
-      career.daleDays=0;
-    }
-    return h;
-  }
+  /* ASSISTANT MANAGER no longer scores on a branch-health hold — that verb is DELEGATION now
+     (deleg / delegMeritMet, which sets career.mgrGone). Only MANAGER->CEO merit is scored here. */
   if(player.rank<5||career.ceoDone)return null;
   const h=healthToday();   // judge the merit streak on the all-day AVERAGE, not the empty-floor 5pm instant (matches the AM path above)
   if(h>=MERIT_TARGET){
@@ -5253,22 +5261,8 @@ function scoreTheDay(){
   }
   return h;
 }
-function daleUpstairs(){
-  if(career.mgrGone)return;
-  const m=NPCS.find(n=>n.mgr&&n.alive);
-  career.daleDays=0;
-  logLine('Head office looked at this branch — the numbers, the morale, the fact that nobody has cried in a stairwell for a fortnight — and promoted the man whose name is on the door.','a');
-  logLine(`Dale gave a speech. He used the word "we" eleven times. He thanked himself for "building this culture". He is going upstairs, and you are the one who built it.`,'b');
-  toast('Dale got promoted. For YOUR work.');
-  if(m){
-    m.bubble={t:4,text:'I built this team.'};
-    logLine(`"I want to thank the man who made this possible," Dale said, and then he pointed at himself.`,'t');
-  }
-  removeDale();
-  career.mgrGone=true;
-  logLine('His office is empty. The chair is yours to take, and you never laid a finger on him.','g');
-  pushAlertBox('Dale was promoted upstairs — on the strength of a floor YOU fixed. His office is empty.','w');
-}
+/* daleUpstairs() (the AM DALE_OUT 64/2 health-hold outcome) removed in D1 B3 — superseded by the
+   delegation gate (delegMeritMet -> dalePromotedUp). */
 function ceoByMerit(){
   career.ceoDone=true;
   player.rank=RANKS.length-1;
@@ -7324,10 +7318,10 @@ function ladderSteps(){
       steps.push({done:g.ok, text:`Keep doing his favours — he likes you ${Math.round(dale.favor)}/30`});
       break;
     case 'MANAGER': {
-      const h=healthToday();   // show the number the day is judged on (the average), not the live instant
-      steps.push({head:'THE HONEST WAY — LET HIM TAKE THE CREDIT'});
-      steps.push({done:h>=DALE_OUT_TARGET, text:`Run the floor WELL as his deputy — branch health ${h}/${DALE_OUT_TARGET}`});
-      steps.push({done:(career.daleDays||0)>=DALE_OUT_DAYS, text:`Hold it ${DALE_OUT_DAYS} days (${career.daleDays||0}/${DALE_OUT_DAYS}) — head office promotes DALE for your work, and his chair empties`});
+      steps.push({head:'THE HONEST WAY — RUN HIS FLOOR FOR HIM'});
+      steps.push({done:deleg.done>=DELEG_TARGET, text:`Delegate cleanly — the right job to the right person, finished — ${deleg.done}/${DELEG_TARGET}`});
+      steps.push({done:delegWindow()<DELEG_RESET, text:`Keep dropped balls under ${DELEG_RESET} in a 2-day window (now ${delegWindow()}) — three and the streak resets`});
+      steps.push({done:career.mgrGone, text:'The floor runs without Dale — head office promotes HIM up, and his chair empties'});
       steps.push({head:'OR TAKE HIM DOWN'});
       if(dale.active&&!dale.done){
         steps.push({done:dale.titled, text:`Finish Dale's arc — beat ${dale.step}/${DALE_ARC.length}. He hands you the job himself`});
@@ -8168,7 +8162,7 @@ function applySnapshot(s){
   tasks=JSON.parse(JSON.stringify(s.tasks||[])); favors=JSON.parse(JSON.stringify(s.favors||[]));
   missions=JSON.parse(JSON.stringify(s.missions||[])); npcFeuds=[];
   pendingHires=JSON.parse(JSON.stringify(s.pendingHires||[]));
-  deleg=JSON.parse(JSON.stringify(s.deleg||{q:[],done:0,dem:[],seq:0}));
+  deleg=JSON.parse(JSON.stringify(s.deleg||{q:[],done:0,dem:[],seq:0,esc:0}));
   if(s.scheduler){ bossTriggerMin=s.scheduler.bossTriggerMin; auditMin=s.scheduler.auditMin;
     drillPending=s.scheduler.drillPending; drillMin=s.scheduler.drillMin;
     meetingCredited=s.scheduler.meetingCredited; lastPhase=s.scheduler.lastPhase; }
