@@ -3,14 +3,14 @@
 **2026-07-25**
 
 Supplement to `PROJECT.md`, covering everything since `PROJECT_UPDATE_2026-07-15.md`. Build is now
-**~8,556 lines / ~520 KB**. Everything below is committed to `main`, gated green, and pushed live.
+**~8,683 lines / ~528 KB**. Everything below is committed to `main`, gated green, and pushed live.
 
 > **Note on the base doc:** mid-span, `PROJECT.md` was **rewritten as the single source of *current*
 > truth** (verified against code, not docs). It already folds in the AM delegation layer, the
 > day/meeting/audit/storage schedule, the world size (1500×760), `SAVE_VERSION`, the `npcLeaving`
 > convention, and the `test/gate.js` rotation. So the earlier items here are recorded briefly (they're
-> in `PROJECT.md`); the **manager-role rework, the merit-route rebalance, and Test Game** — the newest
-> work — are detailed in full.
+> in `PROJECT.md`); the **manager-role rework, the merit-route rebalance, Test Game, and the favour
+> system** — the newest work — are detailed in full.
 
 ---
 
@@ -119,6 +119,48 @@ Assistant Manager stopped being a duplicate of the Manager→CEO health hold. AM
 
 ---
 
+## The favour system — banked goodwill becomes real leverage
+Two branches, Phase-0 verified. Premise confirmed first: "favours" *were* the missions system
+(`offerMission` was **on-demand and farmable**; `today.favors` was only a global daily counter), and
+allies past `ALLY_THRESHOLD` (45) **already** looked away during wrongdoing (`workerSeesPlayer`
+excludes them) — but it was invisible.
+
+### Branch 1 — the ally cover is now visible
+The first time an ally in range looks the other way while you're doing something dirty, **they say
+so** ("I didn't see anything") — once per person (`noteAllyCover`, hooked in `witnessReact`'s
+no-hostile-witness path; transient flag, no save change). Every favour you'd already banked suddenly
+*reads* as purposeful.
+
+### Branch 2 — a per-person favour track that pays out a verb
+Favours you do for **one** coworker accumulate (`career.favors[name]`). At **`FAVOR_THRESHOLD` = 3**
+(a dial) that person owes you a **single, one-time favour**, shaped by their personality:
+- **Peacock → alibi** — vouches loudly, your suspicion wiped to 0.
+- **Socialite → dirt** — lets slip a piece of leverage on another worker.
+- **Climber → machine** — their desk sends one catfish email **unwatched** (bypasses the HR
+  "caught-you" +30 for that desk, once).
+- **Paranoid → tip-off** — the next desk audit is **announced early** (you hear the time).
+- **Zealot → clean delegation** — takes **one job outside their lane with no botch** (plumbs through
+  the real D1 resolution, and the clean completion even counts toward the AM→Manager gate).
+
+**Anti-farming (a hard requirement, not a tuning note):** the on-demand "Ask what they need" menu item
+is **gone**. Errands now arrive on the **world's schedule** (`maybeOfferFavor`, rolled at each
+work-phase start — `FAVOR_ARRIVE_CHANCE` 0.5, at most 2 open floor-wide, biased toward tracks already
+building so a payoff stays *reachable* without being farmable). **One payoff per person, ever**
+(the reward is assigned once and never re-rolled).
+
+**Discipline:** the track is player-held state pointing at a named NPC → added to the harness
+**investment invariant**, and **`npcLeaving`** closes an in-progress track with a feed line and **no
+payout** (favours done for someone who gets fired leave with them). New saved state →
+**`SAVE_VERSION` bumped 3 → 4** (`career` carries `favors` + a floating `auditTipoff`). Covered by
+`test/t_ally_cover.js` and `test/t_favor_track.js` (28 assertions, real functions — accumulate /
+fires-once / every reward verb incl. the mismatched-delegation-clean plumb-through / the invariant's
+teeth / multi-person save round-trip / anti-farming).
+
+> **Dials for TV feel:** `FAVOR_THRESHOLD` (3) and `FAVOR_ARRIVE_CHANCE` (0.5). As tuned, a full
+> track with one person takes ~5–8 days of consistent help — scarcity is doing the balancing.
+
+---
+
 ## The `npcLeaving(n)` convention + investment invariant
 One hook every removal path calls (fire, promote-away, Dale upstairs): it sweeps every dangling
 investment the player held against a departing NPC — prank build, dirt, coerced missions, delegated
@@ -162,13 +204,23 @@ so the seat model stays consistent. **Assistant Manager** keeps Dale (loyalty ro
 **ephemeral** — a Test Game never autosaves, so it can't clobber a real slot. (`jumpToRank` is
 harness-callable — future tests can reach any endgame state in one line.)
 
+**Follow-up fix — "the controls don't work" on a Test Game.** `jumpToRank` set desk/office
+*ownership* but never moved the **player entity**. In a normal game the intro walks you from the
+sealed entrance vestibule onto the floor; a Test Game skips the intro, so you spawned **boxed-in at
+the front door** (`~[112, 1300]`, on top of `EXIT`) with no room to move and nothing to interact
+with. Fixed: `jumpToRank` now deposits the player **at their own desk** on the nearest walkable tile
+(the same `endIntro` logic), verified at every rank INTERN→MANAGER (`stuck=false`, 0 throws). The
+existing test masked it by running the intro before the jump; added a `seatedAtDesk()` guard to
+`t_test_game.js` that is RED on every rank without the fix.
+
 ---
 
 ## Docs & tests
 - **`PROJECT.md` rewritten** as the single source of current truth (corrected: world 1500×760,
   `SAVE_VERSION`, repo `thepromotionv3`, D1 delegation, `npcLeaving`, printer-50% resolved, roadmap).
-- **`test/gate.js`** is the pre-merge runner — now **25 tests** (`node test/gate.js`), soak last.
-  `SAVE_VERSION` is at **3**.
+- **`test/gate.js`** is the pre-merge runner — now **27 tests** (`node test/gate.js`), soak last
+  (added `t_ally_cover`, `t_favor_track`; `t_test_game` gained the seat guard).
+  `SAVE_VERSION` is at **4**.
 - **New §5 rule:** any new player-held state pointing at a specific NPC goes in the investment
   invariant list in the same commit that introduces it.
 - **Loyalty → CEO route verified end-to-end** through the real functions (not flag-setting). Finding:
@@ -180,6 +232,8 @@ harness-callable — future tests can reach any endgame state in one line.)
 
 ## Open items / balance to watch
 - **Merit target 80 may be too easy** — dial after TV feel (likely ~85). One line (`MERIT_TARGET`).
+- **Favour-track dials** — `FAVOR_THRESHOLD` (3) and `FAVOR_ARRIVE_CHANCE` (0.5). Reaching a full
+  track currently takes ~5–8 days of consistent help; feel it on TV and dial if it's too slow/fast.
 - **The hiring "flicker" churn** (nameplates blinking vacant↔name, new hires jittering *while hiring
   a bunch*) is **still unreproduced** in the harness. The `youTier` fix cleared an *adjacent* bug,
   not this. Needs exact repro steps or a screen recording.
@@ -190,7 +244,7 @@ harness-callable — future tests can reach any endgame state in one line.)
 ---
 
 ## Unchanged
-§2 architecture, §4 save model (now v3), §5 harness discipline (still the law — run `node
+§2 architecture, §4 save model (now v4), §5 harness discipline (still the law — run `node
 test/gate.js` before merging), §7 Electron plan, §9 hosting, §11 workflow. The gas-station tutorial
 level remains the big parked roadmap item. All changes bot-verified: full gate + placement lint +
 save round-trip clean.
