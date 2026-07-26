@@ -12,6 +12,8 @@ const ck = (n, c, x) => { console.log(`  ${c ? 'PASS' : 'FAIL'}  ${n}${x ? '  ['
 const C = G.career;
 G.player.stress = 10;
 C.hireReqs = 0; C.revenue = 0;
+C.ceoDone = true;   // this test lands revenue and runs pinned at Manager — with the 1-day/80 merit gate
+                    // that would actually WIN the game mid-test (scoreTheDay). Suppress it; hiring is the subject.
 
 // --- gate: only a manager runs headcount ---
 G.player.rank = 3;

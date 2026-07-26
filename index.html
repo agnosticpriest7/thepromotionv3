@@ -4948,7 +4948,7 @@ function finishDiscipline(){
    designed to stop you. You spent six days learning how to break people. Now keep
    them whole for three days in a row and the board takes notice.
 ========================================================================== */
-const MERIT_TARGET=70, MERIT_DAYS=3;
+const MERIT_TARGET=80, MERIT_DAYS=1;   // Merit CEO gate: reach 80 for ONE day (the day AVERAGE, judged at the boundary — not a burst). Was 70 held for 3 days: a maintenance treadmill; one day at 80 is a puzzle with a solve. The 80 is a dial.
 /* ================= DALE FAILS UPWARD ======================================
    The most honest thing in the building. You are Assistant Manager. You do the work,
    you keep the floor standing, the numbers go up — and head office looks at the branch,
@@ -5439,17 +5439,15 @@ function scoreTheDay(){
   /* ASSISTANT MANAGER no longer scores on a branch-health hold — that verb is DELEGATION now
      (deleg / delegMeritMet, which sets career.mgrGone). Only MANAGER->CEO merit is scored here. */
   if(player.rank<5||career.ceoDone)return null;
-  const h=healthToday();   // judge the merit streak on the all-day AVERAGE, not the empty-floor 5pm instant (matches the AM path above)
+  const h=healthToday();   // judge on the all-day AVERAGE, not the empty-floor 5pm instant — a burst does not count
   if(h>=MERIT_TARGET){
-    career.goodDays=(career.goodDays||0)+1;
-    if(career.goodDays>=MERIT_DAYS){
+    career.goodDays=1;      // 0/1 -> 1/1 (kept for the x/1 readout)
+    if(!career.meritReady){
       career.meritReady=true;
-      logLine(`THREE GOOD DAYS. The branch is healthy, nobody is broken, and the numbers went UP. The board has noticed — and they have noticed who is running it.`,'g');
-    } else {
-      logLine(`A good day on the floor. Branch health ${h}. That is ${career.goodDays} of ${MERIT_DAYS}.`,'g');
+      logLine(`A DAY AT ${MERIT_TARGET}. Low stress, no feuds, every desk filled, the work done — the whole floor in order at once. The board saw it, and they saw who ran it.`,'g');
     }
   } else {
-    if(career.goodDays)logLine(`Branch health fell to ${h}. The streak is broken. Back to zero.`,'b');
+    if(career.goodDays)logLine(`The branch came in at ${h} — short of ${MERIT_TARGET}. Get the whole floor in order for a full day.`,'t');
     career.goodDays=0;
   }
   return h;
@@ -7046,7 +7044,7 @@ function renderOrg(){
     const bd=healthBreakdown();
     rows.push('<div class="tier">YOUR BRANCH</div>');
     rows.push(`<div><span>Branch health (day avg)</span><b style="color:${col}">${M.h}/100 · need ${M.target}</b></div>`);
-    rows.push(`<div><span>Good days running</span><b style="color:${col}">${M.streak}/${M.need}${career.meritReady?' — READY':''}</b></div>`);
+    rows.push(`<div><span>A day in order (${M.target}+)</span><b style="color:${col}">${M.streak}/${M.need}${career.meritReady?' — READY':''}</b></div>`);
     rows.push(`<div><span>Open requisitions</span><b>${career.hireReqs||0}${(career.hireReqs||0)>0?' — hire from your desk':' — land a client'}</b></div>`);
     // where the number comes from, RIGHT NOW (the instantaneous branchHealth, decomposed)
     rows.push(`<div><span>Where it comes from — now</span><b>${bd.empty?'floor empty':bd.health+'/100'}</b></div>`);
@@ -7554,8 +7552,8 @@ function ladderSteps(){
       if(player.rank>=5){
         const M=meritStatus();
         steps.push({head:'ROUTE 3 — MERIT (run the branch WELL)'});
-        steps.push({done:M.h>=M.target, text:`Branch health ${M.h}/${M.target} — mood up, stress down, nobody broken, nobody fired`});
-        steps.push({done:M.streak>=M.need, text:`Hold it for ${M.need} days running (${M.streak}/${M.need})`});
+        steps.push({done:M.h>=M.target, text:`Get branch health to ${M.target} — low stress, feuds settled, every desk filled (now ${M.h})`});
+        steps.push({done:!!career.meritReady, text:`Hold it there for one full day — the whole floor in order at once, judged at 5pm`});
         steps.push({done:!!career.meritReady, text:'The board kicks Sterling upstairs and he names you himself'});
       }
       break;
