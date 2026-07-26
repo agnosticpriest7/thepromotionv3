@@ -461,6 +461,8 @@ function createWorld(opts) {
     for (const nm of ((G.career && G.career.championed) || [])) { if (!alive(nm)) { record('championing gone ' + nm); break; } }
     // a queued candidate hire whose "bad blood" points at a worker who has since left
     for (const h of (G.pendingHires || [])) { if (h.cand && h.cand.feudTarget && inCast(h.cand.feudTarget) && !alive(h.cand.feudTarget)) { record('pending hire feud-target gone ' + h.cand.feudTarget); break; } }
+    // a per-person favour track pointing at a worker who has since left (npcLeaving must delete it)
+    for (const nm of Object.keys((G.career && G.career.favors) || {})) { if (inCast(nm) && !alive(nm)) { record('favour track on gone ' + nm); break; } }
     // Dale's loyalty arc left active with no live manager
     if (G.dale && G.dale.active && !G.dale.done && !cast.some(n => n.mgr && n.alive)) record('Dale arc active but Dale gone');
   }

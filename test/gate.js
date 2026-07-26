@@ -25,6 +25,7 @@ const TESTS = [
   't_night_decay.js',     // player suspicion + stress halve at the day rollover (don't carry over in full)
   't_rumor_supply.js',
   't_ally_cover.js',      // allies announce when they look away during wrongdoing (once per person)
+  't_favor_track.js',     // per-person favour track: accumulate → owe a one-time verb (alibi/dirt/machine/tipoff/clean-deleg); anti-farming; save; npcLeaving
   't_fetch_mission.js',   // coworker fetch/friendship missions deliver (live inventory re-check)
   't_music.js',
   't_test_game.js',       // dev Test Game: jumpToRank places a consistent world at any rank
