@@ -20,14 +20,16 @@ function main() {
   });
 
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
+  const renderErrs = w.g.renderErrs || 0;   // render() swallows draw throws into this — enforce the long-documented "0 renderErrs"
   const clean =
     s.throws === 0 && s.nonFinite === 0 && s.nonFiniteEntities === 0 &&
-    s.stuckNPCs === 0 && s.seatViolations === 0 && s.investmentViolations === 0 && !s.endedEarly;
+    s.stuckNPCs === 0 && s.seatViolations === 0 && s.investmentViolations === 0 && renderErrs === 0 && !s.endedEarly;
 
   console.log('\n================ BASELINE SOAK RESULT ================');
   console.log(`frames driven      : ${s.frames} (${secs}s)`);
   console.log(`in-game days        : ${s.daysElapsed}`);
   console.log(`throws              : ${s.throws}${s.firstThrow ? '\n   first: ' + oneLine(s.firstThrow) : ''}`);
+  console.log(`render errors       : ${renderErrs}`);
   console.log(`non-finite (canvas) : ${s.nonFinite}${s.firstNonFinite ? '\n   first: ' + s.firstNonFinite : ''}`);
   console.log(`non-finite (entity) : ${s.nonFiniteEntities}${s.firstNonFiniteEntity ? '\n   first: ' + s.firstNonFiniteEntity : ''}`);
   console.log(`stuck NPCs          : ${s.stuckNPCs}${s.stuckNames ? '\n   ' + s.stuckNames.join(', ') : ''}`);

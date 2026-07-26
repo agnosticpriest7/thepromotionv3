@@ -562,6 +562,7 @@ const EPILOGUE = `
       breakTableB:pick('breakTableB',null),
       ART_W:pick('ART_W',{}), OBJ_ART:pick('OBJ_ART',{}), CONT_ART:pick('CONT_ART',{}) }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
+  def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });
   def(G,'screen',   function(){ return (typeof screen!=='undefined')?screen:null; });
