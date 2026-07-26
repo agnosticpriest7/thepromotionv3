@@ -2864,12 +2864,26 @@ function whoSaw(){
 function witnessReact(){
   if(hrSeesPlayer())return true;            // HR already handles this — the big consequence
   const w=workerSeesPlayer();
-  if(!w)return false;
+  if(!w){ noteAllyCover(); return false; } // nobody hostile saw you — but did an ally look away?
   w.bubble={t:2.4,text:pick(['Did you just—','I SAW that.','What are you doing?','Hey!','…noted.'])};
   w.mood=clamp(w.mood-6,0-100,100);
   // a witness quietly costs you: they might talk. Not as bad as HR, but not nothing.
   addSuspicion(6,`${w.name.split(' ')[0]} saw you`);
   return true;
+}
+/* The ally cover is real but invisible: workerSeesPlayer() excludes allies, so an ally standing right
+   there never catches you. Announce it the FIRST time each ally covers for a piece of wrongdoing —
+   once per person (transient _coveredForYou, same convention as _wasAlly), so it never spams. This is
+   what makes every favour already done feel purposeful. */
+function noteAllyCover(){
+  const pc=center(player);
+  const ally=activeNPCs().find(n=>isWorker(n)&&!n.gone&&!n.wentHome
+    && (n.friend||0)>=ALLY_THRESHOLD && !n._coveredForYou && inCone(n,pc,WORKER_SEE_RANGE));
+  if(!ally)return;
+  ally._coveredForYou=true;
+  ally.bubble={t:2.8,text:pick(["I didn't see anything.","...we never spoke.","Your secret's safe.","What you do is your business."])};
+  logLine(`${ally.name.split(' ')[0]} watched you do it — and looked away. That is what an ally is for.`,'g');
+  toast(`${ally.name.split(' ')[0]} covered for you.`);
 }
 const ALLY_THRESHOLD=45;
 function hrSeesNPC(n){const c=center(n);return hrs().some(h=>inCone(h,c));}
