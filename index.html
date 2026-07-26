@@ -768,6 +768,7 @@ function drawChar(ent,idx,scaleTo){
 let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (independent of the person now)
 let SEAT_PERSON_H   = 100;         // seated person's drawn height in U1 units — INDEPENDENT of the chair (tune the two separately)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
+let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -814,7 +815,10 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
   const bb=SIT_BBOX[name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
-  const px=cx-bbCx*scale, py=seatY-bbBot*scale;                   // land the content box's bottom-centre on the seat
+  // side poses: nudge the sitter FORWARD (the way they face) so they sit at the front of the seat and
+  // their legs hang over the edge. The left mirror inverts sign for us, so +shift serves both.
+  const sideShift=(dir==='left'||dir==='right')?U1(SEAT_SIDE_SHIFT):0;
+  const px=cx+sideShift-bbCx*scale, py=seatY-bbBot*scale;         // land the content box's bottom-centre on the seat
   if(!isFinite(px)||!isFinite(py)||!isFinite(drawW)||!isFinite(drawH)||drawW<=0||drawH<=0)return;
   if(dir==='left'){                                               // only a right pose exists — mirror it about cx
     ctx.save(); ctx.translate(Math.round(cx),0); ctx.scale(-1,1); ctx.translate(-Math.round(cx),0);
@@ -6657,7 +6661,7 @@ function drawSeatAnchorTest(){
     ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
     ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(15)));
   });
-  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H+'  SIDE '+SEAT_SIDE_SCALE,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
+  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H,'SIDE x'+SEAT_SIDE_SCALE+'  SIDE_SHIFT '+SEAT_SIDE_SHIFT,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
   const px=cam.x+U1(8), py=cam.y+U1(10);
   ctx.textAlign='left'; ctx.font='bold '+U1(11)+'px monospace';
   ctx.fillStyle='rgba(15,18,14,0.82)'; ctx.fillRect(Math.round(px-U1(4)),Math.round(py-U1(4)),U1(210),U1(15)*lines.length+U1(6));
