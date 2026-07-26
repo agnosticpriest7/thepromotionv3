@@ -483,7 +483,7 @@ const SPRITE_ROWS=[
 "..OJjJWTTWJjJO..","..NJJJWTTWJJJN..","...OPPPPPPPPO...","...OPPP..PPPO..."];
 /* ================= SPRITE ART ================= */
 const ART_PATH='Art/sprites/';
-const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','office_chair',
+const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
@@ -502,7 +502,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'sit_intern_down','sit_intern_up','sit_intern_side',
   'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right',
   'sit_brenda_down','sit_brenda_up','sit_brenda_left','sit_brenda_right',
-  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right'];
+  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right',
+  'sit_peggy_down','sit_peggy_up','sit_peggy_left','sit_peggy_right'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -550,7 +551,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h',
-  'chair_down','chair_up','chair_side','chair_side_left']);   // stall dividers + the seated-character chairs ship with a magenta bg
+  'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* The intern's seated poses are keyed the same way, but ALSO measured for their content bounding box
    (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
    the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
@@ -641,7 +642,7 @@ const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
-  cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140,
+  cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:64, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
@@ -785,7 +786,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in three steps:
    export the PNGs, list them in ART_FILES + SIT_PERSON, and add a line here. Unlisted faces fall back
    to the standing-sprite placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla'};   // 0 = you (intern), 1 = Sterling (CEO), 2 = Brenda (HR), 3 = Marla (HR)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -904,11 +905,22 @@ function bossSeatState(n){
    (hrMorning) before the rounds begin, facing down. The rest of HR roams, so this is the only HR seat;
    it just adds a little life at the start of the day. Matches hrMorning's spot + !hrSettled window. */
 function brendaSeatState(n){
-  if(!n||n.name!=='Brenda'||n.hrSettled||!n.alive||!n.onFloor||n.wentHome||n.gone)return null;
+  if(!n||n.name!=='Brenda'||n.hrSettled||!n.alive||n.wentHome||n.gone)return null;   // (onFloor is a boss-only flag — don't gate on it)
   const p={x:HR_OFFICE.x+((n.zone?1:-1)*Math.round(22*S)),y:HR_OFFICE.y};
   if(cdist(n,p)>=Math.round(30*S))return null;                     // only once she's arrived and settled (not walking there)
   const cyGround=Math.round(p.y+n.h/2);                            // her feet
   return {cx:p.x, cyGround, bx:Math.round(p.x-n.w/2), by:Math.round(cyGround-n.h)};
+}
+/* Peggy (reception) sits behind the front counter all day. Like the CEO: draw the seated composite,
+   then re-draw the desk over her lower body so she reads as sitting BEHIND the counter. Tunable. */
+let RECEPTION_SEAT_DX = 0;      // horizontal nudge of the seated receptionist from the desk centre
+let RECEPTION_SEAT_DY = -35;    // seat ground point relative to the desk's bottom anchor (negative = up/behind)
+function drawReceptionDesk(){ sprAt('reception_desk2',Math.round(110*S),Math.round(566*S),'reception_desk2'); }
+function peggySeatState(n){
+  if(!n||!n.receptionist||n.moving||!n.alive||n.wentHome||n.gone)return null;   // (onFloor is a boss-only flag — don't gate on it)
+  if(cdist(n,{x:Math.round(110*S),y:Math.round(500*S)})>=Math.round(46*S))return null;   // only when parked at her post
+  const cx=Math.round(110*S)+RECEPTION_SEAT_DX, cyGround=Math.round(566*S)+RECEPTION_SEAT_DY;
+  return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};
 }
 /* EMPTY CHAIRS. A chair is furniture: it stays at the seat when the occupant steps away (break, a
    task, the CEO's lap). Seats whose owner is currently SEATED are skipped — drawSeated draws their
@@ -926,6 +938,11 @@ function drawDeskChairs(){
   if(boss&&boss.onFloor&&boss.alive&&!boss.wentHome&&!boss.gone&&!bossSeatState(boss)){
     drawChairOnly('down',Math.round(120*S)+CEO_SEAT_DX,Math.round(120*S)+CEO_SEAT_DY);
     drawCeoDesk();                                                      // re-draw the desk over the empty chair — it sits BEHIND it
+  }
+  const pegg=activeNPCs().find(n=>n.receptionist);                      // Peggy's chair stays if she steps away from the front desk
+  if(pegg&&pegg.alive&&!pegg.wentHome&&!pegg.gone&&!peggySeatState(pegg)){
+    drawChairOnly('down',Math.round(110*S)+RECEPTION_SEAT_DX,Math.round(566*S)+RECEPTION_SEAT_DY);
+    drawReceptionDesk();
   }
 }
 const sprites={};        // sprites[dept] = [frame0(idle), frame1(step L), frame2(step R)]
@@ -6184,9 +6201,9 @@ function drawLabels(){
   ctx.textAlign='left';
   /* Inline decor RE-PLACED for the new floor. Kitchen counter is now a real container
      (drawn by drawContainers), so it's not duplicated here. */
-  // reception desk (SW reception) — real sprite, fall back to a painted block
-  if(ok('reception_desk')){
-    sprAt('reception_desk',U(110),U(566),'reception_desk');
+  // reception desk (SW reception) — new chair-less counter (Peggy sits behind it); fall back to a painted block
+  if(ok('reception_desk2')){
+    drawReceptionDesk();
   } else {
     ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
   }
@@ -6361,6 +6378,7 @@ function drawNPC(n){
    if(!drewBat){
      const bs=bossSeatState(n);       // the CEO parked in his office
      const hs=bs?null:brendaSeatState(n);   // Brenda at her morning paperwork
+     const ps=(bs||hs)?null:peggySeatState(n);   // Peggy behind the reception counter
      if(bs){
        n.x=bs.bx; n.y=bs.by;          // move his box onto the seat so the gold bar / marks follow him
        drawSeated(n,'down',bs.cx,bs.cyGround);
@@ -6368,6 +6386,10 @@ function drawNPC(n){
      } else if(hs){
        n.x=hs.bx; n.y=hs.by;
        drawSeated(n,'down',hs.cx,hs.cyGround);
+     } else if(ps){
+       n.x=ps.bx; n.y=ps.by;
+       drawSeated(n,'down',ps.cx,ps.cyGround);
+       drawReceptionDesk();           // re-draw the counter over her lower body — she sits BEHIND it
      } else {
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
