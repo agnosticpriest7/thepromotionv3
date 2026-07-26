@@ -803,6 +803,11 @@ function seatPlaceholderLog(npc){
 /* Draw order is per-direction (that is WHY we layer instead of baking): for down/left/right the
    chair is behind the person (chair first, person over); for up the tall chair back must cover the
    person's lower body (person first, chair over). Explicit branch, never a global order. */
+/* the chair alone (no occupant) — a chair is furniture that stays put when the sitter steps away */
+function drawChairOnly(dir,cx,cyGround){
+  if(!isFinite(cx)||!isFinite(cyGround))return false;
+  return sprW(chairSpriteFor(dir),cx,cyGround,U1(SEAT_CHAIR_W));
+}
 function drawSeated(npc,dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
   const chairName=chairSpriteFor(dir);
@@ -811,7 +816,7 @@ function drawSeated(npc,dir,cx,cyGround){
   const aspect=(cim&&cim.naturalWidth>0)?(cim.naturalHeight/cim.naturalWidth):SEAT_CHAIR_ASPECT;
   const chairH=chairW*aspect;
   if(!isFinite(chairW)||chairW<=0||!isFinite(chairH)||chairH<=0)return false;
-  const drawChairLayer =()=>sprW(chairName,cx,cyGround,chairW);
+  const drawChairLayer =()=>drawChairOnly(dir,cx,cyGround);
   const drawPersonLayer=()=>drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH);
   if(dir==='up'){ drawPersonLayer(); drawChairLayer(); }
   else          { drawChairLayer(); drawPersonLayer(); }
@@ -890,6 +895,24 @@ function bossSeatState(n){
   if(cdist(n,{x:Math.round(120*S),y:Math.round(80*S)})>Math.round(220*S))return null;   // only when actually parked in his office
   const cx=Math.round(120*S)+CEO_SEAT_DX, cyGround=Math.round(120*S)+CEO_SEAT_DY;
   return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};           // bx/by move his box onto the seat so overlays follow
+}
+/* EMPTY CHAIRS. A chair is furniture: it stays at the seat when the occupant steps away (break, a
+   task, the CEO's lap). Seats whose owner is currently SEATED are skipped — drawSeated draws their
+   chair. Runs just before the NPC pass, so a person walking past their chair draws over it. */
+function drawDeskChairs(){
+  for(const d of desks){
+    if(!d.owner||d.mgrOffice)continue;                                  // no owner, or Dale's desk (its sprite has its own chair)
+    const owner=(d.owner==='you')?player:activeNPCs().find(n=>n.name===d.owner);
+    if(!owner||seatedDeskState(owner))continue;                         // gone / or currently sitting (composite draws the chair)
+    if(!inView(d.x,d.y,d.w,d.h))continue;
+    let seat; try{ seat=deskSeat(d); }catch(e){ continue; }
+    if(seat&&isFinite(seat.x)&&isFinite(seat.y))drawChairOnly(seatDirForDesk(d),seat.x,seat.y);
+  }
+  const boss=activeNPCs().find(n=>n.boss);                              // the CEO's chair stays while he laps the floor
+  if(boss&&boss.onFloor&&boss.alive&&!boss.wentHome&&!boss.gone&&!bossSeatState(boss)){
+    drawChairOnly('down',Math.round(120*S)+CEO_SEAT_DX,Math.round(120*S)+CEO_SEAT_DY);
+    drawCeoDesk();                                                      // re-draw the desk over the empty chair — it sits BEHIND it
+  }
 }
 const sprites={};        // sprites[dept] = [frame0(idle), frame1(step L), frame2(step R)]
 /* legs: rows 14-15. idle = both planted; step frames swing one leg forward/back */
@@ -6716,7 +6739,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
