@@ -816,6 +816,14 @@ function drawChairOnly(dir,cx,cyGround){
 function drawSeated(npc,dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
   const chairName=chairSpriteFor(dir);
+  /* A REGISTERED seated character (in SEAT_ART) whose chair or person art hasn't finished loading:
+     draw them standing at normal size until BOTH are ready, instead of the tiny placeholder / a
+     chair-less half-draw. This only bites during the first seconds of art load (async PNGs), and it
+     keeps the transition a single clean pop: standing -> seated. Faces with no art fall through to
+     the placeholder as before. */
+  if(SEAT_ART[charIndexFor(npc)] && (!ok(chairName) || !seatedPersonSpriteFor(npc,dir))){
+    if(drawChar(npc,charIndexFor(npc)))return true;
+  }
   const chairW=U1(SEAT_CHAIR_W);
   const cim=ART[chairName];
   const aspect=(cim&&cim.naturalWidth>0)?(cim.naturalHeight/cim.naturalWidth):SEAT_CHAIR_ASPECT;
