@@ -765,8 +765,9 @@ function drawChar(ent,idx,scaleTo){
    (the PNGs are square with padding, so we place the figure, not the canvas).
    All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
 // ---- tunables — eyeball on the TV, then fine-tune ----
-let SEAT_CHAIR_W    = 42;          // chair drawn width in U1 world units (independent of the person now)
+let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (independent of the person now)
 let SEAT_PERSON_H   = 100;         // seated person's drawn height in U1 units — INDEPENDENT of the chair (tune the two separately)
+let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -808,7 +809,8 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   const name=seatedPersonSpriteFor(npc,dir);
   if(!name){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
   const im=ART[name];
-  const scale=U1(SEAT_PERSON_H)/(im.naturalHeight||1);            // absolute person height (decoupled from chair size)
+  let scale=U1(SEAT_PERSON_H)/(im.naturalHeight||1);             // absolute person height (decoupled from chair size)
+  if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
   const bb=SIT_BBOX[name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
@@ -6655,7 +6657,7 @@ function drawSeatAnchorTest(){
     ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
     ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(15)));
   });
-  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
+  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H+'  SIDE '+SEAT_SIDE_SCALE,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
   const px=cam.x+U1(8), py=cam.y+U1(10);
   ctx.textAlign='left'; ctx.font='bold '+U1(11)+'px monospace';
   ctx.fillStyle='rgba(15,18,14,0.82)'; ctx.fillRect(Math.round(px-U1(4)),Math.round(py-U1(4)),U1(210),U1(15)*lines.length+U1(6));
