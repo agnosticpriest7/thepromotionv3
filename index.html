@@ -558,7 +558,8 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
 const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side',
   'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right',
   'sit_brenda_down','sit_brenda_up','sit_brenda_left','sit_brenda_right',
-  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right']);
+  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right',
+  'sit_peggy_down','sit_peggy_up','sit_peggy_left','sit_peggy_right']);
 const SIT_BBOX={};   // name -> content box {x,y,w,h} in source px; fallback = full canvas (harness / empty readback)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
