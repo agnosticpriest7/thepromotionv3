@@ -555,11 +555,10 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
 /* The intern's seated poses are keyed the same way, but ALSO measured for their content bounding box
    (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
    the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
-const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side',
-  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right',
-  'sit_brenda_down','sit_brenda_up','sit_brenda_left','sit_brenda_right',
-  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right',
-  'sit_peggy_down','sit_peggy_up','sit_peggy_left','sit_peggy_right']);
+/* Which sprites are seated-person art (magenta-keyed + content-bbox measured at load). DERIVED from
+   SEAT_ART (defined later; read lazily at image-onload time) so adding a character to SEAT_ART can't
+   silently miss the keying — a sprite is seated-person iff its name starts with a SEAT_ART basename. */
+function isSeatedPersonSprite(n){ return typeof SEAT_ART!=='undefined' && Object.values(SEAT_ART).some(b=>n.indexOf(b+'_')===0); }
 const SIT_BBOX={};   // name -> content box {x,y,w,h} in source px; fallback = full canvas (harness / empty readback)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
@@ -612,7 +611,7 @@ function keyAndMeasureSit(img,name){
 function loadArt(){
   ART_FILES.forEach(n=>{
     const im=new Image();
-    im.onload=()=>{ if(SIT_PERSON.has(n))ART[n]=keyAndMeasureSit(im,n); else if(COLORKEY.has(n))ART[n]=keyOutMagenta(im); artLoaded++;if(artLoaded>=artTotal)artReady=true;};
+    im.onload=()=>{ if(isSeatedPersonSprite(n))ART[n]=keyAndMeasureSit(im,n); else if(COLORKEY.has(n))ART[n]=keyOutMagenta(im); artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.onerror=()=>{artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.src=ART_PATH+n+'.png';
     ART[n]=im;
@@ -784,9 +783,9 @@ const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not load
    LEFT (chair_side_left) and a left-facing sitter needs it on the RIGHT (chair_side). */
 function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair_up':dir==='left'?'chair_side':'chair_side_left'; }
 /* sprite index -> seated-art basename. A character supplies sit_<base>_down/_up and EITHER a single
-   _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in three steps:
-   export the PNGs, list them in ART_FILES + SIT_PERSON, and add a line here. Unlisted faces fall back
-   to the standing-sprite placeholder. */
+   _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
+   list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
+   map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
 const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
