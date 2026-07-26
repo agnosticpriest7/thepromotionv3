@@ -4526,6 +4526,14 @@ function jumpToRank(rank){
   if(rank>=2)unlockSales();
   if(typeof syncMusicToRank==='function')syncMusicToRank(player.rank);
   refreshRanks(); if(typeof renderDeleg==='function')renderDeleg(); if(typeof renderTasks==='function')renderTasks();
+  /* The intro normally WALKS the player from the sealed entrance vestibule onto the floor; a Test
+     Game skips the intro (intro=null above), so without this the player is stranded at the door in
+     a walled box — no movement, no interactables (the "controls don't work" bug). Deposit them at
+     their own desk exactly the way endIntro() does, then unstick onto the nearest walkable tile. */
+  const myd=desks.find(d=>d.owner==='you');
+  if(myd){player.x=myd.x+myd.w+10;player.y=myd.y+myd.h+8;}
+  player.goal=null;player.path=null;player.wp=0;player.moving=false;player.animT=0;
+  unstickPlayer();
   logLine(`TEST GAME — you start as ${RANKS[player.rank]}.`,'a');
   toast(`Test game: ${RANKS[player.rank]}`);
 }
