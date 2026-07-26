@@ -900,6 +900,16 @@ function bossSeatState(n){
   const cx=Math.round(120*S)+CEO_SEAT_DX, cyGround=Math.round(120*S)+CEO_SEAT_DY;
   return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};           // bx/by move his box onto the seat so overlays follow
 }
+/* Brenda (HR) sits for her morning paperwork beat — HR sign in at the office and do ~15s of paperwork
+   (hrMorning) before the rounds begin, facing down. The rest of HR roams, so this is the only HR seat;
+   it just adds a little life at the start of the day. Matches hrMorning's spot + !hrSettled window. */
+function brendaSeatState(n){
+  if(!n||n.name!=='Brenda'||n.hrSettled||!n.alive||!n.onFloor||n.wentHome||n.gone)return null;
+  const p={x:HR_OFFICE.x+((n.zone?1:-1)*Math.round(22*S)),y:HR_OFFICE.y};
+  if(cdist(n,p)>=Math.round(30*S))return null;                     // only once she's arrived and settled (not walking there)
+  const cyGround=Math.round(p.y+n.h/2);                            // her feet
+  return {cx:p.x, cyGround, bx:Math.round(p.x-n.w/2), by:Math.round(cyGround-n.h)};
+}
 /* EMPTY CHAIRS. A chair is furniture: it stays at the seat when the occupant steps away (break, a
    task, the CEO's lap). Seats whose owner is currently SEATED are skipped — drawSeated draws their
    chair. Runs just before the NPC pass, so a person walking past their chair draws over it. */
@@ -2852,17 +2862,17 @@ let intro=null;
    desk. POI fractions: CEO~0.22, HR~0.33, Asst-Mgr~0.58, kitchen~0.63, senior~0.74,
    sales~0.80, junior~0.94, desk 1.0. */
 const INTRO_BEATS=[
-  {at:0.00,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
-  {at:0.10,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.22,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
-  {at:0.33,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.45,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.58,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
-  {at:0.63,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.74,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
-  {at:0.80,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
-  {at:0.94,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
-  {at:1.00,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
+  {at:0.000,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
+  {at:0.101,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.221,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
+  {at:0.334,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.454,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.586,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
+  {at:0.635,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.748,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
+  {at:0.786,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
+  {at:0.943,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
+  {at:1.000,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
    -> past HR -> the bullpen -> your desk. Verified against the real nav grid — the middle
@@ -2871,12 +2881,15 @@ const INTRO_BEATS=[
 /* INTRO_ROUTE rebuilt for the overhauled floor (test/genintro.js): a walkable A*-verified
    loop from the intern desk up through the centre, past HR, across the top to the kitchen,
    then down to the sales bullpen. All 12 points verified standable. */
+/* Descent (waypoints past the top-right) rebuilt after the sales/bullpen walls moved — the old
+   descent clipped straight through the sales-room wall. Head (up the left + across the top) is the
+   original authored path; the tail is A*-verified walkable (test regen, 0 clips). Beat `at` fractions
+   below were re-derived so the dialogue still lands at each POI. */
 const INTRO_ROUTE=[
   {x:150,y:710},{x:150,y:650},{x:210,y:590},{x:210,y:510},{x:270,y:450},{x:270,y:250},
   {x:230,y:210},{x:490,y:210},{x:530,y:250},{x:750,y:250},{x:770,y:230},{x:1070,y:230},
-  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1150,y:550},{x:1150,y:610},{x:1130,y:590},
-  {x:1130,y:550},{x:990,y:550},{x:990,y:570},{x:970,y:570},{x:930,y:610},{x:890,y:610},
-  {x:870,y:630},{x:730,y:630},
+  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1130,y:550},{x:1050,y:550},{x:1050,y:610},
+  {x:1050,y:550},{x:950,y:550},{x:730,y:630},
 ];
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){
@@ -6347,10 +6360,14 @@ function drawNPC(n){
    }
    if(!drewBat){
      const bs=bossSeatState(n);       // the CEO parked in his office
+     const hs=bs?null:brendaSeatState(n);   // Brenda at her morning paperwork
      if(bs){
        n.x=bs.bx; n.y=bs.by;          // move his box onto the seat so the gold bar / marks follow him
        drawSeated(n,'down',bs.cx,bs.cyGround);
        drawCeoDesk();                 // re-draw the desk over his lower body — he sits BEHIND it
+     } else if(hs){
+       n.x=hs.bx; n.y=hs.by;
+       drawSeated(n,'down',hs.cx,hs.cyGround);
      } else {
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
