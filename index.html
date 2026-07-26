@@ -764,12 +764,15 @@ function drawChar(ent,idx,scaleTo){
    cushion, and sized off the chair — then anchored by the person art's CONTENT box
    (the PNGs are square with padding, so we place the figure, not the canvas).
    All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
-// ---- tunables — eyeball on the TV, then fine-tune (prototype landed near these) ----
+// ---- tunables — eyeball on the TV, then fine-tune ----
 let SEAT_CHAIR_W    = 52;          // chair drawn width in U1 world units (desk-ish)
-let SEAT_PERSON_SCALE = 0.85;      // person canvas height as a fraction of the chair height
+let SEAT_PERSON_SCALE = 1.0;       // person canvas height as a fraction of the chair height (bigger = fills the chair more)
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
+let SEAT_UP_EXTRA   = 0.30;        // EXTRA upward lift for the away-facing (up) sitter so their head clears the tall chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
-function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair_up':dir==='left'?'chair_side_left':'chair_side'; }
+/* The person art faces RIGHT (back on the left), so a right-facing sitter needs the backrest on the
+   LEFT (chair_side_left) and a left-facing sitter needs it on the RIGHT (chair_side). */
+function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair_up':dir==='left'?'chair_side':'chair_side_left'; }
 /* only the intern face (sprite 0) has real seated art so far; null => draw a placeholder */
 function seatedPersonSpriteFor(npc,dir){
   if(charIndexFor(npc)!==0)return null;
@@ -799,7 +802,8 @@ function drawSeated(npc,dir,cx,cyGround){
   return true;
 }
 function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
-  const seatY=cyGround - chairH*SEAT_OFFSET_RATIO;         // the person's placement point, lifted onto the cushion
+  let seatY=cyGround - chairH*SEAT_OFFSET_RATIO;           // the person's placement point, lifted onto the cushion
+  if(dir==='up')seatY-=chairH*SEAT_UP_EXTRA;              // away-facing: lift more so the head clears the tall chair back
   if(!isFinite(seatY))return;
   const name=seatedPersonSpriteFor(npc,dir);
   if(!name){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
@@ -6651,7 +6655,7 @@ function drawSeatAnchorTest(){
     ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
     ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(15)));
   });
-  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_SCALE '+SEAT_PERSON_SCALE,'OFFSET_RATIO '+SEAT_OFFSET_RATIO,'intern = real art · others = placeholder'];
+  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_SCALE '+SEAT_PERSON_SCALE,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
   const px=cam.x+U1(8), py=cam.y+U1(10);
   ctx.textAlign='left'; ctx.font='bold '+U1(11)+'px monospace';
   ctx.fillStyle='rgba(15,18,14,0.82)'; ctx.fillRect(Math.round(px-U1(4)),Math.round(py-U1(4)),U1(210),U1(15)*lines.length+U1(6));
