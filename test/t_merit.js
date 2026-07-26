@@ -18,14 +18,15 @@ P.rank = 5; C.ceoDone = false; C.goodDays = 0;   // MANAGER — the merit path
 const origHT = S.healthToday, origBH = S.branchHealth;
 // The 5pm floor is empty, so the instantaneous reading is 0; the all-day average was a good day.
 S.branchHealth = () => 0;   // what the merit path used to (wrongly) read
-S.healthToday = () => 95;   // the average the day should be judged on (>= MERIT_TARGET 70)
+S.healthToday = () => 95;   // the day AVERAGE (>= MERIT_TARGET 80)
 
 // sanity: the override reaches scoreTheDay's internal call (global function-decl rebinding)
 ck('setup: healthToday()=95 (good day), branchHealth()=0 (empty 5pm floor)', S.healthToday() === 95 && S.branchHealth() === 0);
 
 const scored = S.scoreTheDay();
-ck('merit day is scored on the AVERAGE (95), not the 5pm instant (0)', scored === 95, `scored=${scored}`);
-ck('good-day streak advances (would stay 0 if judged on the 0 instant)', C.goodDays === 1, 'goodDays=' + C.goodDays);
+ck('merit day is scored on the AVERAGE (95), not the 5pm instant (0) — a burst does not count', scored === 95, `scored=${scored}`);
+ck('a single day in order marks the day good (would stay 0 if judged on the 0 instant)', C.goodDays === 1, 'goodDays=' + C.goodDays);
+ck('ONE day at the target now sets meritReady (was: 3-day streak)', C.meritReady === true);
 
 // a BAD day by the average resets the streak (also driven by the average, not the instant)
 C.goodDays = 2;
