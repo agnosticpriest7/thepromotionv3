@@ -499,7 +499,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
      three seated poses (person-only; left reuses the right pose, mirrored in code). Composited by
      drawSeated(); missing files just fall back (onerror) to the standing sprite. */
   'chair_down','chair_up','chair_side','chair_side_left',
-  'sit_intern_down','sit_intern_up','sit_intern_side'];
+  'sit_intern_down','sit_intern_up','sit_intern_side',
+  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -551,7 +552,8 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
 /* The intern's seated poses are keyed the same way, but ALSO measured for their content bounding box
    (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
    the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
-const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side']);
+const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side',
+  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right']);
 const SIT_BBOX={};   // name -> content box {x,y,w,h} in source px; fallback = full canvas (harness / empty readback)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
@@ -775,11 +777,23 @@ const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not load
 /* The person art faces RIGHT (back on the left), so a right-facing sitter needs the backrest on the
    LEFT (chair_side_left) and a left-facing sitter needs it on the RIGHT (chair_side). */
 function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair_up':dir==='left'?'chair_side':'chair_side_left'; }
-/* only the intern face (sprite 0) has real seated art so far; null => draw a placeholder */
+/* sprite index -> seated-art basename. A character supplies sit_<base>_down/_up and EITHER a single
+   _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in three steps:
+   export the PNGs, list them in ART_FILES + SIT_PERSON, and add a line here. Unlisted faces fall back
+   to the standing-sprite placeholder. */
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling'};   // 0 = you (intern), 1 = Mr. Sterling (CEO)
+/* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
+   sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
-  if(charIndexFor(npc)!==0)return null;
-  const name=(dir==='down')?'sit_intern_down':(dir==='up')?'sit_intern_up':'sit_intern_side';  // side serves left+right
-  return ok(name)?name:null;
+  const base=SEAT_ART[charIndexFor(npc)];
+  if(!base)return null;
+  if(dir==='down') return ok(base+'_down')?{name:base+'_down',mirror:false}:null;
+  if(dir==='up')   return ok(base+'_up')  ?{name:base+'_up',  mirror:false}:null;
+  if(dir==='right')return ok(base+'_right')?{name:base+'_right',mirror:false}
+                        :(ok(base+'_side')?{name:base+'_side', mirror:false}:null);
+  /* left: prefer real left art, else mirror the right-facing 'side' */
+  if(ok(base+'_left'))return {name:base+'_left',mirror:false};
+  return ok(base+'_side')?{name:base+'_side',mirror:true}:null;
 }
 const SEAT_PLACEHOLDER_SEEN=new Set();
 function seatPlaceholderLog(npc){
@@ -807,20 +821,20 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   let seatY=cyGround - chairH*SEAT_OFFSET_RATIO;           // the person's placement point, lifted onto the cushion
   if(dir==='up')seatY-=chairH*SEAT_UP_EXTRA;              // away-facing: lift more so the head clears the tall chair back
   if(!isFinite(seatY))return;
-  const name=seatedPersonSpriteFor(npc,dir);
-  if(!name){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
-  const im=ART[name];
+  const sp=seatedPersonSpriteFor(npc,dir);
+  if(!sp){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
+  const im=ART[sp.name], mirror=sp.mirror;
   let scale=U1(SEAT_PERSON_H)/(im.naturalHeight||1);             // absolute person height (decoupled from chair size)
   if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
-  const bb=SIT_BBOX[name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
+  const bb=SIT_BBOX[sp.name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
-  // side poses: nudge the sitter FORWARD (the way they face) so they sit at the front of the seat and
-  // their legs hang over the edge. The left mirror inverts sign for us, so +shift serves both.
-  const sideShift=(dir==='left'||dir==='right')?U1(SEAT_SIDE_SHIFT):0;
-  const px=cx+sideShift-bbCx*scale, py=seatY-bbBot*scale;         // land the content box's bottom-centre on the seat
+  // side poses: nudge the sitter FORWARD (toward their facing) so they sit at the front of the seat,
+  // legs over the edge. A mirrored draw reflects screen-x about cx, so flip the sign when mirroring.
+  const s=(dir==='right')?U1(SEAT_SIDE_SHIFT):(dir==='left')?-U1(SEAT_SIDE_SHIFT):0;
+  const px=cx-bbCx*scale+(mirror?-s:s), py=seatY-bbBot*scale;     // land the content box's bottom-centre on the seat
   if(!isFinite(px)||!isFinite(py)||!isFinite(drawW)||!isFinite(drawH)||drawW<=0||drawH<=0)return;
-  if(dir==='left'){                                               // only a right pose exists — mirror it about cx
+  if(mirror){                                                    // a right-facing 'side' sprite flipped for the left direction
     ctx.save(); ctx.translate(Math.round(cx),0); ctx.scale(-1,1); ctx.translate(-Math.round(cx),0);
     ctx.drawImage(im,Math.round(px),Math.round(py),Math.round(drawW),Math.round(drawH));
     ctx.restore();
@@ -6637,10 +6651,10 @@ function drawPropMap(){
     .forEach(([t,n])=>{ if(t)chip(t.x+t.w/2, t.y+t.h/2, n, '#66d078'); });
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
-/* SEAT ANCHOR TEST (dev): drop the intern (sprite 0) into a chair in all four directions near the
-   camera, over a ground marker, with the live tunables printed — so seat alignment (hips on the
-   cushion, no float/sink, all four facings) can be eyeballed on the TV before generating 20 more
-   seated characters. Toggle from Settings ("Seat anchor test") or the K key. Rendering only. */
+/* SEAT ANCHOR TEST (dev): one row per character that has real seated art (SEAT_ART), each dropped
+   into a chair in all four directions over a ground marker, with the live tunables printed — so seat
+   alignment (hips on the cushion, no float/sink, all four facings) can be eyeballed on the TV.
+   Toggle from Settings ("Seat anchor test") or the K key. Rendering only. */
 let seatTest=false;
 function toggleSeatTest(){
   seatTest=!seatTest;
@@ -6648,20 +6662,24 @@ function toggleSeatTest(){
   if(seatTest)try{ console.log('[seat] anchor test ON — SEAT_CHAIR_W='+SEAT_CHAIR_W+' SEAT_PERSON_H='+SEAT_PERSON_H+' SEAT_OFFSET_RATIO='+SEAT_OFFSET_RATIO+' SEAT_UP_EXTRA='+SEAT_UP_EXTRA); }catch(e){}
 }
 function drawSeatAnchorTest(){
-  const dummy={name:'you',sprite:0,x:0,y:0,w:U1(24),h:U1(40)};
-  const vw=VW/ZOOM, vh=VH/ZOOM;
-  const baseY=cam.y+vh*0.55, gap=U1(88), cx0=cam.x+vw*0.5;
-  const spots=[['down',cx0-gap*1.5],['up',cx0-gap*0.5],['left',cx0+gap*0.5],['right',cx0+gap*1.5]];
+  const vw=VW/ZOOM, vh=VH/ZOOM, gap=U1(88), cx0=cam.x+vw*0.5;
+  const cast=Object.keys(SEAT_ART).map(k=>({idx:+k, base:SEAT_ART[k].replace(/^sit_/,'')}));
   ctx.save();
-  spots.forEach(([dir,gx])=>{
-    if(!isFinite(gx))return;
-    ctx.strokeStyle='rgba(255,80,80,0.9)'; ctx.lineWidth=1;   // the shared ground line
-    ctx.beginPath(); ctx.moveTo(Math.round(gx-U1(16)),Math.round(baseY)); ctx.lineTo(Math.round(gx+U1(16)),Math.round(baseY)); ctx.stroke();
-    drawSeated(dummy,dir,gx,baseY);
-    ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
-    ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(15)));
+  cast.forEach((c,ri)=>{
+    const baseY=cam.y+vh*(0.40+ri*0.42);                     // one row per character with real art
+    const dummy={name:'seat-test',sprite:c.idx,x:0,y:0,w:U1(24),h:U1(40)};
+    ctx.fillStyle='#8fd0ff'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
+    ctx.fillText(c.base.toUpperCase(), Math.round(cx0-gap*2.0), Math.round(baseY-U1(20)));
+    [['down',cx0-gap*1.5],['up',cx0-gap*0.5],['left',cx0+gap*0.5],['right',cx0+gap*1.5]].forEach(([dir,gx])=>{
+      if(!isFinite(gx))return;
+      ctx.strokeStyle='rgba(255,80,80,0.9)'; ctx.lineWidth=1;   // the shared ground line
+      ctx.beginPath(); ctx.moveTo(Math.round(gx-U1(16)),Math.round(baseY)); ctx.lineTo(Math.round(gx+U1(16)),Math.round(baseY)); ctx.stroke();
+      drawSeated(dummy,dir,gx,baseY);
+      ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(10)+'px monospace'; ctx.textAlign='center';
+      ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(14)));
+    });
   });
-  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H,'SIDE x'+SEAT_SIDE_SCALE+'  SIDE_SHIFT '+SEAT_SIDE_SHIFT,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'intern = real art · others = placeholder'];
+  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_H '+SEAT_PERSON_H,'SIDE x'+SEAT_SIDE_SCALE+'  SIDE_SHIFT '+SEAT_SIDE_SHIFT,'OFFSET_RATIO '+SEAT_OFFSET_RATIO+'  UP_EXTRA '+SEAT_UP_EXTRA,'a row per character with real seated art'];
   const px=cam.x+U1(8), py=cam.y+U1(10);
   ctx.textAlign='left'; ctx.font='bold '+U1(11)+'px monospace';
   ctx.fillStyle='rgba(15,18,14,0.82)'; ctx.fillRect(Math.round(px-U1(4)),Math.round(py-U1(4)),U1(210),U1(15)*lines.length+U1(6));
