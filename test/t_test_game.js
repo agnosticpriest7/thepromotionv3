@@ -9,6 +9,15 @@ const ck = (n, c, x) => { console.log(`  ${c ? 'PASS' : 'FAIL'}  ${n}${x ? '  ['
 function fresh() { const w = createWorld({ seed: 7 }); w.startNewGame(0); let f = 0; while (f < 1500) { w.run(30); f += 30; } return w; }
 const myDesk = G => G.desks.find(d => d.owner === 'you');
 const daleAlive = G => G.NPCS.some(n => n.mgr && n.alive);
+// jumpToRank skips the intro, so it must itself deposit the player AT their new desk on a walkable
+// tile — not leave them stranded at the sealed entrance vestibule (the "controls don't work" bug).
+// Pre-fix the player kept their old (intern-nook) position, ~far from a promoted desk; this catches it.
+const seatedAtDesk = (S, G) => {
+  const d = myDesk(G); if (!d) return false;
+  const dist = Math.hypot(G.player.x - (d.x + d.w / 2), G.player.y - (d.y + d.h / 2));
+  const stuck = typeof S.playerStuck === 'function' ? S.playerStuck() : false;
+  return !stuck && dist < 240;   // within a few tiles of their own desk, on the floor
+};
 
 // --- each worker rank seats the player at the right tier, and the floor stays legal ---
 for (const [r, tier] of [[1, 0], [2, 1], [3, 2]]) {
@@ -16,6 +25,7 @@ for (const [r, tier] of [[1, 0], [2, 1], [3, 2]]) {
   S.jumpToRank(r);
   const d = myDesk(G);
   ck(`jumpToRank(${r}) → rank ${r}, seated in a tier-${tier} desk (out of the intern nook)`, G.player.rank === r && !!d && (d.tier | 0) === tier && d.intern !== true, d ? 'tier ' + (d.tier | 0) : 'no desk');
+  ck(`  … the player is put AT that desk (not stranded at the door)`, seatedAtDesk(S, G), `xy=[${Math.round(G.player.x)},${Math.round(G.player.y)}]`);
   const before = w.stats.seatViolations; w.run(3000);
   ck(`  … the floor stays consistent at rank ${r}`, w.stats.seatViolations === before && G.gameOver === false && w.stats.throws === 0, w.stats.firstSeatViolation || '');
 }
@@ -26,6 +36,7 @@ for (const [r, tier] of [[1, 0], [2, 1], [3, 2]]) {
   S.jumpToRank(4);
   const d = myDesk(G);
   ck('jumpToRank(4) → ASSISTANT MANAGER in the asst office (youTier -1)', G.player.rank === 4 && !!d && d.asstOffice === true && S.youTier() === -1);
+  ck('  … the player is put AT the asst office desk (not stranded at the door)', seatedAtDesk(S, G), `xy=[${Math.round(G.player.x)},${Math.round(G.player.y)}]`);
   ck('Dale is still present at AM — the loyalty arc is reachable', daleAlive(G) === true);
   ck('the delegation verb is active at AM', S.delegActive() === true);
   const before = w.stats.seatViolations; w.run(3000);
@@ -38,6 +49,7 @@ for (const [r, tier] of [[1, 0], [2, 1], [3, 2]]) {
   S.jumpToRank(5);
   const d = myDesk(G);
   ck('jumpToRank(5) → MANAGER in the corner office (youTier -1)', G.player.rank === 5 && !!d && d.mgrOffice === true && S.youTier() === -1);
+  ck('  … the player is put AT the corner office desk (not stranded at the door)', seatedAtDesk(S, G), `xy=[${Math.round(G.player.x)},${Math.round(G.player.y)}]`);
   ck('Dale is gone and the manager chair is yours (mgrGone)', daleAlive(G) === false && G.career.mgrGone === true);
   // the merit route is now reachable: a day at MERIT_TARGET sets meritReady -> the CEO gate opens
   const oHT = S.healthToday; S.healthToday = () => 90; S.scoreTheDay(); S.healthToday = oHT;
