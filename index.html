@@ -500,7 +500,9 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
      drawSeated(); missing files just fall back (onerror) to the standing sprite. */
   'chair_down','chair_up','chair_side','chair_side_left',
   'sit_intern_down','sit_intern_up','sit_intern_side',
-  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right'];
+  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right',
+  'sit_brenda_down','sit_brenda_up','sit_brenda_left','sit_brenda_right',
+  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -553,7 +555,9 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
    (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
    the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
 const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side',
-  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right']);
+  'sit_sterling_down','sit_sterling_up','sit_sterling_left','sit_sterling_right',
+  'sit_brenda_down','sit_brenda_up','sit_brenda_left','sit_brenda_right',
+  'sit_marla_down','sit_marla_up','sit_marla_left','sit_marla_right']);
 const SIT_BBOX={};   // name -> content box {x,y,w,h} in source px; fallback = full canvas (harness / empty readback)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
@@ -781,7 +785,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in three steps:
    export the PNGs, list them in ART_FILES + SIT_PERSON, and add a line here. Unlisted faces fall back
    to the standing-sprite placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling'};   // 0 = you (intern), 1 = Mr. Sterling (CEO)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla'};   // 0 = you (intern), 1 = Sterling (CEO), 2 = Brenda (HR), 3 = Marla (HR)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -6711,9 +6715,10 @@ function toggleSeatTest(){
 function drawSeatAnchorTest(){
   const vw=VW/ZOOM, vh=VH/ZOOM, gap=U1(88), cx0=cam.x+vw*0.5;
   const cast=Object.keys(SEAT_ART).map(k=>({idx:+k, base:SEAT_ART[k].replace(/^sit_/,'')}));
+  const TOP=0.26, BOT=0.90, SP=cast.length>1?(BOT-TOP)/(cast.length-1):0;   // spread rows to fit however many characters have art
   ctx.save();
   cast.forEach((c,ri)=>{
-    const baseY=cam.y+vh*(0.40+ri*0.42);                     // one row per character with real art
+    const baseY=cam.y+vh*(TOP+ri*SP);                        // one row per character with real art
     const dummy={name:'seat-test',sprite:c.idx,x:0,y:0,w:U1(24),h:U1(40)};
     ctx.fillStyle='#8fd0ff'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
     ctx.fillText(c.base.toUpperCase(), Math.round(cx0-gap*2.0), Math.round(baseY-U1(20)));
