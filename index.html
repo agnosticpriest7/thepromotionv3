@@ -777,6 +777,7 @@ let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (indep
 let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content height in U1 units (all poses/characters scale off their own down pose to match)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
+let SEAT_SIDE_CHAIR_SHIFT = 4;     // U1 units to tuck the CHAIR toward the side sitter's back (closes the back-to-backrest gap the forward shift opens)
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -812,7 +813,8 @@ function seatPlaceholderLog(npc){
 /* the chair alone (no occupant) — a chair is furniture that stays put when the sitter steps away */
 function drawChairOnly(dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
-  return sprW(chairSpriteFor(dir),cx,cyGround,U1(SEAT_CHAIR_W));
+  const sx=(dir==='right')?U1(SEAT_SIDE_CHAIR_SHIFT):(dir==='left')?-U1(SEAT_SIDE_CHAIR_SHIFT):0;   // tuck the chair toward the sitter's back on side poses
+  return sprW(chairSpriteFor(dir),cx+sx,cyGround,U1(SEAT_CHAIR_W));
 }
 function drawSeated(npc,dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
