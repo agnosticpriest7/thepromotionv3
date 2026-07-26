@@ -874,6 +874,19 @@ function seatDirForDesk(d){
   if(a==='cubicle_desk_right')return 'right';
   return 'down';   // cubicle_desk + manager/assistant/exec desks face down
 }
+/* THE CEO AT HIS DESK. Sterling (the boss) is not a desk-owning worker, so he gets his own seat: he
+   renders seated behind his chair-less executive desk, facing down, whenever he is parked in his
+   office (not out on his daily lap). drawNPC re-draws the desk OVER his lower body so he reads as
+   sitting behind it. Both offsets are tunable — nudge on the TV. */
+let CEO_SEAT_DX = 0;     // horizontal nudge of the seated CEO from the desk centre (world px)
+let CEO_SEAT_DY = -70;   // seat ground point relative to the desk's bottom anchor (negative = up/behind the desk)
+function drawCeoDesk(){ sprW('ceo_desk',Math.round(120*S),Math.round(120*S),U1(Math.round(ART_W.manager_desk*0.9))); }
+function bossSeatState(n){
+  if(!n||!n.boss||n.lapping||!n.onFloor||!n.alive||n.wentHome||n.gone)return null;
+  if(cdist(n,{x:Math.round(120*S),y:Math.round(80*S)})>Math.round(220*S))return null;   // only when actually parked in his office
+  const cx=Math.round(120*S)+CEO_SEAT_DX, cyGround=Math.round(120*S)+CEO_SEAT_DY;
+  return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};           // bx/by move his box onto the seat so overlays follow
+}
 const sprites={};        // sprites[dept] = [frame0(idle), frame1(step L), frame2(step R)]
 /* legs: rows 14-15. idle = both planted; step frames swing one leg forward/back */
 const LEG_FRAMES=[
@@ -6289,7 +6302,7 @@ function drawNPC(n){
    /* Mid-swing at the printer, hold the body steady — the swing sheet IS the animation, and
       the rampage vibration layered on top just made it read as noise. */
    if(meltEvent&&meltEvent.printerMode&&meltEvent.n===n&&n.batFrame!=null){sh=0;jit=0;}
-   const ox=n.x; n.x+=sh+jit;
+   const ox=n.x, oy=n.y; n.x+=sh+jit;
    /* Printer-meltdown victim mid-swing: draw their bat sheet frame instead of the normal
       character sprite. Falls through to the usual draw if the sheet didn't load or they
       haven't started swinging yet. */
@@ -6302,11 +6315,18 @@ function drawNPC(n){
      }
    }
    if(!drewBat){
-     const seat=seatedDeskState(n);   // at their desk during work? draw the chair+seated-person composite instead
-     if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
-     else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
+     const bs=bossSeatState(n);       // the CEO parked in his office
+     if(bs){
+       n.x=bs.bx; n.y=bs.by;          // move his box onto the seat so the gold bar / marks follow him
+       drawSeated(n,'down',bs.cx,bs.cyGround);
+       drawCeoDesk();                 // re-draw the desk over his lower body — he sits BEHIND it
+     } else {
+       const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
+       if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
+       else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
+     }
    }
-   n.x=ox;}
+   n.x=ox; n.y=oy;}
   if(n.mgr){ctx.fillStyle='#c9a24a';ctx.fillRect(n.x+2,n.y-3,n.w-4,2);}
   /* the VP's gold bar used to be drawn at the top of the 29px collision box — which is
      now the middle of a 61px sprite, i.e. across his face. Everything overhead is measured
@@ -6605,7 +6625,7 @@ function drawContainers(){
     /* no name labels on containers (chests / shelves / lockers / fridge / vending) — the sprites read on their own */
   }
   /* CEO's executive office (top-left glass office): desk + furnishings */
-  sprW('ceo_desk',Math.round(120*S),Math.round(120*S),U1(Math.round(ART_W.manager_desk*0.9)));   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged)
+  drawCeoDesk();   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged). Re-drawn over the seated CEO in drawNPC.
   sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
   sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
   sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
