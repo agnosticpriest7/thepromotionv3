@@ -1175,7 +1175,10 @@ const DRAWER_CAP=6;      // HR searches this
 const HIDDEN_CAP=4;      // taped behind the modesty panel. HR does not find this.
 const STASH_CAP=HIDDEN_CAP;
 let auditMin=0, audited=false;
-function scheduleAudit(){auditMin=rand(9*60,15.5*60);audited=false;}
+function scheduleAudit(){auditMin=rand(9*60,15.5*60);audited=false;
+  if(career.auditTipoff){career.auditTipoff=false;   // a cashed tip-off: your favour pays off — you know when it's coming
+    logLine(`A quiet word from a friend: there’s a desk audit coming around ${fmtTime(auditMin)}. Clean your drawer before then.`,'a');
+    toast(`Tip-off: desk audit ~${fmtTime(auditMin)}`);}}
 let drillPending=false, drillMin=0;
 function scheduleDrill(){drillPending=Math.random()<0.18;drillMin=rand(9*60,15*60);}
 function assembleAtElevator(){
@@ -2340,6 +2343,11 @@ function npcLeaving(n){
   const jobs=(typeof deleg!=='undefined')?deleg.q.filter(t=>t.state==='assigned'&&t.to===n.name):[];
   if(jobs.length){jobs.forEach(t=>{t.state='miss';delegDemerit(0.5,'the worker you gave it to is gone');});logLine(`${jobs.length} job${jobs.length>1?'s':''} you handed ${who} leaves with them — a miss.`,'w');renderDeleg&&renderDeleg();}
   if(career.championed&&career.championed.includes(n.name)){career.championed=career.championed.filter(x=>x!==n.name);logLine(`${who} is gone — whatever you were doing to move them along is settled now.`,'t');}
+  if(career.favors&&career.favors[n.name]){                        // the favours you did for them leave with them — no return (§5)
+    const fv=career.favors[n.name];
+    if((fv.n||0)>0&&(!fv.reward||!fv.given))logLine(`The favours you did for ${who} go out the door with them. No one to collect from now.`,'w');
+    delete career.favors[n.name];
+  }
   if(typeof pendingHires!=='undefined')pendingHires.forEach(h=>{if(h.cand&&h.cand.feudTarget===n.name)h.cand.feudTarget=null;});   // a candidate's "bad blood" points at a named worker — dead when they leave
   if(typeof hireSlate!=='undefined'&&hireSlate)hireSlate.cands.forEach(c=>{if(c.feudTarget===n.name)c.feudTarget=null;if(c.knownBy===n.name)c.knownBy=null;});
   if(n.rival)pickNewRival();
@@ -4346,7 +4354,7 @@ function advanceClock(dt){
     delegExpireDue();   // jobs from the block that just ended, never handed out, are misses
     logLine(`— ${ph} —`,'t');
     if(!intro){playShiftPrinter();toast(`— ${ph} —`);}
-    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();}
+    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();maybeOfferFavor();}
     if(lastPhase==='Clock-In'&&!phaseCred['Clock-In'])addSuspicion(6,'Late clock-in noted');
     if(lastPhase==='Meeting'&&!meetingCredited)missMeeting();
     if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase)){
@@ -4563,7 +4571,9 @@ function catfishItems(d,own,present){
     act:()=>startAct(6,'Typing as somebody else',()=>sendCatfishEmail(d,own))}];
 }
 function sendCatfishEmail(d,own){
-  const seen=seenByAnyone();
+  const perk=career.favors[d.owner];                              // machine-access favour: THIS person opened their desk to you, unwatched
+  const freeMachine=!!(perk&&perk.reward==='machine'&&perk.given&&perk.armed);
+  const seen=!freeMachine&&seenByAnyone();
   if(seen){addSuspicion(30,'HR caught you on someone else\u2019s computer');logLine('HR saw you at a machine that is not yours. That was close.','b');return;}
   /* The "three DIFFERENT machines" rule is the whole point of the fiction. Enforce it
      here, where the state changes — not only in the menu that offers the option. */
@@ -4575,7 +4585,8 @@ function sendCatfishEmail(d,own){
   catfish.emailsSent++;
   catfish.usedDesks.push(d.owner);
   SFX.craft();
-  addSuspicion(6,'Logged in as someone else, unseen');
+  if(freeMachine){perk.armed=false;logLine(`You used ${d.owner.split(' ')[0]}’s machine — the one they opened for you. No eyes on it, no trace.`,'g');}
+  else addSuspicion(6,'Logged in as someone else, unseen');
   const lines=[
     `You wrote to Sterling as ${d.owner.split(' ')[0]}: flattering, familiar, a little too warm. Before you logged out you set a rule on their mailbox — every reply from Sterling forwards to you, then deletes itself. ${d.owner.split(' ')[0]} will never see a word of it.`,
     `Another message to Sterling from ${d.owner.split(' ')[0]}\u2019s account. The forwarding rule is holding: his replies land in YOUR inbox and vanish from theirs. He is writing back quickly now.`,
@@ -4870,7 +4881,9 @@ function daleFavorItems(n){
   return [{label:f.taskLabel,risk:'time you will never get back',act:()=>startAct(s.secs||6,'Being a good friend',()=>completeDaleFavor(),n)}];
 }
 function updateRank(){tryPromote();}
-const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0,championed:[]};
+const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0,championed:[],
+  favors:{},          // per-person favour track: name -> {n, reward, given, armed} — favours you do for someone accumulate; at a threshold they owe you a one-time VERB. Player-held, saved (career is cloned whole), swept by npcLeaving.
+  auditTipoff:false}; // a cashed tip-off perk (paranoid's favour): the next desk audit is announced early. Not person-tied once given.
 /* the day's ledger — reset every morning, read out every evening */
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
 function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
@@ -5418,6 +5431,15 @@ function delegResolve(t,w){
     if(deleg.done>=DELEG_TARGET&&!career.mgrGone)delegMeritMet();   // the AM->Manager gate
     return 'clean';
   }
+  {const fv=career.favors[w.name];                                  // a favour they owe you: one job outside their lane, done clean
+   if(fv&&fv.reward==='deleg'&&fv.given&&fv.armed){
+     fv.armed=false;
+     t.state='done';deleg.done++;
+     w.stress=clamp(w.stress-4,0,100);
+     logLine(`${w.name.split(' ')[0]} took a job outside their lane and just… handled it. The favour they owed you, paid. (${deleg.done}/${DELEG_TARGET})`,'g');
+     if(deleg.done>=DELEG_TARGET&&!career.mgrGone)delegMeritMet();
+     return 'clean';
+   }}
   switch(w.ptype){
     case 'zealot':   // never refuses; takes work they can't hold, and pays for it in stress
       t.state='done-unclean';w.stress=clamp(w.stress+DELEG_BOTCH_STRESS,0,100);
@@ -7309,9 +7331,14 @@ function missionItems(n){
       out.push({label:`(${mine.kind}) job on ${mine.target.split(' ')[0]} — go do it`,disabled:true});
     }
     out.push({label:'Turn them down',risk:'friendship −',act:()=>declineMission(mine)});
-  } else {
-    out.push({label:'Ask what they need (favor / job)',risk:'friendship +',act:()=>offerMission(n)});
   }
+  // ANTI-FARMING: there is deliberately no "ask what they need" here — errands arrive on the world's
+  // schedule (maybeOfferFavor), so you can't farm a track by clearing an inbox on demand.
+  // A favour they OWE you (the per-person track hit its threshold): cash it in, once.
+  {const fv=career.favors[n.name];
+   if(fv&&fv.reward&&!fv.given){
+     out.push({label:`Call in the favour — ${FAVOR_REWARD_LABEL[fv.reward]}`,risk:'one-time, only from them',hot:true,act:()=>cashFavor(n)});
+   }}
   // if someone put a hit out on THIS person, you can warn them
   against.forEach(m=>{
     out.push({label:`Tell them ${m.who.split(' ')[0]} asked you to ${m.kind} them`,risk:'BETRAY the asker',hot:true,act:()=>betrayMission(m)});
@@ -7339,6 +7366,83 @@ function missionAsk(m){
     case 'intel': return `Figure out what makes ${t} tick, would you? I want to know who I'm dealing with.`;
   }
   return 'Do me a favor?';
+}
+/* ===== THE FAVOUR TRACK — favours you do for ONE person accumulate; at a threshold they owe you a
+   real, one-time favour back, in the shape of their personality. Player-held state (career.favors),
+   saved with career, swept by npcLeaving. ANTI-FARMING: errands are NOT requestable on demand — they
+   arrive on the world's schedule (maybeOfferFavor, per work phase). One payoff per person, ever. ===== */
+const FAVOR_THRESHOLD=3;              // completed favours for one person before they owe you back (a dial)
+const FAVOR_ARRIVE_CHANCE=0.5;       // per-work-phase chance a coworker comes to YOU with an errand
+const FAVOR_REWARD_BY_PTYPE={zealot:'deleg',climber:'machine',paranoid:'tipoff',peacock:'alibi',socialite:'dirt'};
+const FAVOR_REWARD_LABEL={
+  alibi:'they vouch for you — suspicion wiped',
+  dirt:'they let slip dirt on someone',
+  machine:'their machine, once, unwatched',
+  tipoff:'a heads-up before the next audit',
+  deleg:'they take one job outside their lane, clean'
+};
+function favorEntry(name){ if(!career.favors[name])career.favors[name]={n:0,reward:null,given:false,armed:false}; return career.favors[name]; }
+/* a completed favour for someone — accumulate, and at the threshold decide what they owe you */
+function creditFavor(n){
+  if(!n||n.mgr||n.boss||n.receptionist)return;                  // only the rank-and-file build a track
+  const fv=favorEntry(n.name); fv.n=(fv.n||0)+1;
+  if(fv.n>=FAVOR_THRESHOLD && !fv.reward){                       // one payoff per person, ever (reward set once)
+    fv.reward=FAVOR_REWARD_BY_PTYPE[n.ptype]||'alibi'; fv.given=false; fv.armed=false;
+    logLine(`${n.name.split(' ')[0]} has decided you’re one of the good ones. Go see them — they’ll do you a real favour.`,'g');
+    toast(`${n.name.split(' ')[0]} owes you a real favour.`);
+  }
+}
+/* cash the one-time favour — a VERB in the shape of who they are (menu item on that NPC) */
+function cashFavor(n){
+  const fv=career.favors[n.name]; if(!fv||!fv.reward||fv.given)return;
+  fv.given=true;
+  const first=n.name.split(' ')[0];
+  switch(fv.reward){
+    case 'alibi':
+      player.suspicion=0;
+      n.bubble={t:2.8,text:'You were with me all afternoon. Understood?'};
+      logLine(`${first} squares it with HR for you — loudly, the way only ${first} can. Your record is clean.`,'g');
+      toast('Alibi called in — suspicion wiped.'); break;
+    case 'dirt':{
+      const others=activeNPCs().filter(o=>isWorker(o)&&o!==n&&!o.gone&&!o.wentHome);
+      if(others.length){ const t=pick(others);
+        player.leverage.push({label:`what ${first} let slip about ${t.name}`,target:t.name,power:30,src:'favor'});
+        renderLeverage&&renderLeverage();
+        n.bubble={t:2.8,text:`Between us? ${t.name.split(' ')[0]}…`};
+        logLine(`${first} leans in and tells you something about ${t.name.split(' ')[0]} they shouldn’t. That’s leverage now.`,'g');
+        toast(`Dirt on ${t.name.split(' ')[0]} — straight from ${first}.`);
+      } else logLine(`${first} would dish, but there’s no one left worth the breath.`,'t');
+      break; }
+    case 'machine':
+      fv.armed=true;
+      n.bubble={t:2.8,text:'Need my desk? Screen’s unlocked. I saw nothing.'};
+      logLine(`${first} will let you use their machine once, unwatched — a catfish email that can’t trace back to you.`,'g');
+      toast(`${first}’s machine is yours, once.`); break;
+    case 'tipoff':
+      career.auditTipoff=true;
+      n.bubble={t:2.8,text:'When the audit’s coming, you hear it from me first.'};
+      logLine(`${first} will tip you off before the next desk audit — time to clean your drawer.`,'g');
+      toast('Tip-off armed — you’ll get a heads-up on the next audit.'); break;
+    case 'deleg':
+      fv.armed=true;
+      n.bubble={t:2.8,text:'Hand me anything. I’ll make it work, just this once.'};
+      logLine(`${first} will take one job outside their lane and get it done clean — no botch, whatever the fit. (Delegate it as Assistant Manager.)`,'g');
+      toast(`${first} will accept one mismatched job, clean.`); break;
+  }
+  if(typeof SFX!=='undefined'&&SFX.craft)SFX.craft();
+  if(typeof closeMenu==='function')closeMenu();
+}
+/* ANTI-FARMING: errands arrive on the WORLD's schedule, not on demand. Called at each work-phase
+   start. Scarce (a couple open at a time), and biased toward someone whose track is already building
+   so a payoff is reachable without you being able to farm 21 inboxes at will. */
+function maybeOfferFavor(){
+  if(missions.filter(m=>!m.done).length>=2)return;              // scarcity cap: at most two open errands floor-wide
+  if(Math.random()>=FAVOR_ARRIVE_CHANCE)return;
+  const ws=activeNPCs().filter(o=>isWorker(o)&&!o.gone&&!o.wentHome&&o.arrived!==false&&!missionFor(o.name));
+  if(!ws.length)return;
+  const building=ws.filter(o=>{const f=career.favors[o.name];return f&&!f.given&&(f.n||0)<FAVOR_THRESHOLD;});
+  const n=(building.length&&Math.random()<0.6)?pick(building):pick(ws);
+  offerMission(n);
 }
 function offerMission(n){
   if(missions.some(m=>m.who===n.name&&!m.done)){toast(`${n.name.split(' ')[0]} already asked you for something.`);return;}
@@ -7376,6 +7480,7 @@ function creditMission(m,exposure){today.favors++;
     checkAlly(asker);
   }
   SFX.task();
+  if(asker)creditFavor(asker);                    // this favour counts toward what they owe you back (per-person track)
   logLine(`Done: ${m.label}. ${m.who.split(' ')[0]} owes you.`,'g');
   toast(`${m.who.split(' ')[0]} friendship up.`);
   // discovery: the target may learn who did it AND who ordered it
@@ -8348,7 +8453,7 @@ logLine('Intern at Paper Supply Co. Rise on tasks — or sabotage rivals into me
    ============================================================================ */
 
 /* ---------- Store: the only code that knows where saves live -------------- */
-const SAVE_VERSION = 3, SAVE_SLOTS = 3;   // v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
+const SAVE_VERSION = 4, SAVE_SLOTS = 3;   // v4: per-person favour track (career.favors + auditTipoff). v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
 const Store = {
   key(s){ return 'promo:slot:' + s; },
   save(s, o){ try{ localStorage.setItem(this.key(s), JSON.stringify(o)); return true; }catch(e){ console.warn('save fail',e); return false; } },
