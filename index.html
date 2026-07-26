@@ -768,7 +768,7 @@ function drawChar(ent,idx,scaleTo){
    All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
 // ---- tunables — eyeball on the TV, then fine-tune ----
 let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (independent of the person now)
-let SEAT_PERSON_H   = 100;         // seated person's drawn height in U1 units — INDEPENDENT of the chair (tune the two separately)
+let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content height in U1 units (all poses/characters scale off their own down pose to match)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
@@ -824,10 +824,14 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   const sp=seatedPersonSpriteFor(npc,dir);
   if(!sp){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
   const im=ART[sp.name], mirror=sp.mirror;
-  let scale=U1(SEAT_PERSON_H)/(im.naturalHeight||1);             // absolute person height (decoupled from chair size)
+  const bb=SIT_BBOX[sp.name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
+  // Size every pose off THIS character's DOWN-pose CONTENT height, so figures render at a consistent
+  // size regardless of their source canvas (the intern is a padded 1254²; Sterling a tight 488×831).
+  const base=SEAT_ART[charIndexFor(npc)], refBB=base&&SIT_BBOX[base+'_down'];
+  const refH=(refBB&&refBB.h)||bb.h||im.naturalHeight||1;
+  let scale=U1(SEAT_PERSON_H)/refH;
   if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
-  const bb=SIT_BBOX[sp.name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
   // side poses: nudge the sitter FORWARD (toward their facing) so they sit at the front of the seat,
   // legs over the edge. A mirrored draw reflects screen-x about cx, so flip the sign when mirroring.
@@ -879,7 +883,7 @@ function seatDirForDesk(d){
    office (not out on his daily lap). drawNPC re-draws the desk OVER his lower body so he reads as
    sitting behind it. Both offsets are tunable — nudge on the TV. */
 let CEO_SEAT_DX = 0;     // horizontal nudge of the seated CEO from the desk centre (world px)
-let CEO_SEAT_DY = -70;   // seat ground point relative to the desk's bottom anchor (negative = up/behind the desk)
+let CEO_SEAT_DY = -35;   // seat ground point relative to the desk's bottom anchor (negative = up/behind the desk)
 function drawCeoDesk(){ sprW('ceo_desk',Math.round(120*S),Math.round(120*S),U1(Math.round(ART_W.manager_desk*0.9))); }
 function bossSeatState(n){
   if(!n||!n.boss||n.lapping||!n.onFloor||!n.alive||n.wentHome||n.gone)return null;
