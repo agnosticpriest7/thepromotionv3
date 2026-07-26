@@ -412,6 +412,7 @@
           <button class="setbtn" id="setSound">🔊 Sound effects: ON</button>
           <div class="volrow"><span>SFX volume</span><button class="volbtn" id="sVolDn">−</button><b id="sVolTxt">80%</b><button class="volbtn" id="sVolUp">+</button></div>
           <button class="setbtn" id="setPropMap">🔢 Prop map overlay: OFF</button>
+          <button class="setbtn" id="setSeatTest">🪑 Seat anchor test: OFF</button>
           <div class="phelp" style="margin-top:-4px">Numbers every prop (D=desks, C=shelves/cabinets, O=objects, T=tables) so you can call out which to swap. Also toggles with M / 0.</div>
           <button class="setbtn" id="restartBtn" style="background:#f7e7e4;border-color:#c0392b;color:#8f2a20;font-weight:700">⟲ RESTART GAME (day 1, from scratch)</button>
           <div class="phelp" id="restartHelp" style="margin-top:-4px">Wipes the current run. There is no save yet, so this is the same as a refresh.</div>
@@ -493,7 +494,12 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'printer_wreck',
   'bat_you','bat_sterling','bat_brenda','bat_marla','bat_peggy','bat_marcus','bat_priya','bat_chad',
   'bat_dana','bat_otis','bat_wren','bat_sana','bat_gil','bat_ramesh','bat_vera','bat_doug','bat_dale',
-  'bat_hire_turban','bat_hire_beard','bat_hire_braids','bat_hire_blazer'];
+  'bat_hire_turban','bat_hire_beard','bat_hire_braids','bat_hire_blazer',
+  /* Seated-character layers: four chair directions (side_left is the exported mirror) + the intern's
+     three seated poses (person-only; left reuses the right pose, mirrored in code). Composited by
+     drawSeated(); missing files just fall back (onerror) to the standing sprite. */
+  'chair_down','chair_up','chair_side','chair_side_left',
+  'sit_intern_down','sit_intern_up','sit_intern_side'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -540,7 +546,13 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
 const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
-  'stall_v','stall_h']);   // stall dividers ship with a magenta bg too (never keyed before — they weren't drawn until the restroom remodel)
+  'stall_v','stall_h',
+  'chair_down','chair_up','chair_side','chair_side_left']);   // stall dividers + the seated-character chairs ship with a magenta bg
+/* The intern's seated poses are keyed the same way, but ALSO measured for their content bounding box
+   (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
+   the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
+const SIT_PERSON=new Set(['sit_intern_down','sit_intern_up','sit_intern_side']);
+const SIT_BBOX={};   // name -> content box {x,y,w,h} in source px; fallback = full canvas (harness / empty readback)
 const COLORKEY=new Set(ART_FILES.filter(n=>n.indexOf('bat_')===0||n==='printer_wreck'||MAGENTA_BG.has(n)));
 function keyOutMagenta(img){
   try{
@@ -564,10 +576,35 @@ function keyOutMagenta(img){
     return c;
   }catch(e){ return img; }   // taint or any failure -> raw image, no crash
 }
+/* Key magenta out of a seated-person sprite AND record its content bounding box (SIT_BBOX[name]) in
+   source px, so drawSeated can anchor by the figure, not the padded square canvas. Same empty-readback
+   / taint guards as keyOutMagenta; on failure the bbox falls back to the full canvas (harmless — the
+   composite still draws, just anchored to the canvas). */
+function keyAndMeasureSit(img,name){
+  try{
+    const w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+    if(!w||!h){ SIT_BBOX[name]={x:0,y:0,w:w||1,h:h||1}; return img; }
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    const x=c.getContext('2d',{willReadFrequently:true}); x.drawImage(img,0,0);
+    const id=x.getImageData(0,0,w,h), d=id.data;
+    let any=false, minX=w, minY=h, maxX=-1, maxY=-1;
+    for(let i=0,p=0;i<d.length;i+=4,p++){
+      const r=d[i],g=d[i+1],b=d[i+2],a=d[i+3];
+      if(r||g||b||a)any=true;
+      if(r-g>60 && b-g>60){ d[i+3]=0; }                                 // magenta -> transparent
+      else if(a!==0){ const px=p%w, py=(p/w)|0;                          // real pixel: grow the content box
+        if(px<minX)minX=px; if(px>maxX)maxX=px; if(py<minY)minY=py; if(py>maxY)maxY=py; }
+    }
+    if(!any){ SIT_BBOX[name]={x:0,y:0,w:w,h:h}; return img; }            // empty readback -> raw image, full-canvas box
+    x.putImageData(id,0,0); c.complete=true; c.naturalWidth=w; c.naturalHeight=h;
+    SIT_BBOX[name]=(maxX>=minX&&maxY>=minY)?{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1}:{x:0,y:0,w:w,h:h};
+    return c;
+  }catch(e){ SIT_BBOX[name]={x:0,y:0,w:(img.naturalWidth||1),h:(img.naturalHeight||1)}; return img; }
+}
 function loadArt(){
   ART_FILES.forEach(n=>{
     const im=new Image();
-    im.onload=()=>{ if(COLORKEY.has(n))ART[n]=keyOutMagenta(im); artLoaded++;if(artLoaded>=artTotal)artReady=true;};
+    im.onload=()=>{ if(SIT_PERSON.has(n))ART[n]=keyAndMeasureSit(im,n); else if(COLORKEY.has(n))ART[n]=keyOutMagenta(im); artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.onerror=()=>{artLoaded++;if(artLoaded>=artTotal)artReady=true;};
     im.src=ART_PATH+n+'.png';
     ART[n]=im;
@@ -711,6 +748,107 @@ function drawChar(ent,idx,scaleTo){
   ctx.drawImage(ART.chars,sx,sy,CHAR_CW,CHAR_CH,
     Math.round(ent.x+ent.w/2-tw/2), Math.round(ent.y+ent.h-th+U1(5)), tw, th);
   return true;
+}
+/* ============================================================================
+   SEATED CHARACTERS — a chair sprite and a seated-person sprite, composited in
+   CODE (not baked), four directions, per-direction draw order. Built to validate
+   the shared seat ANCHOR before the full seated cast exists: only the intern face
+   (sprite 0) has real seated art; every other face falls back to their standing
+   sprite stood in the chair (logged once). Rendering ONLY — seat assignment,
+   collision and the nav grid are untouched; this reads existing seat geometry.
+
+   THE ANCHOR (the whole point): chair and person share ONE ground point
+   (cx,cyGround = the desk's seat position = the chair's floor contact). The chair
+   is drawn bottom-centre there like every world prop (sprW). The person is drawn
+   from the same ground point, lifted up by SEAT_OFFSET so their hips land on the
+   cushion, and sized off the chair — then anchored by the person art's CONTENT box
+   (the PNGs are square with padding, so we place the figure, not the canvas).
+   All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
+// ---- tunables — eyeball on the TV, then fine-tune (prototype landed near these) ----
+let SEAT_CHAIR_W    = 52;          // chair drawn width in U1 world units (desk-ish)
+let SEAT_PERSON_SCALE = 0.85;      // person canvas height as a fraction of the chair height
+let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
+const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
+function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair_up':dir==='left'?'chair_side_left':'chair_side'; }
+/* only the intern face (sprite 0) has real seated art so far; null => draw a placeholder */
+function seatedPersonSpriteFor(npc,dir){
+  if(charIndexFor(npc)!==0)return null;
+  const name=(dir==='down')?'sit_intern_down':(dir==='up')?'sit_intern_up':'sit_intern_side';  // side serves left+right
+  return ok(name)?name:null;
+}
+const SEAT_PLACEHOLDER_SEEN=new Set();
+function seatPlaceholderLog(npc){
+  const k=charIndexFor(npc); if(SEAT_PLACEHOLDER_SEEN.has(k))return; SEAT_PLACEHOLDER_SEEN.add(k);
+  try{ console.log('[seat] placeholder (no seated art yet): '+(npc.name||'?')+' — sprite '+k); }catch(e){}
+}
+/* Draw order is per-direction (that is WHY we layer instead of baking): for down/left/right the
+   chair is behind the person (chair first, person over); for up the tall chair back must cover the
+   person's lower body (person first, chair over). Explicit branch, never a global order. */
+function drawSeated(npc,dir,cx,cyGround){
+  if(!isFinite(cx)||!isFinite(cyGround))return false;
+  const chairName=chairSpriteFor(dir);
+  const chairW=U1(SEAT_CHAIR_W);
+  const cim=ART[chairName];
+  const aspect=(cim&&cim.naturalWidth>0)?(cim.naturalHeight/cim.naturalWidth):SEAT_CHAIR_ASPECT;
+  const chairH=chairW*aspect;
+  if(!isFinite(chairW)||chairW<=0||!isFinite(chairH)||chairH<=0)return false;
+  const drawChairLayer =()=>sprW(chairName,cx,cyGround,chairW);
+  const drawPersonLayer=()=>drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH);
+  if(dir==='up'){ drawPersonLayer(); drawChairLayer(); }
+  else          { drawChairLayer(); drawPersonLayer(); }
+  return true;
+}
+function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
+  const seatY=cyGround - chairH*SEAT_OFFSET_RATIO;         // the person's placement point, lifted onto the cushion
+  if(!isFinite(seatY))return;
+  const name=seatedPersonSpriteFor(npc,dir);
+  if(!name){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
+  const im=ART[name];
+  const scale=(SEAT_PERSON_SCALE*chairH)/(im.naturalHeight||1);   // person canvas at ~0.85 of the chair's height
+  const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
+  const bb=SIT_BBOX[name]||{x:0,y:0,w:im.naturalWidth,h:im.naturalHeight};
+  const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
+  const px=cx-bbCx*scale, py=seatY-bbBot*scale;                   // land the content box's bottom-centre on the seat
+  if(!isFinite(px)||!isFinite(py)||!isFinite(drawW)||!isFinite(drawH)||drawW<=0||drawH<=0)return;
+  if(dir==='left'){                                               // only a right pose exists — mirror it about cx
+    ctx.save(); ctx.translate(Math.round(cx),0); ctx.scale(-1,1); ctx.translate(-Math.round(cx),0);
+    ctx.drawImage(im,Math.round(px),Math.round(py),Math.round(drawW),Math.round(drawH));
+    ctx.restore();
+  } else {
+    ctx.drawImage(im,Math.round(px),Math.round(py),Math.round(drawW),Math.round(drawH));
+  }
+}
+/* no seated art for this face yet — stand their normal sprite in the chair so the system runs */
+function drawSeatPlaceholder(npc,dir,cx,seatY,chairW){
+  if(!ok('chars'))return;
+  const idx=charIndexFor(npc), row=DIR_ROW[dir]||0;
+  const sx=(idx*CHAR_FRAMES+IDLE_FRAME)*CHAR_CW, sy=row*CHAR_CH;
+  const tw=chairW*0.72, th=CHAR_CH*tw/CHAR_CW;
+  if(!isFinite(tw)||tw<=0||!isFinite(th)||th<=0)return;
+  const yBottom=seatY+th*0.5;                                     // feet a little below the cushion; the chair hides the gap
+  ctx.drawImage(ART.chars,sx,sy,CHAR_CW,CHAR_CH,Math.round(cx-tw/2),Math.round(yBottom-th),Math.round(tw),Math.round(th));
+}
+/* Is this character seated at their OWN desk right now? Only during Regular Work, parked at the seat
+   (not walking). Returns {dir,cx,cyGround} keyed off the desk's facing, or null to draw them standing.
+   Reads existing geometry only — no seat/collision/grid changes. */
+function seatedDeskState(n){
+  if(!n||!(isWorker(n)||n===player))return null;
+  if(n.moving)return null;                       // walking -> draw the normal walk-cycle sprite
+  if(!isWorkPhase(currentPhase().name))return null;
+  const own=(n===player)?'you':n.name;
+  const d=desks.find(x=>x.owner===own);
+  if(!d)return null;
+  let seat; try{ seat=deskSeat(d); }catch(e){ return null; }
+  if(!seat||!isFinite(seat.x)||!isFinite(seat.y))return null;
+  if(cdist(n,seat)>=U1(24))return null;          // parked AT their seat (idle workers keep a residual goal/1-waypoint path — don't gate on those)
+  return { dir:seatDirForDesk(d), cx:seat.x, cyGround:seat.y };
+}
+function seatDirForDesk(d){
+  const a=deskArt(d);
+  if(a==='cubicle_desk_up')return 'up';
+  if(a==='cubicle_desk_left')return 'left';
+  if(a==='cubicle_desk_right')return 'right';
+  return 'down';   // cubicle_desk + manager/assistant/exec desks face down
 }
 const sprites={};        // sprites[dept] = [frame0(idle), frame1(step L), frame2(step R)]
 /* legs: rows 14-15. idle = both planted; step frames swing one leg forward/back */
@@ -1481,6 +1619,7 @@ addEventListener('keydown',e=>{
     e.preventDefault();return;
   }
   if(e.key==='m'||e.key==='M'||e.key==='0'){togglePropMap();return;}     // DEV: numbered prop overlay
+  if(e.key==='k'||e.key==='K'){toggleSeatTest();return;}                 // DEV: seated-character anchor test
   if(e.key==='q'||e.key==='Q'){invCycle();return;}                       // fan the pocket out
   if(invOpen&&(e.key==='e'||e.key==='E')&&!menuOpen&&!panelOpen){invUseSelected();return;}
   if(e.key==='e'||e.key==='E')tryInteract();
@@ -6139,7 +6278,9 @@ function drawNPC(n){
      }
    }
    if(!drewBat){
-     if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
+     const seat=seatedDeskState(n);   // at their desk during work? draw the chair+seated-person composite instead
+     if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
+     else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
    }
    n.x=ox;}
   if(n.mgr){ctx.fillStyle='#c9a24a';ctx.fillRect(n.x+2,n.y-3,n.w-4,2);}
@@ -6206,7 +6347,9 @@ function drawBubbles(){
 }
 function drawPlayer(){
   if(player.bubble){player.bubble.t-=lastDt;if(player.bubble.t<=0)player.bubble=null;}   // tick only; drawn in drawBubbles
-  if(!drawChar(player,YOU_SPRITE))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);
+  {const seat=seatedDeskState(player);   // the intern face is the player's — sit them at their desk during work (real seated art)
+   if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
+   else if(!drawChar(player,YOU_SPRITE))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
   ctx.strokeStyle='rgba(217,165,33,.9)';ctx.strokeRect(player.x-1.5,player.y-1.5,player.w+3,player.h+3);
   /* Action progress (craft / work / channel) shown BELOW the feet, bigger and bright, so it
      doesn't cover the character's face and is easy to read at TV/phone distance. */
@@ -6484,13 +6627,44 @@ function drawPropMap(){
     .forEach(([t,n])=>{ if(t)chip(t.x+t.w/2, t.y+t.h/2, n, '#66d078'); });
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
+/* SEAT ANCHOR TEST (dev): drop the intern (sprite 0) into a chair in all four directions near the
+   camera, over a ground marker, with the live tunables printed — so seat alignment (hips on the
+   cushion, no float/sink, all four facings) can be eyeballed on the TV before generating 20 more
+   seated characters. Toggle from Settings ("Seat anchor test") or the K key. Rendering only. */
+let seatTest=false;
+function toggleSeatTest(){
+  seatTest=!seatTest;
+  const b=document.getElementById('setSeatTest'); if(b)b.textContent='🪑 Seat anchor test: '+(seatTest?'ON':'OFF');
+  if(seatTest)try{ console.log('[seat] anchor test ON — SEAT_CHAIR_W='+SEAT_CHAIR_W+' SEAT_PERSON_SCALE='+SEAT_PERSON_SCALE+' SEAT_OFFSET_RATIO='+SEAT_OFFSET_RATIO); }catch(e){}
+}
+function drawSeatAnchorTest(){
+  const dummy={name:'you',sprite:0,x:0,y:0,w:U1(24),h:U1(40)};
+  const vw=VW/ZOOM, vh=VH/ZOOM;
+  const baseY=cam.y+vh*0.55, gap=U1(88), cx0=cam.x+vw*0.5;
+  const spots=[['down',cx0-gap*1.5],['up',cx0-gap*0.5],['left',cx0+gap*0.5],['right',cx0+gap*1.5]];
+  ctx.save();
+  spots.forEach(([dir,gx])=>{
+    if(!isFinite(gx))return;
+    ctx.strokeStyle='rgba(255,80,80,0.9)'; ctx.lineWidth=1;   // the shared ground line
+    ctx.beginPath(); ctx.moveTo(Math.round(gx-U1(16)),Math.round(baseY)); ctx.lineTo(Math.round(gx+U1(16)),Math.round(baseY)); ctx.stroke();
+    drawSeated(dummy,dir,gx,baseY);
+    ctx.fillStyle='#ffe08a'; ctx.font='bold '+U1(11)+'px monospace'; ctx.textAlign='center';
+    ctx.fillText(dir.toUpperCase(), Math.round(gx), Math.round(baseY+U1(15)));
+  });
+  const lines=['SEAT ANCHOR TEST','CHAIR_W '+SEAT_CHAIR_W+'  PERSON_SCALE '+SEAT_PERSON_SCALE,'OFFSET_RATIO '+SEAT_OFFSET_RATIO,'intern = real art · others = placeholder'];
+  const px=cam.x+U1(8), py=cam.y+U1(10);
+  ctx.textAlign='left'; ctx.font='bold '+U1(11)+'px monospace';
+  ctx.fillStyle='rgba(15,18,14,0.82)'; ctx.fillRect(Math.round(px-U1(4)),Math.round(py-U1(4)),U1(210),U1(15)*lines.length+U1(6));
+  ctx.fillStyle='#ffe08a'; lines.forEach((l,i)=>ctx.fillText(l,Math.round(px),Math.round(py+U1(11)+i*U1(15))));
+  ctx.restore(); ctx.textAlign='left';
+}
 function renderInner(){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,VW,VH);
   updateCamera();
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -8297,6 +8471,7 @@ document.getElementById('setMusic').onclick=()=>{toggleMusic();updateSettingsUI(
 document.getElementById('setSound').onclick=()=>{toggleMute();updateSettingsUI();};
 function togglePropMap(){propMap=!propMap;const b=document.getElementById('setPropMap');if(b)b.textContent='🔢 Prop map overlay: '+(propMap?'ON':'OFF');}
 document.getElementById('setPropMap').onclick=()=>{togglePropMap();};
+{const _sb=document.getElementById('setSeatTest'); if(_sb)_sb.onclick=()=>{toggleSeatTest();};}
 document.getElementById('startMusic').onclick=()=>forceStartMusic();
 document.getElementById('mVolDn').onclick=()=>adjMusicVol(-0.05);
 document.getElementById('mVolUp').onclick=()=>adjMusicVol(0.05);
