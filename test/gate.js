@@ -26,6 +26,7 @@ const TESTS = [
   't_rumor_supply.js',
   't_fetch_mission.js',   // coworker fetch/friendship missions deliver (live inventory re-check)
   't_music.js',
+  't_test_game.js',       // dev Test Game: jumpToRank places a consistent world at any rank
   't_menu_load.js',
   't_regress.js',         // slow soak — last
 ];

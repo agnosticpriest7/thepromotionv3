@@ -4495,6 +4495,26 @@ function claimAsstOffice(){
   SFX.promote();
 }
 function myDesk(){return desks.find(d=>d.owner==='you');}
+/* ===== TEST GAME: drop into a fresh round at any rank (dev menu) =====
+   Places the player at INTERN..MANAGER with a consistent world, using the same office/desk plumbing
+   a real promotion would, so endgame features can be reached without grinding up. MANAGER means Dale
+   is gone and the corner office is yours (merit + catfish routes testable; the loyalty route needs
+   Dale, so use ASSISTANT MANAGER for that). Not for CEO — that's the win. */
+function jumpToRank(rank){
+  rank=Math.max(0,Math.min(5,rank|0));
+  intro=null;                                   // no onboarding tour in a test game
+  if(rank>=5){ if(!career.mgrGone)removeDale(); career.mgrGone=true; player.rank=5; }
+  else player.rank=rank;
+  player.prog=0; career.gateShown={};
+  if(rank>=5)claimManagerOffice();
+  else if(rank===4){ career.daleFavor=Math.max(career.daleFavor||0,2); claimAsstOffice(); }
+  else if(rank>=1)movePlayerDesk();
+  if(rank>=2)unlockSales();
+  if(typeof syncMusicToRank==='function')syncMusicToRank(player.rank);
+  refreshRanks(); if(typeof renderDeleg==='function')renderDeleg(); if(typeof renderTasks==='function')renderTasks();
+  logLine(`TEST GAME — you start as ${RANKS[player.rank]}.`,'a');
+  toast(`Test game: ${RANKS[player.rank]}`);
+}
 /* ================= ENDGAME: THE CATFISH ================= */
 /* You cannot out-work the CEO. You have to destroy him. */
 const catfish={
@@ -8395,7 +8415,8 @@ function applySnapshot(s){
 
 /* ---------- autosave hooks ------------------------------------------------- */
 let activeSlot = 0;
-function autosave(){ if(activeSlot==null)return; Store.save(activeSlot, buildSnapshot(gameOver,null)); }
+let testGame = false;   // a Test Game is ephemeral — never persisted to a save slot
+function autosave(){ if(testGame||activeSlot==null)return; Store.save(activeSlot, buildSnapshot(gameOver,null)); }
 function saveFinished(outcome){ if(activeSlot==null)return; Store.save(activeSlot, buildSnapshot(true,outcome)); }
 globalThis.__save = { Store, buildSnapshot, applySnapshot, autosave, saveFinished,
   get slot(){return activeSlot;}, set slot(v){activeSlot=v;} };
@@ -8440,7 +8461,13 @@ function renderMenuDOM(){
     rows.push({label:'Continue', sub: recent>=0?slotText(recent).title:'no saves yet', dis:recent<0, act:()=>{ if(recent>=0)startGame(recent,false); }});
     rows.push({label:'New Game', sub:'choose a slot', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
     rows.push({label:'Load Game', sub:'choose a save', act:()=>{ menuMode='loadpick'; menuSel=0; renderMenuDOM(); }});
+    rows.push({label:'Test Game', sub:'start at any rank (dev)', act:()=>{ menuMode='testpick'; menuSel=0; renderMenuDOM(); }});
     rows.push({label:'Settings', sub:'sound & controls', act:()=>{ /* opens in-game panel later */ }});
+  } else if(menuMode==='testpick'){
+    ['INTERN','JUNIOR SALES','SALES','SENIOR SALES','ASSISTANT MANAGER','MANAGER'].forEach((nm,r)=>{
+      rows.push({label:nm, sub:'fresh round, starting here', act:()=>startTestGame(r)});
+    });
+    rows.push({label:'‹ Back', sub:'ephemeral — not saved', act:()=>{ menuMode='main'; menuSel=0; renderMenuDOM(); }});
   } else if(menuMode==='newpick' || menuMode==='loadpick'){
     for(let i=0;i<SAVE_SLOTS;i++){ const st=slotText(i);
       rows.push({label:st.title, sub:st.sub, cls:st.empty?'empty':(st.over?'over':''),
@@ -8489,14 +8516,29 @@ function startGame(slot, fresh){
   paused=false;
 }
 
+/* Test Game: pristine world (via reload, like New Game) that drops in at a chosen rank and skips the
+   intro. Ephemeral — never autosaved (testGame flag). */
+function startTestGame(rank){
+  activeSlot=0; testGame=true;
+  try{ localStorage.setItem('promo:newgame','0'); localStorage.setItem('promo:testrank',String(rank)); }catch(e){}
+  if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
+  // harness / no-reload fallback: fresh in place, then jump straight to the rank (no intro)
+  screen='play'; renderMenuDOM(); jumpToRank(rank); paused=false;
+}
+
 function boot(){
-  // resume a fresh New Game requested just before a reload
-  let ng=null; try{ ng=localStorage.getItem('promo:newgame'); }catch(e){}
+  // resume a fresh New Game (or Test Game) requested just before a reload
+  let ng=null, tr=null; try{ ng=localStorage.getItem('promo:newgame'); tr=localStorage.getItem('promo:testrank'); }catch(e){}
   if(ng!==null && ng!==undefined && ng!==''){
-    try{ localStorage.removeItem('promo:newgame'); }catch(e){}
+    try{ localStorage.removeItem('promo:newgame'); localStorage.removeItem('promo:testrank'); }catch(e){}
     activeSlot=parseInt(ng,10)||0;
     screen='play'; paused=false; renderMenuDOM();
-    startIntro(); autosave();
+    if(tr!==null && tr!==undefined && tr!==''){
+      testGame=true;
+      jumpToRank(parseInt(tr,10)||0);   // Test Game: skip the tour, drop in at the chosen rank
+    } else {
+      startIntro(); autosave();
+    }
     requestAnimationFrame(loop);
     return;
   }
