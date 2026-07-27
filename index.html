@@ -2903,14 +2903,14 @@ let intro=null;
 const INTRO_BEATS=[
   {at:0.000,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
   {at:0.101,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.221,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
-  {at:0.334,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.454,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.586,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
-  {at:0.635,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.748,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
-  {at:0.786,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
-  {at:0.943,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
+  {at:0.220,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
+  {at:0.332,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.451,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.582,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
+  {at:0.632,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.743,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
+  {at:0.782,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
+  {at:0.936,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
   {at:1.000,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
@@ -2928,7 +2928,7 @@ const INTRO_ROUTE=[
   {x:150,y:710},{x:150,y:650},{x:210,y:590},{x:210,y:510},{x:270,y:450},{x:270,y:250},
   {x:230,y:210},{x:490,y:210},{x:530,y:250},{x:750,y:250},{x:770,y:230},{x:1070,y:230},
   {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1130,y:550},{x:1050,y:550},{x:1050,y:610},
-  {x:1050,y:550},{x:950,y:550},{x:730,y:630},
+  {x:1050,y:550},{x:950,y:550},{x:730,y:610},{x:730,y:630},
 ];
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){
