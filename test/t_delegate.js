@@ -148,7 +148,7 @@ for (const [kind, ptype] of [['grind', 'zealot'], ['credit', 'climber'], ['solo'
   wk.profiled = true;
   const shown = S.delegAssignMenu(wk).items.find(i => /GRIND/.test(i.label));
   ck('profiled worker: the good fit is surfaced', shown && /good fit/.test(shown.risk), shown && shown.risk);
-  ck('the job names its target personality (legibility)', shown && /for a Zealot/.test(shown.risk), shown && shown.risk);
+  ck('the job names its target personality (legibility)', shown && /suits a Zealot/.test(shown.risk), shown && shown.risk);
 }
 
 /* ================= B3 — boss-channel escalation + the AM→Manager gate ======================== */

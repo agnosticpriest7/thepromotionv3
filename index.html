@@ -1116,8 +1116,8 @@ const desks=[];
 /* Workstations REBUILT from the plan (test/gen_level.js). owner:null = empty desk.
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
-[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',intern:true,art:'cubicle_desk_left'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left'},
+[{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',intern:true,art:'cubicle_desk_left',seatSide:'right'},
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left',seatSide:'right'},
  {x:970,y:570,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant) — tucked against east wall (x1015)
  /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
     Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
@@ -1137,9 +1137,9 @@ const desks=[];
  {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing — SEATS[1]=5 is full, this chair can never be filled
  {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // set-dressing (SEATS[1] full)
  {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing (SEATS[1] full)
- {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales'},
- {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales'},
- {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales'},
+ {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales',art:'cubicle_desk_up'},
+ {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales',art:'cubicle_desk_up'},
+ {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales',art:'cubicle_desk_up'},
  {x:680,y:60,w:40,h:60,owner:'Hank',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
  {x:720,y:60,w:40,h:60,owner:'Zora',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Ravinder',tier:0,dept:'exec',seatSide:'up'},
@@ -1242,6 +1242,7 @@ const ITEMS={
   kit_m_peacock:{label:'an insulting client email from their account (crafted)',part:true,kit:true},
   kit_m_socialite:{label:'proof they leaked the client list (crafted)',part:true,kit:true},
   coffee:{label:'a hidden coffee stash',use:'Stress −18'},
+  coffee_cup:{label:'a fresh coffee',use:'Stress −15'},
   snack:{label:'emergency snacks',use:'Stress −8, susp −3'},
   note:{label:'a juicy note about a coworker',part:true,use:'intel + a handwriting sample'},
   keycard:{label:'a spare HR keycard',use:'unlocks HR files'},
@@ -1289,9 +1290,10 @@ const INV_CAP=8;
 function invFull(){return player.inv.length>=INV_CAP;}
 function invHas(id){return player.inv.includes(id);}
 function invTake(id){const i=player.inv.indexOf(id);if(i>=0)player.inv.splice(i,1);}
-const CONSUMABLE={coffee:1,snack:1};
+const CONSUMABLE={coffee:1,snack:1,coffee_cup:1};
 function useConsumable(id){
   if(id==='coffee'){player.stress=clamp(player.stress-18,0,100);toast('Coffee stash! Stress −18');}
+  else if(id==='coffee_cup'){player.stress=clamp(player.stress-15,0,100);toast('Fresh coffee. Stress −15');}
   else if(id==='snack'){player.stress=clamp(player.stress-8,0,100);player.suspicion=clamp(player.suspicion-3,0,100);toast('Snacks. Stress −8, susp −3');}
 }
 /* Consumables used to be swallowed the instant you found them, which made every
@@ -2098,6 +2100,16 @@ function updateNPC(n,dt){
   if(alarmActive){evac(n,dt);return;}
   if(n.boss){updateBoss(n,dt);return;}
   if(n.mgr){updateMgr(n,dt);return;}
+  /* Ravinder, three coffees deep, makes for the exec restroom and stays there a while. Overrides
+     his normal desk behaviour for the duration — this is the window the office gate opens in. */
+  if(n.ravLoo>0){
+    n.ravLoo-=dt;
+    const p=ravLooPoint();
+    if(p&&cdist(n,p)>Math.round(20*S)){setGoal(n,p.x,p.y);followPath(n);checkStuck(n,dt,null);}
+    else {n.goal=null;n.path=null;n.moving=false;}
+    if(n.ravLoo<=0){n.ravLoo=0;n.goal=null;n.path=null;n.stuckT=0;logLine('Ravinder is back at his desk, composed, as if nothing happened.','t');}
+    return;
+  }
   /* Held in place by the player (an interaction that takes time) — stop and face them. */
   if(n.heldT>0){
     n.heldT-=dt;
@@ -3397,7 +3409,9 @@ function addTask(t){
   /* ANY label with a {name} slot needs a real person in it — the coffee run used to
      ship with a literal "{name}" because only npc-tasks were being filled in. */
   if(!task.target&&t.label.includes('{name}')){
-    const who=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
+    /* never Ravinder: the gatekeeper has his own two-verb menu with no task hand-over, so a
+       coffee run aimed at him could never be completed. */
+    const who=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome&&n.name!=='Ravinder');
     const w=pick(who);
     task.target=w?w.name:'Marcus';
   }
@@ -3416,9 +3430,90 @@ function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);play
 
 /* ===== INTERACTIONS ===== */
 const menu=document.getElementById('menu');let menuOpen=false;
+/* ===== THE CEO OFFICE GATE — Ravinder the assistant keeps you out ==========================
+   Ravinder sits at his desk beside Sterling's glass office and turns visitors away. While he is AT
+   his desk you cannot cross the threshold (bounced back, and he says so). The moment he steps away
+   (break / errand / meeting) the office is open and you can slip in. Player-only — NPCs unaffected. */
+function ceoOfficeRect(){ return ROOMS.find(r=>r.name==='CEO OFFICE'); }
+function inCeoOffice(box){ const R=ceoOfficeRect(); return !!(R&&aabb(box,R)); }
+function ravinderGuarding(){
+  const r=NPCS.find(n=>n.name==='Ravinder');
+  if(!r||!r.alive||r.gone||r.wentHome)return null;
+  const d=desks.find(x=>x.owner==='Ravinder'); if(!d)return null;
+  let seat; try{ seat=deskSeat(d); }catch(e){ return null; }
+  if(!seat||cdist(r,seat)>Math.round(40*S))return null;   // only while actually parked at his desk
+  return r;
+}
+let ceoGateT=0;   // cooldown so Ravinder's rebuff doesn't spam while you push against him
+function ceoGateRebuff(){
+  if(ceoGateT>0)return;
+  const r=ravinderGuarding(); if(!r)return;
+  ceoGateT=2.6;
+  r.bubble={t:2.8,text:'You need an appointment to see Mr. Sterling.'};
+  toast('Ravinder turns you away — appointment only.');
+}
+/* ===== RAVINDER — the gatekeeper's own two verbs ==========================================
+   He is not a sales worker and gets none of the usual worker menu. You can bring him a coffee
+   (fetched from the machine, carried in your pockets) or ask for an appointment, which he will
+   never give you. Three coffees and nature takes its course — he bolts for the exec restroom,
+   and the office is unguarded for as long as he is in there. That is the intended way in. */
+const RAV_COFFEE_TARGET=3;    // coffees before he has to go
+const RAV_LOO_SECONDS=26;     // how long he is away (a dial — this is your window to get in and out)
+function ravLooPoint(){
+  const t=objects.filter(o=>o.type==='toilet'&&/Exec/i.test(o.label));
+  const o=t.length?t[0]:objects.find(o2=>o2.type==='toilet');
+  return o?{x:o.x+o.w/2,y:o.y+o.h+Math.round(14*S)}:null;   // stand just in front of the stall
+}
+function sendRavinderToLoo(n){
+  n.ravLoo=RAV_LOO_SECONDS;
+  n.coffees=0;
+  n.goal=null;n.path=null;n.wp=0;n.seat=null;n.errand=null;
+  n.bubble={t:3.0,text:'I gotta go!'};
+  logLine('Three coffees in and Ravinder is suddenly, urgently elsewhere. His desk is empty.','g');
+  toast('Ravinder bolts for the restroom — the office is unguarded.');
+}
+function ravinderItems(n){
+  const has=invHas('coffee_cup');
+  const cups=n.coffees||0;
+  return [
+    {label:has?`Give him the coffee  (${cups}/${RAV_COFFEE_TARGET})`:`Bring him a coffee  (${cups}/${RAV_COFFEE_TARGET}) — you need one from the machine`,
+     disabled:!has,risk:'he is always grateful',hot:has,
+     act:()=>{
+       if(!invHas('coffee_cup'))return;
+       invTake('coffee_cup');renderLeverage();
+       n.coffees=(n.coffees||0)+1;
+       n.mood=clamp(n.mood+8,-100,100);n.friend=clamp(n.friend+4,0,100);
+       if(n.coffees>=RAV_COFFEE_TARGET){
+         n.bubble={t:2.6,text:pick(['Oh — thank you. Really.','You are too kind. Thank you.'])};
+         logLine(`You hand Ravinder his ${RAV_COFFEE_TARGET}rd coffee. He thanks you, warmly, and then goes very still.`,'t');
+         setTimeout(()=>{ if(n.alive&&!n.gone&&!n.wentHome)sendRavinderToLoo(n); },900);
+       } else {
+         n.bubble={t:2.6,text:pick(['Oh — thank you.','Thank you. Very kind.','That is thoughtful of you. Thanks.'])};
+         logLine(`Ravinder thanks you for the coffee. (${n.coffees}/${RAV_COFFEE_TARGET})`,'t');
+         toast(`Ravinder thanks you. (${n.coffees}/${RAV_COFFEE_TARGET})`);
+       }
+     }},
+    {label:'Ask for an appointment with Mr. Sterling',risk:'he guards that diary with his life',
+     act:()=>{
+       n.bubble={t:3.2,text:pick(['He has nothing available today. Try again tomorrow.','His diary is full. Tomorrow, perhaps.','Nothing today. Ask me again tomorrow.'])};
+       logLine('Ravinder checks the diary he has clearly not opened. Nothing available today.','t');
+     }},
+    {label:'← Back',act:()=>{}}
+  ];
+}
+/* he brushes you off when you get in but have nothing on him */
+function ceoDismissiveItems(n){
+  return [
+    {label:'Try to get a word in',risk:'he could not care less',act:()=>{
+      n.bubble={t:3.2,text:pick(["I'm busy. Why are you talking to me?","Make an appointment. Through my assistant.","Whatever this is, it can wait. Indefinitely.","Do we have a meeting? We do not."])};
+      logLine('Sterling barely looks up. You are not worth his time — not yet.','t');
+    }},
+    {label:'Slip back out',risk:'before someone notices',act:()=>{}}
+  ];
+}
 function nearestInteractable(){
   const pc=center(player);let best=null,bd=Math.round(44*S);
-  for(const n of activeNPCs()){if(n.boss&&!n.lapping)continue;const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}   // CEO only interactable while out on his lap, not sealed in his office
+  for(const n of activeNPCs()){const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}   // CEO reachable on his lap, or in his office when you get past Ravinder (the office movement gate keeps you out otherwise)
   for(const o of objects){const d=cdist(o,pc);if(d<bd){bd=d;best={kind:'obj',ref:o};}}
   for(const c of CONTAINERS){const d=cdist(c,pc);if(d<bd){bd=d;best={kind:'container',ref:c};}}
   for(const d of desks){if(!d.owner)continue;const c=cdist(d,pc);if(c<bd){bd=c;best={kind:'desk',ref:d};}}
@@ -3454,9 +3549,23 @@ function buildOptions(t){
   if(t.kind==='npc'){
     const n=t.ref;
     if(n.boss){
+      if(n.lapping){
+        /* HIS DAILY ROUNDS — out on the floor, approachable, acting like he always has:
+           hand over the Henderson file, make small talk, or report someone over HR. */
+        const bt=openTask('npc',n.name);
+        const bi=[bt?{label:'Hand over the Henderson file (task)',risk:'good',act:()=>completeTask(bt)}:{label:'Make small talk',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);toast('Charmed the CEO. Suspicion −5');}}];
+        const reps=leverageBySrc(['hrfile']);if(reps.length)bi.push({label:'Report to the CEO (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to the CEO?',onPick:doc=>snitchItem(doc,'the CEO')})});
+        return {title:`${n.name} · CEO`,items:bi};
+      }
+      /* YOU GOT INTO HIS OFFICE (past Ravinder). With the dirt you can end it here; without it he
+         just brushes you off. The confrontation is deliberately an office-only, private thing. */
       const eg=sterlingEndgameItems(n);
-      if(eg.length)return {title:`${n.name} · CEO  —  you have him`,items:eg};const bt=openTask('npc',n.name);const bi=[bt?{label:'Hand over the Henderson file (task)',risk:'good',act:()=>completeTask(bt)}:{label:'Make small talk',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);toast('Charmed the CEO. Suspicion −5');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)bi.push({label:'Report to the CEO (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to the CEO?',onPick:doc=>snitchItem(doc,'the CEO')})});return {title:`${n.name} · CEO`,items:bi};}
+      if(eg.length)return {title:`${n.name} · CEO  —  you have him`,items:eg};
+      return {title:`${n.name} · CEO`,items:ceoDismissiveItems(n)};
+    }
     if(n.mgr){const mi=[...daleFavorItems(n),{label:'Laugh at his joke (suck up)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);career.daleFavor++;toast('Dale loves you. Suspicion −5'+(career.daleFavor===2?' — he REALLY likes you now':''));logLine("Laughed at Dale's joke. He beams.",'g');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)mi.push({label:'Report to Dale (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to Dale?',onPick:doc=>snitchItem(doc,'the manager')})});return {title:`${n.name} · Branch Manager`,items:mi};}
+    /* the CEO's assistant is a gatekeeper, not a sales worker — two verbs only */
+    if(n.name==='Ravinder')return {title:`${n.name} · CEO Assistant`,items:ravinderItems(n)};
     if(n.receptionist){SFX.talk();}
     if(n.receptionist)return {title:`${n.name} · Reception`,items:[{label:'Chat with the receptionist',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-6,0,100);toast('Pleasant chat. Suspicion −6');if(Math.random()<0.3){const t=pick(activeNPCs().filter(isWorker));if(t){t.profiled=true;player.leverage.push({label:`front-desk gossip re: ${t.name}`,target:t.name,power:20,src:'gossip'});renderLeverage();logLine(`Peggy shares front-desk gossip about ${t.name} — type read: ${PTYPE_NAME[t.ptype]}.`,'w');}}}}]};
     if(n.dept==='hr'){const hi=[{label:'Play nice / check in',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-8,0,100);toast('Suspicion −8');logLine('Buttered up HR.','g');}}];const reps=leverageBySrc(['gossip','desk']);if(reps.length)hi.push({label:'Snitch to HR…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report who to HR?',onPick:doc=>snitchItem(doc,'HR')})});if(!player.hasKeycard)hi.push({label:'Lift her HR keycard',risk:(alarmActive||n.audit)?'she\'s distracted':'very risky',hot:!(alarmActive||n.audit),act:()=>liftKeycard(n)});return {title:`${n.name} · HR`,items:hi};}
@@ -3633,6 +3742,14 @@ function buildOptions(t){
       } else if(ct&&player.coffeeFor){
         items.push({label:`You are already carrying ${player.coffeeFor.split(' ')[0]}'s coffee`,disabled:true});
       }
+      /* Take a cup WITH you — the coffee you carry to somebody else (Ravinder wants three). */
+      items.push({label:invFull()?'Pour a cup to carry (pockets full)':'Pour a cup to carry',disabled:invFull(),risk:'safe',
+        act:()=>startAct(2.0,'Pouring a coffee',()=>{
+          if(invFull()){toast('Pockets full (8 max) — drop something first.');return;}
+          player.inv.push('coffee_cup');renderLeverage();
+          toast('Got a fresh coffee. Somebody might want it.');
+          logLine('You poured a coffee and took it with you.','t');
+        })});
       items.push({label:'Coffee break (stress −)',risk:'safe',act:()=>{player.stress=clamp(player.stress-15,0,100);toast('Ahh. Stress −15');}});
       items.push({label:o.trapped?'Trap already set':'Rig a spill trap (prank)',disabled:o.trapped,risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.trapped=true;logLine('Rigged the coffee machine to spill.','w');addSuspicion(seen?26:9,seen?whoSaw()+' caught your prank':'A prank, unseen');}});
       items.push(...partGrab('decaf',seen));
@@ -5697,7 +5814,7 @@ function delegArrive(){
   if(!delegActive())return;
   const p=currentPhase(), n=DELEG_PHASE_TASKS[p.start]||0;
   for(let i=0;i<n;i++)deleg.q.push({id:++deleg.seq,kind:pick(DELEG_KINDS),phase:p.start,exp:p.end,to:null,state:'open'});
-  if(n){logLine(`${n} job${n>1?'s':''} for the floor landed on your desk — hand them out before the block ends.`,'a');renderDeleg();}
+  if(n){logLine(`${n} job${n>1?'s':''} for the floor landed on your desk — hand them out before the block ends.`,'a');renderDeleg();renderTasks();}
 }
 /* one clean match per personality — the intel you gathered to ruin people is the intel you need
    to lead them. A wrong assignment fails IN CHARACTER (see delegResolve), never with a red X. */
@@ -5718,13 +5835,13 @@ function delegAssign(t,w){
     w.bubble={t:3,text:pick(['Why aren’t YOU doing this?','This isn’t my job.','...why me, exactly?'])};
     t.exp=Math.max(clock,clock+(t.exp-clock)*0.5);   // returns to the tray with reduced time
     logLine(`${w.name.split(' ')[0]} looked at the job, then at you, and asked why you weren’t doing it yourself. It is back on your desk with less time on it.`,'w');
-    renderDeleg();
+    renderDeleg();renderTasks();
     return 'refused';
   }
   t.to=w.name;t.state='assigned';
   w.bubble={t:2,text:pick(['On it.','Sure.','Leave it with me.'])};
   logLine(`You handed ${w.name.split(' ')[0]} a job — ${DELEG_FLAVOUR[t.kind]}.`,'a');
-  renderDeleg();
+  renderDeleg();renderTasks();
   return true;
 }
 /* resolve one assigned job by the worker's personality. Returns 'clean'|'botch'|'steal'|'miss'. */
@@ -5772,7 +5889,7 @@ function delegExpireDue(){   // at phase end: unassigned jobs expire, assigned j
   deleg.q=deleg.q.filter(t=>t.state==='open'||t.state==='assigned');   // keep only still-live jobs
   if(missed){logLine(`${missed} job${missed>1?'s':''} went undone — a miss on each.`,'w');}
   delegEscalate();   // boss-channel escalation on the rolling window (note -> write-up -> reset)
-  if(missed||cleaned||other)renderDeleg();
+  if(missed||cleaned||other){renderDeleg();renderTasks();}
 }
 function delegRollDay(){deleg.q=[];delegPruneDem();delegEscalate();}   // new day: fresh tray; done + the rolling window persist; a cleared window ends the escalation stretch
 /* minimal tray (B1). The interactive version — pick a job, walk it to a worker — lands with the
@@ -5795,14 +5912,17 @@ function renderDeleg(){
    without a profile the fit is a guess (the assignment still works; you just don't know the odds).
    Delegation is legitimate work, so it carries no "seen" risk. */
 function delegAssignMenu(w){
+  const wt=w.profiled?PTYPE_NAME[w.ptype]:'unread — profile them';   // the WORKER's own personality (the letter over their head)
   const items=delegOpen().map(t=>{
-    const suit=PTYPE_NAME[DELEG_MATCH[t.kind]];   // the personality this job kind is built for (fixed rule)
+    const suit=PTYPE_NAME[DELEG_MATCH[t.kind]];   // the personality this job KIND is built for (fixed rule)
     const fit=w.profiled?(delegMatch(t,w)?'good fit':'wrong fit'):'unread — profile them';
-    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:`for a ${suit} · ${fit}`,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
+    // Lead each row with THIS worker's fit (varies per person) so it never reads as "everyone is a
+    // <job's type>"; the named personality is clearly the JOB's requirement, not the worker's.
+    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:`${fit} · this job suits a ${suit}`,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
   });
   if(!items.length)items.push({label:'Nothing on the tray to hand out right now.',disabled:true});
   items.push({label:'← Back',act:()=>{}});
-  return {title:`Give ${w.name.split(' ')[0]} a job${w.profiled?' · '+PTYPE_NAME[w.ptype]:' · unread'}`,items};
+  return {title:`Give ${w.name.split(' ')[0]} (${wt}) a job`,items};
 }
 /* judged at 5pm, every day you are the manager */
 function scoreTheDay(){
@@ -6153,6 +6273,7 @@ function drawDesks(){
 function drawDeskPlates(){
   for(const d of desks){
     if(!inView(d.x,d.y,d.w,d.h))continue;
+    if(!d.owner&&d.reserved)continue;   // set-dressing / held desks are NOT real vacancies — no misleading "VACANT" plate (a chair you can never fill)
     const art=deskArt(d);
     const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
     const dw=U1(ART_W[art]||40);
@@ -6413,6 +6534,18 @@ function headTop(e){
   const tw=U1(38), th=Math.round(CHAR_CH*tw/CHAR_CW);
   return e.y+e.h-th+U1(5);
 }
+/* A persistent green "!" over a worker who has an open favour to hand you (a coworker errand waiting
+   to be picked up). Sits above the personality mark so favours are easy to spot on the floor. */
+function drawFavorMark(n){
+  if(!isWorker(n)||!missionFor(n.name))return;
+  const mx=n.x+n.w/2, my=headTop(n)-U1(15), o=Math.max(1,U1(2));
+  ctx.font='bold '+U1(13)+'px monospace';ctx.textAlign='center';
+  ctx.fillStyle='rgba(16,18,13,0.92)';                          // dark outline so it reads on the pale carpet
+  for(let dx=-o;dx<=o;dx+=o)for(let dy=-o;dy<=o;dy+=o)if(dx||dy)ctx.fillText('!',mx+dx,my+dy);
+  ctx.fillStyle='#5fd47a';                                      // favour green (matches the FAVOURS accent)
+  ctx.fillText('!',mx,my);
+  ctx.textAlign='left';
+}
 function drawAlertMark(n){
   if(!n.alertFx||n.alertFx<=0)return;
   const a=Math.min(1,n.alertFx*1.6);
@@ -6508,6 +6641,7 @@ function drawNPC(n){
   if(n.melFx>0){ctx.fillStyle='#c0392b';ctx.font='bold '+U1(16)+'px monospace';ctx.fillText('!',n.x+n.w/2,headTop(n)-U1(4));}
   ctx.textAlign='left';
   drawAlertMark(n);
+  drawFavorMark(n);
   if(n.dept==='hr'||n.mgr){
     const cx=n.x+n.w/2,cy=n.y+n.h/2,f=n.face||0;
     ctx.fillStyle=n.mgr?'rgba(201,138,26,.07)':'rgba(192,57,43,.08)';
@@ -7739,7 +7873,7 @@ function missionAsk(m){
    saved with career, swept by npcLeaving. ANTI-FARMING: errands are NOT requestable on demand — they
    arrive on the world's schedule (maybeOfferFavor, per work phase). One payoff per person, ever. ===== */
 const FAVOR_THRESHOLD=3;              // completed favours for one person before they owe you back (a dial)
-const FAVOR_ARRIVE_CHANCE=0.5;       // per-work-phase chance a coworker comes to YOU with an errand
+const FAVOR_ARRIVE_CHANCE=0.85;      // per-work-phase chance a coworker comes to YOU with an errand (boosted from 0.5 — favours were too scarce)
 const FAVOR_REWARD_BY_PTYPE={zealot:'deleg',climber:'machine',paranoid:'tipoff',peacock:'alibi',socialite:'dirt'};
 const FAVOR_REWARD_LABEL={
   alibi:'they vouch for you — suspicion wiped',
@@ -7803,7 +7937,7 @@ function cashFavor(n){
    start. Scarce (a couple open at a time), and biased toward someone whose track is already building
    so a payoff is reachable without you being able to farm 21 inboxes at will. */
 function maybeOfferFavor(){
-  if(missions.filter(m=>!m.done).length>=2)return;              // scarcity cap: at most two open errands floor-wide
+  if(missions.filter(m=>!m.done).length>=3)return;              // scarcity cap: at most three open errands floor-wide (raised from 2)
   if(Math.random()>=FAVOR_ARRIVE_CHANCE)return;
   const ws=activeNPCs().filter(o=>isWorker(o)&&!o.gone&&!o.wentHome&&o.arrived!==false&&!missionFor(o.name));
   if(!ws.length)return;
@@ -8139,6 +8273,24 @@ function renderTasks(){
       rows.push(`<div class="chip favor${m.done?' done':''}${isT('mission',m.who)?' tracked':''}" data-tt="mission" data-tk="${esc(m.who)}">
         <span class="mk">${m.done?'✓':'★'}</span>${m.label}${isT('mission',m.who)?'<span class="trk">TRACKED</span>':''}</div>`);
     });
+  }
+  /* Dale's personal favour (the arc's current ask). Used to live only in the retired #tracker
+     (display:none), so it never showed once the JOURNAL panel took over — surface it here. */
+  if(dale.offered){
+    rows.push('<div class="tier">DALE</div>');
+    rows.push(`<div class="chip favor"><span class="mk">★</span>${dale.offered.taskLabel}</div>`);
+  }
+  /* Assistant Manager: the jobs to hand out this block. The interactive assign tray is the left
+     #delegTray; this mirrors the open jobs onto the main task panel so "it's time to delegate"
+     actually shows up where the player reads their tasks. */
+  if(delegActive()){
+    const dq=delegOpen();
+    if(dq.length){
+      rows.push('<div class="tier">DELEGATE — hand out before the block ends</div>');
+      dq.forEach(t=>{
+        rows.push(`<div class="chip favor"><span class="mk">▸</span>${DELEG_FLAVOUR[t.kind]}</div>`);
+      });
+    }
   }
   const L=(player.rank>=2)?ladderSteps():null;
   if(L){
@@ -8566,7 +8718,13 @@ function loop(now){
     if(keys['w']||keys['arrowup'])dy-=player.speed;
     if(keys['s']||keys['arrowdown'])dy+=player.speed;
     unstickPlayer();
-    if(dx||dy){const px=player.x,py=player.y;player.face=Math.atan2(dy,dx);moveEntity(player,dx,dy);if(menuOpen)closeMenu();
+    if(ceoGateT>0)ceoGateT-=dt;
+    if(dx||dy){const px=player.x,py=player.y;player.face=Math.atan2(dy,dx);moveEntity(player,dx,dy);
+      /* Ravinder gatekeeps: while he's at his desk you can't cross into Sterling's office. Bounce the
+         player back to where they were and let him say his line. Only blocks stepping IN from outside,
+         so anyone already inside (slipped in before he sat down) can still walk out. */
+      if(ravinderGuarding()&&inCeoOffice(player)&&!inCeoOffice({x:px,y:py,w:player.w,h:player.h})){player.x=px;player.y=py;ceoGateRebuff();}
+      if(menuOpen)closeMenu();
       const md=Math.hypot(player.x-px,player.y-py);
       player.moving=md>0.08;player.animT=(player.animT||0)+md;
       stepT-=dt;if(stepT<=0){SFX.step();stepT=0.30;addPuff(player.x+player.w/2,player.y+player.h,'rgba(150,140,120,',2);}
@@ -8839,7 +8997,8 @@ function npcSnap(n){ return { id:n.id,name:n.name,dept:n.dept,x:n.x,y:n.y,alive:
   resist:n.resist||{},strikes:n.strikes||0,mistakes:n.mistakes||0,meltdowns:n.meltdowns||0,tier:n.tier,
   friend:n.friend,friends:(n.friends||[]).slice(),feudWith:n.feudWith||null,supported:!!n.supported,
   suspectsYou:!!n.suspectsYou,caughtToday:n.caughtToday||0,homeDeskOwner:n.homeDesk?n.homeDesk.owner:null,
-  arrived:n.arrived!==false,arriveAt:(typeof n.arriveAt==='number'?n.arriveAt:DAY_START) }; }
+  arrived:n.arrived!==false,arriveAt:(typeof n.arriveAt==='number'?n.arriveAt:DAY_START),
+  coffees:n.coffees||0 }; }
 function deskSnap(d){ return { owner:d.owner,tier:d.tier,x:d.x,y:d.y,rigged:d.rigged||null,planted:d.planted||null,
   loot:(d.loot&&d.loot.slice)?d.loot.slice():null }; }
 
@@ -8883,6 +9042,7 @@ function applySnapshot(s){
       friends:(ns.friends||[]).slice(),feudWith:ns.feudWith,supported:ns.supported,suspectsYou:ns.suspectsYou,
       caughtToday:ns.caughtToday,homeDesk:ns.homeDeskOwner?desks.find(d=>d.owner===ns.homeDeskOwner)||n.homeDesk:n.homeDesk,
       arrived:ns.arrived!==false,arriveAt:(typeof ns.arriveAt==='number'?ns.arriveAt:DAY_START),
+      coffees:ns.coffees||0,ravLoo:0,
       path:null,goal:null,wp:0,seat:null,bubble:null,chat:null,mission:null,prankBuild:null,
       lastX:ns.x,lastY:ns.y,stuckT:0,moving:false,animT:0,melFx:0,alertFx:0 });
     restored.push(n); });

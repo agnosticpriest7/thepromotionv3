@@ -21,7 +21,7 @@ wk.ptype = 'zealot'; wk.profiled = true;
   const menu = S.delegAssignMenu(wk);
   KINDS.forEach(([kind, who]) => {
     const it = menu.items.find(i => new RegExp('^' + kind.toUpperCase()).test(i.label));
-    ck(`${kind.toUpperCase()} job names its target: ${who}`, !!it && new RegExp('for a ' + who).test(it.risk), it ? it.risk : 'missing');
+    ck(`${kind.toUpperCase()} job names its target: ${who}`, !!it && new RegExp('suits a ' + who).test(it.risk), it ? it.risk : 'missing');
   });
   const grind = menu.items.find(i => /^GRIND/.test(i.label));
   const credit = menu.items.find(i => /^CREDIT/.test(i.label));
@@ -34,7 +34,7 @@ wk.ptype = 'zealot'; wk.profiled = true;
   wk.profiled = false;
   const menu = S.delegAssignMenu(wk);
   const grind = menu.items.find(i => /^GRIND/.test(i.label));
-  ck('target personality is shown even when the worker is unread', /for a Zealot/.test(grind.risk));
+  ck('target personality is shown even when the worker is unread', /suits a Zealot/.test(grind.risk));
   ck('the per-worker fit stays hidden until you profile them', /unread/.test(grind.risk) && grind.hot !== true);
 }
 

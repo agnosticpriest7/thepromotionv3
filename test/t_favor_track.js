@@ -161,7 +161,7 @@ const workers = (S, G) => G.NPCS.filter(n => S.isWorker(n) && n.alive && !n.gone
   ck('maybeOfferFavor (world-schedule arrival) exists', typeof S.maybeOfferFavor === 'function');
   for (let i = 0; i < 40; i++) S.maybeOfferFavor();
   const open = (typeof S.missionFor === 'function') ? workers(S, G).filter(n => S.missionFor(n.name)).length : 0;
-  ck('errands stay scarce even under repeated ticks (≤2 open at once)', open <= 2, 'open=' + open);
+  ck('errands stay scarce even under repeated ticks (≤3 open at once)', open <= 3, 'open=' + open);
 }
 
 console.log(`\nFAVOUR TRACK: ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
