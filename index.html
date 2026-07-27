@@ -518,7 +518,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'sit_ravinder_down','sit_ravinder_up','sit_ravinder_left','sit_ravinder_right',
   'sit_hank_down','sit_hank_up','sit_hank_left','sit_hank_right',
   'sit_zora_down','sit_zora_up','sit_zora_left','sit_zora_right',
-  'sit_hire_blazer_down','sit_hire_blazer_up','sit_hire_blazer_left','sit_hire_blazer_right'];
+  'sit_hire_blazer_down','sit_hire_blazer_up','sit_hire_blazer_left','sit_hire_blazer_right',
+  'sit_dale_down','sit_dale_up','sit_dale_left','sit_dale_right'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -803,7 +804,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -936,6 +937,38 @@ function bossSeatState(n){
   if(cdist(n,{x:Math.round(120*S),y:Math.round(80*S)})>Math.round(220*S))return null;   // only when actually parked in his office
   const cx=Math.round(120*S)+CEO_SEAT_DX, cyGround=Math.round(120*S)+CEO_SEAT_DY;
   return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};           // bx/by move his box onto the seat so overlays follow
+}
+/* DALE (branch manager) at his corner-office desk. Like the CEO, he's not a desk-owning worker, so he
+   gets his own seat: he sits facing down whenever he's parked at his desk (not lapping, meeting, or on
+   the day-1 intro walk). Unlike the CEO we KEEP the manager_desk's own executive chair (the furniture
+   pass already drew it behind him), so we draw only his seated PERSON into it — then re-draw a chair-
+   less desk front (ceo_desk == manager_desk minus its chair, same footprint/width) over his lower body
+   so he reads as sitting BEHIND the desk. Both offsets are tunable — nudge on the TV. */
+let DALE_SEAT_DX = 0;     // horizontal nudge of the seated manager from his desk centre (world px)
+let DALE_SEAT_DY = -35;   // seat ground point relative to the desk's bottom anchor (negative = up/behind the desk)
+function daleDeskAnchor(){ const d=DALE_DESK; return {cx:(d.ax!==undefined?d.ax:d.x+d.w/2), cyB:(d.ay!==undefined?d.ay:d.y+d.h+U1(8))}; }
+function drawDaleDeskFront(){ const a=daleDeskAnchor(); sprAt('ceo_desk',a.cx,a.cyB,'manager_desk'); }   // chair-less desk front over the manager_desk footprint
+function daleSeatState(n){
+  if(!n||!n.mgr||!n.alive||n.wentHome||n.gone||n.moving)return null;
+  if(intro)return null;                                            // day-1 intro: he's walking you around, not seated
+  const a=daleDeskAnchor();
+  if(cdist(n,{x:a.cx,y:a.cyB})>Math.round(120*S))return null;      // only when actually parked at his desk (lapping/meeting => away)
+  const cx=a.cx+DALE_SEAT_DX, cyGround=a.cyB+DALE_SEAT_DY;
+  return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};
+}
+/* Dale's seated body only (no chair layer — the manager_desk exec chair is his chair). Mirrors
+   drawSeated's load-guard + person sizing, minus the chair draw. */
+function drawDaleSeated(npc,cx,cyGround){
+  if(!isFinite(cx)||!isFinite(cyGround))return false;
+  if(SEAT_ART[charIndexFor(npc)] && !seatedPersonSpriteFor(npc,'down')){   // art still loading: stand him until ready (one clean pop)
+    if(drawChar(npc,charIndexFor(npc)))return true;
+  }
+  const chairW=U1(SEAT_CHAIR_W), cim=ART[chairSpriteFor('down')];
+  const aspect=(cim&&cim.naturalWidth>0)?(cim.naturalHeight/cim.naturalWidth):SEAT_CHAIR_ASPECT;
+  const chairH=chairW*aspect;
+  if(!isFinite(chairH)||chairH<=0)return false;
+  drawSeatedPerson(npc,'down',cx,cyGround,chairW,chairH);
+  return true;
 }
 /* Brenda (HR) sits for her morning paperwork beat — HR sign in at the office and do ~15s of paperwork
    (hrMorning) before the rounds begin, facing down. The rest of HR roams, so this is the only HR seat;
@@ -6415,6 +6448,7 @@ function drawNPC(n){
      const bs=bossSeatState(n);       // the CEO parked in his office
      const hs=bs?null:brendaSeatState(n);   // Brenda at her morning paperwork
      const ps=(bs||hs)?null:peggySeatState(n);   // Peggy behind the reception counter
+     const ds=(bs||hs||ps)?null:daleSeatState(n);   // Dale parked at his manager desk
      if(bs){
        n.x=bs.bx; n.y=bs.by;          // move his box onto the seat so the gold bar / marks follow him
        drawSeated(n,'down',bs.cx,bs.cyGround);
@@ -6426,6 +6460,10 @@ function drawNPC(n){
        n.x=ps.bx; n.y=ps.by;
        drawSeated(n,'down',ps.cx,ps.cyGround);
        drawReceptionDesk();           // re-draw the counter over her lower body — she sits BEHIND it
+     } else if(ds){
+       n.x=ds.bx; n.y=ds.by;          // move his box onto the seat so the gold manager bar follows him
+       drawDaleSeated(n,ds.cx,ds.cyGround);
+       drawDaleDeskFront();           // re-draw the chair-less desk front over his lower body — he sits BEHIND it, in the exec chair
      } else {
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
