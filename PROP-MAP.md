@@ -19,7 +19,7 @@ Colours: D=desks (gold), C=containers (cyan), O=objects (orange), T=tables (gree
 - **D13** — Sana · dept sales · sprite=down · SENIOR SALES · (1320,370)
 - **D14** — Gil · dept sales · sprite=down · SENIOR SALES · (1320,470)
 - **D15** — Hank · dept acct · sprite=up · ACCOUNTING · (670,70)
-- **D16** — Vaughn · dept acct · sprite=down · ACCOUNTING · (710,70)
+- **D16** — Zora · dept acct · sprite=down · ACCOUNTING · (710,70)
 - **D17** — Colette · dept exec · sprite=assistant · — · (330,130)
 - **D18** — VACANT · dept sales · sprite=left · ASST. MANAGER · (1110,10)
 - **D19** — Dale Brackett · dept — · sprite=manager · MANAGER · (898,50)
