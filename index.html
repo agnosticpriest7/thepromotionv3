@@ -777,7 +777,7 @@ let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (indep
 let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content height in U1 units (all poses/characters scale off their own down pose to match)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
-let SEAT_SIDE_CHAIR_SHIFT = 4;     // U1 units to tuck the CHAIR toward the side sitter's back (closes the back-to-backrest gap the forward shift opens)
+let SEAT_DESK_PULL  = 24;          // U1 units to pull a seated WORKER's whole chair+person toward their desk (the stand point is set back from it)
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -813,8 +813,7 @@ function seatPlaceholderLog(npc){
 /* the chair alone (no occupant) — a chair is furniture that stays put when the sitter steps away */
 function drawChairOnly(dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
-  const sx=(dir==='right')?U1(SEAT_SIDE_CHAIR_SHIFT):(dir==='left')?-U1(SEAT_SIDE_CHAIR_SHIFT):0;   // tuck the chair toward the sitter's back on side poses
-  return sprW(chairSpriteFor(dir),cx+sx,cyGround,U1(SEAT_CHAIR_W));
+  return sprW(chairSpriteFor(dir),cx,cyGround,U1(SEAT_CHAIR_W));
 }
 function drawSeated(npc,dir,cx,cyGround){
   if(!isFinite(cx)||!isFinite(cyGround))return false;
@@ -880,6 +879,13 @@ function drawSeatPlaceholder(npc,dir,cx,seatY,chairW){
 /* Is this character seated at their OWN desk right now? Only during Regular Work, parked at the seat
    (not walking). Returns {dir,cx,cyGround} keyed off the desk's facing, or null to draw them standing.
    Reads existing geometry only — no seat/collision/grid changes. */
+/* The desk's STAND point (deskSeat) is set back from the desk so a standing worker doesn't overlap it.
+   For the seated RENDER we pull the chair+person toward the desk so they tuck up to it. Render-only —
+   the real stand point / collision are unchanged. */
+function seatRenderPoint(d,seat){
+  const vx=(d.x+d.w/2)-seat.x, vy=(d.y+d.h/2)-seat.y, vl=Math.hypot(vx,vy)||1, pull=U1(SEAT_DESK_PULL);
+  return {x:seat.x+vx/vl*pull, y:seat.y+vy/vl*pull};
+}
 function seatedDeskState(n){
   if(!n||!(isWorker(n)||n===player))return null;
   if(n.moving)return null;                       // walking -> draw the normal walk-cycle sprite
@@ -890,7 +896,8 @@ function seatedDeskState(n){
   let seat; try{ seat=deskSeat(d); }catch(e){ return null; }
   if(!seat||!isFinite(seat.x)||!isFinite(seat.y))return null;
   if(cdist(n,seat)>=U1(24))return null;          // parked AT their seat (idle workers keep a residual goal/1-waypoint path — don't gate on those)
-  return { dir:seatDirForDesk(d), cx:seat.x, cyGround:seat.y };
+  const r=seatRenderPoint(d,seat);
+  return { dir:seatDirForDesk(d), cx:r.x, cyGround:r.y };
 }
 function seatDirForDesk(d){
   const a=deskArt(d);
@@ -943,7 +950,7 @@ function drawDeskChairs(){
     if(!owner||seatedDeskState(owner))continue;                         // gone / or currently sitting (composite draws the chair)
     if(!inView(d.x,d.y,d.w,d.h))continue;
     let seat; try{ seat=deskSeat(d); }catch(e){ continue; }
-    if(seat&&isFinite(seat.x)&&isFinite(seat.y))drawChairOnly(seatDirForDesk(d),seat.x,seat.y);
+    if(seat&&isFinite(seat.x)&&isFinite(seat.y)){ const r=seatRenderPoint(d,seat); drawChairOnly(seatDirForDesk(d),r.x,r.y); }
   }
   const boss=activeNPCs().find(n=>n.boss);                              // the CEO's chair stays while he laps the floor
   if(boss&&boss.onFloor&&boss.alive&&!boss.wentHome&&!boss.gone&&!bossSeatState(boss)){
