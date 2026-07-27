@@ -511,7 +511,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'sit_otis_down','sit_otis_up','sit_otis_left','sit_otis_right',
   'sit_wren_down','sit_wren_up','sit_wren_left','sit_wren_right',
   'sit_sana_down','sit_sana_up','sit_sana_left','sit_sana_right',
-  'sit_gil_down','sit_gil_up','sit_gil_left','sit_gil_right'];
+  'sit_gil_down','sit_gil_up','sit_gil_left','sit_gil_right',
+  'sit_ramesh_down','sit_ramesh_up','sit_ramesh_left','sit_ramesh_right'];
 /* which characters have a bat sheet — maps a character's CAST name to its sheet file */
 const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla:'bat_marla',peggy:'bat_peggy',
   marcus:'bat_marcus',priya:'bat_priya',chad:'bat_chad',dana:'bat_dana',otis:'bat_otis',wren:'bat_wren',
@@ -796,7 +797,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5 Marcus, 6 Priya, 7 Chad, 8 Dana, 9 Otis, 10 Wren, 11 Sana, 12 Gil (all sales)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5 Marcus, 6 Priya, 7 Chad, 8 Dana, 9 Otis, 10 Wren, 11 Sana, 12 Gil, 13 Ramesh (all sales)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
