@@ -778,6 +778,7 @@ let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content 
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
 let SEAT_DESK_PULL  = 24;          // U1 units to pull a seated WORKER's whole chair+person toward their desk (the stand point is set back from it)
+let SEAT_SIDE_DOWN  = 22;          // U1 units to slide a LEFT/RIGHT-desk sitter down (their stand point is at desk-centre height, which renders too high)
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -884,7 +885,10 @@ function drawSeatPlaceholder(npc,dir,cx,seatY,chairW){
    the real stand point / collision are unchanged. */
 function seatRenderPoint(d,seat){
   const vx=(d.x+d.w/2)-seat.x, vy=(d.y+d.h/2)-seat.y, vl=Math.hypot(vx,vy)||1, pull=U1(SEAT_DESK_PULL);
-  return {x:seat.x+vx/vl*pull, y:seat.y+vy/vl*pull};
+  let x=seat.x+vx/vl*pull, y=seat.y+vy/vl*pull;
+  const dir=seatDirForDesk(d);
+  if(dir==='left'||dir==='right')y+=U1(SEAT_SIDE_DOWN);   // side desks: stand point is at desk-centre height — slide the sitter down so the cushion lines up with the desk
+  return {x,y};
 }
 function seatedDeskState(n){
   if(!n||!(isWorker(n)||n===player))return null;
