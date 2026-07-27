@@ -91,7 +91,7 @@ const DESKS=[
   [1320,280,60,40,'Wren',2,'sales'],
   [1320,380,60,40,'Sana',2,'sales'],
   [1320,480,60,40,'Gil',2,'sales'],
-  [680,60,40,60,'Nadia',0,'acct'],            // Accountant 1 (new)
+  [680,60,40,60,'Hank',0,'acct'],            // Accountant 1 (new)
   [720,60,40,60,'Vaughn',0,'acct'],           // Accountant 2 (new)
   [320,160,80,20,'Ravinder',0,'exec'],         // CEO Assistant (turban + grey jacket)
   [1120,0,40,60,null,0,'sales',{reserved:true}], // Asst Manager office empty (tease)
