@@ -975,8 +975,14 @@ let CEO_SEAT_DX = 0;     // horizontal nudge of the seated CEO from the desk cen
 let CEO_SEAT_DY = -35;   // seat ground point relative to the desk's bottom anchor (negative = up/behind the desk)
 function drawCeoDesk(){ sprW('ceo_desk',Math.round(120*S),Math.round(120*S),U1(Math.round(ART_W.manager_desk*0.9))); }
 function bossSeatState(n){
-  if(!n||!n.boss||n.lapping||!n.onFloor||!n.alive||n.wentHome||n.gone)return null;
-  if(cdist(n,{x:Math.round(120*S),y:Math.round(80*S)})>Math.round(220*S))return null;   // only when actually parked in his office
+  if(!n||!n.boss||n.lapping||!n.onFloor||!n.alive||n.wentHome||n.gone||n.moving)return null;
+  /* 220 was far too generous — his whole office is only 260x180, so that radius reached well into
+     the corridor outside it. Walking out (a fire drill, say) he stayed "parked": the sprite kept
+     being drawn SEATED at his desk while his gold bar tracked his real position, so he read as
+     vanishing and leaving a yellow bar floating in the corridor. 70 means AT the desk — his parked
+     spot is 22 from this anchor — and the n.moving check above means a walking CEO is never drawn
+     seated regardless. Dale's equivalent guard already had both. */
+  if(cdist(n,{x:Math.round(120*S),y:Math.round(80*S)})>Math.round(70*S))return null;   // only when actually parked in his office
   const cx=Math.round(120*S)+CEO_SEAT_DX, cyGround=Math.round(120*S)+CEO_SEAT_DY;
   return {cx, cyGround, bx:Math.round(cx-n.w/2), by:Math.round(cyGround-n.h)};           // bx/by move his box onto the seat so overlays follow
 }
@@ -7728,9 +7734,20 @@ function refreshRanks(){
 function npcRank(n){return n.tier|0;}
 function seniorSeatsFree(){refreshRanks();return seatsFree[2];}
 /* ---- a promotion means you pack your things and move rooms ---- */
+/* RESERVED desks are set dressing — surplus chairs a room has beyond its seat cap, deliberately
+   never fillable. Handing one out was the root of the hire/desk churn: it pushed a tier OVER its
+   cap, and refreshRanks() corrects over-capacity inline while being called every frame and every
+   org render — so one bad placement became a per-frame demote + desk-move + buildGrid(), which is
+   the flickering VACANT<->name nameplates, the jittering NPCs and the lag.
+   Fixing it HERE, at the over-fill, rather than in refreshRanks: the 2026-07-25 attempt also made
+   refreshRanks a pure read and moved the correction to a rollover pass, and that regressed
+   t_promote / t_hire / t_manager_fire — the per-frame correction is load-bearing for the
+   forced-rank-5 youTier()=2 phantom senior seat. Leave it alone; just stop feeding it bad input.
+   Both callers already handle a null return (moveToDeskFor logs "hot-desking", movePlayerDesk
+   returns), so refusing a reserved desk is safe. */
 function freeDeskFor(tier){
-  let d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired&&x.tier===tier);
-  if(!d)d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired);        // the room is full: take what is going
+  let d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired&&!x.reserved&&x.tier===tier);
+  if(!d)d=desks.find(x=>!x.owner&&!x.mgrOffice&&!x.retired&&!x.reserved);   // the room is full: take what is going
   return d||null;
 }
 function moveToDeskFor(n){
