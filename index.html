@@ -4752,8 +4752,17 @@ function finishSnoop(){const dale=NPCS.find(n=>n.mgr&&n.alive);const who=activeN
 /* meeting attendance */
 let meetingCredited=false;
 let phaseCred={};
-function inBreakZone(){const U=(v)=>Math.round(v*S);return player.x>U(840)&&player.x<U(1100)&&player.y>U(280)&&player.y<U(500);}   // the NEW break room (840,280,260,220); the old one used to overlap reception
-function inKitchenZone(){const U=(v)=>Math.round(v*S);return player.x>U(1160)&&player.x<U(1500)&&player.y>U(0)&&player.y<U(280);}
+/* ONE source of truth for "am I in this room": roomAt() on the player's CENTRE — the exact test the
+   room caption already uses (drawRoomCaption). These two used to carry their own hardcoded copy of
+   the room rect AND test player.x/player.y, which is the player's TOP-LEFT corner, not their centre.
+   player.w=player.h=round(16*S), so the break zone and the caption switched on at points 8 authored
+   units apart: 130 reachable tiles disagreed, bunched along the south doorway you walk in through —
+   you could be standing in the break room, see no caption, and not be credited with your break
+   (these gate rest-stress decay and break credit). The duplicated rects were also drifting: the
+   kitchen zone had been widened to 1500 for the east extension while ROOMS.KITCHEN still said 1400. */
+function inRoomNamed(n){ const r=roomAt(player.x+player.w/2, player.y+player.h/2); return !!r && r.name===n; }
+function inBreakZone(){ return inRoomNamed('BREAK ROOM'); }
+function inKitchenZone(){ return inRoomNamed('KITCHEN'); }
 function phaseCheckins(ph){
   if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
   if((ph==='Morning Break'||ph==='Afternoon Break'||ph==='Lunch / Break')&&!phaseCred[ph]&&(inBreakZone()||inKitchenZone())){phaseCred[ph]=true;player.stress=clamp(player.stress-10,0,100);player.suspicion=clamp(player.suspicion-4,0,100);toast('Break taken. Stress −10, suspicion −4');logLine('Took your break like a normal employee. Suspicion −4.','g');}
@@ -6438,7 +6447,7 @@ const ROOMS=[
   {name:'RESTROOM',     x:380, y:600, w:280, h:160, c:'#7c7768'},
   {name:'EXEC RESTROOM',x:0,   y:280, w:240, h:140, c:'#7c7768'},
   {name:'RECEPTION',    x:0,   y:420, w:240, h:260, c:'#3b6ea5'},
-  {name:'KITCHEN',      x:1160,y:0,   w:240, h:280, c:'#c9a41a'},
+  {name:'KITCHEN',      x:1160,y:0,   w:335, h:280, c:'#c9a41a'},   // east 1495: the kitchen floor runs to the east perimeter wall, not to 1400 (the pre-widening edge)
   {name:'SENIOR SALES', x:1240,y:280, w:160, h:300, c:'#3b6ea5', glass:true},
   {name:'SALES FLOOR',  x:1020,y:580, w:380, h:180, c:'#3b6ea5'},
   {name:'JUNIOR SALES', x:660, y:580, w:360, h:180, c:'#4a8c5a'},
