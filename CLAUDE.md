@@ -7,12 +7,23 @@ The one habit that matters: **run it, don't read it.** Almost every real bug sho
 ---
 
 ### 1. Workflow (merge = deploy to the live Pages site)
-One change per branch → soak + save round-trip → placement check → review → **only then** merge to `main`.
+One change per branch → iterate on the fast trio → **full gate** → review → **only then** merge to `main`.
+
+**While iterating** (~4 min) — re-run after each edit:
 ```bash
 node test/t_regress.js       # 150k-frame baseline soak (~5 in-game days); default frame count is 150000
 node test/placement.js       # ASCII floor map + sprite-aware placement linter (0 FAIL to pass)
 node test/t_menu_load.js     # save round-trip (build → save → load → keep ticking)
 ```
+
+**Before merging** — the trio is *not* enough to authorise a merge:
+```bash
+node test/gate.js            # all 38 tests, ~24 min. This is the merge authority.
+```
+The trio proves *not broken*, *not overlapping*, *saves survive*. It cannot catch a logic regression — nothing in it would notice delegation, hiring, promotion or leverage breaking. Merge means deploy to a public site, so the merge gate is the full rotation. Run it in the background and keep working; the 24 minutes is Claude's wall-clock, not Kyle's.
+
+`gate.js` runs **every** `t_*.js` on disk and **fails if one is unlisted** (or if it lists a file that no longer exists). Don't work around that by adding to `SKIP` — it costs a written reason for good cause. This guard exists because `t_printer` sat RED for weeks purely because nothing ran it, and it wasn't even a real failure. See §14.
+
 All exit `0` GREEN / `1` RED. Green soak = **not broken**; clean placement = **not overlapping**; **neither means "looks right on the TV."** That verdict is Kyle's — never merge on green alone if the change is visual.
 
 ### 2. Placement gate
@@ -122,3 +133,22 @@ The standard gate (§1) **plus**:
 
 ### 13. The standing line
 A green soak means **NOT BROKEN**. A clean screenshot means **IT RENDERS**. **Neither means GOOD.** That verdict is Kyle's, on the TV, with a gamepad. Never merge a visual change on green alone.
+
+---
+
+## Writing tests (added 2026-07-28)
+
+### 14. ⚠️ Never assert where something IS — assert what the code must DO
+A test that hardcodes a world coordinate **rots the next time the floor is redesigned**, then reports a failure that isn't real. That is worse than no test: it burns trust, and a suite with a permanent red in it stops being read.
+
+`t_printer` was RED for weeks and **never was a bug**. It asserted a printer at authored `(932,524)`; the printer had moved three times (→545 →565 → `770,610`), and its probe point had drifted out of every sales room when the geometry changed. `nearestPrinter` was right the whole time. `t_ceo` had the same bake — Sterling's post at `(120,58)` — a *third* copy of a value the game already stores twice.
+
+**The rules:**
+- **Derive from the live world, never from a literal.** `w.g.layout` exposes `objects`, `ROOMS`, `walls`, `desks`, `WINDOWS`, `W`, `H`, `S`. Ask the world where the printer is; don't tell it.
+- **Assert identity, not coordinates.** `got === thePrinter`, not `Math.abs(got.x - 1678) < 120`.
+- **Ask `roomAt()` "is he in his office"** rather than measuring a magic radius from a magic point.
+- **Prefer a brute-force cross-check** where the contract allows one. `t_printer` now verifies its answer against the true minimum at 722 sample points using the game's own `cdist`, so the test cannot disagree with the implementation about what "nearest" means — and it never goes stale when a printer moves.
+- **Prove a new test bites.** Mutate the thing it guards and watch it go RED before trusting it green. Both rewrites were verified this way.
+- **`W`/`H` are already scaled** — divide `S` back out for authored bounds (see `promotion-world-width`). `placement.js` used to hardcode `1500/760` and needed a hand-edit at every resize; it derives now.
+
+Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
