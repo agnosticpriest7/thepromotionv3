@@ -816,6 +816,7 @@ let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose 
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
 let SEAT_DESK_PULL  = 24;          // U1 units to pull a seated WORKER's whole chair+person toward their desk (the stand point is set back from it)
 let SEAT_SIDE_DOWN  = 22;          // U1 units to slide a LEFT/RIGHT-desk sitter down (their stand point is at desk-centre height, which renders too high)
+let SEAT_ABOVE_DOWN = 34;          // U1 units to slide down a sitter whose seat is ABOVE their desk (Ravinder). deskSeat sets the stand point 26u clear of the desk BOX for walking room; for the chair that reads as parked in open floor, 17u off the desk's drawn top edge
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
@@ -925,6 +926,7 @@ function seatRenderPoint(d,seat){
   let x=seat.x+vx/vl*pull, y=seat.y+vy/vl*pull;
   const dir=seatDirForDesk(d);
   if(dir==='left'||dir==='right')y+=U1(SEAT_SIDE_DOWN);   // side desks: stand point is at desk-centre height — slide the sitter down so the cushion lines up with the desk
+  else if(dir==='down'&&seat.y<d.y)y+=U1(SEAT_ABOVE_DOWN);   // seat ABOVE the desk: tuck the chair to the desk's top edge instead of leaving it adrift in the floor
   return {x,y};
 }
 function seatedDeskState(n){
@@ -1251,8 +1253,13 @@ const objects=[
   /* Both corridor coolers now sit flush against the supply closet's walls instead of floating in
      open corridor (the linter's "adrift / 34u from nearest wall" WARN). Shortest move each: this one
      backs onto the closet's SOUTH face (y435..445), the next stands against its NORTH face (y335). */
-  {type:'water',x:760,y:445,w:24,h:30,label:'Water cooler',trapped:false},
-  {type:'water',x:760,y:305,w:24,h:30,label:'Water cooler',trapped:false},
+  /* Both nudged clear of the supply closet's walls. drawWalls runs AFTER drawObjects, so a wall
+     drawn over a cooler SLICES it: the sprite is 41 tall and anchored bottom = y+34, so its top is
+     y-7. At y445 that put the top at 438, nine units behind the closet's south wall (bottom face
+     445) — the cooler was visibly cut off. y454 clears it; y301 does the same at the north wall,
+     whose top face is 335. */
+  {type:'water',x:760,y:454,w:24,h:30,label:'Water cooler',trapped:false},
+  {type:'water',x:760,y:301,w:24,h:30,label:'Water cooler',trapped:false},
   /* moved out of the middle of the kitchen floor (was 1240,240, where its blocker merged with the
      table's and pinched the room) to the strip between the ASST MANAGER door (x1078..1122) and the
      JANITORIAL door (x1209..1265). */
@@ -1277,10 +1284,14 @@ const objects=[
 ];
 /* Bins (contraband/loot) + shelves REBUILT from the plan (test/gen_level.js). */
 const CONTAINERS=[
-  {x:806,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
-  {x:606,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
-  {x:666,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
-  {x:746,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
+  /* Accounting's four shelves brought DOWN y9 -> y30. The supply_shelf sprite is 48.9 tall and is
+     anchored by its BOTTOM, so at y9 its top sat at -15.6 — 20.6 above the north wall band's top
+     edge (-5), poking out through the wall and over the windows. y30 lands the sprite at 5.4..54.3,
+     clear of the wall and still well above the Hank/Zora desks at y60. */
+  {x:806,y:30,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:606,y:30,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:666,y:30,w:28,h:22,label:'Accounting bin',kind:'box'},
+  {x:746,y:30,w:28,h:22,label:'Accounting bin',kind:'box'},
   {x:760,y:406,w:28,h:22,label:'Supply bin',kind:'box'},
   /* kitchen bin (1166,9) removed — the kitchen's north half is now the JANITORIAL room */
   {x:526,y:49,w:28,h:22,label:'HR bin',kind:'box'},
@@ -1437,7 +1448,7 @@ function dropItemMenu(){
   items.push({label:'Cancel',act:()=>{}});
   renderMenu({title:'Your pockets',items});
 }
-const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:445,type:'water'},{x:1170,y:105,type:'coffee'},{x:700,y:600,type:'chat'}];
+const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:454,type:'water'},{x:1170,y:105,type:'coffee'},{x:700,y:600,type:'chat'}];
 
 const player={x:400,y:180,w:16,h:16,speed:1.7,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0};
 
@@ -2380,7 +2391,27 @@ function startErrand(n){
      NPC a cell away — past the arrival tolerance — and it wedges. snapTarget lands them on
      the nearest cell they can actually stand on, so "arrived" always triggers. */
   if(Math.random()<0.55){const p=pick(errandPoints);const sp=snapTarget(p.x,p.y);n.errand={x:sp.x,y:sp.y,dwell:rand(2.5,5),ptype:p.type,arrived:false};}
-  else{const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;const d=pick(others);const p=snapTarget(d.x+d.w+Math.round(18*S),d.y+d.h/2);n.errand={x:p.x,y:p.y,dwell:rand(2,4),ptype:'chat',arrived:false};}
+  else{
+    const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;
+    const d=pick(others);
+    /* Stand CLEAR of the owner's own seat. The visit point used to be a fixed offset off the desk's
+       RIGHT edge — which on every cubicle_desk_left (seatSide 'right') is exactly where the owner is
+       sitting. The visitor arrived on top of them, the collision nudge shoved the owner off their
+       seat and back, and seatedDeskState's 24u "am I at my seat" tolerance flipped every frame, so
+       BOTH sprites flashed. Pick the approach farthest from the seat instead, and require real
+       clearance from it. */
+    let seat=null; try{ seat=deskSeat(d); }catch(e){}
+    const m=Math.round(18*S), cx=d.x+d.w/2, cy=d.y+d.h/2, clear=U1(28);
+    const sides=[{x:d.x+d.w+m,y:cy},{x:d.x-m,y:cy},{x:cx,y:d.y+d.h+m},{x:cx,y:d.y-m}]
+      .sort((a,b)=> (seat?Math.hypot(b.x-seat.x,b.y-seat.y):0) - (seat?Math.hypot(a.x-seat.x,a.y-seat.y):0));
+    let p=null;
+    for(const s of sides){
+      const t=snapTarget(Math.round(s.x),Math.round(s.y));
+      if(!seat||Math.hypot(t.x-seat.x,t.y-seat.y)>clear){ p=t; break; }
+    }
+    if(!p)p=snapTarget(Math.round(sides[0].x),Math.round(sides[0].y));
+    n.errand={x:p.x,y:p.y,dwell:rand(2,4),ptype:'chat',arrived:false};
+  }
 }
 function onErrandArrive(n,er){
   const flavor={supply:'Supplies...',water:'Water break',coffee:'Coffee time',printer:objByType('printer').jammed?'Ugh, jammed!':'Just scanning',chat:pick(CHATTER)};
@@ -6556,8 +6587,10 @@ function drawObjects(){
     if(o.jammed && !(o.type==='printer'&&o.wreckStage>0)){ctx.fillStyle='#c0392b';ctx.fillRect(o.x+o.w-6,o.y-6,6,6);}
     if(o.trapped){ctx.fillStyle='#8e44ad';ctx.fillRect(o.x+o.w-6,o.y-6,6,6);}
     if(o.rigged){ctx.fillStyle='rgba(90,160,200,.35)';ctx.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);}
-    /* no label on wall safety props (fire alarms / extinguishers) — they read on their own */
-    if(o.type!=='alarm')labelBox(o.label,cx,o.y-U1(18));
+    /* NO prop labels. The sprites read on their own — a printer looks like a printer — and a floor
+       full of "Printer" / "Water cooler" / "Supplies" / "Toilet" boxes was just noise over the art.
+       Desk NAME plates are unaffected: those come from drawDeskPlates(), which is what tells you
+       whose desk you are standing at. Labels still appear on interaction, not permanently. */
   }
 }
 
