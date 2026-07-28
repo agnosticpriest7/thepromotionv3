@@ -6762,9 +6762,20 @@ const LIGHT_BANKS=[
 ];
 let lightsUp=false, lightSeq=-1, lightSeqT=0, deadBank=1, lightsDoneToday=false;   // deadBank = the panel that never got fixed
 /* window bands: the ONLY way to tell what time it is */
+/* WINDOWS are authored like every other box and scaled ONCE by scaleWorld (WINDOWS.forEach(scaleBox)).
+   W and H are ALREADY scaled (round(1500*S) x round(760*S)), so using them here fed scaled numbers
+   into a list that then got scaled a second time: 6 of 15 north windows landed at x2826..4518 —
+   past the 2700-wide world — and all 7 east windows at x4838, i.e. the east facade had NO windows
+   at all. Author in authored units instead, derived from W/H so a future resize carries through.
+   The panes also sat at y2..12 while the north wall band is y-5..5, so only 28% of each window
+   overlapped the wall and the rest hung below it, inside the room. They now fill the wall band
+   exactly (north y-5 h10; east x1495 = the east wall's inner face). Margins widened 120->90 and
+   160->100 so the run reaches the corners of the post-1400->1500 facade instead of stopping short:
+   9 north panes spanning 40..1490, 4 east panes spanning 140..746. */
+const AW=Math.round(W/S), AH=Math.round(H/S);
 const WINDOWS=[];
-for(let wx=40;wx<W-120;wx+=170)WINDOWS.push({x:wx,y:2,w:90,h:10,side:'n'});
-for(let wy=140;wy<H-160;wy+=170)WINDOWS.push({x:W-12,y:wy,w:10,h:96,side:'e'});
+for(let wx=40;wx<AW-90;wx+=170)WINDOWS.push({x:wx,y:-5,w:90,h:10,side:'n'});
+for(let wy=140;wy<AH-100;wy+=170)WINDOWS.push({x:AW-5,y:wy,w:10,h:96,side:'e'});
 /* sky colour through the glass, by clock */
 function skyColour(){
   const m=clock;
