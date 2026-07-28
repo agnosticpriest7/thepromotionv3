@@ -21,7 +21,13 @@ const path = require('path');
 const { createWorld } = require('./harness');
 
 const ART_DIR = path.join(__dirname, '..', 'Art', 'sprites');
-const WORLD_W = 1500, WORLD_H = 760;   // authored world bounds (east side widened 1400->1500)
+
+/* Authored world bounds. These are DERIVED from the live W/H in buildContext() — the literals
+   below are only a fallback for a harness too old to expose them. They used to be hardcoded, and
+   the east widening 1400->1500 needed a manual edit here; forgetting it made every desk past
+   x1400 FAIL as out-of-bounds, a false positive in the one linter that is supposed to be the
+   authority on placement. Derive it and the next resize carries through on its own. */
+let WORLD_W = 1500, WORLD_H = 760;
 
 /* ---- intrinsic sprite dimensions, read straight from the PNG IHDR ----------
    The harness stubs Image at 64x64 (aspect lost), so we read the real width/
@@ -55,6 +61,9 @@ function buildContext() {
   const S = L.S || 1.8;
   const U1 = v => Math.round(v * S / 1.8);          // game's U1(), replicated
   const A  = v => Math.round(v / S);                // scaled -> authored
+  // W/H are ALREADY scaled (round(1500*S) x round(760*S)), so divide back out for authored bounds
+  if (L.W) WORLD_W = A(L.W);
+  if (L.H) WORLD_H = A(L.H);
   const ART_W = L.ART_W || {}, OBJ_ART = L.OBJ_ART || {}, CONT_ART = L.CONT_ART || {};
   const deskArt = w.g.fn && w.g.fn.deskArt;
 

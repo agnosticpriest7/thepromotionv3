@@ -1,7 +1,14 @@
 /* GATE ROTATION — the pre-merge test suite. `node test/gate.js` runs each test as a child process
    and reports pass/fail; a non-zero exit means do not merge. t_regress (the 150k soak) runs last. */
 const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+
+/* Deliberately not run, with a reason. Empty is the healthy state — this exists so leaving a test
+   out is a decision somebody wrote down, not an oversight. */
+const SKIP = {
+  // 't_something.js': 'why it is not in the rotation',
+};
 
 const TESTS = [
   'placement.js',
@@ -29,22 +36,71 @@ const TESTS = [
   't_fetch_mission.js',   // coworker fetch/friendship missions deliver (live inventory re-check)
   't_music.js',
   't_test_game.js',       // dev Test Game: jumpToRank places a consistent world at any rank
+
+  /* --- added 2026-07-28: these 11 existed but NOTHING RAN THEM -------------------------------
+     t_printer sat RED for weeks and nobody noticed, because it was not in this list. It was not
+     even a real failure — it hardcoded a printer position that had moved three times. A test no
+     rotation runs is not a safety net, it is a file. Everything under test/ now runs here. */
+  't_windows.js',         // every window pane is set into a perimeter wall (catches double-scaling)
+  't_printer.js',         // nearestPrinter really returns the nearest, checked by brute force
+  't_meltdown.js',        // victim reaches the printer and swings deliberately  (slow, ~280s)
+  't_ceo.js',             // Sterling lives in his office, laps once, comes home
+  't_meeting.js',         // meeting attendance penalty
+  't_grace.js',           // meeting grace period
+  't_arrivals.js',        // workers trickle in over the morning, all present by 8:25
+  't_paths.js',           // paths panel
+  't_leverage.js',        // leverage legibility
+  't_rumor_carrier.js',   // rumour carrier + gossip menu
+  't_intro_face.js',      // player always faces the way it walks
+
   't_menu_load.js',
   't_regress.js',         // slow soak — last
 ];
 
+/* ---- ROOT CAUSE GUARD ----------------------------------------------------------------------
+   t_printer went stale and stayed RED because it was simply absent from TESTS, and nothing ever
+   said so. Adding a test file was enough to create a test; nothing made it RUN. So: every
+   t_*.js / placement.js on disk must be listed here or SKIPped with a reason. Fails loudly. */
+const onDisk = fs.readdirSync(__dirname).filter(f => /^t_.*\.js$/.test(f) || f === 'placement.js');
+const unlisted = onDisk.filter(f => !TESTS.includes(f) && !(f in SKIP));
+const ghosts   = TESTS.filter(f => !onDisk.includes(f));
+if (unlisted.length || ghosts.length) {
+  if (unlisted.length) {
+    console.log('GATE: RED ❌ — test files on disk that no rotation runs:');
+    unlisted.forEach(f => console.log(`   - ${f}   (add it to TESTS, or to SKIP with a reason)`));
+  }
+  if (ghosts.length) {
+    console.log('GATE: RED ❌ — TESTS names a file that does not exist:');
+    ghosts.forEach(f => console.log(`   - ${f}`));
+  }
+  process.exit(1);
+}
+Object.entries(SKIP).forEach(([f, why]) => console.log(`-- ${f.padEnd(22)} SKIPPED — ${why}`));
+
 const failed = [];
+const times = [];
+const t0 = Date.now();
 for (const t of TESTS) {
-  process.stdout.write(`-- ${t.padEnd(20)} `);
+  process.stdout.write(`-- ${t.padEnd(22)} `);
+  const started = Date.now();
   try {
     const out = execSync(`node "${path.join(__dirname, t)}"`, { encoding: 'utf8' });
+    const secs = (Date.now() - started) / 1000;
+    times.push([t, secs]);
     const line = out.trim().split('\n').filter(l => /GREEN|RESULT:|PLACEMENT:|pass,|documented/.test(l)).pop() || 'ok';
-    console.log(line.trim());
+    console.log(`${String(secs.toFixed(0)).padStart(4)}s  ${line.trim()}`);
   } catch (e) {
+    const secs = (Date.now() - started) / 1000;
+    times.push([t, secs]);
     failed.push(t);
-    console.log('FAILED ❌');
+    console.log(`${String(secs.toFixed(0)).padStart(4)}s  FAILED ❌`);
     console.log(((e.stdout || '') + (e.stderr || '')).trim().split('\n').slice(-8).map(l => '   ' + l).join('\n'));
   }
 }
+/* Report the slowest few. A gate nobody wants to sit through is a gate that gets skipped, and a
+   skipped gate is how t_printer stayed RED — so keep the cost visible rather than letting it drift. */
+const slow = times.slice().sort((a, b) => b[1] - a[1]).slice(0, 5);
+console.log(`\ntotal ${((Date.now() - t0) / 1000 / 60).toFixed(1)} min over ${TESTS.length} tests`
+          + `  |  slowest: ${slow.map(([n, s]) => `${n.replace(/\.js$/, '')} ${s.toFixed(0)}s`).join(', ')}`);
 console.log(failed.length ? `\nGATE: RED ❌ — ${failed.join(', ')}` : `\nGATE: GREEN ✅ (all ${TESTS.length} passed)`);
 process.exit(failed.length ? 1 : 0);
