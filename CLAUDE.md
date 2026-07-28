@@ -49,6 +49,22 @@ npx --yes serve -l 3000 .      # from the repo root
 ```
 **Why it matters:** under `file://` the canvas is *tainted*, so `getImageData` throws inside `keyOutMagenta`, which catches and silently returns the **raw image**. Every magenta-keyed sprite then renders with an **opaque magenta background** — desks, chairs, stalls, bat sheets, the seated cast. It looks like an art bug and isn't. If you see magenta, you loaded the wrong way.
 
+**⚠️ Orphan servers — a live version of the stale-build trap.** Stopping a background task kills the `npx` **wrapper** but can leave the spawned **`node` child still serving** on `:3000` (seen 2026-07-27: PID 6680 outlived its wrapper). An orphan from an *earlier session* can therefore hold the port and serve **a directory nobody chose** — and the Browser pane will happily open `localhost:3000` and screenshot it without complaining. Same failure mode as §9: the picture looks real and isn't.
+
+- **Before trusting anything on `:3000`, verify which directory is actually being served** — byte count *and* a symbol check for something recent:
+```bash
+curl -s http://localhost:3000/ | wc -c                              # must equal the live index.html
+curl -s http://localhost:3000/ | grep -c "function acceptMission"   # a recent symbol -> 1
+```
+- **Stopping a preview means killing the `node` child by PID, not just the wrapper**, then confirming the port is dead:
+```bash
+# find + kill the real listener (PowerShell)
+Get-NetTCPConnection -LocalPort 3000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+```
+```bash
+curl -s -o /dev/null -m 3 -w "%{http_code}\n" http://localhost:3000/   # want 000 / no response
+```
+
 ### 9. ⚠️ THE STALE CLONE TRAP — check what you are actually serving
 A **sibling clone of the old `Promotionv2` repo** exists on this machine with **its own, older `index.html`**. It is **not a parent or child of this repo**, so `cwd` can neither reach it nor be used to avoid it — the preview tool only accepts a `cwd` *relative and inside* the session root.
 

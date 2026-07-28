@@ -66,6 +66,7 @@ Colette → Ravinder** (turban + grey jacket male face) — the rename touched `
 - **Remaining named cast without seated art:** Nadia (sprite 17, accountant), Vaughn (18,
   accountant), Dale Brackett (20, the manager) — plus the generic hire-pool faces used for
   randomly-named new hires.
+  > **[SUPERSEDED 2026-07-27]** All done — the seated cast is complete, sprites **0–20**. Sprite 17 was renamed **Nadia → Hank** and 18 **Vaughn → Zora**; 19 is the generic hire face `sit_hire_blazer`; 20 (Dale) needed its own `daleSeatState` because managers are excluded from `seatedDeskState`. See `HANDOFF-7.md`.
 - **Parked from earlier:** "clean up the kitchen" — never started.
 
 ## Validate every add (harness can't see pixels — Kyle's TV verdict is final)

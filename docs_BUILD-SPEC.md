@@ -13,8 +13,10 @@ the JSON has the exact coordinates, this doc says how to interpret and build the
 
 1. **SHIP-BLOCKER still open (unrelated to this overhaul):** `meltdown(n)` is forced to
    `Math.random()<0.50` for testing — revert to `0.07` before any release.
+   > **[SUPERSEDED 2026-07-27]** Resolved — the shipped code has been `Math.random()<0.07` since HANDOFF-5. There is no 50% flag and nothing to revert. To see the homage on demand use `__dbg.melt(name)` (CLAUDE.md §11). Line above kept as the historical record.
 2. **This overhaul WIDENS THE WORLD to 1400×760** (decision made). The plan is authored
    1400 wide; height is unchanged at 760. See §1.
+   > **[SUPERSEDED 2026-07-27]** This overhaul shipped, and the east side was widened again afterwards: the world is now **1500×760** (`const W=Math.round(1500*S)`, more sales + senior-sales room). Read every "1400" in this document as the authored plan at the time, not the current width.
 
 ---
 

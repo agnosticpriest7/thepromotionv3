@@ -12,6 +12,8 @@ they don't exist and try to build them again. That nearly happened this session 
 
 ## ⚠️ SHIP-BLOCKER (unchanged, still #1)
 
+> **[SUPERSEDED 2026-07-27]** Resolved — the shipped code has been `Math.random()<0.07` since HANDOFF-5. There is no 50% flag and nothing to revert. Section below kept as the historical record.
+
 Printer meltdown is forced to **50%** for testing. In `meltdown(n)` (~ln 2097) change
 `Math.random()<0.50` back to `0.07` before shipping.
 

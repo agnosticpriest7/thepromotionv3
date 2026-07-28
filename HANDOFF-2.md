@@ -8,6 +8,8 @@
 
 ## ⚠️ BEFORE YOU SHIP — REVERT THE TEST TWEAK
 
+> **[SUPERSEDED 2026-07-27]** Resolved — the shipped code has been `Math.random()<0.07` since HANDOFF-5. There is no 50% flag and nothing to revert. Section below kept as the historical record.
+
 The printer meltdown is currently forced to **50%** for testing. Find this line and change `0.50` back to `0.07`:
 
 ```js

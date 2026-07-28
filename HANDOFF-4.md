@@ -114,6 +114,7 @@ letter = an asset that silently fails to load, no error. When copying assets int
   `Math.random()<0.50 // TEMP: 50% for testing (ship value is 0.07)`. Do **not** "helpfully" revert
   it to 0.07 — Kyle relies on the high rate to test the printer smash. Reverting to 7% is a
   pre-ship item **Kyle owns** (HANDOFF-3 Part D #1). Leave the flag and its comment as-is.
+  > **[SUPERSEDED 2026-07-27]** No longer applies — Kyle has since reverted it himself; the shipped code has been `Math.random()<0.07` since HANDOFF-5. There is no 50% flag to preserve. To see the homage on demand use `__dbg.melt(name)` (CLAUDE.md §11) rather than changing the roll. Bullet above kept as the historical record.
 - **Desks are ground truth** (§5). If code and the nav grid disagree about a desk, rebuild the grid
   — don't patch around it. The seat/desk/rank agreement check is the single most important soak
   assertion; it disagreed since day one and kept resurfacing.

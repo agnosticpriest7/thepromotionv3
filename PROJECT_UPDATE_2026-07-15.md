@@ -9,6 +9,8 @@ base doc still holds unless noted below. Build is now **~7,180 lines / ~404 KB**
 
 ## ⚠️ Ship-blocker: revert the test tweak
 
+> **[SUPERSEDED 2026-07-27]** Resolved — the shipped code has been `Math.random()<0.07` since HANDOFF-5. There is no 50% flag and nothing to revert. Section below kept as the historical record.
+
 The printer-smash Easter egg is temporarily forced to **50%** for testing. Before shipping,
 in `meltdown(n)` change `Math.random()<0.50` back to `Math.random()<0.07`. It's flagged in-line.
 
