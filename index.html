@@ -489,6 +489,9 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
   /* kitchen counter run (Kyle's art, magenta bg): plain / sink / microwave / coffee */
   'counter_plain','counter_sink','counter_micro','counter_coffee',
+  /* break-room + kitchen table set. Table and chairs are SEPARATE sprites (unlike conference_table,
+     which has its chairs baked in) so every chair is an addressable seat an NPC can be sent to. */
+  'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -570,6 +573,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h','couch',
   'counter_plain','counter_sink','counter_micro','counter_coffee',
+  'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -677,6 +681,11 @@ const ART_W={
      never a hairline gap. */
   counter_plain:106, counter_sink:106, counter_micro:106, counter_coffee:106,
   break_table:190, kitchen_table:190, bush:44, grass:64,
+  /* crew set. Chairs sit OUTSIDE the tabletop (they are their own sprites), so the whole set spans
+     1.436x the table's width and 1.944x its height — 132 keeps a set at ~190x133 world, i.e. about
+     the footprint the old chairs-baked-in conference sprite had. Chair 30 is the layout sheet's
+     0.226 x table width. */
+  crew_table:132, crew_chair_top:30, crew_chair_bottom:30, crew_chair_left:30, crew_chair_right:30,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
 function sprAt(name,cx,cyBottom,widthKey){
@@ -1185,17 +1194,29 @@ const meetingTable={x:540,y:320,w:40,h:120};
 const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null}];
-const breakTable={x:880,y:340,w:40,h:120};
-const breakTableB={x:540,y:250,w:40,h:120};   // T3: a second table in the MEETING ROOM, stacked directly above the main table
-const breakChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                   {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
-/* moved down out of the old north half (was 1250,130) so it sits in the kitchen proper, below the
-   JANITORIAL divider at y120. The DRAWN table is ART_W.kitchen_table wide and anchored by
-   bottom=y+h+8, so y180 puts its bottom at 238 — clear of the coffee machine (y240) and well off
-   the south wall (y275). seatRing puts the chairs inside that drawn rect, not outside it. */
-const kitchenTable={x:1300,y:180,w:100,h:50};
-const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                     {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
+const breakTableB={x:540,y:250,w:40,h:120};   // T3: despite the name this is in the MEETING ROOM, stacked above meetingTable. Left on the old conference art — Kyle is redesigning the meeting room separately.
+/* ---- crew sets: two in the BREAK ROOM, one in the KITCHEN ----------------------------------
+   Box is just the anchor (crewRect reads cx and y+h+8); the drawn set is much larger. h33 keeps
+   the anchor box inside its room instead of poking out the top like a h120 box would.
+   Break room interior is x845..1095, y285..495. A set spans 105x74 authored, so at cx900 the two
+   stack at y332..406 and y408..482: clear of the lockers (858,300 84x26, so y<=326), the vending
+   machine (1005,330), the water cooler (1050,460) and the bin (1060,400) without moving any. */
+const breakTable ={x:880,y:427,w:40,h:33};    // lower set
+const breakTable2={x:880,y:351,w:40,h:33};    // upper set
+const breakChairs =[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
+                    {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
+const breakChairs2=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
+                    {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
+/* Kitchen crew set, east half. It started at 1310,204 — centred, which read fine but pinched the
+   room: the coffee machine (1240,240) and this table's blocker merge under the 20u nav grid into
+   one mass, leaving the bottom seat row reachable only down a single-cell lane. With 24 seats
+   instead of 12 nearly every worker now walks to a chair, so that lane got used constantly and
+   three of them (Hank, Sana, Doug — every run) ended up inside geometry mid-route. Moved east and
+   up: the whole western half of the kitchen is now an open corridor, the bottom chairs sit 39u off
+   the south wall (2 cells, not 1), and the top chairs clear the counter boxes' cells. */
+const kitchenTable={x:1370,y:190,w:40,h:33};
+const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
+                     {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 /* Interactive objects REBUILT from the plan pins (test/gen_level.js). Two printers + two
    waters are intentional. Toilets sit in the central Restroom. */
 const objects=[
@@ -2361,22 +2382,34 @@ function assignSeats(chairs){
 /* breaks: half the floor takes the break room, half goes up to the kitchen */
 function assignBreakSeats(){
   breakChairs.forEach(c=>c.by=null);
+  breakChairs2.forEach(c=>c.by=null);
   kitchenChairs.forEach(c=>c.by=null);
   const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
   const brk=[], kit=[];
   att.forEach((n,i)=>((i%2)?kit:brk).push(n));
-  const place=(list,chairs,table)=>{
-    const cx=table.x+table.w/2, cy=table.y+table.h/2;
+  /* The break room now has TWO crew sets, so its seats come from a pool across both tables —
+     fill table 1's eight chairs, then table 2's, and only stand once both are full. Each chair is
+     an individual sprite, so a seated NPC is genuinely sitting ON the chair that is drawn. */
+  const place=(list,groups)=>{
+    const pool=[];
+    groups.forEach(g=>g.chairs.forEach(c=>pool.push({c:c,t:g.table})));
     let standing=0;
     list.forEach((n,i)=>{
-      if(chairs[i]){n.seat={x:chairs[i].x,y:chairs[i].y};chairs[i].by=n.id;}
-      else{n.seat=standRing(cx,cy,Math.round(82*S),Math.round(62*S),standing,Math.max(4,list.length-chairs.length));standing++;}
+      if(pool[i]){n.seat={x:pool[i].c.x,y:pool[i].c.y};pool[i].c.by=n.id;}
+      else{const t=groups[0].table, cx=t.x+t.w/2, cy=t.y+t.h/2;
+           n.seat=standRing(cx,cy,Math.round(82*S),Math.round(62*S),standing,Math.max(4,list.length-pool.length));standing++;}
     });
   };
-  place(brk,breakChairs,breakTable);
-  place(kit,kitchenChairs,kitchenTable);
+  place(brk,[{chairs:breakChairs,table:breakTable},{chairs:breakChairs2,table:breakTable2}]);
+  place(kit,[{chairs:kitchenChairs,table:kitchenTable}]);
+  /* Going from 12 seats to 24 means almost everyone now walks to a chair instead of loitering, and
+     that exposed a latent problem: an NPC already standing inside a blocker had no goal before, so
+     nothing moved it — now it has one, and it can't move, which the soak scores as stuck (Hank,
+     Sana and Doug, every run, all mid-route to a kitchen seat on a non-walkable tile). Unstick
+     everyone at assignment so nobody starts the walk from inside geometry. */
+  att.forEach(n=>{ try{ unstickEnt(n); }catch(e){} });
 }
-function clearSeats(){activeNPCs().forEach(n=>{n.seat=null;});meetingChairs.forEach(c=>c.by=null);breakChairs.forEach(c=>c.by=null);kitchenChairs.forEach(c=>c.by=null);}
+function clearSeats(){activeNPCs().forEach(n=>{n.seat=null;});meetingChairs.forEach(c=>c.by=null);breakChairs.forEach(c=>c.by=null);breakChairs2.forEach(c=>c.by=null);kitchenChairs.forEach(c=>c.by=null);}
 
 /* meltdown -> firing */
 /* ---- stress tiers: pranks degrade behavior, the office notices ---- */
@@ -6222,6 +6255,55 @@ function tableRect(table,artKey,widthKey){
   const bottom=table.y+table.h+U1(8);
   return {cx, cy:bottom-h/2, w, h, left:cx-w/2, right:cx+w/2, top:bottom-h, bottom};
 }
+/* ---- CREW SET: table and chairs are separate sprites -------------------------------------
+   conference_table has its chairs baked into one sprite, so seatRing drops seats INSIDE the
+   sprite's footprint. Kyle's new set is a bare tabletop plus four chair sprites, so the chairs
+   live OUTSIDE the tabletop and each one is its own addressable seat — which is the point: an
+   NPC can be sent to chair N. Offsets are read off Kyle's layout sheet, as fractions of the
+   drawn tabletop: rows at +-0.34w, row chairs 0.236h beyond the near edge (so they tuck under
+   it), end chairs 0.105w beyond the side. Seat order matches seatRing: 0-2 top, 3-5 bottom,
+   6 left end, 7 right end. */
+const CREW_CHAIR_ART=['crew_chair_top','crew_chair_top','crew_chair_top',
+                      'crew_chair_bottom','crew_chair_bottom','crew_chair_bottom',
+                      'crew_chair_left','crew_chair_right'];
+function crewRect(table){
+  const im=ART['crew_table']; if(!im||!im.naturalWidth) return null;
+  const w=U1(ART_W.crew_table);
+  const h=Math.round(im.naturalHeight*w/im.naturalWidth);
+  const cx=table.x+table.w/2, bottom=table.y+table.h+U1(8);
+  return {cx, cy:bottom-h/2, w, h, left:cx-w/2, right:cx+w/2, top:bottom-h, bottom};
+}
+function crewSeatPts(r){
+  const dx=r.w*0.34, ry=r.h*0.236, sx=r.w*0.105;
+  return [{x:r.cx-dx,y:r.top-ry},   {x:r.cx,y:r.top-ry},   {x:r.cx+dx,y:r.top-ry},
+          {x:r.cx-dx,y:r.bottom+ry},{x:r.cx,y:r.bottom+ry},{x:r.cx+dx,y:r.bottom+ry},
+          {x:r.left-sx,y:r.cy},     {x:r.right+sx,y:r.cy}];
+}
+function drawCrewChair(art,p){
+  const im=ART[art]; if(!im||!im.naturalWidth)return;
+  const w=U1(ART_W[art]||30);
+  const h=Math.round(im.naturalHeight*w/im.naturalWidth);
+  sprAt(art,Math.round(p.x),Math.round(p.y+h/2),art);
+}
+/* back row + ends first, then the tabletop over them, then the front row in front of it — the
+   same stacking Kyle's layout sheet shows. */
+function drawCrewSet(table){
+  const r=crewRect(table); if(!r||!ok('crew_table'))return false;
+  const p=crewSeatPts(r);
+  for(let i=0;i<3;i++) drawCrewChair(CREW_CHAIR_ART[i],p[i]);
+  drawCrewChair(CREW_CHAIR_ART[6],p[6]);
+  drawCrewChair(CREW_CHAIR_ART[7],p[7]);
+  sprAt('crew_table',r.cx,r.bottom,'crew_table');
+  for(let i=3;i<6;i++) drawCrewChair(CREW_CHAIR_ART[i],p[i]);
+  return true;
+}
+function crewSeatRing(r,seats){
+  const pts=crewSeatPts(r);
+  for(let i=0;i<seats.length&&i<pts.length;i++){
+    const p=snapTarget(Math.round(pts[i].x),Math.round(pts[i].y));
+    seats[i].x=p.x;seats[i].y=p.y;
+  }
+}
 function seatRing(r,seats,sixOnly){
   /* three chairs along the top edge, three along the bottom, one at each end */
   const rowIn=r.h*0.16, endIn=r.w*0.055;
@@ -6237,18 +6319,19 @@ function seatRing(r,seats,sixOnly){
 }
 function fitTableSeats(){
   if(tableSeatsFitted)return;
-  if(!ok('conference_table'))return;
+  if(!ok('conference_table')||!ok('crew_table'))return;
   const mr=tableRect(meetingTable,'conference_table');
-  const br=tableRect(breakTable,'conference_table','break_table');
   const brB=tableRect(breakTableB,'conference_table','break_table');
-  const kr=tableRect(kitchenTable,'conference_table','kitchen_table');
+  /* crew sets: the sprite IS the tabletop, so its rect is the blocker (no middle-band guess) */
+  const br=crewRect(breakTable), br2=crewRect(breakTable2), kr=crewRect(kitchenTable);
   /* blockers FIRST, then rebuild the grid, THEN place the seats — so snapTarget knows
      about the tabletop and can never drop a seat inside the furniture */
-  buildBlockers([mr,br,brB,kr]);
+  buildBlockers([mr,brB],[br,br2,kr]);
   buildGrid();
   seatRing(mr,meetingChairs);
-  seatRing(br,breakChairs.filter(c=>!c.couch));
-  seatRing(kr,kitchenChairs);
+  crewSeatRing(br,breakChairs.filter(c=>!c.couch));
+  crewSeatRing(br2,breakChairs2);
+  crewSeatRing(kr,kitchenChairs);
   tableSeatsFitted=true;
   NPCS.forEach(n=>{n.goal=null;n.path=null;n.wp=0;unstickEnt(n);});
   unstickPlayer();
@@ -6256,13 +6339,24 @@ function fitTableSeats(){
 /* The solid parts of the world that aren't walls or desks.
    For the tables that means the TABLETOP only — the chairs are part of the sprite, and
    people have to be able to stand on them. */
-function buildBlockers(tableRects){
+function buildBlockers(tableRects,crewRects){
   blockers=[];
   tableRects.forEach(r=>{
     /* the TABLETOP: the sprite's middle band. The chairs live outside it and people
        have to be able to stand on those. */
     blockers.push({x:Math.round(r.left+r.w*0.18), y:Math.round(r.top+r.h*0.36),
                    w:Math.round(r.w*0.64),        h:Math.round(r.h*0.28)});
+  });
+  /* crew tables: the sprite is JUST the tabletop, but the blocker still has to be a MIDDLE BAND,
+     not the full rect. The nav grid is 20 authored units and a blocker claims every cell it touches
+     at all, so a full-rect blocker on a 37u-tall tabletop inflated to ~60u and swallowed the very
+     tiles the chair rows sit on — snapTarget then flung those seats out of the room (one landed at
+     y530, outside it) and NPCs sent to them got stuck. Measured, from the soak going RED.
+     0.30..0.70 of the height keeps the blocker inside the middle cells and leaves the chair rows
+     above and below walkable, so every seat stays reachable. */
+  (crewRects||[]).forEach(r=>{
+    blockers.push({x:Math.round(r.left+r.w*0.06), y:Math.round(r.top+r.h*0.30),
+                   w:Math.round(r.w*0.88),        h:Math.round(r.h*0.40)});
   });
   /* filing cabinets, lockers, shelves, the fridge — furniture you should bump into */
   CONTAINERS.forEach(c=>blockers.push({x:c.x,y:c.y,w:c.w,h:c.h}));
@@ -6279,12 +6373,14 @@ function buildBlockers(tableRects){
 function drawFurniture(table,chairs){
   /* the table sprites already come with chairs attached — drawing office_chair on top
      of them is what gave every room two sets of seats. Seats are logical now. */
+  /* break room + kitchen run Kyle's crew set (separate table and chair sprites, so every chair is
+     an addressable seat). The meeting room keeps the old chairs-baked-in conference sprite — Kyle
+     is redesigning those tables separately. */
+  if(table===breakTable||table===breakTable2||table===kitchenTable){
+    if(drawCrewSet(table))return;                    // art missing -> fall through to the old sprite
+  }
   if(table===meetingTable){
     sprAt('conference_table',table.x+table.w/2,table.y+table.h+U1(10),'conference_table');
-    return;
-  }
-  if(table===kitchenTable){
-    sprW('conference_table',table.x+table.w/2,table.y+table.h+U1(8),U1(ART_W.kitchen_table));
     return;
   }
   sprW('conference_table',table.x+table.w/2,table.y+table.h+U1(8),U1(ART_W.break_table));
@@ -7094,7 +7190,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -8936,7 +9032,7 @@ function scaleWorld(){
   WINDOWS.forEach(scaleBox);
   INTRO_ROUTE.forEach(scaleBox);
   breakChairs.filter(c=>c.couch).forEach(scaleBox);
-  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(breakTableB); scaleBox(kitchenTable);
+  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(breakTable2); scaleBox(breakTableB); scaleBox(kitchenTable);
   scaleBox(EXIT);
   scaleBox(MUSTER);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
