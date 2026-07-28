@@ -492,6 +492,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   /* break-room + kitchen table set. Table and chairs are SEPARATE sprites (unlike conference_table,
      which has its chairs baked in) so every chair is an addressable seat an NPC can be sent to. */
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
+  /* meeting-room set — same 3/3/1/1 layout, its own art */
+  'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -574,6 +576,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'stall_v','stall_h','couch',
   'counter_plain','counter_sink','counter_micro','counter_coffee',
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
+  'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -687,6 +690,9 @@ const ART_W={
      the footprint the old chairs-baked-in conference sprite had. Chair 30 is the layout sheet's
      0.226 x table width. */
   crew_table:137, crew_chair_top:30, crew_chair_bottom:30, crew_chair_left:30, crew_chair_right:30,
+  /* meeting set: same 137 tabletop as the crew set, which is what keeps the grid-alignment maths
+     (and therefore the free ring of chair cells around a solid table) identical for both. */
+  meet_table:137, meet_chair_top:30, meet_chair_bottom:30, meet_chair_left:30, meet_chair_right:30,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
 function sprAt(name,cx,cyBottom,widthKey){
@@ -954,7 +960,7 @@ function seatedBreakState(n){
   if(!n||!isWorker(n))return null;
   if(n.moving)return null;
   const ph=currentPhase().name;
-  if(ph!=='Morning Break'&&ph!=='Afternoon Break'&&ph!=='Lunch / Break')return null;
+  if(ph!=='Morning Break'&&ph!=='Afternoon Break'&&ph!=='Lunch / Break'&&ph!=='Meeting')return null;
   const s=n.seat;
   if(!s||!s.dir||!isFinite(s.gy))return null;          // standing overflow has no dir -> not seated
   if(cdist(n,s)>=U1(24))return null;                   // still walking over
@@ -1213,12 +1219,15 @@ const desks=[];
    from the furniture they were supposedly sitting at. fitTableSeats() below reads the
    sprite's real footprint once the art loads and drops the seats onto the actual chairs. */
 /* Tables REBUILT from the plan. Meeting = conference table; Break room has TWO tables
-   (breakTable + breakTableB); Kitchen = open-concept table by the counter. */
-const meetingTable={x:540,y:320,w:40,h:120};
-const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                     {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
-                     {x:0,y:0,by:null},{x:0,y:0,by:null}];
-const breakTableB={x:540,y:250,w:40,h:120};   // T3: despite the name this is in the MEETING ROOM, stacked above meetingTable. Left on the old conference art — Kyle is redesigning the meeting room separately.
+   (breakTable + breakTable2); Kitchen = open-concept table by the counter. */
+/* MEETING ROOM: one set, replacing the two old chairs-baked-in conference tables that used to be
+   stacked here (meetingTable + the misleadingly named breakTableB, both now gone). Same 3/3/1/1 rig
+   as the break room, its own art. Tabletop 462,382 — grid-aligned 2u inside the cell like the
+   others, so the table can be solid while the whole ring of chair cells stays walkable. Set spans
+   x445..554, y363..436, which clears the whiteboard on the west wall and the corner plant. */
+const meetingTable={x:480,y:383,w:40,h:33};
+const meetingChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
+                     {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 /* ---- crew sets: two in the BREAK ROOM, one in the KITCHEN ----------------------------------
    Box is just the anchor (crewRect reads cx and y+h+8); the drawn set is much larger. h33 keeps
    the anchor box inside its room instead of poking out the top like a h120 box would.
@@ -1272,7 +1281,12 @@ const objects=[
   {type:'coffee',x:1170,y:105,w:30,h:26,label:'Coffee',trapped:false},
   {type:'files',x:500,y:40,w:30,h:26,label:'HR Files',restricted:true},
   {type:'alarm',x:1032,y:500,w:16,h:22,label:'Fire Alarm'},
-  {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
+  /* Whiteboard pushed LEFT onto the meeting room's west wall. Its sprite is drawn centred on the
+     BOX centre, so an 84-wide box starting at 388 put the board at 406.9..452.5 — 23 off the wall
+     (inner face 384) and all but touching the new set's left end chair at 454. Narrowing the box to
+     the sprite's own width and starting it at 386 lands the board at 386.2..431.8: flush to the
+     wall, with 22 clear to the chair. */
+  {type:'board',x:386,y:408,w:46,h:26,label:'Whiteboard'},
   {type:'phones',x:1030,y:668,w:32,h:22,label:'Sales phones'},   // moved into the freed Sales-bin slot
   {type:'supply',x:708,y:402,w:40,h:26,label:'Supplies'},
   {type:'toilet',x:457,y:696,w:26,h:30,label:'Toilet (M)',rigged:false},
@@ -2438,9 +2452,16 @@ function assignSeats(chairs){
   chairs.forEach(ch=>ch.by=null);
   const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
   const cx=meetingTable.x+meetingTable.w/2, cy=meetingTable.y+meetingTable.h/2;
+  /* RANDOM, re-rolled every meeting. It used to be positional — attendee order picked the chair —
+     so the same people took the same seats in every meeting, all game. Shuffling both sides means
+     who sits where changes each time, and who has to stand changes with it. */
+  const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; } return a; };
+  shuffle(att);
+  chairs=shuffle(chairs.slice());
   let standing=0;
   att.forEach((n,i)=>{
-    if(chairs[i]){n.seat={x:chairs[i].x,y:chairs[i].y};chairs[i].by=n.id;}
+    /* dir/gy/cw/ch ride along so drawNPC renders them SEATED on the actual chair */
+    if(chairs[i]){const c=chairs[i];n.seat={x:c.x,y:c.y,dir:c.dir,gy:c.gy,cw:c.cw,ch:c.ch};c.by=n.id;}
     else{
       n.seat=standRing(cx,cy,Math.round(112*S),Math.round(84*S),standing,Math.max(4,att.length-chairs.length));
       standing++;
@@ -6344,9 +6365,21 @@ function tableRect(table,artKey,widthKey){
 const CREW_CHAIR_ART=['crew_chair_top','crew_chair_top','crew_chair_top',
                       'crew_chair_bottom','crew_chair_bottom','crew_chair_bottom',
                       'crew_chair_left','crew_chair_right'];
+const MEET_CHAIR_ART=['meet_chair_top','meet_chair_top','meet_chair_top',
+                      'meet_chair_bottom','meet_chair_bottom','meet_chair_bottom',
+                      'meet_chair_left','meet_chair_right'];
+/* Which art a set wears. The MEETING ROOM runs the same 3/3/1/1 rig as the break room and kitchen
+   — same geometry, same seat ring, same solid-table-with-free-chair-cells trick — just its own
+   table and chair sprites. */
+function setArt(table){
+  return (table===meetingTable)
+    ? {table:'meet_table', chairs:MEET_CHAIR_ART}
+    : {table:'crew_table', chairs:CREW_CHAIR_ART};
+}
 function crewRect(table){
-  const im=ART['crew_table']; if(!im||!im.naturalWidth) return null;
-  const w=U1(ART_W.crew_table);
+  const key=setArt(table).table;
+  const im=ART[key]; if(!im||!im.naturalWidth) return null;
+  const w=U1(ART_W[key]);
   const h=Math.round(im.naturalHeight*w/im.naturalWidth);
   const cx=table.x+table.w/2, bottom=table.y+table.h+U1(8);
   return {cx, cy:bottom-h/2, w, h, left:cx-w/2, right:cx+w/2, top:bottom-h, bottom};
@@ -6366,13 +6399,14 @@ function drawCrewChair(art,p){
 /* back row + ends first, then the tabletop over them, then the front row in front of it — the
    same stacking Kyle's layout sheet shows. */
 function drawCrewSet(table){
-  const r=crewRect(table); if(!r||!ok('crew_table'))return false;
+  const A=setArt(table);
+  const r=crewRect(table); if(!r||!ok(A.table))return false;
   const p=crewSeatPts(r);
-  for(let i=0;i<3;i++) drawCrewChair(CREW_CHAIR_ART[i],p[i]);
-  drawCrewChair(CREW_CHAIR_ART[6],p[6]);
-  drawCrewChair(CREW_CHAIR_ART[7],p[7]);
-  sprAt('crew_table',r.cx,r.bottom,'crew_table');
-  for(let i=3;i<6;i++) drawCrewChair(CREW_CHAIR_ART[i],p[i]);
+  for(let i=0;i<3;i++) drawCrewChair(A.chairs[i],p[i]);
+  drawCrewChair(A.chairs[6],p[6]);
+  drawCrewChair(A.chairs[7],p[7]);
+  sprAt(A.table,r.cx,r.bottom,A.table);
+  for(let i=3;i<6;i++) drawCrewChair(A.chairs[i],p[i]);
   return true;
 }
 /* Which way an occupant faces, by ring index: the three along the top look DOWN at the table, the
@@ -6383,7 +6417,8 @@ function crewChairDims(art){
   const h=(im&&im.naturalWidth>0)?Math.round(im.naturalHeight*w/im.naturalWidth):w;
   return {w:w,h:h};
 }
-function crewSeatRing(r,seats){
+function crewSeatRing(r,seats,chairArt){
+  const arts=chairArt||CREW_CHAIR_ART;
   const pts=crewSeatPts(r);
   for(let i=0;i<seats.length&&i<pts.length;i++){
     const p=snapTarget(Math.round(pts[i].x),Math.round(pts[i].y));
@@ -6391,7 +6426,7 @@ function crewSeatRing(r,seats){
     /* Carried so a sitter can be DRAWN on this chair: which way they face, the chair's ground line
        (drawCrewChair puts the sprite's bottom at centre + h/2) and its size, which is what lifts the
        figure onto the cushion. */
-    const d=crewChairDims(CREW_CHAIR_ART[i]);
+    const d=crewChairDims(arts[i]);
     seats[i].dir=CREW_SEAT_DIR[i];
     seats[i].gy=p.y+Math.round(d.h/2);
     seats[i].cw=d.w; seats[i].ch=d.h;
@@ -6412,16 +6447,15 @@ function seatRing(r,seats,sixOnly){
 }
 function fitTableSeats(){
   if(tableSeatsFitted)return;
-  if(!ok('conference_table')||!ok('crew_table'))return;
-  const mr=tableRect(meetingTable,'conference_table');
-  const brB=tableRect(breakTableB,'conference_table','break_table');
-  /* crew sets: the sprite IS the tabletop, so its rect is the blocker (no middle-band guess) */
-  const br=crewRect(breakTable), br2=crewRect(breakTable2), kr=crewRect(kitchenTable);
+  if(!ok('crew_table')||!ok('meet_table'))return;
+  /* every set is now a crew-style rig — the sprite IS the tabletop, so its rect is the blocker
+     (no middle-band guess). The last conference_table, in the meeting room, is gone. */
+  const mr=crewRect(meetingTable), br=crewRect(breakTable), br2=crewRect(breakTable2), kr=crewRect(kitchenTable);
   /* blockers FIRST, then rebuild the grid, THEN place the seats — so snapTarget knows
      about the tabletop and can never drop a seat inside the furniture */
-  buildBlockers([mr,brB],[br,br2,kr]);
+  buildBlockers([],[mr,br,br2,kr]);
   buildGrid();
-  seatRing(mr,meetingChairs);
+  crewSeatRing(mr,meetingChairs,MEET_CHAIR_ART);
   crewSeatRing(br,breakChairs.filter(c=>!c.couch));
   crewSeatRing(br2,breakChairs2);
   crewSeatRing(kr,kitchenChairs);
@@ -6469,18 +6503,11 @@ function buildBlockers(tableRects,crewRects){
   blockers.push({x:Math.round(90*S),y:Math.round(80*S),w:Math.round(60*S),h:Math.round(38*S)});
 }
 function drawFurniture(table,chairs){
-  /* the table sprites already come with chairs attached — drawing office_chair on top
-     of them is what gave every room two sets of seats. Seats are logical now. */
-  /* break room + kitchen run Kyle's crew set (separate table and chair sprites, so every chair is
-     an addressable seat). The meeting room keeps the old chairs-baked-in conference sprite — Kyle
-     is redesigning those tables separately. */
-  if(table===breakTable||table===breakTable2||table===kitchenTable){
-    if(drawCrewSet(table))return;                    // art missing -> fall through to the old sprite
-  }
-  if(table===meetingTable){
-    sprAt('conference_table',table.x+table.w/2,table.y+table.h+U1(10),'conference_table');
-    return;
-  }
+  /* EVERY table is now a set of separate table + chair sprites, so every chair is an addressable
+     seat. The old conference_table had its chairs baked into one image — drawing office_chair on
+     top of that is what once gave every room two sets of seats. Nothing uses it any more. */
+  if(drawCrewSet(table))return;
+  /* art still loading: fall back to the old combined sprite rather than an empty floor */
   sprW('conference_table',table.x+table.w/2,table.y+table.h+U1(8),U1(ART_W.break_table));
 }
 /* THE FIX for "you can walk into the top of a desk": the collision box was authored
@@ -7246,7 +7273,7 @@ function drawPropMap(){
   desks.forEach((d,i)=>chip(d.x+d.w/2, d.y+d.h/2, 'D'+(i+1), '#f0c040'));
   CONTAINERS.forEach((c,i)=>chip(c.x+c.w/2, c.y+c.h/2, 'C'+(i+1), '#48d0da'));
   objects.forEach((o,i)=>chip(o.x+o.w/2, o.y+o.h/2, 'O'+(i+1), '#ff8a5c'));
-  [[meetingTable,'T1'],[breakTable,'T2'],[breakTableB,'T3'],[kitchenTable,'T4']]
+  [[meetingTable,'T1'],[breakTable,'T2'],[breakTable2,'T3'],[kitchenTable,'T4']]
     .forEach(([t,n])=>{ if(t)chip(t.x+t.w/2, t.y+t.h/2, n, '#66d078'); });
   ctx.textAlign='left'; ctx.textBaseline='alphabetic';
 }
@@ -7292,7 +7319,7 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(breakTableB,breakChairs);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -9145,7 +9172,7 @@ function scaleWorld(){
   WINDOWS.forEach(scaleBox);
   INTRO_ROUTE.forEach(scaleBox);
   breakChairs.filter(c=>c.couch).forEach(scaleBox);
-  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(breakTable2); scaleBox(breakTableB); scaleBox(kitchenTable);
+  scaleBox(meetingTable); scaleBox(breakTable); scaleBox(breakTable2); scaleBox(kitchenTable);
   scaleBox(EXIT);
   scaleBox(MUSTER);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
