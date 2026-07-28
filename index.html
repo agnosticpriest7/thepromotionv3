@@ -6448,14 +6448,20 @@ const ROOMS=[
   {name:'EXEC RESTROOM',x:0,   y:280, w:240, h:140, c:'#7c7768'},
   {name:'RECEPTION',    x:0,   y:420, w:240, h:260, c:'#3b6ea5'},
   {name:'KITCHEN',      x:1160,y:0,   w:335, h:280, c:'#c9a41a'},   // east 1495: the kitchen floor runs to the east perimeter wall, not to 1400 (the pre-widening edge)
-  {name:'SENIOR SALES', x:1240,y:280, w:160, h:300, c:'#3b6ea5', glass:true},
-  {name:'SALES FLOOR',  x:1020,y:580, w:380, h:180, c:'#3b6ea5'},
+  /* east 1495 on both: their floor runs to the east perimeter wall, not to 1400 (the pre-widening
+     edge). glassBox pins the glass-flagging pass below to SENIOR SALES' ORIGINAL bounds — without it
+     the widened east edge lands on the east PERIMETER wall and flags all three of its segments
+     see-through, i.e. the building's east exterior wall goes transparent. Note the perimeter is a
+     legitimate glass edge elsewhere (the CEO office genuinely glazes the west+north perimeter), so
+     this has to be scoped per-room, not by excluding perimeter walls globally. */
+  {name:'SENIOR SALES', x:1240,y:280, w:255, h:300, c:'#3b6ea5', glass:true, glassBox:{x:1240,y:280,w:160,h:300}},
+  {name:'SALES FLOOR',  x:1020,y:580, w:475, h:180, c:'#3b6ea5'},
   {name:'JUNIOR SALES', x:660, y:580, w:360, h:180, c:'#4a8c5a'},
   {name:'ELEVATOR',     x:0,   y:680, w:220, h:80,  c:'#7c7768'},
 ];
 /* Flag the wall rects on a glass room's outline so drawWalls() renders them see-through
    (authored coords, before scaleWorld scales walls/ROOMS together). */
-ROOMS.filter(r=>r.glass).forEach(r=>{ walls.forEach(w=>{
+ROOMS.filter(r=>r.glass).forEach(rm=>{ const r=rm.glassBox||rm; walls.forEach(w=>{   // glassBox: glaze the room's ORIGINAL outline, not a rect widened for roomAt()
   const inX=w.x<r.x+r.w+6 && w.x+w.w>r.x-6, inY=w.y<r.y+r.h+6 && w.y+w.h>r.y-6;
   const onH=(Math.abs(w.y-r.y)<12||Math.abs(w.y+w.h-(r.y+r.h))<12)&&inX;
   const onV=(Math.abs(w.x-r.x)<12||Math.abs(w.x+w.w-(r.x+r.w))<12)&&inY;
