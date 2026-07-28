@@ -65,17 +65,19 @@ Get-NetTCPConnection -LocalPort 3000 -State Listen | ForEach-Object { Stop-Proce
 curl -s -o /dev/null -m 3 -w "%{http_code}\n" http://localhost:3000/   # want 000 / no response
 ```
 
-### 9. ⚠️ THE STALE CLONE TRAP — check what you are actually serving
-A **sibling clone of the old `Promotionv2` repo** exists on this machine with **its own, older `index.html`**. It is **not a parent or child of this repo**, so `cwd` can neither reach it nor be used to avoid it — the preview tool only accepts a `cwd` *relative and inside* the session root.
+### 9. ⚠️ CHECK WHAT YOU ARE ACTUALLY SERVING
+> **[UPDATED 2026-07-27]** The sibling `Promotionv2` clone has been **deleted** — there is no longer a second, older `index.html` on this machine. The *trap* is not gone, though: it is now **cwd drift** and **orphan servers** (§8). Both still let you screenshot a build nobody chose. Don't re-clone `Promotionv2` next to this repo; if you must, put it somewhere that isn't `Documents/`.
 
-- **Sessions must be rooted in `thepromotionv3`.** If a session is rooted in `Promotionv2`, `launch.json` cannot point at the live build; start the server from this repo by absolute path and open the pane at the URL instead.
-- Bash `cwd` also **drifts** to that clone. Prefer `git -C /c/Users/Kyle_/Documents/thepromotionv3 …` or `cd` first.
+**`thepromotionv3` is the only build on disk — so the failure mode is serving the wrong *directory*, not the wrong *repo*.**
+
+- **Sessions must be rooted in `thepromotionv3`.** A session rooted elsewhere can't point `launch.json` at the live build — start the server from this repo by absolute path and open the pane at the URL instead. (A session's root is also **pinned by the OS**: you cannot delete a folder that is a live process's working directory.)
+- Bash `cwd` **drifts**. Prefer `git -C /c/Users/Kyle_/Documents/thepromotionv3 …` or `cd` first.
 - **Verify before trusting any screenshot** — byte count *and* a symbol check for something recent:
 ```bash
 curl -s http://localhost:3000/ | wc -c        # must equal the live index.html byte count
 curl -s http://localhost:3000/ | grep -c "function acceptMission"   # a recent symbol -> 1
 ```
-A screenshot of the stale clone is indistinguishable from a real one until you check.
+A screenshot of the wrong directory is indistinguishable from a real one until you check.
 
 ### 10. The colour-key test is programmatic — don't eyeball pixels
 `keyOutMagenta` returns a **`<canvas>`** on success and the **raw `<img>`** on taint/failure. So:
