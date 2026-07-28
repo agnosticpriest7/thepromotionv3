@@ -21,8 +21,8 @@ After any edit that adds/moves a **prop, desk, container, or wall**, or changes 
 ### 3. Testing hygiene
 The harness recompiles `index.html`'s `<script>` live on every run (that *is* the rebuild + `node --check`) — just re-run it after every change. Keep the raw script's **`const`/`let` intact — never `var`-ify to test**; that hides duplicate-declaration errors that are fatal in the browser. The canvas stub **throws on non-finite coordinates**, so keep all draw math finite.
 
-### 4. Ship-blocker — printer meltdown probability
-In `meltdown(n)`: `n.printerMode = Math.random()<0.50;` is forced to **`0.50`** (50%) for testing. It **must be reverted to `0.07`** before release. Never touch it without Kyle's instruction.
+### 4. Printer meltdown probability — RESOLVED (was a ship-blocker)
+In `meltdown(n)`: `n.printerMode = Math.random()<0.07;` — already at the shipping **7%**. The old testing override of `0.50` is gone, so there is **no outstanding ship-blocker here**; don't go looking for one. Never change this number without Kyle's instruction. To *see* the homage on demand, don't touch the roll — use `__dbg.melt(name)` (§10), which forces it.
 
 ### 5. Hard constraints
 - **`Store`** is the save/`localStorage` seam — route all save I/O through it (the lone other `localStorage` touch is the one-shot `promo:newgame` reload flag).
@@ -36,4 +36,71 @@ In `meltdown(n)`: `n.printerMode = Math.random()<0.50;` is forced to **`0.50`** 
 Prefer running the build over inspecting it. Fix **root causes, not symptoms**.
 
 ### 7. Full context
-Read **`PROJECT.md`** and the latest **`HANDOFF-*`** doc (currently `HANDOFF-4.md`).
+Read **`PROJECT.md`** and the latest **`HANDOFF-*`** doc (currently **`HANDOFF-7.md`**; `HANDOFF-6.md` is the seated-art run, now complete).
+
+---
+
+## Looking at the game (added 2026-07-27)
+
+### 8. Run it over http — NEVER `file://`
+Serve the repo root and open **`http://localhost:3000`**. `.claude/launch.json` is committed and needs **no `cwd`** when the session is rooted in this repo.
+```bash
+npx --yes serve -l 3000 .      # from the repo root
+```
+**Why it matters:** under `file://` the canvas is *tainted*, so `getImageData` throws inside `keyOutMagenta`, which catches and silently returns the **raw image**. Every magenta-keyed sprite then renders with an **opaque magenta background** — desks, chairs, stalls, bat sheets, the seated cast. It looks like an art bug and isn't. If you see magenta, you loaded the wrong way.
+
+### 9. ⚠️ THE STALE CLONE TRAP — check what you are actually serving
+A **sibling clone of the old `Promotionv2` repo** exists on this machine with **its own, older `index.html`**. It is **not a parent or child of this repo**, so `cwd` can neither reach it nor be used to avoid it — the preview tool only accepts a `cwd` *relative and inside* the session root.
+
+- **Sessions must be rooted in `thepromotionv3`.** If a session is rooted in `Promotionv2`, `launch.json` cannot point at the live build; start the server from this repo by absolute path and open the pane at the URL instead.
+- Bash `cwd` also **drifts** to that clone. Prefer `git -C /c/Users/Kyle_/Documents/thepromotionv3 …` or `cd` first.
+- **Verify before trusting any screenshot** — byte count *and* a symbol check for something recent:
+```bash
+curl -s http://localhost:3000/ | wc -c        # must equal the live index.html byte count
+curl -s http://localhost:3000/ | grep -c "function acceptMission"   # a recent symbol -> 1
+```
+A screenshot of the stale clone is indistinguishable from a real one until you check.
+
+### 10. The colour-key test is programmatic — don't eyeball pixels
+`keyOutMagenta` returns a **`<canvas>`** on success and the **raw `<img>`** on taint/failure. So:
+```js
+ART['stall_v'].tagName    // "CANVAS" = keyed OK   |   "IMG" = keying failed
+```
+Stronger: draw it to a scratch canvas and read the corner pixel — **alpha 0** proves the magenta actually became transparent. Good probes: `stall_v`, `stall_h`, `printer_wreck`, `bat_*`, `sit_*`, `cubicle_desk`.
+
+### 11. `window.__dbg` — dev-only posing hook
+Poses a state for a screenshot instead of playing to it. **Arms only on `?debug=1` AND a localhost hostname** — a normal load never builds the object (`window.__dbg === undefined`) and it can never arm on Pages. Rendering/inspection only; nothing persisted, no `SAVE_VERSION` bump; unknown names log and no-op, never throw.
+
+Open **`http://localhost:3000/?debug=1`**. Nine entry points:
+
+| call | does |
+|---|---|
+| `__dbg.help()` | prints the list |
+| `__dbg.state()` | day / clock / phase / rank / player xy / workersPresent / seatedNow / meltdown / missions / renderErrs |
+| `__dbg.time(t)` | `510` \| `"8:30"` \| a phase name e.g. `"Regular Work"`. Syncs `lastPhase` so posing doesn't re-fire the phase-change block |
+| `__dbg.seat()` | snaps every worker onto their own desk seat; forces a desk phase. Returns the count |
+| `__dbg.tp(where)` | desk owner (full or first name) \| room name \| object type (`printer`/`water`/`coffee`/`toilet`…) \| `elevator`/`hr`/`dale`/`exit`/`muster` |
+| `__dbg.melt(name)` | meltdown with the printer homage **forced** (the real roll is 7%). Briefly pins `Math.random` and calls the real `meltdown()`; refuses if one is already running |
+| `__dbg.favour(name)` | spawns a **pending** favour ask — the "!", the toast and the accept/decline menu |
+| `__dbg.rank(r)` | index or rank name. A pose — desks are **not** re-dealt |
+| `__dbg.day(n)` | jumps the day counter |
+
+**The intro will silently ruin your pose.** A fresh `startGame` runs the day-1 orientation tour, which drives Dale *and the player* along a fixed route and **overwrites their positions every frame** — so any teleport or seat pose is undone with no error. Bail it first:
+```js
+if (typeof intro !== 'undefined' && intro) endIntro(true);   // a game fn in page scope, NOT part of __dbg
+```
+(or pick **Test Game** from the menu, which skips the intro entirely).
+
+**Other posing gotchas:**
+- The sim keeps running, so a pose drifts within a second. Set **`paused = true`** after posing to hold it — `render()` still runs, only the update block is skipped.
+- `__dbg.tp('printer')` puts the player **on top of** the NPC you wanted to photograph. Offset the player instead.
+- The canvas-drawn TODAY tracker overlays the action: `tracked = null` and stub `autoTrack` to clear it.
+- To catch one animation frame, install a `requestAnimationFrame` watcher that sets `paused = true` on the condition — e.g. `meltEvent.n.batFrame === 2` is the bat fully down (impact).
+
+### 12. Gate for a RENDERING change
+The standard gate (§1) **plus**:
+1. a **before/after screenshot of the affected state**, posed with `__dbg` (§11), and
+2. confirmation that a **normal load without `?debug=1` is unaffected** (`window.__dbg === undefined`, game boots, art loads).
+
+### 13. The standing line
+A green soak means **NOT BROKEN**. A clean screenshot means **IT RENDERS**. **Neither means GOOD.** That verdict is Kyle's, on the TV, with a gamepad. Never merge a visual change on green alone.
