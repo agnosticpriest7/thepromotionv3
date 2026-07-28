@@ -9274,6 +9274,188 @@ function boot(){
 }
 globalThis.__menu = { get screen(){return screen;}, goToMenu, startGame, menuMove, menuActivate, menuBack, renderMenuDOM, boot };
 
+/* ===== DEV DEBUG HOOK — window.__dbg ==========================================================
+   Poses the world for a screenshot instead of playing to the state. The game is a canvas, so DOM
+   inspection tells you nothing and there is no way to walk the player from a tool.
+
+   ARMING: needs BOTH ?debug=1 AND a localhost hostname. A normal load never even builds the object,
+   and it cannot arm on Pages — it deploys completely inert.
+   SCOPE: rendering and inspection only. It moves and flags things the game already moves and flags;
+   it adds no systems, changes no rules, and touches no nav grid or collision. Nothing is persisted —
+   no Store write, no SAVE_VERSION bump. Every entry point no-ops with a console line on a name it
+   doesn't recognise, and the whole thing is wrapped so it can never throw into the game.
+   (In Node the harness reaches these same internals through its EXPORTS epilogue; in the browser
+   this hook is already inside the script scope, so it just calls them directly.) */
+(function(){
+  try{
+    var host=String(location.hostname||'');
+    var isLocal=(host==='localhost'||host==='127.0.0.1'||host==='::1'||host==='[::1]'||host==='');
+    var wants=false;
+    try{ wants=(new URLSearchParams(location.search)).get('debug')==='1'; }
+    catch(e){ wants=/[?&]debug=1(&|$)/.test(String(location.search||'')); }
+    if(!wants||!isLocal)return;                     // <- off by default, and dead anywhere but localhost
+
+    var say=function(){ try{ console.log.apply(console,['[__dbg]'].concat([].slice.call(arguments))); }catch(e){} };
+    var repaint=function(){
+      try{ renderTasks&&renderTasks(); }catch(e){}
+      try{ renderDeleg&&renderDeleg(); }catch(e){}
+      try{ updateHUD&&updateHUD(); }catch(e){}
+    };
+    var phaseNames=function(){ var seen={},out=[]; PHASES.forEach(function(p){ if(!seen[p.name]){seen[p.name]=1;out.push(p.name);} }); return out; };
+    var npcBy=function(name){
+      if(name==null)return null;
+      var s=String(name).trim().toLowerCase();
+      return NPCS.find(function(n){ return String(n.name).toLowerCase()===s; })
+          || NPCS.find(function(n){ return String(n.name).toLowerCase().split(' ')[0]===s; })
+          || null;
+    };
+    var liveNames=function(){ return NPCS.filter(function(n){return n.alive;}).map(function(n){return n.name;}); };
+
+    var api={
+      help:function(){
+        var h=['__dbg.state()      — day / clock / phase / rank / meltdown / missions / renderErrs',
+               '__dbg.time(t)      — 510 | "8:30" | a phase name e.g. "Regular Work"',
+               '__dbg.seat()       — snap every worker onto their own desk seat (forces a desk phase)',
+               '__dbg.tp(where)    — desk owner | room name | printer/water/coffee/toilet | elevator/hr/dale/exit/muster',
+               '__dbg.melt(name)   — meltdown on a named NPC, printer homage FORCED (the real roll is 7%)',
+               '__dbg.favour(name) — spawn a PENDING favour ask (the "!", the toast, the accept/decline menu)',
+               '__dbg.rank(r)      — 0..'+(RANKS.length-1)+' or a rank name',
+               '__dbg.day(n)       — jump the day counter'];
+        say('\n'+h.join('\n')); return h;
+      },
+      state:function(){
+        var s;
+        try{
+          s={ day:day, clock:Math.round(clock),
+              time:(typeof fmtTime==='function'?fmtTime(clock):null),
+              phase:currentPhase().name, rank:RANKS[player.rank], rankIdx:player.rank,
+              player:{x:Math.round(player.x),y:Math.round(player.y)},
+              workersPresent:activeNPCs().filter(function(n){return isWorker(n)&&!n.gone;}).length,
+              seatedNow:activeNPCs().filter(function(n){ try{return isWorker(n)&&!!seatedDeskState(n);}catch(e){return false;} }).length,
+              meltdown:meltEvent?{who:(meltEvent.n&&meltEvent.n.name)||null,printerMode:!!meltEvent.printerMode,
+                                  batFrame:(meltEvent.n&&meltEvent.n.batFrame!=null)?meltEvent.n.batFrame:null}:null,
+              missions:missions.map(function(m){return {who:m.who,label:m.label,accepted:!!m.accepted,done:!!m.done};}),
+              renderErrs:(typeof renderErrs!=='undefined'?renderErrs:null) };
+        }catch(e){ say('state failed:',e&&e.message); return null; }
+        say(s); return s;
+      },
+      time:function(t){
+        var target=null;
+        if(typeof t==='number'&&isFinite(t)) target=t;
+        else if(typeof t==='string'){
+          var m=/^(\d{1,2}):(\d{2})$/.exec(t.trim());
+          if(m) target=(+m[1])*60+(+m[2]);
+          else { var p=PHASES.find(function(x){return x.name.toLowerCase()===t.trim().toLowerCase();}); if(p) target=p.start+1; }
+        }
+        if(target==null){ say('unknown time/phase:',t,'— use 510, "8:30", or one of',phaseNames()); return false; }
+        clock=clamp(target,DAY_START,DAY_END-1);
+        lastPhase=currentPhase().name;      // a pose, not play: don't re-fire the phase-change block
+        repaint();
+        say('clock ->',(typeof fmtTime==='function'?fmtTime(clock):Math.round(clock)),'·',currentPhase().name);
+        return true;
+      },
+      seat:function(){
+        if(!isDeskPhase(currentPhase().name)) api.time('Regular Work');   // seating only renders in a desk phase
+        var k=0;
+        activeNPCs().forEach(function(n){
+          if(!isWorker(n))return;
+          var d=n.homeDesk||desks.find(function(x){return x.owner===n.name;});
+          if(!d)return;
+          var s; try{ s=deskSeat(d); }catch(e){ return; }
+          if(!s||!isFinite(s.x)||!isFinite(s.y))return;
+          n.gone=false; n.wentHome=false; n.arrived=true;
+          n.x=s.x-n.w/2; n.y=s.y-n.h/2;
+          n.goal=null; n.path=null; n.wp=0; n.seat=null; n.errand=null; n.moving=false; n.animT=0;
+          try{ unstickEnt(n); }catch(e){}
+          k++;
+        });
+        repaint();
+        say('seated',k,'workers at their own desks ·',currentPhase().name);
+        return k;
+      },
+      tp:function(where){
+        var s=String(where==null?'':where).trim().toLowerCase(), pt=null, label=null;
+        var d=desks.find(function(x){ return x.owner&&String(x.owner).toLowerCase()===s; })
+            ||desks.find(function(x){ return x.owner&&String(x.owner).toLowerCase().split(' ')[0]===s; });
+        if(d){ try{ var st=deskSeat(d); if(st&&isFinite(st.x)){ pt={x:st.x,y:st.y}; label=d.owner+"'s desk"; } }catch(e){} }
+        var LM={};
+        try{ if(typeof ELEVATOR!=='undefined')LM.elevator=ELEVATOR; }catch(e){}
+        try{ if(typeof MUSTER!=='undefined')LM.muster=MUSTER; }catch(e){}
+        try{ if(typeof EXIT!=='undefined')LM.exit=EXIT; }catch(e){}
+        try{ if(typeof HR_OFFICE!=='undefined')LM.hr=HR_OFFICE; }catch(e){}
+        try{ if(typeof DALE_DESK!=='undefined')LM.dale={x:DALE_DESK.x+DALE_DESK.w/2,y:DALE_DESK.y+DALE_DESK.h+Math.round(20*S)}; }catch(e){}
+        if(!pt&&LM[s]){ pt={x:LM[s].x,y:LM[s].y}; label=s; }
+        if(!pt&&typeof ROOMS!=='undefined'){
+          var r=ROOMS.find(function(x){ return String(x.name).toLowerCase()===s; });
+          if(r){ pt={x:r.x+r.w/2,y:r.y+r.h/2}; label='room '+r.name; }
+        }
+        if(!pt){
+          var o=objects.find(function(x){ return String(x.type).toLowerCase()===s; });
+          if(o){ pt={x:o.x+o.w/2,y:o.y+o.h+Math.round(18*S)}; label=o.label||s; }
+        }
+        if(!pt){
+          say('unknown place:',where,'— try a desk owner, an object type (printer/water/coffee/toilet/supply/files),',
+              'a landmark',Object.keys(LM),'or a room',(typeof ROOMS!=='undefined'?ROOMS.map(function(x){return x.name;}):[]));
+          return false;
+        }
+        player.x=Math.round(pt.x-player.w/2); player.y=Math.round(pt.y-player.h/2);
+        player.goal=null; player.path=null; player.wp=0; player.moving=false; player.animT=0;
+        try{ unstickPlayer(); }catch(e){}
+        say('player ->',label);
+        return true;
+      },
+      melt:function(name){
+        var n=npcBy(name);
+        if(!n){ say('unknown NPC:',name,'— live cast:',liveNames()); return false; }
+        if(meltEvent){ say('a meltdown is already running (the game allows one at a time) — see __dbg.state()'); return false; }
+        if(n.gone||n.wentHome){ n.gone=false; n.wentHome=false; }
+        /* The printer homage is a 7% roll INSIDE meltdown(). Force the roll rather than
+           re-implementing the staging, so this drives the exact path the game drives. */
+        var R=Math.random, ok=true;
+        try{ Math.random=function(){ return 0; }; meltdown(n); }
+        catch(e){ ok=false; say('meltdown failed:',e&&e.message); }
+        finally{ Math.random=R; }
+        if(ok)say('printer meltdown ->',n.name,'— he walks to the printer, then swings');
+        return ok;
+      },
+      favour:function(name){
+        var n=npcBy(name);
+        if(!n){ say('unknown NPC:',name,'— live cast:',liveNames()); return false; }
+        if(!isWorker(n)){ say(n.name,'is not a worker — asks come from workers'); return false; }
+        if(n.gone||n.wentHome){ n.gone=false; n.wentHome=false; }
+        var had=missionFor(n.name);
+        if(had){ say(n.name,'already has an open ask:',had.label,had.accepted?'(accepted)':'(pending)'); return true; }
+        try{ offerMission(n); }catch(e){ say('offerMission failed:',e&&e.message); return false; }
+        var m=missionFor(n.name);
+        repaint();
+        say('ask from',n.name,m?('— "'+m.label+'" · PENDING, walk over to accept or decline'):'(none created)');
+        return !!m;
+      },
+      rank:function(r){
+        var i=null;
+        if(typeof r==='number'&&isFinite(r)) i=r|0;
+        else if(typeof r==='string') i=RANKS.indexOf(r.trim().toUpperCase());
+        if(i==null||!(i>=0&&i<RANKS.length)){ say('unknown rank:',r,'— use 0..'+(RANKS.length-1)+' or',RANKS); return false; }
+        player.rank=i;
+        try{ refreshRanks&&refreshRanks(); }catch(e){}
+        repaint();
+        say('rank ->',RANKS[i],'(a pose — desks and seats are not re-dealt)');
+        return true;
+      },
+      day:function(d){
+        var v=Number(d);
+        if(!isFinite(v)||v<1){ say('unknown day:',d,'— use a positive number'); return false; }
+        day=Math.round(v);
+        repaint();
+        say('day ->',day);
+        return true;
+      }
+    };
+    window.__dbg=api;
+    say('armed (?debug=1 on '+host+'). __dbg.help() for the list. Dev only — never arms off localhost.');
+  }catch(e){ try{ console.log('[__dbg] failed to arm:',e&&e.message); }catch(_){} }
+})();
+
 /* Show the title screen instead of dropping straight into the world. */
 boot();
 </script>
