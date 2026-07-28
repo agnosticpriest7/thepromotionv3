@@ -17,6 +17,9 @@ function fetchMission(S, G, n) {
   S.offerMission(n);
   const m = S.missionFor(n.name);
   m.kind = 'fetch'; m.dirty = false; m.target = null; m.need = 'stapler'; m.label = S.missionLabel(m);
+  /* Errands are opt-in now: an ask is not a job until the player accepts it, and the Deliver verb
+     only exists on an accepted mission. This test is about the DELIVERY mechanics, so say yes here. */
+  S.acceptMission(m);
   return m;
 }
 const deliverOpt = (S, n) => S.missionItems(n).find(it => /Deliver/i.test(it.label));

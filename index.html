@@ -4001,7 +4001,7 @@ function allyNeedleItems(target){
 }
 function swipePrized(d,own,present){
   const seen=seenByAnyone();
-  {const m=missions.find(x=>!x.done&&x.kind==='steal'&&x.target===(own?own.name:''));if(m)setTimeout(()=>creditMission(m,seen?0.35:0.05),400);}
+  {const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='steal'&&x.target===(own?own.name:''));if(m)setTimeout(()=>creditMission(m,seen?0.35:0.05),400);}
   if(present){toast('They are right there.');return;}
   const items=['stapler','mug','charger'];
   const it=pick(items);
@@ -4017,7 +4017,7 @@ function swipePrized(d,own,present){
   }
   addSuspicion(seen?16:5,seen?whoSaw()+' saw you pocket it':'Petty theft, unseen');
 }
-function plantGossip(n){{const m=missions.find(x=>!x.done&&x.kind==='rumor'&&x.target===n.name);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.3:0.05),400);}n.mood=clamp(n.mood-25,-100,100);n.stress=clamp(n.stress+20,0,100);logLine(`Planted gossip about ${n.name}. Their stress climbs.`,'w');addSuspicion(hrSeesPlayer()?22:8,hrSeesPlayer()?'HR saw you scheming':'Low-key scheming');witnessReact();}
+function plantGossip(n){{const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='rumor'&&x.target===n.name);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.3:0.05),400);}n.mood=clamp(n.mood-25,-100,100);n.stress=clamp(n.stress+20,0,100);logLine(`Planted gossip about ${n.name}. Their stress climbs.`,'w');addSuspicion(hrSeesPlayer()?22:8,hrSeesPlayer()?'HR saw you scheming':'Low-key scheming');witnessReact();}
 function spreadGossip(n){
   const item=player.leverage[player.leverage.length-1];
   if(!item){toast('You have no rumour to spread. Eavesdrop or snoop a desk first.');return;}
@@ -4133,7 +4133,7 @@ function spreadRumorAbout(vector,t,doc){
   const chance=d?1.0:0.40;                 // proof lands for sure; hearsay is a 40% coin-flip
   const basePower=d?(d.power||18):16;      // hearsay bites weaker
   if(d){const i=player.leverage.indexOf(d);if(i>=0)player.leverage.splice(i,1);renderLeverage();}
-  {const m=missions.find(x=>!x.done&&x.kind==='rumor'&&x.target===t.name);if(m)setTimeout(()=>creditMission(m,seen?0.3:0.05),400);}
+  {const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='rumor'&&x.target===t.name);if(m)setTimeout(()=>creditMission(m,seen?0.3:0.05),400);}
   if(Math.random()<chance){
     const feudBoost=(vector.feudWith===t.name)?1.3:1.0;
     const carry=ptypeCarry(vector.ptype);
@@ -4720,7 +4720,7 @@ function pickPlantDoc(d){
   if(!hasLev()||d.planted)return;
   pickDocument(player.leverage,{title:`Plant in ${d.owner}'s desk — which document?`,onPick:l=>startAct(5,'Planting evidence',()=>plantEvidence(d,l))});
 }
-function plantEvidence(d,item){{const m=missions.find(x=>!x.done&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
+function plantEvidence(d,item){{const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
   if(!item)item=player.leverage[player.leverage.length-1];
   if(!item||d.planted)return;
   const idx=player.leverage.indexOf(item);if(idx>=0)player.leverage.splice(idx,1);renderLeverage();d.planted=item;
@@ -4793,6 +4793,7 @@ function advanceClock(dt){
   const ph=currentPhase().name;
   if(ph!==lastPhase){
     delegExpireDue();   // jobs from the block that just ended, never handed out, are misses
+    expireUnacceptedOffers();   // asks nobody answered lapse with the block (before new ones arrive below)
     logLine(`— ${ph} —`,'t');
     if(!intro){playShiftPrinter();toast(`— ${ph} —`);}
     if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();maybeOfferFavor();}
@@ -6555,7 +6556,9 @@ function headTop(e){
 /* A persistent green "!" over a worker who has an open favour to hand you (a coworker errand waiting
    to be picked up). Sits above the personality mark so favours are easy to spot on the floor. */
 function drawFavorMark(n){
-  if(!isWorker(n)||!missionFor(n.name))return;
+  if(!isWorker(n))return;
+  const m=missionFor(n.name);
+  if(!m||m.accepted)return;   // the "!" is "come and hear this", so it clears the moment you accept
   const mx=n.x+n.w/2, my=headTop(n)-U1(15), o=Math.max(1,U1(2));
   ctx.font='bold '+U1(13)+'px monospace';ctx.textAlign='center';
   ctx.fillStyle='rgba(16,18,13,0.92)';                          // dark outline so it reads on the pale carpet
@@ -7236,7 +7239,7 @@ function autoTrack(){
   if(trackedThing())return;
   const t=tasks.find(x=>!x.done);
   if(t){tracked={type:'task',key:t.label};return;}
-  const m=missions.find(x=>!x.done);
+  const m=missions.find(x=>!x.done&&x.accepted);   // never pin an errand you haven't agreed to
   if(m){tracked={type:'mission',key:m.who};return;}
   tracked=null;
 }
@@ -7824,7 +7827,14 @@ function missionItems(n){
   const out=[];
   const mine=missionFor(n.name);            // they asked YOU for something
   const against=missionsAgainst(n.name);    // someone asked you to hit THEM
-  if(mine){
+  /* An ask is NOT a job until you say yes. Until then all you get is the ask itself and the two
+     answers — nothing lands on your task list and nothing counts toward their favour track. */
+  if(mine&&!mine.accepted){
+    out.push({label:`“${missionAsk(mine)}”`,disabled:true});
+    out.push({label:`Accept — ${mine.label}`,risk:mine.dirty?'a dirty job — they will owe you':'friendship +',hot:true,act:()=>acceptMission(mine)});
+    out.push({label:'Turn them down',risk:'friendship −',act:()=>declineMission(mine)});
+  }
+  if(mine&&mine.accepted){
     if(mine.kind==='fetch'){
       const has=player.inv.includes(mine.need);   // display state at open time…
       out.push({label:`Deliver ${ITEMS[mine.need].label}`,risk:has?'ready!':'need the item',hot:!has,act:()=>{
@@ -7974,10 +7984,33 @@ function offerMission(n){
   m.label=missionLabel(m);
   missions.push(m);
   n.bubble={t:4,text:missionAsk(m)};
-  logLine(`${n.name.split(' ')[0]}: "${missionAsk(m)}"`,'w');
+  logLine(`${n.name.split(' ')[0]} is after a favour: "${missionAsk(m)}"`,'w');
   renderTasks();
-  if(m.dirty)toast('A dirty job. You can do it, refuse, or warn the target.');
-  else toast('Favor accepted — check your tasks');
+  /* This is only an ASK. It stays off your task list until you walk over and accept it — the "!"
+     over their head is the prompt. (It used to drop straight onto your list and announce itself as
+     already accepted, which meant you never actually agreed to anything.) */
+  toast(`${n.name.split(' ')[0]} wants a word — go hear them out.`);
+}
+/* you said yes: NOW it becomes a job on your list */
+function acceptMission(m){
+  if(!m||m.accepted||m.done)return;
+  m.accepted=true;
+  const n=activeNPCs().find(x=>x.name===m.who);
+  if(n){
+    n.mood=clamp(n.mood+6,-100,100);
+    n.bubble={t:2.4,text:pick(['You are a star.','Appreciate it.','Knew I could ask you.'])};
+  }
+  SFX.select();
+  logLine(`You took ${m.who.split(' ')[0]}'s errand: ${m.label}`,'t');
+  toast(m.dirty?'Dirty job accepted. Do it, or warn the target.':'Favour accepted — check your tasks');
+  renderTasks();
+}
+/* An ask you never answered doesn't follow you round all day: it lapses when the work block does.
+   This also stops ignored offers from sitting in the scarcity cap and choking off new ones. */
+function expireUnacceptedOffers(){
+  if(!missions.some(m=>!m.accepted&&!m.done))return;
+  missions=missions.filter(m=>m.accepted||m.done);
+  renderTasks();
 }
 function missionFor(name){return missions.find(m=>m.who===name&&!m.done);}
 function missionsAgainst(name){return missions.filter(m=>m.target===name&&!m.done&&m.dirty);}
@@ -8286,9 +8319,10 @@ function renderTasks(){
     rows.push(`<div class="chip${t.done?' done':''}${t.bonus?' bonus':''}${isT('task',t.label)?' tracked':''}" data-tt="task" data-tk="${esc(t.label)}">
       <span class="mk">${t.done?'✓':'○'}</span>${t.label}${t.bonus?' <b>(+14)</b>':''}${isT('task',t.label)?'<span class="trk">TRACKED</span>':''}</div>`);
   });
-  if(missions.length){
+  const favAccepted=missions.filter(m=>m.accepted);   // an ask you haven't agreed to is not on your list yet
+  if(favAccepted.length){
     rows.push('<div class="tier">FAVOURS</div>');
-    missions.forEach(m=>{
+    favAccepted.forEach(m=>{
       rows.push(`<div class="chip favor${m.done?' done':''}${isT('mission',m.who)?' tracked':''}" data-tt="mission" data-tk="${esc(m.who)}">
         <span class="mk">${m.done?'✓':'★'}</span>${m.label}${isT('mission',m.who)?'<span class="trk">TRACKED</span>':''}</div>`);
     });
