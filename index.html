@@ -566,8 +566,11 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
 const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
-  'stall_v','stall_h',
+  'stall_v','stall_h','couch',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
+/* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
+   transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
+   The body is navy, so the green-far-below-red-and-blue test can never bite the upholstery. */
 /* The intern's seated poses are keyed the same way, but ALSO measured for their content bounding box
    (the source PNGs are square with padding, so we anchor the seated figure by its real content, not
    the canvas). Kept in their own set so the measure pass only runs on the handful of person sprites. */
