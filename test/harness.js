@@ -560,7 +560,8 @@ const EPILOGUE = `
       EXIT:pick('EXIT',null), MUSTER:pick('MUSTER',null), HR_OFFICE:pick('HR_OFFICE',null),
       SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]),
       breakTableB:pick('breakTableB',null),
-      ART_W:pick('ART_W',{}), OBJ_ART:pick('OBJ_ART',{}), CONT_ART:pick('CONT_ART',{}) }; });
+      ART_W:pick('ART_W',{}), OBJ_ART:pick('OBJ_ART',{}), CONT_ART:pick('CONT_ART',{}),
+      WINDOWS:pick('WINDOWS',[]), W:pick('W',0), H:pick('H',0) }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
