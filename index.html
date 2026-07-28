@@ -944,6 +944,20 @@ function seatedDeskState(n){
   const r=seatRenderPoint(d,seat);
   return { dir:seatDirForDesk(d), cx:r.x, cyGround:r.y };
 }
+/* Parked on a break/kitchen chair during a break -> render them SEATED on it. The chair sprite is
+   already on screen (drawCrewSet drew it), so this draws the PERSON layer only — drawSeated would
+   stamp a second, desk-style chair on top. Sized by the crew chair's own dimensions so the figure
+   lands on that cushion rather than a desk chair's. */
+function seatedBreakState(n){
+  if(!n||!isWorker(n))return null;
+  if(n.moving)return null;
+  const ph=currentPhase().name;
+  if(ph!=='Morning Break'&&ph!=='Afternoon Break'&&ph!=='Lunch / Break')return null;
+  const s=n.seat;
+  if(!s||!s.dir||!isFinite(s.gy))return null;          // standing overflow has no dir -> not seated
+  if(cdist(n,s)>=U1(24))return null;                   // still walking over
+  return {dir:s.dir, cx:s.x, cyGround:s.gy, cw:s.cw, ch:s.ch};
+}
 function seatDirForDesk(d){
   const a=deskArt(d);
   if(a==='cubicle_desk_up')return 'up';
@@ -2402,6 +2416,12 @@ function assignBreakSeats(){
   breakChairs2.forEach(c=>c.by=null);
   kitchenChairs.forEach(c=>c.by=null);
   const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
+  /* Break seating is RANDOM, re-rolled every break. It used to be positional — attendee order
+     decided both which room you went to and which chair you got, so the same people sat in the same
+     seats all game. Shuffling the attendees randomises the room split; shuffling each room's chair
+     pool randomises who lands where within it. */
+  const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i];a[i]=a[j];a[j]=t; } return a; };
+  shuffle(att);
   const brk=[], kit=[];
   att.forEach((n,i)=>((i%2)?kit:brk).push(n));
   /* The break room now has TWO crew sets, so its seats come from a pool across both tables —
@@ -2410,9 +2430,13 @@ function assignBreakSeats(){
   const place=(list,groups)=>{
     const pool=[];
     groups.forEach(g=>g.chairs.forEach(c=>pool.push({c:c,t:g.table})));
+    shuffle(pool);
     let standing=0;
     list.forEach((n,i)=>{
-      if(pool[i]){n.seat={x:pool[i].c.x,y:pool[i].c.y};pool[i].c.by=n.id;}
+      /* dir/gy/cw/ch ride along so drawNPC can render this one SEATED on the actual chair rather
+         than standing on its tile. Standing overflow (standRing below) carries none, so it keeps
+         the normal walk sprite. */
+      if(pool[i]){const c=pool[i].c;n.seat={x:c.x,y:c.y,dir:c.dir,gy:c.gy,cw:c.cw,ch:c.ch};c.by=n.id;}
       else{const t=groups[0].table, cx=t.x+t.w/2, cy=t.y+t.h/2;
            n.seat=standRing(cx,cy,Math.round(82*S),Math.round(62*S),standing,Math.max(4,list.length-pool.length));standing++;}
     });
@@ -6314,11 +6338,26 @@ function drawCrewSet(table){
   for(let i=3;i<6;i++) drawCrewChair(CREW_CHAIR_ART[i],p[i]);
   return true;
 }
+/* Which way an occupant faces, by ring index: the three along the top look DOWN at the table, the
+   three along the bottom look UP at it, and the end chairs look in along the table's long axis. */
+const CREW_SEAT_DIR=['down','down','down','up','up','up','right','left'];
+function crewChairDims(art){
+  const im=ART[art], w=U1(ART_W[art]||30);
+  const h=(im&&im.naturalWidth>0)?Math.round(im.naturalHeight*w/im.naturalWidth):w;
+  return {w:w,h:h};
+}
 function crewSeatRing(r,seats){
   const pts=crewSeatPts(r);
   for(let i=0;i<seats.length&&i<pts.length;i++){
     const p=snapTarget(Math.round(pts[i].x),Math.round(pts[i].y));
     seats[i].x=p.x;seats[i].y=p.y;
+    /* Carried so a sitter can be DRAWN on this chair: which way they face, the chair's ground line
+       (drawCrewChair puts the sprite's bottom at centre + h/2) and its size, which is what lifts the
+       figure onto the cushion. */
+    const d=crewChairDims(CREW_CHAIR_ART[i]);
+    seats[i].dir=CREW_SEAT_DIR[i];
+    seats[i].gy=p.y+Math.round(d.h/2);
+    seats[i].cw=d.w; seats[i].ch=d.h;
   }
 }
 function seatRing(r,seats,sixOnly){
@@ -6804,7 +6843,9 @@ function drawNPC(n){
        drawDaleDeskFront();           // re-draw the chair-less desk front over his lower body — he sits BEHIND it, in the exec chair
      } else {
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
+       const brk=seat?null:seatedBreakState(n);   // on a break chair? person layer only — the chair is already drawn
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
+       else if(brk){ drawSeatedPerson(n,brk.dir,brk.cx,brk.cyGround,brk.cw,brk.ch); }
        else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
      }
    }
