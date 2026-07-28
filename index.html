@@ -487,6 +487,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
+  /* kitchen counter run (Kyle's art, magenta bg): plain / sink / microwave / coffee */
+  'counter_plain','counter_sink','counter_micro','counter_coffee',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -567,6 +569,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h','couch',
+  'counter_plain','counter_sink','counter_micro','counter_coffee',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -663,10 +666,16 @@ const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
-  vending_machine:64, fridge:48, lockers:80, supply_shelf:61, whiteboard:82,
+  vending_machine:64, fridge:85, lockers:80, supply_shelf:61, whiteboard:82,   // fridge 48->85 so it matches the counter run it caps (sole user is the kitchen fridge)
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
+  /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
+     these get compared against box*S. The art is a 1254² square whose opaque content is only 74.88%
+     of the width (x 0.126..0.8748), so a unit DRAWS 106*0.7488 = 79.4 world = 44.1 authored. Boxes
+     are 44 authored (79.2 world) and adjacent, so visible edges overlap by 0.2 world — touching,
+     never a hairline gap. */
+  counter_plain:106, counter_sink:106, counter_micro:106, counter_coffee:106,
   break_table:190, kitchen_table:190, bush:44, grass:64,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
@@ -1244,6 +1253,20 @@ const CONTAINERS=[
   /* pantry shortened y40..240 -> y130..240: it used to run straight through the new JANITORIAL
      divider at y120. Kyle did not mark it for removal, so it stays — but wholly kitchen-side now. */
   {x:1455,y:130,w:40,h:110,label:'Kitchen pantry',kind:'cabinet'},
+  /* ---- kitchen counter run: four units side by side, flush under the JANITORIAL divider ----
+     Starts at 1265, the east lip of the doorway, so the run never stands in front of the door.
+     drawContainers draws sprAt(art, boxCentreX, boxBottom+4, art) with the sprite BOTTOM on
+     boxBottom+4, and everything there is WORLD px. Heights are solved so the art's 12.6% top
+     padding lands the VISIBLE top on the wall band's underside (world 225 = authored 125):
+       counters  h49 -> bottom 313.2, sprite top 211.2, visible top 224.6  (flush)
+       fridge    h70 -> bottom 351.0, sprite top 222.6, visible top 225.7  (flush, level with them)
+     The fridge is 414x645 rather than square, hence its own height. Run spans 1265..1485, ending
+     10u short of the east wall. */
+  {x:1265,y:125,w:44,h:49,label:'Kitchen counter',kind:'cabinet',art:'counter_plain'},
+  {x:1309,y:125,w:44,h:49,label:'Kitchen sink',kind:'cabinet',art:'counter_sink'},
+  {x:1353,y:125,w:44,h:49,label:'Microwave counter',kind:'cabinet',art:'counter_micro'},
+  {x:1397,y:125,w:44,h:49,label:'Coffee counter',kind:'cabinet',art:'counter_coffee'},
+  {x:1441,y:125,w:44,h:70,label:'Fridge',kind:'fridge'},
   /* fridge (1170,50) removed — JANITORIAL room */
   {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
   {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
