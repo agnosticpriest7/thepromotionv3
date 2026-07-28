@@ -1099,6 +1099,10 @@ const walls=[
   {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
   {x:1040,y:-5,w:120,h:10},{x:1040,y:115,w:38,h:10},{x:1122,y:115,w:38,h:10},{x:1035,y:0,w:10,h:120},{x:1155,y:0,w:10,h:120},
+  /* JANITORIAL divider: splits the old kitchen at y120 — the north half becomes the janitor's supply
+     room, the south half stays the kitchen. y115 + a 44-wide doorway is the same pattern the ASST
+     MANAGER wall above uses, and y120 is where the kitchen's west wall (1155,0,10,120) already ends. */
+  {x:1160,y:115,w:130,h:10},{x:1334,y:115,w:166,h:10},
   {x:380,y:275,w:38,h:10},{x:462,y:275,w:178,h:10},{x:380,y:495,w:38,h:10},{x:462,y:495,w:178,h:10},{x:375,y:280,w:10,h:220},{x:635,y:280,w:10,h:220},
   {x:840,y:275,w:98,h:10},{x:982,y:275,w:118,h:10},{x:840,y:495,w:98,h:10},{x:982,y:495,w:118,h:10},{x:835,y:280,w:10,h:220},{x:1095,y:280,w:10,h:220},
   {x:640,y:335,w:18,h:10},{x:702,y:335,w:138,h:10},{x:640,y:435,w:18,h:10},{x:702,y:435,w:138,h:10},{x:635,y:340,w:10,h:100},{x:835,y:340,w:10,h:100},
@@ -1167,7 +1171,11 @@ const breakTable={x:880,y:340,w:40,h:120};
 const breakTableB={x:540,y:250,w:40,h:120};   // T3: a second table in the MEETING ROOM, stacked directly above the main table
 const breakChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                    {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
-const kitchenTable={x:1250,y:130,w:100,h:50};
+/* moved down out of the old north half (was 1250,130) so it sits in the kitchen proper, below the
+   JANITORIAL divider at y120. The DRAWN table is ART_W.kitchen_table wide and anchored by
+   bottom=y+h+8, so y180 puts its bottom at 238 — clear of the coffee machine (y240) and well off
+   the south wall (y275). seatRing puts the chairs inside that drawn rect, not outside it. */
+const kitchenTable={x:1300,y:180,w:100,h:50};
 const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 /* Interactive objects REBUILT from the plan pins (test/gen_level.js). Two printers + two
@@ -1206,7 +1214,7 @@ const CONTAINERS=[
   {x:666,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
   {x:746,y:9,w:28,h:22,label:'Accounting bin',kind:'box'},
   {x:760,y:406,w:28,h:22,label:'Supply bin',kind:'box'},
-  {x:1166,y:9,w:28,h:22,label:'Kitchen bin',kind:'box'},
+  /* kitchen bin (1166,9) removed — the kitchen's north half is now the JANITORIAL room */
   {x:526,y:49,w:28,h:22,label:'HR bin',kind:'box'},
   {x:1246,y:499,w:28,h:22,label:'Senior sales bin',kind:'box'},
   {x:1246,y:399,w:28,h:22,label:'Senior sales bin',kind:'box'},
@@ -1214,18 +1222,20 @@ const CONTAINERS=[
   {x:1035,y:720,w:28,h:22,label:'Sales bin',kind:'box'},
   {x:800,y:368,w:28,h:22,label:'Supply bin',kind:'box'},
   {x:1060,y:400,w:28,h:22,label:'Break bin',kind:'box'},
-  {x:1225,y:50,w:28,h:22,label:'Kitchen bin',kind:'box'},
+  /* kitchen bin (1225,50) removed — JANITORIAL room */
   {x:560,y:0,w:20,h:120,label:'Accounting shelf',kind:'cabinet'},
   {x:860,y:0,w:20,h:120,label:'Manager shelf',kind:'cabinet'},
   {x:0,y:180,w:20,h:100,label:'Exec shelf',kind:'cabinet'},
-  {x:1200,y:0,w:200,h:40,label:'Kitchen counter',kind:'cabinet',art:'kitchen_counter'},
+  /* kitchen counter (1200,0,200x40) removed — JANITORIAL room */
   {x:400,y:0,w:160,h:20,label:'HR shelf',kind:'cabinet'},
   {x:880,y:0,w:160,h:20,label:'Manager shelf',kind:'cabinet'},
   {x:1140,y:60,w:20,h:60,label:'Asst mgr shelf',kind:'cabinet'},
   {x:820,y:340,w:20,h:100,label:'Supply shelf',kind:'cabinet'},
   {x:740,y:340,w:80,h:20,label:'Supply shelf',kind:'cabinet'},
-  {x:1455,y:40,w:40,h:200,label:'Kitchen pantry',kind:'cabinet'},
-  {x:1170,y:50,w:44,h:54,label:'Fridge',kind:'fridge'},                 // kitchen fridge (new art)
+  /* pantry shortened y40..240 -> y130..240: it used to run straight through the new JANITORIAL
+     divider at y120. Kyle did not mark it for removal, so it stays — but wholly kitchen-side now. */
+  {x:1455,y:130,w:40,h:110,label:'Kitchen pantry',kind:'cabinet'},
+  /* fridge (1170,50) removed — JANITORIAL room */
   {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
   {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
   {x:404,y:63,w:34,h:52,label:'HR desk',kind:'cabinet',art:'cubicle_desk_left'},   // HR desk, against the left wall — real container = collision
@@ -6432,8 +6442,7 @@ function drawLabels(){
     ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
   }
   // reception waiting room — real couch + chairs are drawn in drawDecor now
-  // kitchen vending (NE kitchen, against the east wall)
-  ctx.fillStyle='#241d16';ctx.fillRect(U(1362),U(60),U(26),U(52));ctx.fillStyle='#8a2f2a';ctx.fillRect(U(1364),U(62),U(22),U(48));ctx.fillStyle='#20242a';ctx.fillRect(U(1367),U(66),U(16),U(20));
+  // kitchen vending (the painted maroon unit at 1362,60) removed — that half is the JANITORIAL room now
   ctx.textAlign='left';
 }
 /* named zones, authored at 1240x760 — scaleWorld scales them */
@@ -6450,7 +6459,11 @@ const ROOMS=[
   {name:'RESTROOM',     x:380, y:600, w:280, h:160, c:'#7c7768'},
   {name:'EXEC RESTROOM',x:0,   y:280, w:240, h:140, c:'#7c7768'},
   {name:'RECEPTION',    x:0,   y:420, w:240, h:260, c:'#3b6ea5'},
-  {name:'KITCHEN',      x:1160,y:0,   w:335, h:280, c:'#c9a41a'},   // east 1495: the kitchen floor runs to the east perimeter wall, not to 1400 (the pre-widening edge)
+  /* The old kitchen (1160,0,335x280) is split at y120 by the divider wall above. North half is the
+     janitor's supply room, south half stays the kitchen. east 1495 on both: the floor runs to the
+     east perimeter wall, not to 1400 (the pre-widening edge). */
+  {name:'JANITORIAL',   x:1160,y:0,   w:335, h:120, c:'#7c7768'},
+  {name:'KITCHEN',      x:1160,y:120, w:335, h:160, c:'#c9a41a'},
   /* east 1495 on both: their floor runs to the east perimeter wall, not to 1400 (the pre-widening
      edge). glassBox pins the glass-flagging pass below to SENIOR SALES' ORIGINAL bounds — without it
      the widened east edge lands on the east PERIMETER wall and flags all three of its segments
