@@ -84,7 +84,17 @@ function driveDay(rank) {
 }
 
 /* ================= B2 — the assign verb, affinity, and the five in-character outcomes ========= */
-function amWorld() { const w = createWorld({ seed: 7 }); w.startNewGame(0); const S = w.sandbox, G = w.g; G.player.rank = 4; return { w, S, G }; }
+function amWorld() {
+  const w = createWorld({ seed: 7 }); w.startNewGame(0); const S = w.sandbox, G = w.g; G.player.rank = 4;
+  /* Day 1 now uses the same staggered arrival as every other day (the clock runs during the
+     orientation tour), so at 8:00 sharp the floor is still empty — everyone is in the lift.
+     Drive frames until the cast has actually clocked in before trying to hand anyone a job.
+     In real play this is never an issue: delegated work arrives at 8:30, long after the last
+     arrival at ~8:17. */
+  let f = 0;
+  while (!G.NPCS.some(n => S.isWorker(n) && n.alive && !n.gone) && f < 6000) { w.run(30); f += 30; G.player.rank = 4; }
+  return { w, S, G };
+}
 function aWorker(G, S) { return G.NPCS.find(n => S.isWorker(n) && n.alive && !n.gone); }
 function mkTask(G, kind) { const t = { id: ++G.deleg.seq, kind, phase: 510, exp: G.clock, to: null, state: 'open' }; G.deleg.q.push(t); return t; }
 

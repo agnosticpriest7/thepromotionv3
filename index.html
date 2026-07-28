@@ -908,7 +908,11 @@ function seatRenderPoint(d,seat){
 function seatedDeskState(n){
   if(!n||!(isWorker(n)||n===player))return null;
   if(n.moving)return null;                       // walking -> draw the normal walk-cycle sprite
-  if(!isWorkPhase(currentPhase().name))return null;
+  /* Clock-In counts too: somebody who has arrived and parked at their own desk is SITTING at it,
+     not standing over the chair. Gating this on Regular Work alone meant the whole floor stood at
+     their desks through the 8:00-8:30 block (and the whole day-1 tour) and then dropped into their
+     seats in unison at 8:30. */
+  if(!isDeskPhase(currentPhase().name))return null;
   const own=(n===player)?'you':n.name;
   const d=desks.find(x=>x.owner===own);
   if(!d)return null;
@@ -1490,9 +1494,10 @@ function assembleAtElevator(){
   const gx=Math.round(15*S), gy=Math.round(15*S);
   /* Staggered morning arrival — the mirror image of the staggered clock-out (goHome). Held
      off-screen (gone=true, so every "is present" filter already skips them) until arriveAt,
-     then they step out of the lift and walk to their desk. Day 1 keeps everyone present so
-     Dale's orientation tour isn't touring empty desks. The manager always opens the floor. */
-  const stagger=(day>1);
+     then they step out of the lift and walk to their desk. The manager always opens the floor.
+     Day 1 staggers too: the clock now runs during the orientation tour, so the floor fills up
+     around you as Dale walks you round instead of everyone being pre-placed at their desks. */
+  const stagger=true;
   activeNPCs().forEach(n=>{
     if(n.boss)return;
     n.wentHome=false;n.gone=false;n.leaving=false;n.leaveAt=undefined;
@@ -1745,6 +1750,9 @@ const PHASES=[
   {name:'Clock-Out',start:16*60+30,end:17*60},
 ];
 function isWorkPhase(nm){return nm==='Regular Work';}
+/* phases where a worker parked at their own desk should render SEATED. Work blocks plus the
+   morning clock-in — during breaks/meeting/clock-out they are deliberately somewhere else. */
+function isDeskPhase(nm){return nm==='Regular Work'||nm==='Clock-In';}
 function currentPhase(){for(const p of PHASES)if(clock>=p.start&&clock<p.end)return p;return PHASES[PHASES.length-1];}
 
 /* input */
@@ -2961,15 +2969,17 @@ let intro=null;
    sales~0.80, junior~0.94, desk 1.0. */
 const INTRO_BEATS=[
   {at:0.000,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
-  {at:0.101,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.220,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
-  {at:0.332,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
-  {at:0.451,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.582,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
-  {at:0.632,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.743,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
-  {at:0.782,t:2.6,hold:true,say:"The sales floor. It's cutthroat. Guard your stapler."},
-  {at:0.936,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
+  {at:0.095,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.210,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
+  {at:0.315,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.435,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
+  {at:0.556,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
+  {at:0.605,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.710,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
+  /* fires at wp17 — he is INSIDE the sales floor for this one (it used to go off at 0.782, out in
+     the corridor before he'd even entered), and lingers there before moving on. */
+  {at:0.815,t:2.6,hold:true,linger:1.8,say:"The sales floor. It's cutthroat. Guard your stapler."},
+  {at:0.920,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
   {at:1.000,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
@@ -2986,9 +2996,14 @@ const INTRO_BEATS=[
 const INTRO_ROUTE=[
   {x:150,y:710},{x:150,y:650},{x:210,y:590},{x:210,y:510},{x:270,y:450},{x:270,y:250},
   {x:230,y:210},{x:490,y:210},{x:530,y:250},{x:750,y:250},{x:770,y:230},{x:1070,y:230},
-  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1130,y:550},{x:1050,y:550},{x:1050,y:610},
-  {x:1050,y:550},{x:950,y:550},{x:730,y:610},{x:730,y:630},
+  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1130,y:550},{x:1050,y:550},{x:1050,y:650},
+  {x:1050,y:550},{x:950,y:550},{x:745,y:550},{x:730,y:630},
 ];
+/* Tail notes: the sales-floor dip now reaches y650 (70px INSIDE the room, walkable) so Dale is
+   properly in the room for the cutthroat line instead of calling it from the doorway. The final
+   approach holds y550 until x745 before dropping to the desk, which keeps both walkers clear of
+   the junior-floor printer at (770,610) — the old 950,550 -> 730,610 diagonal cut straight
+   through its sprite. Beat fractions below were recomputed against THIS route. */
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){
   if(dist<=0)return {x:pts[0].x,y:pts[0].y};
@@ -3010,18 +3025,21 @@ function startIntro(){
   const dale=NPCS.find(n=>n.mgr&&n.alive);
   const myD=desks.find(d=>d.owner==='you');
   if(!dale||!myD)return;
-  /* clear the crowd: everyone goes straight to their own desk */
-  activeNPCs().forEach(n=>{
-    if(n===dale||n.receptionist||n.boss)return;
-    if(n.homeDesk){const s=deskSeat(n.homeDesk);n.x=s.x-n.w/2;n.y=s.y-n.h/2;n.goal=null;n.path=null;n.bubble=null;unstickEnt(n);}
-  });
-  hrs().forEach((h,i)=>{h.x=HR_OFFICE.x+(i?Math.round(24*S):-Math.round(24*S));h.y=HR_OFFICE.y;h.goal=null;h.path=null;h.bubble=null;unstickEnt(h);});
+  /* NO pre-placing the floor any more. The clock runs during the tour, so everyone keeps their
+     normal staggered arrival: they ride up, walk to their own desk and sit down while Dale is
+     still talking. (This block used to teleport the whole cast onto their seats before the first
+     line, which is why they all stood over their chairs until 8:30.) */
   intro={i:0,t:0,dale,desk:myD,d:0,age:0,pause:0};
   const p0=routeAt(INTRO_ROUTE,0);
   dale.x=p0.x;dale.y=p0.y;dale.goal=null;dale.path=null;
   const pp=routeAt(INTRO_ROUTE,-INTRO_GAP);
   player.x=pp.x;player.y=pp.y+2;
   player.goal=null;player.path=null;
+  /* You arrive WITH the manager on day 1. Now that the clock runs during the tour, the Clock-In
+     block can expire while Dale still has you halfway round the floor — and the route never passes
+     back within the elevator's check-in radius, so you'd be booked late for something you had no
+     way to do. Credit it up front: you came in the front door with the boss. */
+  phaseCred['Clock-In']=true;
   logLine('Day 1. Dale is showing you to your desk.','t');
 }
 function tickIntro(dt){
@@ -3048,7 +3066,7 @@ function tickIntro(dt){
     if(ready&&arrived){
       d.bubble={t:b.t,text:b.say};
       intro.t=b.t+0.35;
-      if(b.hold)intro.pause=Math.max(intro.pause||0, b.t*0.55+0.4);   // linger at the landmark
+      if(b.hold)intro.pause=Math.max(intro.pause||0, b.t*0.55+0.4+(b.linger||0));   // linger at the landmark (+ optional extra beat)
       intro.i++;
       SFX.talk();
     }
@@ -6880,8 +6898,9 @@ function drawDecor(){
   sprAt('couch',U(70),U(662),'couch');
   sprAt('office_chair',U(190),U(618),'office_chair');
   sprAt('office_chair',U(190),U(656),'office_chair');
-  // HR desk is a real container now (drawn + collision by drawContainers); just its chair here
-  sprAt('office_chair',U(452),U(98),'office_chair');
+  /* HR desk is a real container now (drawn + collision by drawContainers). Its loose office_chair
+     was removed — Brenda brings her own chair when she sits (brendaSeatState -> drawSeated), so the
+     static one just sat there as a spare blue chair nobody uses. */
   // scattered papers + coffee stains
   ctx.fillStyle='rgba(255,255,255,.55)';[[340,352],[610,240],[930,320],[520,520],[770,700]].forEach(p=>ctx.fillRect(U(p[0]),U(p[1]),U(7),U(5)));
   ctx.fillStyle='rgba(110,70,40,.16)';[[480,300],[660,520],[240,540]].forEach(p=>{ctx.beginPath();ctx.arc(U(p[0]),U(p[1]),U(6),0,Math.PI*2);ctx.fill();});
@@ -8707,7 +8726,24 @@ function loop(now){
       const introDale=intro.dale;
       tickIntro(dt);
       tickLights(dt);   // day-1 override brings the lights up so the tour isn't in the dark
-      activeNPCs().forEach(n=>{if(n!==introDale){const ox=n.x,oy=n.y;updateNPC(n,dt);const mdx=n.x-ox,mdy=n.y-oy;if(mdx*mdx+mdy*mdy>0.02)n.face=Math.atan2(mdy,mdx);}});
+      /* Same per-NPC bookkeeping as the normal loop. It used to only set `face`, which was fine
+         when the cast was pre-placed at their desks and stood still — now that they genuinely walk
+         in during the tour they need moving/animT or they slide across the floor without a walk
+         cycle, and separate() so the arrival crowd doesn't stack up in the lift lobby. */
+      activeNPCs().forEach(n=>{
+        if(n===introDale)return;
+        const ox=n.x,oy=n.y;
+        updateNPC(n,dt);
+        const mdx=n.x-ox,mdy=n.y-oy, sp=Math.hypot(mdx,mdy);
+        n.moving=sp>0.12;
+        if(n.moving){n.face=Math.atan2(mdy,mdx);n.animT=(n.animT||0)+sp;}else n.animT=0;
+        separate(n);
+      });
+      /* The office keeps its own time during the tour. The clock used to be frozen here, so the
+         whole floor was stuck mid-morning until the intro ended — staggered arrivals never fired
+         and nobody sat down. (The phase-change toast is already suppressed while intro is set, and
+         the player starts the tour standing on the elevator, so clock-in still credits normally.) */
+      advanceClock(dt);
       updateCamera();render();updateHUD();
       requestAnimationFrame(loop);
       return;
