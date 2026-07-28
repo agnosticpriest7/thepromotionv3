@@ -670,22 +670,23 @@ const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
-  vending_machine:64, fridge:85, lockers:80, supply_shelf:61, whiteboard:82,   // fridge 48->85 so it matches the counter run it caps (sole user is the kitchen fridge)
+  vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
      these get compared against box*S. The art is a 1254² square whose opaque content is only 74.88%
      of the width (x 0.126..0.8748), so a unit DRAWS 106*0.7488 = 79.4 world = 44.1 authored. Boxes
-     are 44 authored (79.2 world) and adjacent, so visible edges overlap by 0.2 world — touching,
-     never a hairline gap. */
-  counter_plain:106, counter_sink:106, counter_micro:106, counter_coffee:106,
+     are adjacent, so visible edges overlap fractionally — touching, never a hairline gap.
+     Cut 15% (106 -> 90) 2026-07-28: they read too big for the room. A unit now draws 90*0.7488 =
+     67.4 world = 37.4 authored, so the boxes are 37 and the run is 4x37 + fridge. */
+  counter_plain:90, counter_sink:90, counter_micro:90, counter_coffee:90,
   break_table:190, kitchen_table:190, bush:44, grass:64,
   /* crew set. Chairs sit OUTSIDE the tabletop (they are their own sprites), so the whole set spans
      1.436x the table's width and 1.944x its height — 132 keeps a set at ~190x133 world, i.e. about
      the footprint the old chairs-baked-in conference sprite had. Chair 30 is the layout sheet's
      0.226 x table width. */
-  crew_table:132, crew_chair_top:30, crew_chair_bottom:30, crew_chair_left:30, crew_chair_right:30,
+  crew_table:137, crew_chair_top:30, crew_chair_bottom:30, crew_chair_left:30, crew_chair_right:30,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
 function sprAt(name,cx,cyBottom,widthKey){
@@ -1119,6 +1120,7 @@ const walls=[
   {x:1040,y:-5,w:120,h:10},{x:1040,y:115,w:38,h:10},{x:1122,y:115,w:38,h:10},{x:1035,y:0,w:10,h:120},{x:1155,y:0,w:10,h:120},
   /* JANITORIAL divider: splits the old kitchen at y120 — the north half becomes the janitor's supply
      room, the south half stays the kitchen. y115 matches the ASST MANAGER wall pattern west of it,
+     BUMPED UP 2026-07-28: band was y115..125, now y85..95, giving the kitchen 30u more depth.
      and y120 is where the kitchen's west wall (1155,0,10,120) already ends. Doorway is the gap at
      1209..1260 — as far left as it can go. It cannot sit flush against the west wall: the ASST
      MANAGER office's shelf box (1140,60) DRAWS east of itself at 1160..1209, poking through that
@@ -1129,7 +1131,7 @@ const walls=[
      to CLEAR 1260, not stop on it. 1209..1265 leaves cells 1220-1240 and 1240-1260 both whole: a 40u
      door, matching the manager/meeting/break rooms. (Stopping at 1253 or 1260 left only one cell
      walkable — a 20u door.) */
-  {x:1160,y:115,w:49,h:10},{x:1265,y:115,w:235,h:10},
+  {x:1160,y:85,w:49,h:10},{x:1265,y:85,w:235,h:10},
   {x:380,y:275,w:38,h:10},{x:462,y:275,w:178,h:10},{x:380,y:495,w:38,h:10},{x:462,y:495,w:178,h:10},{x:375,y:280,w:10,h:220},{x:635,y:280,w:10,h:220},
   {x:840,y:275,w:98,h:10},{x:982,y:275,w:118,h:10},{x:840,y:495,w:98,h:10},{x:982,y:495,w:118,h:10},{x:835,y:280,w:10,h:220},{x:1095,y:280,w:10,h:220},
   {x:640,y:335,w:18,h:10},{x:702,y:335,w:138,h:10},{x:640,y:435,w:18,h:10},{x:702,y:435,w:138,h:10},{x:635,y:340,w:10,h:100},{x:835,y:340,w:10,h:100},
@@ -1201,8 +1203,18 @@ const breakTableB={x:540,y:250,w:40,h:120};   // T3: despite the name this is in
    Break room interior is x845..1095, y285..495. A set spans 105x74 authored, so at cx900 the two
    stack at y332..406 and y408..482: clear of the lockers (858,300 84x26, so y<=326), the vending
    machine (1005,330), the water cooler (1050,460) and the bin (1060,400) without moving any. */
-const breakTable ={x:880,y:427,w:40,h:33};    // lower set
-const breakTable2={x:880,y:351,w:40,h:33};    // upper set
+/* Positions are GRID-ALIGNED, which is what lets the table carry a full collision box while every
+   chair stays walkable: the nav grid is 20u and claims any cell a blocker touches, so landing the
+   TABLETOP's top-left on a 20u boundary keeps its blocker inside whole cells and leaves the ring of
+   chair cells free. Tabletop is 76.1 x 38.9 authored (ART_W 137), so with box w40/h33 the anchor is
+   tabletopLeft+18, tabletopTop+1. Both sets now sit on the room's LEFT half — the lockers and the
+   rest of the amenities moved east to clear it.
+   The tabletop is placed 2u INSIDE its cell, not on the boundary: landing exactly on 880/320 put
+   the top edge at 319.4 after world rounding, which bled into the cell above and blocked the whole
+   top chair row, while a left edge sitting ON 880 counts as touching the cell to its left and
+   blocked the end chair. 882/321 keeps the blocker strictly within its own cells. */
+const breakTable ={x:900,y:422,w:40,h:33};    // lower set  — tabletop 882,421
+const breakTable2={x:900,y:322,w:40,h:33};    // upper set  — tabletop 882,321
 const breakChairs =[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                     {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 const breakChairs2=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
@@ -1214,7 +1226,7 @@ const breakChairs2=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y
    three of them (Hank, Sana, Doug — every run) ended up inside geometry mid-route. Moved east and
    up: the whole western half of the kitchen is now an open corridor, the bottom chairs sit 39u off
    the south wall (2 cells, not 1), and the top chairs clear the counter boxes' cells. */
-const kitchenTable={x:1370,y:190,w:40,h:33};
+const kitchenTable={x:1300,y:182,w:40,h:33};   // tabletop 1282,181 — grid-aligned (2u inside the cell, see breakTable), back toward the middle now the coffee machine has moved off the floor
 const kitchenChairs=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                      {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 /* Interactive objects REBUILT from the plan pins (test/gen_level.js). Two printers + two
@@ -1227,7 +1239,10 @@ const objects=[
      backs onto the closet's SOUTH face (y435..445), the next stands against its NORTH face (y335). */
   {type:'water',x:760,y:445,w:24,h:30,label:'Water cooler',trapped:false},
   {type:'water',x:760,y:305,w:24,h:30,label:'Water cooler',trapped:false},
-  {type:'coffee',x:1240,y:240,w:30,h:26,label:'Coffee',trapped:false},
+  /* moved out of the middle of the kitchen floor (was 1240,240, where its blocker merged with the
+     table's and pinched the room) to the strip between the ASST MANAGER door (x1078..1122) and the
+     JANITORIAL door (x1209..1265). */
+  {type:'coffee',x:1170,y:105,w:30,h:26,label:'Coffee',trapped:false},
   {type:'files',x:500,y:40,w:30,h:26,label:'HR Files',restricted:true},
   {type:'alarm',x:1032,y:500,w:16,h:22,label:'Fire Alarm'},
   {type:'board',x:388,y:408,w:84,h:26,label:'Whiteboard'},
@@ -1260,7 +1275,7 @@ const CONTAINERS=[
   {x:1246,y:299,w:28,h:22,label:'Senior sales bin',kind:'box'},
   {x:1035,y:720,w:28,h:22,label:'Sales bin',kind:'box'},
   {x:800,y:368,w:28,h:22,label:'Supply bin',kind:'box'},
-  {x:1060,y:400,w:28,h:22,label:'Break bin',kind:'box'},
+  {x:1055,y:405,w:28,h:22,label:'Break bin',kind:'box'},   // break room, east side with the rest of the amenities
   /* kitchen bin (1225,50) removed — JANITORIAL room */
   {x:560,y:0,w:20,h:120,label:'Accounting shelf',kind:'cabinet'},
   {x:860,y:0,w:20,h:120,label:'Manager shelf',kind:'cabinet'},
@@ -1271,9 +1286,8 @@ const CONTAINERS=[
   {x:1140,y:60,w:20,h:60,label:'Asst mgr shelf',kind:'cabinet'},
   {x:820,y:340,w:20,h:100,label:'Supply shelf',kind:'cabinet'},
   {x:740,y:340,w:80,h:20,label:'Supply shelf',kind:'cabinet'},
-  /* pantry shortened y40..240 -> y130..240: it used to run straight through the new JANITORIAL
-     divider at y120. Kyle did not mark it for removal, so it stays — but wholly kitchen-side now. */
-  {x:1455,y:130,w:40,h:110,label:'Kitchen pantry',kind:'cabinet'},
+  /* the little chest, moved to the kitchen's bottom-right corner */
+  {x:1440,y:215,w:40,h:45,label:'Kitchen pantry',kind:'cabinet'},
   /* ---- kitchen counter run: four units side by side, flush under the JANITORIAL divider ----
      Starts at 1265, the east lip of the doorway, so the run never stands in front of the door.
      drawContainers draws sprAt(art, boxCentreX, boxBottom+4, art) with the sprite BOTTOM on
@@ -1283,14 +1297,17 @@ const CONTAINERS=[
        fridge    h70 -> bottom 351.0, sprite top 222.6, visible top 225.7  (flush, level with them)
      The fridge is 414x645 rather than square, hence its own height. Run spans 1265..1485, ending
      10u short of the east wall. */
-  {x:1265,y:125,w:44,h:49,label:'Kitchen counter',kind:'cabinet',art:'counter_plain'},
-  {x:1309,y:125,w:44,h:49,label:'Kitchen sink',kind:'cabinet',art:'counter_sink'},
-  {x:1353,y:125,w:44,h:49,label:'Microwave counter',kind:'cabinet',art:'counter_micro'},
-  {x:1397,y:125,w:44,h:49,label:'Coffee counter',kind:'cabinet',art:'counter_coffee'},
-  {x:1441,y:125,w:44,h:70,label:'Fridge',kind:'fridge'},
+  {x:1265,y:95,w:37,h:41,label:'Kitchen counter',kind:'cabinet',art:'counter_plain'},
+  {x:1302,y:95,w:37,h:41,label:'Kitchen sink',kind:'cabinet',art:'counter_sink'},
+  {x:1339,y:95,w:37,h:41,label:'Microwave counter',kind:'cabinet',art:'counter_micro'},
+  {x:1376,y:95,w:37,h:41,label:'Coffee counter',kind:'cabinet',art:'counter_coffee'},
+  {x:1413,y:95,w:37,h:59,label:'Fridge',kind:'fridge'},
   /* fridge (1170,50) removed — JANITORIAL room */
-  {x:858,y:300,w:84,h:26,label:'Lockers',kind:'locker'},                // break-room lockers (new art)
-  {x:1005,y:330,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art)
+  /* Break-room amenities all moved to the RIGHT of the room (2026-07-28) so the whole left half is
+     free for the two crew table sets. Lockers came off the north-west corner, where they were
+     crowding the upper set; vending, bin and cooler restacked down the east side under them. */
+  {x:1000,y:295,w:84,h:26,label:'Lockers',kind:'locker'},               // break-room lockers (new art)
+  {x:1046,y:345,w:44,h:34,label:'Vending',kind:'vending'},              // break-room vending machine (new art), flush to the east wall
   {x:404,y:63,w:34,h:52,label:'HR desk',kind:'cabinet',art:'cubicle_desk_left'},   // HR desk, against the left wall — real container = collision
 ];
 const ITEMS={
@@ -1406,7 +1423,7 @@ function dropItemMenu(){
   items.push({label:'Cancel',act:()=>{}});
   renderMenu({title:'Your pockets',items});
 }
-const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:445,type:'water'},{x:1240,y:240,type:'coffee'},{x:700,y:600,type:'chat'}];
+const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:445,type:'water'},{x:1170,y:105,type:'coffee'},{x:700,y:600,type:'chat'}];
 
 const player={x:400,y:180,w:16,h:16,speed:1.7,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0};
 
@@ -6347,16 +6364,21 @@ function buildBlockers(tableRects,crewRects){
     blockers.push({x:Math.round(r.left+r.w*0.18), y:Math.round(r.top+r.h*0.36),
                    w:Math.round(r.w*0.64),        h:Math.round(r.h*0.28)});
   });
-  /* crew tables: the sprite is JUST the tabletop, but the blocker still has to be a MIDDLE BAND,
-     not the full rect. The nav grid is 20 authored units and a blocker claims every cell it touches
-     at all, so a full-rect blocker on a 37u-tall tabletop inflated to ~60u and swallowed the very
-     tiles the chair rows sit on — snapTarget then flung those seats out of the room (one landed at
-     y530, outside it) and NPCs sent to them got stuck. Measured, from the soak going RED.
-     0.30..0.70 of the height keeps the blocker inside the middle cells and leaves the chair rows
-     above and below walkable, so every seat stays reachable. */
+  /* crew tables: the TABLE gets a full collision box, the CHAIRS get none — you can walk up to a
+     chair and sit, but not through the table. That only works because the tabletops are GRID
+     ALIGNED. The nav grid is 20u and claims any cell a blocker touches at all, so an unaligned
+     full-rect blocker bleeds into the neighbouring cells and eats the chair ring (that is exactly
+     what sent the earlier soak RED, with seats flung out of the room). Aligned, a 76.1 x 38.9
+     tabletop starting on a 20u boundary occupies whole cells and every chair sits in the free ring
+     just outside them. */
   (crewRects||[]).forEach(r=>{
-    blockers.push({x:Math.round(r.left+r.w*0.06), y:Math.round(r.top+r.h*0.30),
-                   w:Math.round(r.w*0.88),        h:Math.round(r.h*0.40)});
+    /* Inset 4 world px. buildGrid tests each cell INFLATED by 2px a side, so a blocker that starts
+       even 1px inside a cell still claims the cell before it — a full-size 70px tabletop was
+       claiming 4 cell rows instead of 2 and swallowing both chair rows. 4px keeps it strictly
+       inside its own cells. The table is still solid; it just stops 4px short of its own edge. */
+    const I=4;
+    blockers.push({x:Math.round(r.left+I), y:Math.round(r.top+I),
+                   w:Math.round(r.w-I*2),  h:Math.round(r.h-I*2)});
   });
   /* filing cabinets, lockers, shelves, the fridge — furniture you should bump into */
   CONTAINERS.forEach(c=>blockers.push({x:c.x,y:c.y,w:c.w,h:c.h}));
@@ -6590,8 +6612,8 @@ const ROOMS=[
   /* The old kitchen (1160,0,335x280) is split at y120 by the divider wall above. North half is the
      janitor's supply room, south half stays the kitchen. east 1495 on both: the floor runs to the
      east perimeter wall, not to 1400 (the pre-widening edge). */
-  {name:'JANITORIAL',   x:1160,y:0,   w:335, h:120, c:'#7c7768'},
-  {name:'KITCHEN',      x:1160,y:120, w:335, h:160, c:'#c9a41a'},
+  {name:'JANITORIAL',   x:1160,y:0,   w:335, h:90,  c:'#7c7768'},
+  {name:'KITCHEN',      x:1160,y:90,  w:335, h:185, c:'#c9a41a'},
   /* east 1495 on both: their floor runs to the east perimeter wall, not to 1400 (the pre-widening
      edge). glassBox pins the glass-flagging pass below to SENIOR SALES' ORIGINAL bounds — without it
      the widened east edge lands on the east PERIMETER wall and flags all three of its segments
