@@ -1100,9 +1100,18 @@ const walls=[
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
   {x:1040,y:-5,w:120,h:10},{x:1040,y:115,w:38,h:10},{x:1122,y:115,w:38,h:10},{x:1035,y:0,w:10,h:120},{x:1155,y:0,w:10,h:120},
   /* JANITORIAL divider: splits the old kitchen at y120 — the north half becomes the janitor's supply
-     room, the south half stays the kitchen. y115 + a 44-wide doorway is the same pattern the ASST
-     MANAGER wall above uses, and y120 is where the kitchen's west wall (1155,0,10,120) already ends. */
-  {x:1160,y:115,w:130,h:10},{x:1334,y:115,w:166,h:10},
+     room, the south half stays the kitchen. y115 matches the ASST MANAGER wall pattern west of it,
+     and y120 is where the kitchen's west wall (1155,0,10,120) already ends. Doorway is the gap at
+     1209..1260 — as far left as it can go. It cannot sit flush against the west wall: the ASST
+     MANAGER office's shelf box (1140,60) DRAWS east of itself at 1160..1209, poking through that
+     wall and straddling y115..125, so a door there is blocked (placement: blocks-doorway). Nudging
+     the shelf instead only leaves a 7-unit window between the office desk and this band, so the
+     door yields rather than the office. The gap runs to 1260, not 1253, because the nav grid is 20u
+     with edges on 1220/1240/1260, and a cell is blocked if a wall touches it at all — so the gap has
+     to CLEAR 1260, not stop on it. 1209..1265 leaves cells 1220-1240 and 1240-1260 both whole: a 40u
+     door, matching the manager/meeting/break rooms. (Stopping at 1253 or 1260 left only one cell
+     walkable — a 20u door.) */
+  {x:1160,y:115,w:49,h:10},{x:1265,y:115,w:235,h:10},
   {x:380,y:275,w:38,h:10},{x:462,y:275,w:178,h:10},{x:380,y:495,w:38,h:10},{x:462,y:495,w:178,h:10},{x:375,y:280,w:10,h:220},{x:635,y:280,w:10,h:220},
   {x:840,y:275,w:98,h:10},{x:982,y:275,w:118,h:10},{x:840,y:495,w:98,h:10},{x:982,y:495,w:118,h:10},{x:835,y:280,w:10,h:220},{x:1095,y:280,w:10,h:220},
   {x:640,y:335,w:18,h:10},{x:702,y:335,w:138,h:10},{x:640,y:435,w:18,h:10},{x:702,y:435,w:138,h:10},{x:635,y:340,w:10,h:100},{x:835,y:340,w:10,h:100},
@@ -6934,7 +6943,11 @@ function drawDecor(){
   sprAt('wall_clock',U(120),U(440),'wall_clock');                 // reception
   sprAt('first_aid',U(1085),U(302),'first_aid');                  // break room
   sprAt('first_aid',U(35),U(454),'first_aid');                    // reception
-  sprAt('fire_extinguisher',U(1345),U(72),'fire_extinguisher');   // kitchen
+  /* wall-mounted on the JANITORIAL room's north wall (was 72 — freestanding in open floor ~18 units
+     off it). sprAt's 3rd arg is the sprite BOTTOM. Tuned by the VISIBLE red body, not the sprite
+     box: the art carries transparent padding up top, so a box flush to the wall still reads as
+     floating. cyBottom 48 puts the red at y~15.5, the same line the fire alarm next to it sits on. */
+  sprAt('fire_extinguisher',U(1345),U(48),'fire_extinguisher');   // janitorial (was kitchen)
   sprAt('fire_extinguisher',U(1090),U(530),'fire_extinguisher');  // sales/annex corridor (by the alarm) — raised half a square
   // company sign above the reception desk (SW reception) — raised one square
   ctx.fillStyle='#241d16';ctx.fillRect(U(44),U(478),U(136),U(14));ctx.fillStyle='#2b2b2b';ctx.fillRect(U(46),U(480),U(132),U(10));
