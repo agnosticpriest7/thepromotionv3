@@ -561,7 +561,19 @@ const EPILOGUE = `
       SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]),
       breakTableB:pick('breakTableB',null),
       ART_W:pick('ART_W',{}), OBJ_ART:pick('OBJ_ART',{}), CONT_ART:pick('CONT_ART',{}),
-      WINDOWS:pick('WINDOWS',[]), W:pick('W',0), H:pick('H',0) }; });
+      WINDOWS:pick('WINDOWS',[]), W:pick('W',0), H:pick('H',0),
+      /* Reception lounge: decor sprites, but the table and couch are SOLID, so the linter and the
+         tests need their footprints. Deliberately does NOT return a height — the harness stubs
+         Image at 64x64, so anything derived from naturalHeight here comes back square and every
+         piece looks like it overlaps its neighbour. Export the anchor and the width (both
+         independent of the stub) and let the consumer apply the real PNG aspect from disk, the
+         same way placement.js already does with spriteDims(). */
+      LOBBY:(function(){ try{
+        return [LOBBY_TABLE,LOBBY_COUCH].concat(LOBBY_CHAIRS).map(function(p){
+          return {art:p.art, solid:!!p.box, box:p.box||null,
+                  cx:Math.round(p.x*S), yB:Math.round(p.yB*S), w:U1(ART_W[p.art]||40)};
+        });
+      }catch(e){ return []; } })() }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });

@@ -494,6 +494,9 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   /* meeting-room set — same 3/3/1/1 layout, its own art */
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
+  /* reception lounge (Kyle's art). Deliberately NOT reusing 'couch' — that key is still the CEO's
+     waiting couch, which this change does not touch. _l / _r name the way the SITTER faces. */
+  'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -577,6 +580,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'counter_plain','counter_sink','counter_micro','counter_coffee',
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
+  'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -693,6 +697,10 @@ const ART_W={
   /* meeting set: same 137 tabletop as the crew set, which is what keeps the grid-alignment maths
      (and therefore the free ring of chair cells around a solid table) identical for both. */
   meet_table:137, meet_chair_top:30, meet_chair_bottom:30, meet_chair_left:30, meet_chair_right:30,
+  /* reception lounge. Sized to the corridor it stands in: usable floor is authored x245..374 (129
+     wide) between reception's marble edge and the restroom's west wall, so chair + table + chair =
+     28.9 + 45.6 + 28.9 authored leaves ~7 either side. Chairs are 52/0.861 = 60 world tall. */
+  lobby_couch:104, lobby_table:82, lobby_chair_l:52, lobby_chair_r:52,
 };
 /* draw a sprite centred on a footprint, standing on the floor */
 function sprAt(name,cx,cyBottom,widthKey){
@@ -1141,7 +1149,15 @@ const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a
 /* Walls REBUILT from the level-overhaul plan (test/gen_level.js): perimeter + dividers as
    rects, plus each room outline with a 44u door gap carved at every door. Authored 1400x760. */
 const walls=[
-  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:840,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1495,y:0,w:10,h:340},{x:1160,y:-5,w:340,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},{x:1495,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1074,y:575,w:166,h:10},
+  {x:560,y:-5,w:320,h:10},{x:260,y:-5,w:140,h:10},{x:-5,y:180,w:10,h:100},{x:-5,y:420,w:10,h:260},{x:220,y:755,w:160,h:10},{x:660,y:755,w:840,h:10},{x:0,y:755,w:220,h:10},{x:-5,y:680,w:10,h:80},{x:1495,y:0,w:10,h:340},{x:1160,y:-5,w:340,h:10},{x:515,y:600,w:10,h:160},{x:115,y:680,w:10,h:80},{x:115,y:280,w:10,h:140},
+  /* East wall of the elevator lobby, closing it off from the new reception lounge (Kyle's map marks
+     it in black). Runs from reception's south edge down to meet the south perimeter at y755, so it
+     leaves no slit. The elevator stays reachable from reception to the NORTH — that route is what
+     arrivals and departures use, so it must not be sealed.
+     x220 is flush with the elevator room's east edge, and that placement is load-bearing: at x230
+     the wall's east face landed on world x432, exactly a 36px nav-cell boundary, and buildGrid's
+     2px-per-side cell inflation then blocked the whole column of corridor beside it. */
+  {x:220,y:680,w:10,h:75},{x:1495,y:580,w:10,h:180},{x:1015,y:580,w:10,h:180},{x:1074,y:575,w:166,h:10},
   {x:0,y:-5,w:260,h:10},{x:0,y:175,w:260,h:10},{x:-5,y:0,w:10,h:180},{x:255,y:0,w:10,h:38},{x:255,y:82,w:10,h:98},
   {x:400,y:-5,w:160,h:10},{x:400,y:175,w:118,h:10},{x:395,y:0,w:10,h:180},{x:555,y:0,w:10,h:180},
   {x:880,y:-5,w:160,h:10},{x:880,y:175,w:58,h:10},{x:982,y:175,w:58,h:10},{x:875,y:0,w:10,h:180},{x:1035,y:0,w:10,h:180},
@@ -6463,6 +6479,38 @@ function fitTableSeats(){
   NPCS.forEach(n=>{n.goal=null;n.path=null;n.wp=0;unstickEnt(n);});
   unstickPlayer();
 }
+/* ===== RECEPTION LOUNGE =====================================================================
+   The waiting area east of reception. Authored units; the corridor it stands in is x245..374
+   (reception's marble stops at 240, the restroom's west wall starts at 375) and y~630..755
+   (the south perimeter wall is y755..765).
+
+   Laid out to Kyle's marked-up map: two armchairs down the west side facing EAST, three down the
+   east side facing WEST, a glass table between them and the couch across the south end — a U of
+   seating around the table. `_l` / `_r` name the direction the SITTER faces, so the west column
+   uses lobby_chair_r and the east column lobby_chair_l.
+
+   Every piece is anchored by its BOTTOM centre, the same as sprAt.
+   `box` is the authored collision footprint of the SOLID pieces, written out in full rather than
+   measured off the sprite. Deriving it from naturalHeight (the obvious first cut) makes collision
+   depend on whether the image loaded: under the test harness, which stubs Image at 64x64, the
+   table's blocker came out square — 82x82 world instead of 82x37 — and claimed the whole nav-grid
+   row above it, so the corridor tested as sealed while the browser would have been fine. Collision
+   the sim depends on must be deterministic; only the DRAWING uses the sprite's real aspect. The
+   numbers below are that aspect, measured once: table 82/2.206, couch 104/2.102 world. */
+const LOBBY_TABLE  = {x:310, yB:700, art:'lobby_table', box:{x:287, y:679, w:46, h:21}};
+const LOBBY_COUCH  = {x:309, yB:751, art:'lobby_couch', box:{x:280, y:724, w:58, h:27}};
+const LOBBY_CHAIRS = [
+  {x:262, yB:704, art:'lobby_chair_r'},   // west column, sitter faces east
+  {x:262, yB:748, art:'lobby_chair_r'},
+  {x:356, yB:664, art:'lobby_chair_l'},   // east column, sitter faces west
+  {x:356, yB:706, art:'lobby_chair_l'},
+  {x:356, yB:750, art:'lobby_chair_l'},
+];
+function drawLobby(){
+  for(const p of [LOBBY_TABLE,LOBBY_COUCH,...LOBBY_CHAIRS])
+    sprAt(p.art,Math.round(p.x*S),Math.round(p.yB*S),p.art);
+}
+
 /* The solid parts of the world that aren't walls or desks.
    For the tables that means the TABLETOP only — the chairs are part of the sprite, and
    people have to be able to stand on them. */
@@ -6489,6 +6537,15 @@ function buildBlockers(tableRects,crewRects){
     const I=4;
     blockers.push({x:Math.round(r.left+I), y:Math.round(r.top+I),
                    w:Math.round(r.w-I*2),  h:Math.round(r.h-I*2)});
+  });
+  /* reception lounge: the TABLE and the COUCH are solid, the ARMCHAIRS are not — the same rule
+     Kyle set for the break room, so you can walk up to a chair but not through the big pieces.
+     Inset 4 world px for the reason spelled out above (buildGrid inflates each cell by 2px a side,
+     so a flush blocker claims the cell before it). Skipped entirely if the art failed to load. */
+  [LOBBY_TABLE,LOBBY_COUCH].forEach(p=>{
+    const I=4;
+    blockers.push({x:Math.round(p.box.x*S)+I,          y:Math.round(p.box.y*S)+I,
+                   w:Math.max(1,Math.round(p.box.w*S)-I*2), h:Math.max(1,Math.round(p.box.h*S)-I*2)});
   });
   /* filing cabinets, lockers, shelves, the fridge — furniture you should bump into */
   CONTAINERS.forEach(c=>blockers.push({x:c.x,y:c.y,w:c.w,h:c.h}));
@@ -7203,10 +7260,13 @@ function drawDecor(){
   // rug: break room only (the blue reception rug was removed)
   ctx.fillStyle='rgba(140,90,50,.14)';ctx.fillRect(U(858),U(300),U(224),U(160));ctx.strokeStyle='rgba(140,90,50,.25)';ctx.strokeRect(U(858),U(300),U(224),U(160));
   /* the whiteboard is an OBJECT (drawObjects) — drawing it here too gave us two of them */
-  // reception waiting area — couch along the south wall, two chairs off to the east
-  sprAt('couch',U(70),U(662),'couch');
-  sprAt('office_chair',U(190),U(618),'office_chair');
-  sprAt('office_chair',U(190),U(656),'office_chair');
+  /* Reception lounge. Replaces the old waiting set (a 'couch' at 70,662 and two loose office_chairs
+     at 190,618/656, all of it inside the marble room). The lounge now sits in the grey corridor
+     EAST of reception — authored x245..374, between the marble edge at 240 and the restroom's west
+     wall at 375 — laid out to Kyle's map: chairs down both sides facing each other, glass table in
+     the middle, couch across the south end facing up. LOBBY_SEATS is drawn here and read by
+     buildBlockers, so the collision boxes can never drift from the art. */
+  drawLobby();
   /* HR desk is a real container now (drawn + collision by drawContainers). Its loose office_chair
      was removed — Brenda brings her own chair when she sits (brendaSeatState -> drawSeated), so the
      static one just sat there as a spare blue chair nobody uses. */
