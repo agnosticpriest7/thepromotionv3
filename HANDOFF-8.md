@@ -139,6 +139,35 @@ Workaround until then: **verify seating and footprints in the browser, not the h
 
 *(`HANDOFF-7`'s "kitchen cleanup, never started" is **done** — see §2.)*
 
+## From the overnight sweep (2026-07-29, `test/overnight.js`, 57 min, 32/32 green)
+
+The harness image-stub fix landed first (`086060a`), so this is the first run where the geometry
+numbers mean anything under test. Gate stayed green on all 38 — the change shifted nothing any test
+asserted, which is itself the proof that seat geometry was never tested.
+
+**The floor is healthy over the long horizon.** 1M frames / 28 in-game days: 0 render errors, nobody
+wedged, live workers stable at 11–14, and **0 desk-less workers at every sample**. 12 seeds x 5
+characters clean, 12/12 save round-trips deep into a run, every rank soaks clean.
+
+**One thing to know: the cast array never prunes.** `NPCS` grows 19 → 32 over 28 days while live
+workers stay flat, because departed staff stay in the array forever — by day 14 that is Doug, Wren,
+Sana, Gil and Ravinder, all `alive:false` / `gone:true` and still present. That is plausibly *by
+design* (leverage and history reference people who have left, and the harness's own investment
+invariant assumes gone NPCs remain findable), so it is **not filed as a bug**. But `buildSnapshot`
+serialises the whole array — 17.5 KB at day 14 with 24 entries — so **save size grows monotonically
+with playtime**. Worth a decision before a long playthrough, not before.
+
+⚠️ **Ravinder is gone by day 14 in an unattended run.** He is the CEO-office gatekeeper, so the
+gate that keeps you out of Sterling's office may simply evaporate in a long game. Not investigated.
+
+⚠️ **Three drift metrics are trivially green** — favours, delegation and leverage all read 0 → 0
+over 28 days, because a bot that never acts never generates any. They prove no unbounded growth;
+they are *not* evidence those systems work. `test/botrun.js` is what exercises them.
+
+**Open question from `botrun`:** crafting after its looting loop yields no kit, while crafting
+standalone does. A probe of `takeItem()` threw, so the bot may be calling it wrong rather than the
+game misbehaving. Answer it before trusting a green there.
+
 ## Standing TV items (Kyle's verdict, gamepad in hand)
 
 - **The five characters** — do they read at TV distance, and do the seated poses land?
