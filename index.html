@@ -1091,7 +1091,9 @@ function sitAtDesk(d){
   standUp();
   player.x=Math.round(seat.x-player.w/2); player.y=Math.round(seat.y-player.h/2);
   player.moving=false; player.animT=0; player.path=null; player.goal=null; player.wp=0;
-  player.sit={kind:'desk', chair:null, dir:seatDirForDesk(d), cx:r.x, cyGround:r.y};
+  /* `desk` is kept so the interact key can re-open THIS desk's menu while you are sitting at it,
+     without going back through nearestInteractable — see tryInteract. */
+  player.sit={kind:'desk', chair:null, desk:d, dir:seatDirForDesk(d), cx:r.x, cyGround:r.y};
   return true;
 }
 function sitOnChair(c){
@@ -3926,9 +3928,17 @@ function nearestInteractable(){
 }
 function tryInteract(){
   if(menuOpen){closeMenu();return;}
-  /* Seated already? The interact key is also the get-up key. Checked before nearestInteractable so
-     the chair you are ON can't re-trigger a sit, and so you are never stuck in a seat. */
-  if(player.sit){standUp();SFX.close();return;}
+  /* Seated already. What the interact key does depends on WHAT you are sitting on:
+       - your own DESK: it uses the desk, which is the entire point of sitting down at it. Sitting
+         used to swallow the key and stand you up, so you had to leave the chair to open your own
+         desk menu again. Answered from player.sit.desk rather than nearestInteractable so it is
+         always THIS desk, never a colleague who happens to be a pixel closer.
+       - a table CHAIR: there is nothing to use, so it stands you up.
+     Either way, walking off also stands you up — that never stops working. */
+  if(player.sit){
+    if(player.sit.kind==='desk'&&player.sit.desk){ openMenu({kind:'desk',ref:player.sit.desk}); return; }
+    standUp();SFX.close();return;
+  }
   const t=nearestInteractable();
   if(!t){toast('Nothing here to interact with.');return;}
   /* A chair is a straight action, not a menu — Kyle asked for "press X to sit", and a one-item menu
