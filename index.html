@@ -512,6 +512,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   /* GUEST HIRES — not playable, they arrive through the hiring slate. See GUESTS. */
   'walk_rod_down','walk_rod_up','walk_rod_left','walk_rod_right',
   'sit_rod_down','sit_rod_up','sit_rod_left','sit_rod_right',
+  'walk_karl_down','walk_karl_up','walk_karl_left','walk_karl_right',
+  'sit_karl_down','sit_karl_up','sit_karl_left','sit_karl_right',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -603,6 +605,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'walk_raelee_down','walk_raelee_up','walk_raelee_left','walk_raelee_right',
   'walk_jax_down','walk_jax_up','walk_jax_left','walk_jax_right',
   'walk_rod_down','walk_rod_up','walk_rod_left','walk_rod_right',
+  'walk_karl_down','walk_karl_up','walk_karl_left','walk_karl_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -761,6 +764,7 @@ const CHAR_SHEETS={
   24:{down:'walk_jax_down',    up:'walk_jax_up',    left:'walk_jax_left',    right:'walk_jax_right'},
   /* guest hires continue the same numbering — they are faces, just not playable ones */
   25:{down:'walk_rod_down',    up:'walk_rod_up',    left:'walk_rod_left',    right:'walk_rod_right'},
+  26:{down:'walk_karl_down',   up:'walk_karl_up',   left:'walk_karl_left',   right:'walk_karl_right'},
 };
 /* The main-menu roster. `locked` entries render greyed and cannot be chosen — Kyle, Raelee and Jax
    are declared so the roster reads as intended, and each becomes playable the moment its art lands
@@ -917,7 +921,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod', 26:'sit_karl'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -1763,6 +1767,14 @@ const GUESTS = [
            'I used to be Legit. In fact, I was 2 Legit.',
            'The safe word is Whiskey',
            'You have only to believe if you wish to achieve. That rhymed. Unintentional.'] },
+  { key:'karl', name:'Karl Havoc', sprite:26, sex:'m', ptype:'paranoid',
+    resume:'Came in for one thing. Now he is not doing it.',
+    lines:['We did WAY too much',
+           "I don't wanna be around anymore",
+           "I'm so Hot!",
+           "I can't see out the sides of my eye",
+           'The prank is theirs a real guy inside my suit',
+           "I'm not doing it"] },
 ];
 function guestByName(nm){ return GUESTS.find(g=>g.name===nm)||null; }
 /* already on the floor, or already hired and waiting to start */
