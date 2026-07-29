@@ -509,6 +509,13 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'sit_raelee_down','sit_raelee_up','sit_raelee_left','sit_raelee_right',
   'walk_jax_down','walk_jax_up','walk_jax_left','walk_jax_right',
   'sit_jax_down','sit_jax_up','sit_jax_left','sit_jax_right',
+  /* GUEST HIRES — not playable, they arrive through the hiring slate. See GUESTS. */
+  'walk_rod_down','walk_rod_up','walk_rod_left','walk_rod_right',
+  'sit_rod_down','sit_rod_up','sit_rod_left','sit_rod_right',
+  'walk_karl_down','walk_karl_up','walk_karl_left','walk_karl_right',
+  'sit_karl_down','sit_karl_up','sit_karl_left','sit_karl_right',
+  'walk_nwh_down','walk_nwh_up','walk_nwh_left','walk_nwh_right',
+  'sit_nwh_down','sit_nwh_up','sit_nwh_left','sit_nwh_right',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -599,6 +606,9 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'walk_kyle_down','walk_kyle_up','walk_kyle_left','walk_kyle_right',
   'walk_raelee_down','walk_raelee_up','walk_raelee_left','walk_raelee_right',
   'walk_jax_down','walk_jax_up','walk_jax_left','walk_jax_right',
+  'walk_rod_down','walk_rod_up','walk_rod_left','walk_rod_right',
+  'walk_karl_down','walk_karl_up','walk_karl_left','walk_karl_right',
+  'walk_nwh_down','walk_nwh_up','walk_nwh_left','walk_nwh_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -755,6 +765,10 @@ const CHAR_SHEETS={
   22:{down:'walk_kyle_down',   up:'walk_kyle_up',   left:'walk_kyle_left',   right:'walk_kyle_right'},
   23:{down:'walk_raelee_down', up:'walk_raelee_up', left:'walk_raelee_left', right:'walk_raelee_right'},
   24:{down:'walk_jax_down',    up:'walk_jax_up',    left:'walk_jax_left',    right:'walk_jax_right'},
+  /* guest hires continue the same numbering — they are faces, just not playable ones */
+  25:{down:'walk_rod_down',    up:'walk_rod_up',    left:'walk_rod_left',    right:'walk_rod_right'},
+  26:{down:'walk_karl_down',   up:'walk_karl_up',   left:'walk_karl_left',   right:'walk_karl_right'},
+  27:{down:'walk_nwh_down',    up:'walk_nwh_up',    left:'walk_nwh_left',    right:'walk_nwh_right'},
 };
 /* The main-menu roster. `locked` entries render greyed and cannot be chosen — Kyle, Raelee and Jax
    are declared so the roster reads as intended, and each becomes playable the moment its art lands
@@ -911,7 +925,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod', 26:'sit_karl', 27:'sit_nwh'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -1736,6 +1750,66 @@ const TELLS={
   peacock:['Looking sharp.','Not a scratch on it.','Everyone saw that, right?','My good pen.'],
   socialite:['You did NOT hear this...','Guess what I heard.','Everyone knows already.','Ooh, spill it.']
 };
+
+/* ===== GUEST HIRES ==========================================================================
+   Rare named characters who can turn up on the hiring slate instead of a generated candidate.
+   Unlike a normal hire they arrive with a FIXED identity — their own face, their own art, and
+   their own bubble lines — so running into one is an event rather than another Gary B.
+
+   `weight` is the per-candidate chance of that guest being rolled (GUEST_CHANCE gates the roll
+   overall). Each guest can only land once per game: taken() checks both the live cast and anyone
+   already queued in pendingHires, so a slate can never offer the same guest twice, and a guest
+   who has been fired does not come back.
+
+   `lines` REPLACE the personality tells for that character — see tellsFor(). */
+const GUEST_CHANCE = 0.10;        // Kyle's number: 10% of candidates roll as a guest
+const GUESTS = [
+  { key:'rod', name:'Rod Kimble', sprite:25, sex:'m', ptype:'peacock',
+    resume:'Amateur stuntman. Lists "falling" under skills.',
+    lines:['Cool Beans',
+           "Life's short, stunt it",
+           'I used to be Legit. In fact, I was 2 Legit.',
+           'The safe word is Whiskey',
+           'You have only to believe if you wish to achieve. That rhymed. Unintentional.'] },
+  { key:'karl', name:'Karl Havoc', sprite:26, sex:'m', ptype:'paranoid',
+    resume:'Came in for one thing. Now he is not doing it.',
+    lines:['We did WAY too much',
+           "I don't wanna be around anymore",
+           "I'm so Hot!",
+           "I can't see out the sides of my eye",
+           'The prank is theirs a real guy inside my suit',
+           "I'm not doing it"] },
+  /* sprite key is 'nwh' — the art files are walk_nwh_* / sit_nwh_*, the display name is his own */
+  { key:'nwh', name:'Night Wolf Hawk', sprite:27, sex:'m', ptype:'peacock',
+    resume:'References available. He says they are classified.',
+    lines:['It actually was Could be Good',
+           'I have 7 Japanese Girlfriends',
+           'Get up. Get Angry. Call the Police',
+           'Uh oh my Dark Side is coming out',
+           'I am in Shadow Forces, Navy Seals call us for help'] },
+];
+function guestByName(nm){ return GUESTS.find(g=>g.name===nm)||null; }
+/* already on the floor, or already hired and waiting to start */
+function guestTaken(g){
+  if(NPCS.some(n=>n.name===g.name))return true;
+  return (typeof pendingHires!=='undefined') && pendingHires.some(h=>h.cand&&h.cand.name===g.name);
+}
+function rollGuest(){
+  if(Math.random()>=GUEST_CHANCE)return null;
+  const open=GUESTS.filter(g=>!guestTaken(g));
+  if(!open.length)return null;
+  /* weighted pick, defaulting to equal weight so a guest can be added without one */
+  const tot=open.reduce((a,g)=>a+(g.weight||1),0);
+  let r=Math.random()*tot;
+  for(const g of open){ r-=(g.weight||1); if(r<=0)return g; }
+  return open[open.length-1];
+}
+/* Which bubble lines a character uses. A guest's own lines REPLACE their personality tells —
+   that is the whole point of a guest. Everyone else falls through to TELLS[ptype] as before. */
+function tellsFor(n){
+  const g=n&&n.guest?guestByName(n.name):null;
+  return (g&&g.lines&&g.lines.length)?g.lines:TELLS[n.ptype];
+}
 function NPC(name,dept,desk){
   /* hold the real desk object. A {x,y} copy has no w/h, and deskSeat() on one of those
      produced NaN — which is what froze the game the moment the first hire walked in. */
@@ -2457,7 +2531,7 @@ function updateNPC(n,dt){
   if(n.alertFx>0)n.alertFx-=dt;
   if(n.meltCd>0)n.meltCd-=dt;
   if(!intro&&isWorker(n)&&!n.bubble){n.socialCd-=dt;if(n.socialCd<=0){socialize(n);n.socialCd=rand(11,26);}}
-  if(!intro&&isWorker(n)&&!n.bubble){n.tellCd-=dt;if(n.tellCd<=0){n.tellCd=rand(12,22);if(Math.random()<0.55&&TELLS[n.ptype])n.bubble={t:3.0,text:pick(TELLS[n.ptype])};}}
+  if(!intro&&isWorker(n)&&!n.bubble){n.tellCd-=dt;if(n.tellCd<=0){n.tellCd=rand(12,22);if(Math.random()<0.55){const tl=tellsFor(n); if(tl&&tl.length)n.bubble={t:3.0,text:pick(tl)};}}}
 
   if(n.mission){
     const tgt=activeNPCs().find(x=>x.name===n.mission.target&&isWorker(x));
@@ -3229,7 +3303,10 @@ function freshName(){
 function spawnScaled(name,dept,desk,opts){
   const n=NPC(name,dept,desk);
   if(opts&&opts.ptype)n.ptype=opts.ptype;             // a vetted hire arrives as the personality you picked
-  n.sprite=freeSprite(isFemaleName(name)?'f':'m');   // a face nobody on this floor is wearing
+  /* a guest wears their OWN face; everyone else draws from the shared pool */
+  const gst=guestByName(name);
+  n.sprite=gst?gst.sprite:freeSprite(isFemaleName(name)?'f':'m');   // a face nobody on this floor is wearing
+  if(gst)n.guest=gst.key;
   n.tier=desk?(desk.tier|0):0;                        // a hire takes the rank of the chair they fill, not always Junior
   n.career=rand(4,14) + (n.tier*20);                  // and enough standing to plausibly hold it
   n.w=Math.round(16*S); n.h=Math.round(16*S);
@@ -5959,8 +6036,15 @@ const RESUME={
 };
 function affinityKind(ptype){for(const k in DELEG_MATCH)if(DELEG_MATCH[k]===ptype)return k;return null;}
 function makeCandidate(){
-  const ptype=pick(PTYPES);
-  const c={name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
+  /* A guest displaces the generated identity entirely — fixed name, fixed face, fixed personality
+     — but still takes the ordinary feud/vouch rolls below, so meeting one still plays like hiring
+     anyone else. Falls through to a normal candidate when the roll misses or all guests are used. */
+  const g=rollGuest();
+  const ptype=g?g.ptype:pick(PTYPES);
+  const c=g
+    ? {name:g.name,ptype,resume:g.resume||pick(RESUME[ptype]||['Seems fine.']),guest:g.key,
+       feudTarget:null,knownBy:null,vouched:false,known:false}
+    : {name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
   if(ws.length&&Math.random()<0.35)c.feudTarget=pick(ws).name;      // ~1/3 carry history with someone here — the teeth
   if(ws.length&&Math.random()<0.55)c.knownBy=pick(ws).name;         // someone here who can vouch or warn
@@ -5986,7 +6070,7 @@ function hireCandidate(c){
   const desk=hireSlate?desks[hireSlate.deskIdx]:null;
   if(!desk||desk.owner){toast('That desk is no longer open.');hireSlate=null;return;}
   career.hireReqs--;
-  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched}});
+  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched,guest:c.guest||null}});   // `guest` is additive — an old save simply has none
   logLine(`You hired ${c.name}. They start tomorrow.${c.vouched?' Comes vouched — they will settle fast.':(c.known?'':' You did not vet them — could go either way.')} ${career.hireReqs} requisition(s) left.`,'g');
   toast(`Hired ${c.name.split(' ')[0]} — starts tomorrow`);
   hireSlate=null;renderTasks();
