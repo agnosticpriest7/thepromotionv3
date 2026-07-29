@@ -268,7 +268,35 @@ function createWorld(opts) {
      touch let/const declared later in the file -> TDZ ReferenceError. So we
      queue onloads and flush them at safe points: once after boot, and at the
      top of each frame (never mid-eval, never reentrant). */
+  /* Fallback size only. Every sprite that exists on disk reports its REAL dimensions — see
+     realImageSize below. A square 64x64 stub silently broke every piece of geometry derived from
+     a sprite's aspect: crewRect measured each crew tabletop 76 authored units tall instead of 34
+     (so seat rows spread twice as wide as they really are, and the meeting room's upper set tested
+     as hanging outside the room), and the reception lounge's collision box came back 82x82 instead
+     of 82x37 and sealed a corridor. Both were fine in the browser and broken only under test,
+     which is the worst way round. HANDOFF-8 has the full account. */
   const ART_W = 64, ART_H = 64;
+  const SPRITE_DIR = path.join(__dirname, '..', 'Art', 'sprites');
+  const _dimCache = Object.create(null);
+  /* Real width/height straight off the PNG header, the same trick placement.js already uses:
+     8-byte signature, then the IHDR chunk with its type at byte 12, width at 16, height at 20.
+     Returns null for a missing or non-PNG file so the caller falls back to the square stub —
+     the three known-missing sprites must keep degrading gracefully, not throw. */
+  function realImageSize(src) {
+    const name = String(src || '').split('/').pop();
+    if (!name) return null;
+    if (name in _dimCache) return _dimCache[name];
+    let d = null;
+    try {
+      const b = fs.readFileSync(path.join(SPRITE_DIR, name));
+      if (b.length > 24 && b.readUInt32BE(12) === 0x49484452) {
+        const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+        if (w > 0 && h > 0) d = { w, h };
+      }
+    } catch (e) { /* missing file -> null -> square fallback, as before */ }
+    _dimCache[name] = d;
+    return d;
+  }
   const pendingImageLoads = [];
   function flushImageLoads() {
     while (pendingImageLoads.length) {
@@ -284,8 +312,10 @@ function createWorld(opts) {
       get() { return _src; },
       set(v) {
         _src = v;
-        im.complete = true; im.naturalWidth = ART_W; im.naturalHeight = ART_H;
-        im.width = ART_W; im.height = ART_H;
+        const d = realImageSize(v);
+        const w = d ? d.w : ART_W, h = d ? d.h : ART_H;
+        im.complete = true; im.naturalWidth = w; im.naturalHeight = h;
+        im.width = w; im.height = h;
         if (typeof im.onload === 'function') pendingImageLoads.push(im.onload.bind(im));
       },
     });
