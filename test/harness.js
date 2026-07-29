@@ -556,6 +556,8 @@ const EPILOGUE = `
   def(G,'layout',   function(){ var pick=function(n,d){ try{ return eval(n); }catch(e){ return d; } };
     return { S:pick('S',1), objects:pick('objects',[]), desks:pick('desks',[]), walls:pick('walls',[]),
       ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]), meetingTable:pick('meetingTable',null),
+      meetingTable2:pick('meetingTable2',null),
+      meetingChairs:pick('meetingChairs',[]), meetingChairs2:pick('meetingChairs2',[]),
       breakTable:pick('breakTable',null), kitchenTable:pick('kitchenTable',null),
       EXIT:pick('EXIT',null), MUSTER:pick('MUSTER',null), HR_OFFICE:pick('HR_OFFICE',null),
       SALES_DOOR:pick('SALES_DOOR',null), sealedZones:pick('sealedZones',[]),
