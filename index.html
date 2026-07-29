@@ -497,6 +497,11 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   /* reception lounge (Kyle's art). Deliberately NOT reusing 'couch' — that key is still the CEO's
      waiting couch, which this change does not touch. _l / _r name the way the SITTER faces. */
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
+  /* PLAYABLE CHARACTERS beyond the shared chars.png sheet. Each is a 3-frame walk strip per
+     direction (see CHAR_SHEETS) plus seated poses via SEAT_ART. Kyle, Raelee and Jax are declared
+     in PLAYABLE but have no art yet — nothing is listed here for them, so nothing 404s. */
+  'walk_stacie_down','walk_stacie_up','walk_stacie_left','walk_stacie_right',
+  'sit_stacie_down','sit_stacie_up','sit_stacie_side',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -581,6 +586,9 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
+  /* playable-character walk strips. The SEATED poses are NOT listed here — isSeatedPersonSprite()
+     derives them from SEAT_ART, so they get keyed AND content-measured automatically. */
+  'walk_stacie_down','walk_stacie_up','walk_stacie_left','walk_stacie_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -723,6 +731,41 @@ function tileFloor(name,x,y,w,h,size){
 /* ---- characters: 7 people x 3 frames x 4 directions ---- */
 const CHAR_CW=40, CHAR_CH=64, CHAR_FRAMES=3, CHAR_COUNT=21;
 const DIR_ROW={down:0,up:1,left:2,right:3};
+
+/* ===== PLAYABLE CHARACTERS ===================================================================
+   Faces 0..20 live in the shared chars.png sheet (40x64 cells, 3 frames, 4 direction rows).
+   Anyone added AFTER that ships as their own per-direction 3-frame strip instead, listed here.
+   Baking them into chars.png would mean rescaling Kyle's art down to 40x64 and rewriting a shared
+   PNG every time a character arrives; a strip per direction keeps each character's art its own
+   file, at its own resolution, and drawChar picks the override when one exists.
+
+   Index numbering continues past CHAR_COUNT so it can never collide with a sheet face. */
+const CHAR_SHEETS={
+  21:{down:'walk_stacie_down', up:'walk_stacie_up', left:'walk_stacie_left', right:'walk_stacie_right'},
+};
+/* The main-menu roster. `locked` entries render greyed and cannot be chosen — Kyle, Raelee and Jax
+   are declared so the roster reads as intended, and each becomes playable the moment its art lands
+   (drop the PNGs in, add ART_FILES + CHAR_SHEETS + SEAT_ART entries, clear the flag). */
+const PLAYABLE=[
+  {idx:0,  name:'The Intern',  sub:'the one you know — ginger, bad tie', locked:false},
+  {idx:21, name:'Stacie',      sub:'floral dress, red glasses',          locked:false},
+  {idx:22, name:'Kyle',        sub:'art not in yet',                     locked:true},
+  {idx:23, name:'Raelee',      sub:'art not in yet',                     locked:true},
+  {idx:24, name:'Jax',         sub:'art not in yet',                     locked:true},
+];
+const DEFAULT_CHAR=0;          // the orange-haired intern — the default everywhere, incl. Test Game
+let playerChar=DEFAULT_CHAR;   // which face the player is wearing this run
+function charPlayable(i){ const e=PLAYABLE.find(p=>p.idx===i); return !!e&&!e.locked; }
+function setPlayerChar(i){
+  playerChar = charPlayable(i)?i:DEFAULT_CHAR;
+  if(typeof player!=='undefined'&&player)player.sprite=playerChar;
+  return playerChar;
+}
+/* A character's own walk strip for this direction, or null when they live in the shared sheet. */
+function charStripFor(idx,dir){
+  const s=CHAR_SHEETS[idx]; if(!s)return null;
+  const n=s[dir]; return (n&&ok(n))?n:null;
+}
 function faceDir(f){
   const a=((f||0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
   if(a>=Math.PI*0.25&&a<Math.PI*0.75)return 'down';
@@ -796,15 +839,28 @@ const STRIDE=()=>Math.max(6,Math.round(10*S));   // world px walked per animatio
 /* The new sheets are a real walk cycle — column 1 and column 3 are opposite feet — so the
    old mirror-the-sprite hack is gone. Frames are played straight. */
 function drawChar(ent,idx,scaleTo){
-  if(!ok('chars'))return false;
   const dir=faceDir(ent.face);
-  const row=DIR_ROW[dir];
   let f=IDLE_FRAME;
   if(ent.moving)f=WALK_CYCLE[Math.floor((ent.animT||0)/STRIDE())%4];
-  const sx=(idx*CHAR_FRAMES+f)*CHAR_CW, sy=row*CHAR_CH;
   const tw=scaleTo||U1(38);   // sprites were undersized next to the desks
-  const th=Math.round(CHAR_CH*tw/CHAR_CW);
   if(!isFinite(ent.x)||!isFinite(ent.y)||!isFinite(tw)||tw<=0)return false;
+  /* A character with their own per-direction strip (CHAR_SHEETS) is drawn from it. Cell size comes
+     from the STRIP, not from CHAR_CW/CHAR_CH — the art arrives at whatever resolution it arrives at
+     (Stacie's frames are 229x374), and forcing the sheet's 40x64 aspect on it would squash her. */
+  const strip=charStripFor(idx,dir);
+  if(strip){
+    const im=ART[strip];
+    const cw=im.naturalWidth/CHAR_FRAMES, ch=im.naturalHeight;
+    if(!isFinite(cw)||cw<=0)return false;
+    const th=Math.round(ch*tw/cw);
+    ctx.drawImage(im, Math.round(f*cw), 0, Math.round(cw), ch,
+      Math.round(ent.x+ent.w/2-tw/2), Math.round(ent.y+ent.h-th+U1(5)), tw, th);
+    return true;
+  }
+  if(!ok('chars'))return false;
+  const row=DIR_ROW[dir];
+  const sx=(idx*CHAR_FRAMES+f)*CHAR_CW, sy=row*CHAR_CH;
+  const th=Math.round(CHAR_CH*tw/CHAR_CW);
   ctx.drawImage(ART.chars,sx,sy,CHAR_CW,CHAR_CH,
     Math.round(ent.x+ent.w/2-tw/2), Math.round(ent.y+ent.h-th+U1(5)), tw, th);
   return true;
@@ -842,7 +898,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -1584,7 +1640,7 @@ const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},
    Ravinder at your own desk ever since seated art landed (a1893c7). Only the standing path was
    right, because it passes YOU_SPRITE explicitly. Setting it here fixes every path at once, and
    freeSprite() already refuses to hand out any index in CAST, so no hire can wear this face. */
-const player={x:400,y:180,w:16,h:16,speed:1.7,sprite:YOU_SPRITE,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0,sit:null};
+const player={x:400,y:180,w:16,h:16,speed:1.7,sprite:DEFAULT_CHAR,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0,sit:null};
 
 let RANKS=['INTERN','JUNIOR SALES','SALES','SENIOR SALES','ASSISTANT MANAGER','MANAGER','CEO'];
 
@@ -7178,7 +7234,7 @@ function drawPlayer(){
       drawSeated would stamp a second, desk-style chair over Kyle's art. Same split drawNPC uses. */
    if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch);
    else if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
-   else if(!drawChar(player,YOU_SPRITE))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
+   else if(!drawChar(player,playerChar))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
   /* The "that's you" box follows the DRAWN figure, not the collision box. Seated, the two are not
      in the same place: the collision box sits on the seat point while the composite draws at
      seatRenderPoint, which is offset (SEAT_ABOVE_DOWN and friends). Anchoring the outline to the
@@ -9602,7 +9658,12 @@ function buildSnapshot(over, outcome){ return {
   v:SAVE_VERSION,
   meta:{ day:day, rank:RANKS[player.rank], suspicion:Math.round(player.suspicion), stamp:Date.now(), over:!!over, outcome:outcome||null },
   day, clock, npcId,
+  /* `char` is ADDITIVE and deliberately does NOT bump SAVE_VERSION (Kyle's call). A save written
+     before character select simply has no `char`, and applySnapshot defaults it to DEFAULT_CHAR —
+     which is exactly the character that save was played as, so nothing loads wrong. The §5 rule
+     exists to stop CORRUPT loads; a new optional field with a correct default cannot corrupt one. */
   player:{ x:player.x,y:player.y,rank:player.rank,prog:player.prog,suspicion:player.suspicion,stress:player.stress,
+    char:playerChar,
     hasKeycard:!!player.hasKeycard,workPass:!!player.workPass,busyCount:player.busyCount||0,
     inv:player.inv.slice(),deskItems:player.deskItems.slice(),deskHidden:player.deskHidden.slice(),
     leverage:JSON.parse(JSON.stringify(player.leverage||[])) },
@@ -9619,7 +9680,9 @@ function buildSnapshot(over, outcome){ return {
 function applySnapshot(s){
   if(!s||s.v!==SAVE_VERSION) return false;
   day=s.day; clock=s.clock; npcId=s.npcId||0;
+  setPlayerChar(s.player.char!=null?s.player.char:DEFAULT_CHAR);   // pre-select saves have no char
   Object.assign(player,{ x:s.player.x,y:s.player.y,rank:s.player.rank,prog:s.player.prog,
+    sprite:playerChar,
     suspicion:s.player.suspicion,stress:s.player.stress,hasKeycard:s.player.hasKeycard,
     workPass:s.player.workPass,busyCount:s.player.busyCount,
     inv:s.player.inv.slice(),deskItems:s.player.deskItems.slice(),deskHidden:s.player.deskHidden.slice(),
@@ -9716,6 +9779,8 @@ function renderMenuDOM(){
     rows.push({label:'Settings', sub:'sound & controls', act:()=>{ /* opens in-game panel later */ }});
   } else if(menuMode==='testpick'){
     ['INTERN','JUNIOR SALES','SALES','SENIOR SALES','ASSISTANT MANAGER','MANAGER'].forEach((nm,r)=>{
+      /* Test Game never asks who you are — Kyle wants it pinned to the default face so a dev run is
+         always the same known character. startTestGame forces it. */
       rows.push({label:nm, sub:'fresh round, starting here', act:()=>startTestGame(r)});
     });
     rows.push({label:'‹ Back', sub:'ephemeral — not saved', act:()=>{ menuMode='main'; menuSel=0; renderMenuDOM(); }});
@@ -9723,12 +9788,22 @@ function renderMenuDOM(){
     for(let i=0;i<SAVE_SLOTS;i++){ const st=slotText(i);
       rows.push({label:st.title, sub:st.sub, cls:st.empty?'empty':(st.over?'over':''),
         act:()=>{ if(menuMode==='loadpick'){ if(!st.empty)startGame(i,false); }
-                  else { if(st.empty)startGame(i,true); else { menuMode='confirm'; confirmSlot=i; menuSel=1; renderMenuDOM(); } } }}); }
+                  else { if(st.empty)goToCharPick(i); else { menuMode='confirm'; confirmSlot=i; menuSel=1; renderMenuDOM(); } } }}); }
     rows.push({label:'‹ Back', sub:'', act:()=>{ menuMode='main'; menuSel=0; renderMenuDOM(); }});
   } else if(menuMode==='confirm'){
     rows.push({label:`Overwrite ${slotText(confirmSlot).title}?`, sub:'this cannot be undone', cls:'head', act:()=>{}});
     rows.push({label:'Cancel', sub:'', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
-    rows.push({label:'Overwrite & start', sub:'', cls:'danger', act:()=>{ Store.clear(confirmSlot); startGame(confirmSlot,true); }});
+    rows.push({label:'Overwrite & start', sub:'', cls:'danger', act:()=>{ Store.clear(confirmSlot); goToCharPick(confirmSlot); }});
+  } else if(menuMode==='charpick'){
+    /* WHO YOU PLAY. Sits between picking a slot and starting, so it only ever asks on a NEW run —
+       Continue and Load Game take the character out of the save instead. Locked entries are shown
+       rather than hidden so the roster reads as intended; they are non-selectable (dis) and
+       menuMove already skips nothing, so menuActivate's !r.dis check is what blocks them. */
+    PLAYABLE.forEach(pc=>{
+      rows.push({label:pc.name, sub:pc.locked?'locked — '+pc.sub:pc.sub, dis:pc.locked,
+        cls:pc.locked?'empty':'', act:()=>{ if(pc.locked)return; setPlayerChar(pc.idx); startGame(charSlot,true); }});
+    });
+    rows.push({label:'‹ Back', sub:'pick a different slot', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
   }
   menuSel = Math.max(0, Math.min(menuSel, rows.length-1));
   rows.forEach((r,i)=>{ idx=i; const b=add(r.label,r.sub,i===menuSel,(r.dis?'dis ':'')+(r.cls||''),r.act);
@@ -9745,13 +9820,16 @@ function menuBack(){ if(menuMode==='main'){ screen='title'; renderMenuDOM(); } e
 /* ---- transitions --------------------------------------------------------- */
 function goToMenu(){ screen='menu'; menuMode='main'; menuSel=0; renderMenuDOM(); }
 
+let charSlot=0;   // which slot the character pick is choosing for
+function goToCharPick(slot){ charSlot=slot; menuMode='charpick'; menuSel=0; renderMenuDOM(); }
+
 function startGame(slot, fresh){
   activeSlot = slot;
   if(fresh){
     // A brand-new run needs a pristine world. Rather than un-pick apart a possibly
     // ended/mutated world in place (double-scaling, fired NPCs, reowned desks), we
     // reload the page — boot rebuilds everything clean — and resume into this slot.
-    try{ localStorage.setItem('promo:newgame', String(slot)); }catch(e){}
+    try{ localStorage.setItem('promo:newgame', String(slot)); localStorage.setItem('promo:char', String(playerChar)); }catch(e){}
     if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
     // harness / no-reload fallback: start intro in place
     screen='play'; renderMenuDOM(); startIntro(); autosave(); paused=false; return;
@@ -9771,7 +9849,8 @@ function startGame(slot, fresh){
    intro. Ephemeral — never autosaved (testGame flag). */
 function startTestGame(rank){
   activeSlot=0; testGame=true;
-  try{ localStorage.setItem('promo:newgame','0'); localStorage.setItem('promo:testrank',String(rank)); }catch(e){}
+  setPlayerChar(DEFAULT_CHAR);   // a dev run is always the default face
+  try{ localStorage.setItem('promo:newgame','0'); localStorage.setItem('promo:testrank',String(rank)); localStorage.setItem('promo:char',String(DEFAULT_CHAR)); }catch(e){}
   if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
   // harness / no-reload fallback: fresh in place, then jump straight to the rank (no intro)
   screen='play'; renderMenuDOM(); jumpToRank(rank); paused=false;
@@ -9779,9 +9858,12 @@ function startTestGame(rank){
 
 function boot(){
   // resume a fresh New Game (or Test Game) requested just before a reload
-  let ng=null, tr=null; try{ ng=localStorage.getItem('promo:newgame'); tr=localStorage.getItem('promo:testrank'); }catch(e){}
+  let ng=null, tr=null, pc=null; try{ ng=localStorage.getItem('promo:newgame'); tr=localStorage.getItem('promo:testrank'); pc=localStorage.getItem('promo:char'); }catch(e){}
   if(ng!==null && ng!==undefined && ng!==''){
-    try{ localStorage.removeItem('promo:newgame'); localStorage.removeItem('promo:testrank'); }catch(e){}
+    try{ localStorage.removeItem('promo:newgame'); localStorage.removeItem('promo:testrank'); localStorage.removeItem('promo:char'); }catch(e){}
+    /* the character chosen just before the reload — setPlayerChar falls back to the default for a
+       missing, malformed or locked value, so a hand-edited key can't put you in unfinished art */
+    setPlayerChar(pc!==null&&pc!==undefined&&pc!==''?parseInt(pc,10):DEFAULT_CHAR);
     activeSlot=parseInt(ng,10)||0;
     screen='play'; paused=false; renderMenuDOM();
     if(tr!==null && tr!==undefined && tr!==''){
