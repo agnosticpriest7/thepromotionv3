@@ -505,6 +505,8 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   /* Kyle ships BOTH side seats, so seatedPersonSpriteFor uses each as-is and never mirrors. */
   'walk_kyle_down','walk_kyle_up','walk_kyle_left','walk_kyle_right',
   'sit_kyle_down','sit_kyle_up','sit_kyle_left','sit_kyle_right',
+  'walk_raelee_down','walk_raelee_up','walk_raelee_left','walk_raelee_right',
+  'sit_raelee_down','sit_raelee_up','sit_raelee_left','sit_raelee_right',
   'grass','bush',
   /* Office-Space printer-meltdown assets: a 4-stage printer wreck sheet, plus one 4-frame
      bat-swing sheet per character who has one. Missing files just fall back (onerror) and
@@ -593,6 +595,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
      derives them from SEAT_ART, so they get keyed AND content-measured automatically. */
   'walk_stacie_down','walk_stacie_up','walk_stacie_left','walk_stacie_right',
   'walk_kyle_down','walk_kyle_up','walk_kyle_left','walk_kyle_right',
+  'walk_raelee_down','walk_raelee_up','walk_raelee_left','walk_raelee_right',
   'chair_down','chair_up','chair_side','chair_side_left','reception_desk2']);   // stall dividers + the seated-character chairs + the new reception counter ship with a magenta bg
 /* couch: the PNG carries real alpha but keeps a magenta anti-alias rim (411 px, all of it adjacent to
    transparency, none in the interior) — so it drew with a purple halo on the two reception couches.
@@ -747,6 +750,7 @@ const DIR_ROW={down:0,up:1,left:2,right:3};
 const CHAR_SHEETS={
   21:{down:'walk_stacie_down', up:'walk_stacie_up', left:'walk_stacie_left', right:'walk_stacie_right'},
   22:{down:'walk_kyle_down',   up:'walk_kyle_up',   left:'walk_kyle_left',   right:'walk_kyle_right'},
+  23:{down:'walk_raelee_down', up:'walk_raelee_up', left:'walk_raelee_left', right:'walk_raelee_right'},
 };
 /* The main-menu roster. `locked` entries render greyed and cannot be chosen — Kyle, Raelee and Jax
    are declared so the roster reads as intended, and each becomes playable the moment its art lands
@@ -755,7 +759,7 @@ const PLAYABLE=[
   {idx:0,  name:'The Intern',  sub:'the one you know — ginger, bad tie', locked:false},
   {idx:21, name:'Stacie',      sub:'floral dress, red glasses',          locked:false},
   {idx:22, name:'Kyle',        sub:'spiked blond, charcoal suit',        locked:false},
-  {idx:23, name:'Raelee',      sub:'art not in yet',                     locked:true},
+  {idx:23, name:'Raelee',      sub:'Kill Crew tank, crocs',              locked:false},
   {idx:24, name:'Jax',         sub:'art not in yet',                     locked:true},
 ];
 const DEFAULT_CHAR=0;          // the orange-haired intern — the default everywhere, incl. Test Game
@@ -903,7 +907,7 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
+const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
