@@ -982,6 +982,70 @@ function seatDirForDesk(d){
   if(a==='cubicle_desk_right')return 'right';
   return 'down';   // cubicle_desk + manager/assistant/exec desks face down
 }
+/* ===== THE PLAYER SITS DOWN =================================================================
+   Two ways in, both Kyle's ask: you sit at your OWN desk whenever you open its menu, and you sit on
+   any empty table chair with the interact key ([X] on a pad, [E] on a keyboard).
+
+   `player.sit` is the explicit state and it OVERRIDES seatedDeskState, which only ever seated you
+   during a desk phase and only within U1(24) of the seat point — while the desk menu opens from up
+   to 44*S away. That mismatch is why you so often stood at your own desk with the menu up.
+
+   Getting up is deliberately forgiving: ANY movement input stands you up (the same branch that
+   already closes the menu), and pressing interact while seated stands you up too. Nothing else can
+   trap you in a chair. */
+function allSeatChairs(){
+  /* Every table chair that has actually been fitted. crewSeatRing stamps dir/gy/cw/ch onto a chair
+     when it places it, so requiring dir is what filters out the not-yet-fitted ones and the break
+     room's couch entries (which crewSeatRing skips). */
+  const out=[];
+  [meetingChairs,meetingChairs2,breakChairs,breakChairs2,kitchenChairs].forEach(list=>{
+    (list||[]).forEach(c=>{ if(c&&c.dir&&isFinite(c.gy)&&(c.x||c.y))out.push(c); });
+  });
+  return out;
+}
+function chairIsFree(c){ return !c.by || c.by===PLAYER_SEAT_TAG; }
+const PLAYER_SEAT_TAG='you';   // parked in chair.by so seat assignment can see the chair is taken
+function standUp(){
+  if(!player.sit)return false;
+  if(player.sit.chair && player.sit.chair.by===PLAYER_SEAT_TAG)player.sit.chair.by=null;
+  player.sit=null;
+  return true;
+}
+/* Sit at your own desk. Snaps you onto the seat point: you can open the desk menu from a fair way
+   off, and sliding into the chair is what "you sat down" has to look like. */
+function sitAtDesk(d){
+  if(!d)return false;
+  let seat; try{ seat=deskSeat(d); }catch(e){ return false; }
+  if(!seat||!isFinite(seat.x)||!isFinite(seat.y))return false;
+  const r=seatRenderPoint(d,seat);
+  if(!r||!isFinite(r.x)||!isFinite(r.y))return false;
+  standUp();
+  player.x=Math.round(seat.x-player.w/2); player.y=Math.round(seat.y-player.h/2);
+  player.moving=false; player.animT=0; player.path=null; player.goal=null; player.wp=0;
+  player.sit={kind:'desk', chair:null, dir:seatDirForDesk(d), cx:r.x, cyGround:r.y};
+  return true;
+}
+function sitOnChair(c){
+  if(!c||!chairIsFree(c)||!c.dir||!isFinite(c.gy))return false;
+  standUp();
+  player.x=Math.round(c.x-player.w/2); player.y=Math.round(c.y-player.h/2);
+  player.moving=false; player.animT=0; player.path=null; player.goal=null; player.wp=0;
+  c.by=PLAYER_SEAT_TAG;
+  player.sit={kind:'chair', chair:c, dir:c.dir, cx:c.x, cyGround:c.gy, cw:c.cw, ch:c.ch};
+  return true;
+}
+/* What drawPlayer should render. The explicit sit wins; otherwise fall back to the existing
+   automatic desk seating so nothing about the old behaviour changes. */
+function playerSeatState(){
+  if(player.sit){
+    /* a chair re-fitted underneath us (fitTableSeats re-runs when art loads) — follow it */
+    const c=player.sit.chair;
+    if(c){ player.sit.cx=c.x; player.sit.cyGround=c.gy; player.sit.cw=c.cw; player.sit.ch=c.ch; }
+    return player.sit;
+  }
+  const s=seatedDeskState(player);
+  return s?{kind:'desk',chair:null,dir:s.dir,cx:s.cx,cyGround:s.cyGround}:null;
+}
 /* THE CEO AT HIS DESK. Sterling (the boss) is not a desk-owning worker, so he gets his own seat: he
    renders seated behind his chair-less executive desk, facing down, whenever he is parked in his
    office (not out on his daily lap). drawNPC re-draws the desk OVER his lower body so he reads as
@@ -1510,7 +1574,17 @@ function dropItemMenu(){
 }
 const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},{x:700,y:405,type:'supply'},{x:932,y:524,type:'printer'},{x:692,y:144,type:'printer'},{x:760,y:454,type:'water'},{x:1170,y:105,type:'coffee'},{x:700,y:600,type:'chat'}];
 
-const player={x:400,y:180,w:16,h:16,speed:1.7,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0};
+/* `sit` is the player's own seated state — see sitAtDesk/sitOnChair/standUp. Deliberately NOT in the
+   save payload (which picks explicit fields), so a loaded game starts standing and no SAVE_VERSION
+   bump is needed. It holds a live chair reference, which must not be serialised. */
+/* `sprite` pins the player to their OWN face. charIndexFor() resolves in the order sprite -> CAST
+   [name] -> name-hash, and `player` has neither a name nor a sprite — so it fell through to
+   hashing `undefined` and returned 16, i.e. RAVINDER. Anything drawing the player through
+   charIndexFor therefore drew the wrong character: the seated composite has rendered you as
+   Ravinder at your own desk ever since seated art landed (a1893c7). Only the standing path was
+   right, because it passes YOU_SPRITE explicitly. Setting it here fixes every path at once, and
+   freeSprite() already refuses to hand out any index in CAST, so no hire can wear this face. */
+const player={x:400,y:180,w:16,h:16,speed:1.7,sprite:YOU_SPRITE,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0,sit:null};
 
 let RANKS=['INTERN','JUNIOR SALES','SALES','SENIOR SALES','ASSISTANT MANAGER','MANAGER','CEO'];
 
@@ -2489,7 +2563,10 @@ function standRing(cx,cy,rx,ry,i,total){
   return snapTarget(cx+Math.cos(a)*rx, cy+Math.sin(a)*ry);
 }
 function assignSeats(chairs){
-  chairs.forEach(ch=>ch.by=null);
+  /* Free every chair EXCEPT the one the player is sitting in — otherwise the next meeting quietly
+     reassigns it and an NPC is drawn sitting in your lap. Same guard in assignBreakSeats/clearSeats. */
+  chairs.forEach(ch=>{ if(ch.by!==PLAYER_SEAT_TAG)ch.by=null; });
+  chairs=chairs.filter(ch=>ch.by!==PLAYER_SEAT_TAG);
   const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
   const mc=meetingCentre(), cx=mc.x, cy=mc.y;   // ring anyone left standing around BOTH tables
   /* RANDOM, re-rolled every meeting. It used to be positional — attendee order picked the chair —
@@ -2510,9 +2587,10 @@ function assignSeats(chairs){
 }
 /* breaks: half the floor takes the break room, half goes up to the kitchen */
 function assignBreakSeats(){
-  breakChairs.forEach(c=>c.by=null);
-  breakChairs2.forEach(c=>c.by=null);
-  kitchenChairs.forEach(c=>c.by=null);
+  const freeUp=c=>{ if(c.by!==PLAYER_SEAT_TAG)c.by=null; };   // the player's chair stays claimed
+  breakChairs.forEach(freeUp);
+  breakChairs2.forEach(freeUp);
+  kitchenChairs.forEach(freeUp);
   const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
   /* Break seating is RANDOM, re-rolled every break. It used to be positional — attendee order
      decided both which room you went to and which chair you got, so the same people sat in the same
@@ -2548,7 +2626,8 @@ function assignBreakSeats(){
      everyone at assignment so nobody starts the walk from inside geometry. */
   att.forEach(n=>{ try{ unstickEnt(n); }catch(e){} });
 }
-function clearSeats(){activeNPCs().forEach(n=>{n.seat=null;});meetingChairs.forEach(c=>c.by=null);meetingChairs2.forEach(c=>c.by=null);breakChairs.forEach(c=>c.by=null);breakChairs2.forEach(c=>c.by=null);kitchenChairs.forEach(c=>c.by=null);}
+function clearSeats(){const freeUp=c=>{ if(c.by!==PLAYER_SEAT_TAG)c.by=null; };   // leaves the player seated through a phase change
+  activeNPCs().forEach(n=>{n.seat=null;});meetingChairs.forEach(freeUp);meetingChairs2.forEach(freeUp);breakChairs.forEach(freeUp);breakChairs2.forEach(freeUp);kitchenChairs.forEach(freeUp);}
 
 /* meltdown -> firing */
 /* ---- stress tiers: pranks degrade behavior, the office notices ---- */
@@ -3759,9 +3838,37 @@ function nearestInteractable(){
   for(const d of desks){if(!d.owner)continue;const c=cdist(d,pc);if(c<bd){bd=c;best={kind:'desk',ref:d};}}
   {const e={x:ELEVATOR.x-Math.round(30*S),y:ELEVATOR.y-Math.round(14*S),w:Math.round(60*S),h:Math.round(28*S),label:'Elevator'};
    const d=cdist(e,pc); if(d<bd){bd=d;best={kind:'elevator',ref:e};}}
+  /* Empty table chairs. A chair is a bare seat POINT (x,y plus dir/gy/cw/ch) with no w/h, so it gets
+     a synthetic rect built around it — center()/cdist()/headTop() all assume a box, and a missing w
+     would put NaN into the [X] prompt, which the canvas stub treats as fatal. Occupied chairs are
+     skipped so you can never sit in someone's lap. */
+  /* Chairs get a TIGHTER reach than everything else — you have to be standing essentially on one.
+     At the full 44*S they competed with the people sitting around the same table, so walking up to
+     a colleague in the break room offered "sit down" instead of talking to them. Anything nearer
+     still wins outright, because this only narrows the bar, never widens it. */
+  {const chairBar=Math.min(bd,Math.round(18*S));
+   for(const c of allSeatChairs()){
+     if(!chairIsFree(c))continue;
+     const w=c.cw||Math.round(30*S), h=c.ch||Math.round(39*S);
+     const ref={x:Math.round(c.x-w/2), y:Math.round(c.y-h/2), w, h, label:'Chair', chair:c};
+     const d=cdist(ref,pc); if(d<chairBar&&d<bd){bd=d;best={kind:'chair',ref};}
+   }}
   return best;
 }
-function tryInteract(){if(menuOpen){closeMenu();return;}const t=nearestInteractable();if(!t){toast('Nothing here to interact with.');return;}openMenu(t);}
+function tryInteract(){
+  if(menuOpen){closeMenu();return;}
+  /* Seated already? The interact key is also the get-up key. Checked before nearestInteractable so
+     the chair you are ON can't re-trigger a sit, and so you are never stuck in a seat. */
+  if(player.sit){standUp();SFX.close();return;}
+  const t=nearestInteractable();
+  if(!t){toast('Nothing here to interact with.');return;}
+  /* A chair is a straight action, not a menu — Kyle asked for "press X to sit", and a one-item menu
+     to sit in a chair would be a worse version of that. */
+  if(t.kind==='chair'){ if(sitOnChair(t.ref.chair))SFX.open(); return; }
+  openMenu(t);
+  /* Your own desk seats you as you open it. Any other desk is somebody else's chair — no sitting. */
+  if(t.kind==='desk'&&t.ref.owner==='you')sitAtDesk(t.ref);
+}
 function openMenu(t){SFX.open();renderMenu(buildOptions(t));}
 let menuBtns=[],gpSel=0;
 function gpHighlight(){menuBtns.forEach((b,i)=>{b.style.background=(i===gpSel)?'#e9e5d8':'';b.style.outline=(i===gpSel)?'2px solid #d9a521':'';if(i===gpSel&&b.scrollIntoView)b.scrollIntoView({block:'nearest'});});}
@@ -7066,10 +7173,19 @@ function drawBubbles(){
 }
 function drawPlayer(){
   if(player.bubble){player.bubble.t-=lastDt;if(player.bubble.t<=0)player.bubble=null;}   // tick only; drawn in drawBubbles
-  {const seat=seatedDeskState(player);   // the intern face is the player's — sit them at their desk during work (real seated art)
-   if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
+  const seat=playerSeatState();   // the intern face is the player's — sit them down in the real seated art
+  {/* A table chair is ALREADY drawn by drawCrewSet, so only the person layer goes on top of it —
+      drawSeated would stamp a second, desk-style chair over Kyle's art. Same split drawNPC uses. */
+   if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch);
+   else if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
    else if(!drawChar(player,YOU_SPRITE))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
-  ctx.strokeStyle='rgba(217,165,33,.9)';ctx.strokeRect(player.x-1.5,player.y-1.5,player.w+3,player.h+3);
+  /* The "that's you" box follows the DRAWN figure, not the collision box. Seated, the two are not
+     in the same place: the collision box sits on the seat point while the composite draws at
+     seatRenderPoint, which is offset (SEAT_ABOVE_DOWN and friends). Anchoring the outline to the
+     collision box left a gold square hanging on the carpet a good 25px off the seated player. */
+  {const bx = seat ? seat.cx-player.w/2 : player.x;
+   const by = seat ? seat.cyGround-player.h : player.y;
+   ctx.strokeStyle='rgba(217,165,33,.9)';ctx.strokeRect(bx-1.5,by-1.5,player.w+3,player.h+3);}
   /* Action progress (craft / work / channel) shown BELOW the feet, bigger and bright, so it
      doesn't cover the character's face and is easy to read at TV/phone distance. */
   {
@@ -9198,6 +9314,7 @@ function loop(now){
     if(keys['s']||keys['arrowdown'])dy+=player.speed;
     unstickPlayer();
     if(ceoGateT>0)ceoGateT-=dt;
+    if((dx||dy)&&player.sit)standUp();   // walking off is always how you get out of a chair
     if(dx||dy){const px=player.x,py=player.y;player.face=Math.atan2(dy,dx);moveEntity(player,dx,dy);
       /* Ravinder gatekeeps: while he's at his desk you can't cross into Sterling's office. Bounce the
          player back to where they were and let him say his line. Only blocks stepping IN from outside,
