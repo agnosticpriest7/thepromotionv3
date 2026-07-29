@@ -1245,10 +1245,16 @@ const desks=[];
    again. MEETING ROOM is 380,280 260x220 and BREAK ROOM is 840,280 260x220 — identical dimensions —
    so the stacking that already works there works here, including the grid alignment that lets each
    table stay solid while its whole ring of chair cells stays walkable. Sets span y332..406 and
-   y408..482 at x445..554, which clears the whiteboard on the west wall (x386..432) and the corner
-   plant (x591..609) without moving either. */
-const meetingTable ={x:480,y:422,w:40,h:33};    // lower set — tabletop 462,421
-const meetingTable2={x:480,y:322,w:40,h:33};    // upper set — tabletop 462,321
+   y408..482.
+
+   x moved 480 -> 520 on Kyle's second markup, to open up the room's left side. +40 keeps the grid
+   relationship exactly as it was — the tabletop's left edge goes 461.9 -> 501.9, still landing ~2u
+   INSIDE a 20u cell boundary rather than on it, which is what keeps the chair ring free. The sets
+   now span x485..594: 100 clear on the left (was 60), 41 on the right. That is the space the room's
+   plant used to occupy, so it moved SE corner -> NW corner (see the plant list in drawContainers).
+   The whiteboard on the west wall (x386..432) is untouched and now has room around it. */
+const meetingTable ={x:520,y:422,w:40,h:33};    // lower set — tabletop 502,421
+const meetingTable2={x:520,y:322,w:40,h:33};    // upper set — tabletop 502,321
 const meetingChairs =[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
                       {x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null}];
 const meetingChairs2=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},
@@ -7322,7 +7328,11 @@ function drawContainers(){
   sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
   sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
   /* potted plants — CEO office, reception, meeting room, break room, sales corner */
-  [[60,150],[222,452],[600,470],[1070,470],[1380,720]].forEach(p=>{
+  /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
+     two table sets shifted into. Sprite is 18.9 x 28.9 authored anchored bottom-centre at y+7.8, so
+     it lands at x390..409 y285..314 — tucked into the room's interior corner (x385..635, y285..495)
+     and clear of the whiteboard below it (x386..432, y402..436). */
+  [[60,150],[222,452],[400,306],[1070,470],[1380,720]].forEach(p=>{
     sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
   });
 }
