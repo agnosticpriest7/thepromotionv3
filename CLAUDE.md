@@ -1,6 +1,6 @@
 # CLAUDE.md — The Promotion (session rules card)
 
-Hard rules, loaded every session. Follow these without being re-asked. This is the checklist, not the manual — for context and rationale read **`PROJECT.md`** and the latest handoff, **`HANDOFF-4.md`**.
+Hard rules, loaded every session. Follow these without being re-asked. This is the checklist, not the manual — for context and rationale read **`PROJECT.md`** and the latest handoff, **`HANDOFF-8.md`**.
 
 The one habit that matters: **run it, don't read it.** Almost every real bug showed up only by running the harness, never by reading code.
 
@@ -47,7 +47,9 @@ In `meltdown(n)`: `n.printerMode = Math.random()<0.07;` — already at the shipp
 Prefer running the build over inspecting it. Fix **root causes, not symptoms**.
 
 ### 7. Full context
-Read **`PROJECT.md`** and the latest **`HANDOFF-*`** doc (currently **`HANDOFF-7.md`**; `HANDOFF-6.md` is the seated-art run, now complete).
+Read **`PROJECT.md`** and the latest **`HANDOFF-*`** doc (currently **`HANDOFF-8.md`** — rooms, seating, the test audit and character select; `HANDOFF-7.md` is the preview-loop/`__dbg` run, now complete).
+
+⚠️ **`HANDOFF-8` carries one open trap worth reading before you touch furniture or seats:** the test harness stubs `Image` at 64x64, so anything measured off a sprite is wrong under test. Verify seating and footprints in the BROWSER, not the harness.
 
 ---
 
