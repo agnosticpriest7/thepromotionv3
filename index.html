@@ -697,10 +697,11 @@ const ART_W={
   /* meeting set: same 137 tabletop as the crew set, which is what keeps the grid-alignment maths
      (and therefore the free ring of chair cells around a solid table) identical for both. */
   meet_table:137, meet_chair_top:30, meet_chair_bottom:30, meet_chair_left:30, meet_chair_right:30,
-  /* reception lounge. Sized to the corridor it stands in: usable floor is authored x245..374 (129
-     wide) between reception's marble edge and the restroom's west wall, so chair + table + chair =
-     28.9 + 45.6 + 28.9 authored leaves ~7 either side. Chairs are 52/0.861 = 60 world tall. */
-  lobby_couch:104, lobby_table:82, lobby_chair_l:52, lobby_chair_r:52,
+  /* reception lounge. The corridor it stands in is authored x230..375 (the new wall's east face to
+     the restroom's west wall). With the west column down to a single chair the table no longer has
+     to thread between two of them, so it takes the 10-15% Kyle asked for: 28.9 authored of chair
+     against the wall, then a 14-unit gap, then a 51.1 table, then 16 clear to the east chairs. */
+  lobby_couch:104, lobby_table:92, lobby_chair_l:52, lobby_chair_r:52,   // table 82 -> 92 (+12%, Kyle's 10-15%)
 };
 /* draw a sprite centred on a footprint, standing on the floor */
 function sprAt(name,cx,cyBottom,widthKey){
@@ -6484,10 +6485,12 @@ function fitTableSeats(){
    (reception's marble stops at 240, the restroom's west wall starts at 375) and y~630..755
    (the south perimeter wall is y755..765).
 
-   Laid out to Kyle's marked-up map: two armchairs down the west side facing EAST, three down the
-   east side facing WEST, a glass table between them and the couch across the south end — a U of
-   seating around the table. `_l` / `_r` name the direction the SITTER faces, so the west column
-   uses lobby_chair_r and the east column lobby_chair_l.
+   Laid out to Kyle's marked-up map, then thinned on his second pass: ONE armchair on the west side
+   facing EAST (pushed against the new wall), TWO on the east side facing WEST, the glass table
+   between them and the couch across the south end. `_l` / `_r` name the direction the SITTER
+   faces, so the west chair is lobby_chair_r and the east column lobby_chair_l.
+   The first cut had 2 west / 3 east; the upper-west and lower-east chairs came out, which is also
+   what let the table grow 12% and still sit further from its neighbour than before.
 
    Every piece is anchored by its BOTTOM centre, the same as sprAt.
    `box` is the authored collision footprint of the SOLID pieces, written out in full rather than
@@ -6497,14 +6500,12 @@ function fitTableSeats(){
    row above it, so the corridor tested as sealed while the browser would have been fine. Collision
    the sim depends on must be deterministic; only the DRAWING uses the sprite's real aspect. The
    numbers below are that aspect, measured once: table 82/2.206, couch 104/2.102 world. */
-const LOBBY_TABLE  = {x:310, yB:700, art:'lobby_table', box:{x:287, y:679, w:46, h:21}};
+const LOBBY_TABLE  = {x:300, yB:700, art:'lobby_table', box:{x:274, y:677, w:52, h:23}};
 const LOBBY_COUCH  = {x:309, yB:751, art:'lobby_couch', box:{x:280, y:724, w:58, h:27}};
 const LOBBY_CHAIRS = [
-  {x:262, yB:704, art:'lobby_chair_r'},   // west column, sitter faces east
-  {x:262, yB:748, art:'lobby_chair_r'},
+  {x:246, yB:748, art:'lobby_chair_r'},   // west, pushed against the new wall (its east face is x230)
   {x:356, yB:664, art:'lobby_chair_l'},   // east column, sitter faces west
   {x:356, yB:706, art:'lobby_chair_l'},
-  {x:356, yB:750, art:'lobby_chair_l'},
 ];
 function drawLobby(){
   for(const p of [LOBBY_TABLE,LOBBY_COUCH,...LOBBY_CHAIRS])
