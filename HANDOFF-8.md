@@ -46,7 +46,9 @@ off from it.
 - **The meeting room now has TWO sets — 16 seats** — so the floor sits down together instead of 8
   sitting and the rest forming a standing ring. Posed: 14 workers, 14 seated, 0 standing.
 - **You sit down too** (`0794404`): your own desk seats you when you open its menu, and any empty
-  chair seats you with `[X]`. Any movement stands you up; so does pressing `[X]` again.
+  chair seats you with `[X]`. **Seated at your desk, `[X]` keeps using the desk** — it does not
+  stand you up (`6cd39c3`; the first cut locked you out of your own desk). On a table chair there
+  is nothing to use, so `[X]` stands you up. Walking off always stands you up.
 
 **Tables are solid, chairs are not.** That only works because tabletops are grid-aligned — see §5.
 
@@ -141,7 +143,7 @@ Workaround until then: **verify seating and footprints in the browser, not the h
 
 - **The five characters** — do they read at TV distance, and do the seated poses land?
 - **Sitting down** — chairs only prompt within 18 units so they don't steal the prompt from a
-  colleague at the same table; and while seated `[X]` stands you up rather than talking. Both are
+  colleague at the same table; and while seated on a CHAIR `[X]` stands you up rather than talking. Both are
   judgement calls, easily changed.
 - **The two meeting tables and the break/kitchen sets** — spacing and whether the room reads full.
 - **The reception lounge** — and whether the bare marble room needs something.
