@@ -491,6 +491,10 @@ const ART_PATH='Art/sprites/';
 const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
+  /* 'phone' was mapped in OBJ_ART but NEVER listed here, so it never loaded and the sales phones
+     drew as the missing-art fallback the whole time. Registering it is what actually puts the
+     sprite on screen — swapping the PNG alone did nothing. */
+  'phone',
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
   /* kitchen counter run (Kyle's art, magenta bg): plain / sink / microwave / coffee */
   'counter_plain','counter_sink','counter_micro','counter_coffee',
@@ -529,6 +533,10 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'bat_you','bat_sterling','bat_brenda','bat_marla','bat_peggy','bat_marcus','bat_priya','bat_chad',
   'bat_dana','bat_otis','bat_wren','bat_sana','bat_gil','bat_ramesh','bat_vera','bat_doug','bat_dale',
   'bat_hire_turban','bat_hire_beard','bat_hire_braids','bat_hire_blazer',
+  /* GUEST meltdown sheets. Rod's is a KARATE KICK rather than a bat swing — drawBatFrame
+     sizes each frame from its own aspect, so a 207x301 frame drops in beside the squarer
+     cast sheets with no code change. */
+  'bat_rod',
   /* Seated-character layers: four chair directions (side_left is the exported mirror) + the intern's
      three seated poses (person-only; left reuses the right pose, mirrored in code). Composited by
      drawSeated(); missing files just fall back (onerror) to the standing sprite. */
@@ -562,7 +570,7 @@ const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla
 const BAT_BY_INDEX={0:'bat_you',1:'bat_sterling',2:'bat_brenda',3:'bat_marla',4:'bat_peggy',5:'bat_marcus',
   6:'bat_priya',7:'bat_chad',8:'bat_dana',9:'bat_otis',10:'bat_wren',11:'bat_sana',12:'bat_gil',
   13:'bat_ramesh',14:'bat_vera',15:'bat_doug',16:'bat_hire_turban',17:'bat_hire_beard',
-  18:'bat_hire_braids',19:'bat_hire_blazer',20:'bat_dale'};
+  18:'bat_hire_braids',19:'bat_hire_blazer',20:'bat_dale',25:'bat_rod'};   // 25 = Rod Kimble (guest)
 function batSheetFor(n){
   const idx = (typeof charIndexFor==='function') ? charIndexFor(n) : (n.sprite!=null?n.sprite:CAST[n.name]);
   const file = BAT_BY_INDEX[idx];
@@ -605,6 +613,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
+  'phone',   // the new handset-on-a-cabinet art ships on magenta; without this it drew a magenta border
   /* playable-character walk strips. The SEATED poses are NOT listed here — isSeatedPersonSprite()
      derives them from SEAT_ART, so they get keyed AND content-measured automatically. */
   'walk_stacie_down','walk_stacie_up','walk_stacie_left','walk_stacie_right',
@@ -712,7 +721,7 @@ const ART_W={
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
-  mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
+  mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
      these get compared against box*S. The art is a 1254² square whose opaque content is only 74.88%
@@ -913,7 +922,13 @@ function drawChar(ent,idx,scaleTo){
    (the PNGs are square with padding, so we place the figure, not the canvas).
    All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
 // ---- tunables — eyeball on the TV, then fine-tune ----
-let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (independent of the person now)
+/* Chair size. It was 38, which drew the chair 21.1 x 40.5 authored against a STANDING character of
+   21.1 x 33.9 — the chair stood 1.19x taller than a person, which is what Kyle saw when he stood
+   next to it. An office chair has to read SMALLER than the person using it. 33 brings it to
+   18.3 x 35.2, a hair over standing height rather than a fifth taller. The seated figure is
+   anchored by SEAT_OFFSET_RATIO, a fraction of chair height, so it follows the chair down and stays
+   on the cushion. Purely a look knob — nudge it on the TV. */
+let SEAT_CHAIR_W    = 33;          // chair drawn width in U1 world units (independent of the person now)
 let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content height in U1 units (all poses/characters scale off their own down pose to match)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
@@ -2188,11 +2203,15 @@ function shredDoc(){
 }
 
 /* Branch manager (resident, does his rounds) */
-/* seatSide/seatDir pinned: of the four sides only DOWN is walkable (up is blocked, left is in
-   ACCOUNTING), so a sitter must be below the desk — and they have to FACE UP into it. Left to the
-   art alone the facing came out 'down', i.e. the player sat at the manager's desk with their back
-   to it. Dale escaped this because drawDaleSeated uses its own anchor and never asks deskSeat. */
-const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'down',seatDir:'up'};
+/* THE MANAGER SITS BEHIND THE DESK, facing the door — the way Dale does, and the way the chair
+   reads. Getting there took moving the desk: the office's top wall carries a cabinet spanning
+   x880..1040 y0..20, and a container's blocker claims every nav cell it touches, so the cell above a
+   desk at y60 was blocked and the only walkable side was DOWN. That put the player on the little
+   chair BELOW the desk with their back to the room. Dropping the desk to y80 clears the cabinet's
+   reach and opens the seat behind it; seatSide/seatDir then pin it so it can never silently fall
+   back to whichever side happens to be walkable. Dale is unaffected — drawDaleSeated uses its own
+   anchor off this same rect and moves with it. */
+const DALE_DESK={x:900,y:80,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'up',seatDir:'down'};
 desks.push(DALE_DESK);
 const mgr=NPC('Dale Brackett','exec',DALE_DESK); mgr.mgr=true; mgr.speed=0.89; mgr.chatCd=rand(6,14); mgr.lastLine=''; mgr.x=748; mgr.y=452;
 /* authored at 1240x760 — scaleWorld() scales it */
@@ -2212,6 +2231,13 @@ function isWorker(n){return n.alive&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptio
    Meetings are deliberately NOT excluded: everyone attends, it is time-boxed, and a predictable
    window when the gate is down is a fair thing for the player to learn. */
 function deskbound(n){return !!n&&n.name==='Ravinder';}
+/* NOT ALLOWED INTO A FEUD, because a feud they are in could never be ended. Mediation's odds are
+   clamp(0.25 + 0.75*(minFriend/60)) on the LOWER of the two friendships, and Ravinder's gatekeeper
+   menu is deliberately two verbs with no chat and no task hand-over — so his `friend` never moves
+   and the roll is pinned near its floor forever. As manager, Kyle drew a Hank/Ravinder feud he had
+   no way to resolve. Separate from deskbound() above: that one is about him staying at his post,
+   this one about him being unreachable socially. Both fall out of the same gatekeeper design. */
+function noFeuds(n){return !!n&&n.name==='Ravinder';}
 function deptName(d){return {sales:'Sales',acct:'Accounting',hr:'HR',exec:'Executive',intern:'Intern'}[d];}
 function deptColor(n){return n.mgr?COL.mgr:{sales:COL.sales,acct:COL.acct,hr:COL.hr,exec:COL.exec,intern:COL.intern}[n.dept];}
 
@@ -3843,7 +3869,7 @@ function tickCones(dt){
   if(mgrN&&working&&!atDesk&&!alarmActive&&alarmGrace<=0&&!covered&&!meltEvent&&inCone(mgrN,pc)){
     if(player.slack<1)startle(mgrN);
     player.slack=clamp(player.slack+15*dt,0,100);   // ~6.5s to trigger — time to notice and move
-    if(player.slack>=100){player.slack=0;addSuspicion(8,'Dale clocked you away from your desk');mgrN.bubble={t:2.2,text:'Working hard?'};toast('Dale noticed you slacking. Get to your desk!');}
+    if(player.slack>=100){player.slack=0;const mn=mgrN.name.split(' ')[0];addSuspicion(8,mn+' clocked you away from your desk');mgrN.bubble={t:2.2,text:'Working hard?'};toast(mn+' noticed you slacking. Get to your desk!');}
   } else player.slack=clamp(player.slack-45*dt,0,100);
 }
 function checkAlly(n){if(n.friend>=ALLY_THRESHOLD&&!n._wasAlly){n._wasAlly=true;logLine(`${n.name} is now an ally. You can ask them to do your dirty work.`,'g');toast(`${n.name} is now an ally`);}}
@@ -4002,14 +4028,14 @@ function addTask(t){
   tasks.push(task);renderTasks();
 }
 function openTask(via,target){return tasks.find(t=>t.via===via&&!t.done&&(!target||t.target===target));}
-function completeTask(t){if(!t||t.done)return;t.done=true;today.tasks++;SFX.task();markTaskDone(t.label);if(t.kind==='npc'){career.vpFavor++;logLine('Sterling nods. He knows your name now.','g');}const gain=t.bonus?14:8;player.prog=clamp(player.prog+gain,0,100);player.suspicion=clamp(player.suspicion-3,0,100);if(!player.workPass){player.workPass=true;renderLeverage();logLine('Job done for this shift — Dale has no beef. Free time earned.','g');}toast(`Task done. Promotion +${gain}, suspicion −3`);logLine(`Completed: ${t.label}. Promotion +${gain}.`,'g');renderTasks();tryPromote();}
+function completeTask(t){if(!t||t.done)return;t.done=true;today.tasks++;SFX.task();markTaskDone(t.label);if(t.kind==='npc'){career.vpFavor++;logLine('Sterling nods. He knows your name now.','g');}const gain=t.bonus?14:8;player.prog=clamp(player.prog+gain,0,100);player.suspicion=clamp(player.suspicion-3,0,100);if(!player.workPass){player.workPass=true;renderLeverage();logLine('Job done for this shift — '+mgrBeefLine()+'. Free time earned.','g');}toast(`Task done. Promotion +${gain}, suspicion −3`);logLine(`Completed: ${t.label}. Promotion +${gain}.`,'g');renderTasks();tryPromote();}
 function doBusywork(){if(player.workCh||player.act){toast('Already busy.');return;}player.workCh={t:8.0,max:8.0};toast('Working... hold still (8s).');}
 function startAct(sec,label,fn,holdNpc){if(player.workCh||player.act){toast('Already busy.');return;}player.act={t:sec,max:sec,fn};toast(label+'... hold still.');
   /* If this interaction is WITH someone (listening to Dale, sitting through a rehearsal),
      hold them in place and facing you for the duration — they shouldn't wander off mid-story. */
   if(holdNpc){holdNpc.heldT=sec+0.5;holdNpc.heldBy='you';holdNpc.goal=null;holdNpc.path=null;}
 }
-function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);player.suspicion=clamp(player.suspicion-1,0,100);player.busyCount=(player.busyCount||0)+1;if(!player.workPass&&player.busyCount>=3){player.workPass=true;renderLeverage();logLine('Enough visible grind — Dale counts you as working. Free time earned.','g');}toast('Filed. +2');if(Math.random()<0.3)logLine(pick(['Another form filed. Time crawls.','You reformat a spreadsheet nobody asked for.','You reply-all to a dead thread.','You alphabetize your inbox. Again.']),'t');tryPromote();}
+function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);player.suspicion=clamp(player.suspicion-1,0,100);player.busyCount=(player.busyCount||0)+1;if(!player.workPass&&player.busyCount>=3){player.workPass=true;renderLeverage();logLine('Enough visible grind — '+mgrCountsLine()+'. Free time earned.','g');}toast('Filed. +2');if(Math.random()<0.3)logLine(pick(['Another form filed. Time crawls.','You reformat a spreadsheet nobody asked for.','You reply-all to a dead thread.','You alphabetize your inbox. Again.']),'t');tryPromote();}
 
 /* ===== INTERACTIONS ===== */
 const menu=document.getElementById('menu');let menuOpen=false;
@@ -4095,28 +4121,45 @@ function ceoDismissiveItems(n){
   ];
 }
 function nearestInteractable(){
-  const pc=center(player);let best=null,bd=Math.round(44*S);
-  for(const n of activeNPCs()){const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}   // CEO reachable on his lap, or in his office when you get past Ravinder (the office movement gate keeps you out otherwise)
-  for(const o of objects){const d=cdist(o,pc);if(d<bd){bd=d;best={kind:'obj',ref:o};}}
-  for(const c of CONTAINERS){const d=cdist(c,pc);if(d<bd){bd=d;best={kind:'container',ref:c};}}
-  for(const d of desks){if(!d.owner)continue;const c=cdist(d,pc);if(c<bd){bd=c;best={kind:'desk',ref:d};}}
+  const pc=center(player);
+  /* Each KIND has its own reach, and the nearest eligible one wins. Keeping the reach and the
+     best-distance-so-far as separate numbers matters: they used to be one shrinking variable, which
+     meant a kind could never be considered beyond the FIRST kind's radius no matter what its own
+     limit said — the reason the wider desk reach below did nothing until this was split apart. */
+  const REACH      = Math.round(44*S);   // people, machines, containers, the elevator
+  const DESK_REACH = Math.round(64*S);   // see below
+  const CHAIR_REACH= Math.round(18*S);   // see below
+  let best=null, bd=Infinity;
+  const take=(dist,limit,cand)=>{ if(dist<limit && dist<bd){ bd=dist; best=cand; } };
+
+  // CEO reachable on his lap, or in his office once you get past Ravinder
+  for(const n of activeNPCs()) take(cdist(n,pc),REACH,{kind:'npc',ref:n});
+  for(const o of objects)      take(cdist(o,pc),REACH,{kind:'obj',ref:o});
+  for(const c of CONTAINERS)   take(cdist(c,pc),REACH,{kind:'container',ref:c});
+
+  /* DESKS REACH FURTHER, and they have to. cdist measures CENTRE to centre while a desk is a big
+     rect, so standing exactly on a desk's own seat point — the spot the game parks you at, and where
+     sitAtDesk snaps you — leaves you 46.7 to 53.1 authored units from its centre, outside the 44
+     reach. Measured before this: ALL 23 desks were unreachable from their own seat, which is why
+     using your desk meant hunting for a narrow band between seat and desk and mashing the key until
+     you happened to be standing in it. Only ELIGIBILITY widens; nearest still wins, so a colleague
+     or a cabinet standing closer is still what you get. */
+  for(const d of desks){ if(d.owner) take(cdist(d,pc),DESK_REACH,{kind:'desk',ref:d}); }
+
   {const e={x:ELEVATOR.x-Math.round(30*S),y:ELEVATOR.y-Math.round(14*S),w:Math.round(60*S),h:Math.round(28*S),label:'Elevator'};
-   const d=cdist(e,pc); if(d<bd){bd=d;best={kind:'elevator',ref:e};}}
-  /* Empty table chairs. A chair is a bare seat POINT (x,y plus dir/gy/cw/ch) with no w/h, so it gets
-     a synthetic rect built around it — center()/cdist()/headTop() all assume a box, and a missing w
-     would put NaN into the [X] prompt, which the canvas stub treats as fatal. Occupied chairs are
-     skipped so you can never sit in someone's lap. */
-  /* Chairs get a TIGHTER reach than everything else — you have to be standing essentially on one.
-     At the full 44*S they competed with the people sitting around the same table, so walking up to
-     a colleague in the break room offered "sit down" instead of talking to them. Anything nearer
-     still wins outright, because this only narrows the bar, never widens it. */
-  {const chairBar=Math.min(bd,Math.round(18*S));
-   for(const c of allSeatChairs()){
-     if(!chairIsFree(c))continue;
-     const w=c.cw||Math.round(30*S), h=c.ch||Math.round(39*S);
-     const ref={x:Math.round(c.x-w/2), y:Math.round(c.y-h/2), w, h, label:'Chair', chair:c};
-     const d=cdist(ref,pc); if(d<chairBar&&d<bd){bd=d;best={kind:'chair',ref};}
-   }}
+   take(cdist(e,pc),REACH,{kind:'elevator',ref:e});}
+
+  /* Empty table chairs, on a TIGHT reach so you have to be standing essentially on one. A chair is a
+     bare seat POINT (x,y plus dir/gy/cw/ch) with no w/h, so it gets a synthetic rect built around it
+     — center()/cdist()/headTop() all assume a box, and a missing w would put NaN into the [X] prompt,
+     which the canvas stub treats as fatal. Occupied chairs are skipped so you can never sit in
+     someone's lap. At the full reach they competed with the people sitting around the same table. */
+  for(const c of allSeatChairs()){
+    if(!chairIsFree(c))continue;
+    const w=c.cw||Math.round(30*S), h=c.ch||Math.round(39*S);
+    const ref={x:Math.round(c.x-w/2), y:Math.round(c.y-h/2), w, h, label:'Chair', chair:c};
+    take(cdist(ref,pc),CHAIR_REACH,{kind:'chair',ref});
+  }
   return best;
 }
 function tryInteract(){
@@ -4182,7 +4225,7 @@ function buildOptions(t){
       if(eg.length)return {title:`${n.name} · CEO  —  you have him`,items:eg};
       return {title:`${n.name} · CEO`,items:ceoDismissiveItems(n)};
     }
-    if(n.mgr){const mi=[...daleFavorItems(n),{label:'Laugh at his joke (suck up)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);career.daleFavor++;toast('Dale loves you. Suspicion −5'+(career.daleFavor===2?' — he REALLY likes you now':''));logLine("Laughed at Dale's joke. He beams.",'g');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)mi.push({label:'Report to Dale (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to Dale?',onPick:doc=>snitchItem(doc,'the manager')})});return {title:`${n.name} · Branch Manager`,items:mi};}
+    if(n.mgr){const mi=[...daleFavorItems(n),{label:'Laugh at his joke (suck up)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);career.daleFavor++;const mn=n.name.split(' ')[0];toast(mn+' loves you. Suspicion −5'+(career.daleFavor===2?' — he REALLY likes you now':''));logLine('Laughed at '+mn+"'s joke. He beams.",'g');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)mi.push({label:'Report to Dale (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to Dale?',onPick:doc=>snitchItem(doc,'the manager')})});return {title:`${n.name} · Branch Manager`,items:mi};}
     /* the CEO's assistant is a gatekeeper, not a sales worker — two verbs only */
     if(n.name==='Ravinder')return {title:`${n.name} · CEO Assistant`,items:ravinderItems(n)};
     if(n.receptionist){SFX.talk();}
@@ -4374,7 +4417,7 @@ function buildOptions(t){
       items.push(...partGrab('decaf',seen));
       return {title:'Coffee machine',items};
     }
-    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:'Pocket a stapler (petty)',risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{logLine('Swiped office supplies.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},(o.suppliesDay===day?{label:'Supply cupboard is picked clean until tomorrow',disabled:true}:{label:invFull()?'Take assorted prank supplies (pockets full)':'Take assorted prank supplies (wildcard)',disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.suppliesDay=day;player.inv.push('supplies');renderLeverage();logLine('Palmed a handful of assorted supplies. Contraband now — the cupboard is picked clean until tomorrow.','t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take supplies':'Grabbed supplies, unseen');}})]};}
+    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:invFull()?'Pocket a stapler (pockets full)':'Pocket a stapler (petty)',disabled:invFull(),risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{if(invFull()){toast('Pockets full ('+INV_CAP+' max) — drop something first.');return;}player.inv.push('stapler');renderLeverage();logLine('Swiped a stapler from the supply station.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},(o.suppliesDay===day?{label:'Supply cupboard is picked clean until tomorrow',disabled:true}:{label:invFull()?'Take assorted prank supplies (pockets full)':'Take assorted prank supplies (wildcard)',disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.suppliesDay=day;player.inv.push('supplies');renderLeverage();logLine('Palmed a handful of assorted supplies. Contraband now — the cupboard is picked clean until tomorrow.','t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take supplies':'Grabbed supplies, unseen');}})]};}
     if(o.type==='files')return {title:'HR Files (locked cabinet)',items:[...catfishFileItems(),player.hasKeycard?{label:player.channel?'Already snooping...':'Unlock & crack the files (hold ~3s)',disabled:!!player.channel,risk:seen?seenTag():'very risky',hot:seen,act:()=>startSnoop()}:{label:"Locked — you need HR's keycard",disabled:true}]};
     if(o.type==='toilet'){const seen2=seenByAnyone();return {title:o.label,items:[
       {label:o.rigged?'Already rigged to overflow':'Rig it to overflow (prank)',disabled:o.rigged,risk:seen2?seenTag():'sneaky',hot:seen2,act:()=>startAct(4,'Rigging the plumbing',()=>rigToilet(o))},
@@ -4604,9 +4647,14 @@ function swipePrized(d,own,present){
   const seen=seenByAnyone();
   {const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='steal'&&x.target===(own?own.name:''));if(m)setTimeout(()=>creditMission(m,seen?0.35:0.05),400);}
   if(present){toast('They are right there.');return;}
+  /* Full pockets used to fall straight through: the item was skipped, but the log still said you
+     swiped it and you still took the suspicion hit — so you paid for a theft that never happened.
+     That is half of "it says petty theft but nothing is in our inventory". Bail BEFORE anything
+     is charged, and say why. */
+  if(invFull()){toast('Pockets full ('+INV_CAP+' max) — drop something first.');return;}
   const items=['stapler','mug','charger'];
   const it=pick(items);
-  if(!invFull())player.inv.push(it);
+  player.inv.push(it);
   renderLeverage();
   const bonus=(own&&own.ptype==='peacock')?14:0;
   if(own){
@@ -5511,7 +5559,7 @@ function nextDay(){
       n.mood=n.mood*0.5;n.mistakes=0;n.caughtToday=0;n.supported=false;n.snitched=Math.max(0,(n.snitched||0)-1);
     }
   });
-  clearSeats();assembleAtElevator();rivalsClimb();resetLights();favors=[];missions=[];npcFeuds=[];dale.todayCount=0;dale.cooldown=rand(20,50);for(const k in trkState)delete trkState[k];renderTracker();
+  clearSeats();assembleAtElevator();rivalsClimb();resetLights();favors=[];missions=[];npcFeuds=[];clearUnfeudable();dale.todayCount=0;dale.cooldown=rand(20,50);for(const k in trkState)delete trkState[k];renderTracker();
   processHires();scheduleBoss();scheduleAudit();scheduleDrill();tasks=[];renderTasks();rollContainers();
   hrs().forEach(h=>{h.audit=false;h.auditDesk=null;});
   resetToday();
@@ -5987,6 +6035,26 @@ function setRankDown(){
     if(player.rank===4)claimAsstOffice(); else movePlayerDesk();   // back down the corridor (or into the asst office)
     renderDeleg();
   }
+}
+/* THE BRANCH MANAGER, as the game currently knows them — not "Dale" the string literal. Dale starts
+   in the chair but he can be removed (removeDale, below) and the PLAYER can take the job themselves,
+   after which every line that still names him is talking about somebody who is not there. That is
+   what Kyle saw: finishing a task told him "Dale has no beef" while he WAS the manager.
+   Returns null when the chair is empty or the player holds it. */
+function branchMgr(){ return NPCS.find(n=>n.mgr&&n.alive&&!n.gone&&!n.wentHome)||null; }
+function mgrFirst(){ const m=branchMgr(); return m?m.name.split(' ')[0]:null; }
+/* How to refer to whoever is watching you work. Falls back to the situation rather than a name. */
+function mgrBeefLine(){
+  const nm=mgrFirst();
+  if(nm)return nm+' has no beef';
+  if(player.rank>=5)return 'you are the one who signs it off';
+  return 'nobody is left to check';
+}
+function mgrCountsLine(){
+  const nm=mgrFirst();
+  if(nm)return nm+' counts you as working';
+  if(player.rank>=5)return 'you count yourself as working';
+  return 'that counts as working';
 }
 function removeDale(){
   const m=NPCS.find(n=>n.mgr&&n.alive);
@@ -8887,8 +8955,20 @@ function betrayMission(m){
   renderTasks();
   setTimeout(()=>{missions=missions.filter(x=>x!==m);renderTasks();},2600);
 }
+/* Existing feuds involving someone who can never mediate out of one — from a save written before
+   noFeuds(), or from a rule change later. Run at the day roll so it heals rather than stranding the
+   player with an unresolvable job. */
+function clearUnfeudable(){
+  NPCS.forEach(n=>{
+    if(!n.feudWith)return;
+    const o=NPCS.find(x=>x.name===n.feudWith);
+    if(noFeuds(n)||noFeuds(o)){ n.feudWith=null; if(o)o.feudWith=null; }
+  });
+}
 function startFeud(a,b){
   if(!a||!b)return;
+  /* Guarded HERE rather than at each caller — there are five, and a sixth would forget. */
+  if(noFeuds(a)||noFeuds(b))return;
   a.feudWith=b.name;b.feudWith=a.name;
   a.mood=clamp(a.mood-15,-100,100);b.mood=clamp(b.mood-15,-100,100);
 }
