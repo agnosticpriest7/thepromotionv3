@@ -4095,28 +4095,45 @@ function ceoDismissiveItems(n){
   ];
 }
 function nearestInteractable(){
-  const pc=center(player);let best=null,bd=Math.round(44*S);
-  for(const n of activeNPCs()){const d=cdist(n,pc);if(d<bd){bd=d;best={kind:'npc',ref:n};}}   // CEO reachable on his lap, or in his office when you get past Ravinder (the office movement gate keeps you out otherwise)
-  for(const o of objects){const d=cdist(o,pc);if(d<bd){bd=d;best={kind:'obj',ref:o};}}
-  for(const c of CONTAINERS){const d=cdist(c,pc);if(d<bd){bd=d;best={kind:'container',ref:c};}}
-  for(const d of desks){if(!d.owner)continue;const c=cdist(d,pc);if(c<bd){bd=c;best={kind:'desk',ref:d};}}
+  const pc=center(player);
+  /* Each KIND has its own reach, and the nearest eligible one wins. Keeping the reach and the
+     best-distance-so-far as separate numbers matters: they used to be one shrinking variable, which
+     meant a kind could never be considered beyond the FIRST kind's radius no matter what its own
+     limit said — the reason the wider desk reach below did nothing until this was split apart. */
+  const REACH      = Math.round(44*S);   // people, machines, containers, the elevator
+  const DESK_REACH = Math.round(64*S);   // see below
+  const CHAIR_REACH= Math.round(18*S);   // see below
+  let best=null, bd=Infinity;
+  const take=(dist,limit,cand)=>{ if(dist<limit && dist<bd){ bd=dist; best=cand; } };
+
+  // CEO reachable on his lap, or in his office once you get past Ravinder
+  for(const n of activeNPCs()) take(cdist(n,pc),REACH,{kind:'npc',ref:n});
+  for(const o of objects)      take(cdist(o,pc),REACH,{kind:'obj',ref:o});
+  for(const c of CONTAINERS)   take(cdist(c,pc),REACH,{kind:'container',ref:c});
+
+  /* DESKS REACH FURTHER, and they have to. cdist measures CENTRE to centre while a desk is a big
+     rect, so standing exactly on a desk's own seat point — the spot the game parks you at, and where
+     sitAtDesk snaps you — leaves you 46.7 to 53.1 authored units from its centre, outside the 44
+     reach. Measured before this: ALL 23 desks were unreachable from their own seat, which is why
+     using your desk meant hunting for a narrow band between seat and desk and mashing the key until
+     you happened to be standing in it. Only ELIGIBILITY widens; nearest still wins, so a colleague
+     or a cabinet standing closer is still what you get. */
+  for(const d of desks){ if(d.owner) take(cdist(d,pc),DESK_REACH,{kind:'desk',ref:d}); }
+
   {const e={x:ELEVATOR.x-Math.round(30*S),y:ELEVATOR.y-Math.round(14*S),w:Math.round(60*S),h:Math.round(28*S),label:'Elevator'};
-   const d=cdist(e,pc); if(d<bd){bd=d;best={kind:'elevator',ref:e};}}
-  /* Empty table chairs. A chair is a bare seat POINT (x,y plus dir/gy/cw/ch) with no w/h, so it gets
-     a synthetic rect built around it — center()/cdist()/headTop() all assume a box, and a missing w
-     would put NaN into the [X] prompt, which the canvas stub treats as fatal. Occupied chairs are
-     skipped so you can never sit in someone's lap. */
-  /* Chairs get a TIGHTER reach than everything else — you have to be standing essentially on one.
-     At the full 44*S they competed with the people sitting around the same table, so walking up to
-     a colleague in the break room offered "sit down" instead of talking to them. Anything nearer
-     still wins outright, because this only narrows the bar, never widens it. */
-  {const chairBar=Math.min(bd,Math.round(18*S));
-   for(const c of allSeatChairs()){
-     if(!chairIsFree(c))continue;
-     const w=c.cw||Math.round(30*S), h=c.ch||Math.round(39*S);
-     const ref={x:Math.round(c.x-w/2), y:Math.round(c.y-h/2), w, h, label:'Chair', chair:c};
-     const d=cdist(ref,pc); if(d<chairBar&&d<bd){bd=d;best={kind:'chair',ref};}
-   }}
+   take(cdist(e,pc),REACH,{kind:'elevator',ref:e});}
+
+  /* Empty table chairs, on a TIGHT reach so you have to be standing essentially on one. A chair is a
+     bare seat POINT (x,y plus dir/gy/cw/ch) with no w/h, so it gets a synthetic rect built around it
+     — center()/cdist()/headTop() all assume a box, and a missing w would put NaN into the [X] prompt,
+     which the canvas stub treats as fatal. Occupied chairs are skipped so you can never sit in
+     someone's lap. At the full reach they competed with the people sitting around the same table. */
+  for(const c of allSeatChairs()){
+    if(!chairIsFree(c))continue;
+    const w=c.cw||Math.round(30*S), h=c.ch||Math.round(39*S);
+    const ref={x:Math.round(c.x-w/2), y:Math.round(c.y-h/2), w, h, label:'Chair', chair:c};
+    take(cdist(ref,pc),CHAIR_REACH,{kind:'chair',ref});
+  }
   return best;
 }
 function tryInteract(){
