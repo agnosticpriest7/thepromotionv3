@@ -491,6 +491,10 @@ const ART_PATH='Art/sprites/';
 const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
+  /* 'phone' was mapped in OBJ_ART but NEVER listed here, so it never loaded and the sales phones
+     drew as the missing-art fallback the whole time. Registering it is what actually puts the
+     sprite on screen — swapping the PNG alone did nothing. */
+  'phone',
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
   /* kitchen counter run (Kyle's art, magenta bg): plain / sink / microwave / coffee */
   'counter_plain','counter_sink','counter_micro','counter_coffee',
@@ -609,6 +613,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
+  'phone',   // the new handset-on-a-cabinet art ships on magenta; without this it drew a magenta border
   /* playable-character walk strips. The SEATED poses are NOT listed here — isSeatedPersonSprite()
      derives them from SEAT_ART, so they get keyed AND content-measured automatically. */
   'walk_stacie_down','walk_stacie_up','walk_stacie_left','walk_stacie_right',
