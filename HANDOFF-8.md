@@ -1,10 +1,11 @@
-# HANDOFF-8 — Rooms, seating, the test audit, and character select
+# HANDOFF-8 — Rooms, seating, the test audit, character select, and guest hires
 
-**2026-07-28/29.** Live/committed state: `main` @ `bcc454a`, full gate green (**38/38**, ~25 min).
+**2026-07-28/30.** Live/committed state: `main` @ `d31b464`, full gate green (**38/38**, ~26 min).
 Supersedes `HANDOFF-7` (the preview-loop / `__dbg` run — **complete**).
 
-26 commits. The floor got rebuilt room by room, everyone sits down now including you, the test
-suite stopped lying, and there are five playable characters.
+37 commits. The floor got rebuilt room by room, everyone sits down now including you, the test
+suite stopped lying, there are five playable characters, and rare guests turn up unannounced in
+place of the person you hired.
 
 ---
 
@@ -104,26 +105,37 @@ inset the blocker 4 world px. Do that and a solid table keeps a free ring of wal
 
 ---
 
-## ⚠️ Open item that matters most
+## ✅ The harness image stub — FIXED (`086060a`)
 
-**The harness stubs `Image` at 64×64, so anything measured off a sprite is wrong under test.**
+*(Kept because the failure mode is worth recognising again, not because it is still open.)*
 
-`crewRect` derives tabletop height from `naturalHeight`; under the stub every crew tabletop measures
-**76 authored units tall instead of 34** and the seat rows spread twice as far as they really do.
-The meeting room's upper set tests as having its top chair row *outside the room*, scattered by
-`snapTarget` — and is perfectly fine in the browser.
+The harness stubbed `Image` at a flat **64×64**, so anything derived from a sprite's aspect was
+wrong under test and right in the browser — the worst way round, because no test failure ever told
+you. `crewRect` measured every crew tabletop **76 authored units tall instead of 34**, spreading the
+seat rows twice as wide as they really are. It cost two bugs: the reception lounge's collision box
+came back **square** (82×82 instead of 82×37) and sealed a corridor, and the meeting room's upper
+seat row tested as hanging outside the room.
 
-This is **pre-existing and affects the break room and kitchen sets equally**. It is why:
-- no test has ever actually verified seat placement, and
-- the reception lounge's first collision box came back **square** (82×82 instead of 82×37) and
-  sealed the corridor — fine in the browser, broken in every test.
+The stub now reads width/height off the PNG header (signature, then IHDR — width@16, height@20), the
+same trick `placement.js` already used, with the 64×64 square kept as a fallback so the three
+known-missing sprites still degrade gracefully. Cached per filename.
 
-It bit **twice in one session**. The fix is to have the stub report real PNG dimensions — the
-harness can read them off the IHDR exactly as `placement.js` already does. It changes the geometry
-every existing test runs against, so it wants its own branch and a careful look at what moves.
-**Not started; needs Kyle's go-ahead.**
+Harness geometry now matches the browser exactly:
 
-Workaround until then: **verify seating and footprints in the browser, not the harness.**
+| | browser | harness before | harness now |
+|---|---|---|---|
+| meeting tabletops | x501.9..578.1 | ~2× too tall | x501.9..578.1 |
+| seat span | y317.8..467.2 | rows outside the room | y317.8..467.2 |
+| seats exactly on chair | 16/16 | scattered | 16/16 |
+
+Full gate stayed GREEN on all 38. It was flagged as risky because it shifts the geometry every test
+runs against — and it shifted nothing any test asserted, which is precisely the evidence that seat
+geometry was never being tested at all.
+
+⚠️ **The related trap is still live:** a second "harness cannot do this" claim in the same session —
+that timed actions never tick — was WRONG. `player.act` freezes only because the day-1 intro
+early-returns out of `loop()` before the act tick, and the bot was crafting at frame 2000 inside a
+~3740-frame intro. **Run past the intro before expecting any `startAct` verb to finish.**
 
 ## Other open items
 
@@ -136,6 +148,10 @@ Workaround until then: **verify seating and footprints in the browser, not the h
   Start at `delegAssignMenu` / `delegOpen()`.
 - **HUD overlap** — the TODAY checklist prints over desks and room labels. Carried from
   `HANDOFF-7`; seen in four world states at full width, so it is not pane geometry.
+- **Bat-swing art for the three guests** — Kyle is generating it. Meltdowns degrade safely without
+  it (see §7); when the sheets land it is one `BAT_BY_INDEX` entry each for 25/26/27 plus the PNGs.
+- **The art→facing map for the DEFAULT desk sprite** is inconsistent (see §10). Latent, not broken:
+  every desk is correct via explicit `seatDir`.
 
 *(`HANDOFF-7`'s "kitchen cleanup, never started" is **done** — see §2.)*
 
@@ -168,14 +184,114 @@ they are *not* evidence those systems work. `test/botrun.js` is what exercises t
 standalone does. A probe of `takeItem()` threw, so the bot may be calling it wrong rather than the
 game misbehaving. Answer it before trusting a green there.
 
+## Second pass (2026-07-29/30) — guests, and a batch of playtest fixes
+
+Eleven more commits after the overnight sweep above. Gate green on every one.
+
+### 7. Guest hires — rare named characters who turn up instead of your hire
+
+`GUESTS` holds **Rod Kimble**, **Karl Havoc** and **Night Wolf Hawk**: fixed name, fixed face
+(25/26/27), own four-direction art, own seated poses, and their own bubble lines, which REPLACE the
+personality tells via `tellsFor()`. Each lands at most once per game — `guestTaken()` checks the live
+cast *and* anyone already queued in `pendingHires`.
+
+⚠️ **The roll lives at ARRIVAL, not on the slate.** Kyle's rule is that the player must not know one
+is coming, so `makeCandidate()` gives nothing away and `GUEST_CHANCE` (10%) is rolled on the day they
+start — you hire Gary B. and Rod Kimble walks in. It fires on **both** hire paths: the manager's
+slate and HR's own auto-backfill. Measured: 0 leaks in 3000 slate candidates, 10.1% over 4000 rolls,
+and end-to-end through `processHires()` 60 arrivals produced 3 guests (all three, none twice — 3/60
+is the ceiling, not a shortfall). `cand.guest` rides in the save additively; `SAVE_VERSION` stays 4.
+
+⚠️ **No bat art for guests yet** (Kyle is generating it). `BAT_BY_INDEX` stops at 20,
+`batSheetFor()` returns null for anything unlisted and `drawBatFrame()` bails on a falsy file, so a
+meltdown degrades instead of breaking — measured on Rod and Karl, 12k frames each, 0 render errors.
+That proves nothing THREW, not that the swing plays out. It needs looking at once the sheets exist.
+
+### 8. Character art: adding and replacing is now routine
+
+Adding a character costs **8 PNGs and 5 lines** (`ART_FILES`, `MAGENTA_BG`, `CHAR_SHEETS`,
+`SEAT_ART`, plus the roster/unlock). Replacing walk art costs **zero lines** — `drawChar` takes its
+cell size from the STRIP, so new frames at a different resolution simply work. Raelee, Night Wolf
+Hawk and Kyle have all had their walk sheets swapped this way with no code change.
+
+⚠️ **Identify every sheet from a frame cropped and scaled 3x — never from the thumbnail.** On the
+Night Wolf Hawk swap BOTH side sheets read as left-facing at thumbnail size, which would have meant
+no right sheet existed; the zoom showed one was right-facing. Assigning those backwards is exactly
+the moonwalk bug Kyle reported on Raelee. Useful second check: a genuine left/right pair are pixel
+mirrors of each other — h-flip one and compare.
+
+The same rule applies to SEATED side poses, and it has already bitten: `sit_zora_left.png` contained
+right-facing art and vice versa. Fixed by swapping the FILES rather than special-casing her, so the
+convention (`_left` faces left) still holds for everyone.
+
+### 9. Seated figures: scale and placement
+
+- **The away-facing (up) pose renders oversized.** Every pose is scaled so the character's DOWN pose
+  stands `SEAT_PERSON_H` tall, but the up-pose art is drawn larger in source — measured at 84-90% of
+  the down pose's content height, where a head-and-torso back view should be nearer 60%. That is why
+  the BOTTOM row of every table read bigger than the top row and the end chairs. `SEAT_UP_SCALE =
+  0.80` brings it to 67-72%. Per-character variance means no single multiplier is perfect: it is a
+  knob, like the rest.
+- **`SEAT_CREW_DOWN_DROP = 6`** tucks the table TOP row toward the table. Scoped to crew chairs via a
+  `crew` flag on `drawSeatedPerson` — top-row sitters and desk sitters both face down, so without
+  that scoping this would have shifted all 23 desks as well.
+
+### 10. ⚠️ Desk facing: `seatSide` says WHERE you sit, `seatDir` says WHICH WAY you look
+
+`deskSeat()` tries down, up, right, left and returns the first **walkable** side. Where a desk's only
+walkable side disagrees with its art, the art cannot be trusted to say which way the sitter looks,
+and they end up with their back to their own desk. Two desks were doing exactly that (the manager
+desk and the reserved intern nook), and the AM desk seated you **through a wall into JANITORIAL**.
+
+New `seatDir` pins the facing independently of the art. The check that finds these objectively: for
+every desk, a sitter facing up must be BELOW it, facing down ABOVE, left → RIGHT-of, right →
+LEFT-of. **0 of 23 backwards now.**
+
+⚠️ **`seatDir` was silently dropped for a whole commit.** The desks array is built by copying a FIXED
+list of fields off each literal, and the new field was not in that list. Add any per-desk field there
+or it does nothing. It was missed because the rescan skipped *vacant* desks — **scan all 23, not just
+the occupied ones.**
+
+⚠️ **The art→facing map is inconsistent for the DEFAULT sprite.** It maps default → 'down', but
+`cubicle_desk` depicts a desk whose sitter is BELOW it facing up. Every desk is correct now via
+explicit `seatDir`, so this is latent rather than broken — but a new default-art desk will want an
+override. `cubicle_desk_up` is the discontinued sprite and is no longer referenced by any desk.
+
+### 11. Other fixes from Kyle's playtest
+
+- **An impossible fetch favour.** Loot is rolled at random, so coffee was absent from the whole floor
+  on ~0.15% of days (3 of 2000 whole-floor rolls) and snack on ~0.05% — and a fetch ask picked
+  blindly from `FETCH_NEEDS`. `seedFetchNeeds()` at the day roll now guarantees every fetchable item
+  exists, and `offerMission()` only asks for something obtainable right now. Regression test in
+  `t_fetch_mission.js`, mutation-tested. **Lesson: a 0.15% event needs ~2000 samples. My first check
+  used 40 days, found nothing, and I nearly reported "cannot reproduce".**
+- **The manager's double chair** — a loose `office_chair` prop stood at 930,120 and the desk's seat
+  point is 930,127, the same spot, so two chairs stacked once anyone sat there. Removed; sitters
+  bring their own via `drawSeated`, exactly as the HR desk's spare chair was removed for.
+- **Menu text overflow** — `.r` was `flex:0 0 auto` with `white-space:nowrap`, so a long risk string
+  could neither shrink nor wrap. Measured in a 340px menu it was **363px wide** and printed across
+  the label. Now `flex:0 1 auto`, wrapping, capped at 46% of the row, rows top-aligned.
+- **Ravinder would not stay at his desk.** He gatekeeps the CEO's office and `ravinderGuarding()`
+  only returns him while parked there, so every wander opened the door to Sterling. `isWorker()` only
+  excludes HR, the boss, the manager and reception, so the gatekeeper was treated as an ordinary
+  worker: at his desk **23%** of samples, most of the absence lost to ERRANDS during Regular Work,
+  not breaks. New `deskbound()` stops errands and break attendance → **80%**, with the gate genuinely
+  guarded 80% of samples. Note that removing his break SEAT was not enough on its own:
+  `npcTarget`'s break branch sends anyone seatless to a fixed point *inside* the break room, so that
+  just sent him there without a chair. Meetings still pull him, on purpose — everyone attends, it is
+  time-boxed, and a predictable window is fair for the player to learn.
+
 ## Standing TV items (Kyle's verdict, gamepad in hand)
 
-- **The five characters** — do they read at TV distance, and do the seated poses land?
+- **The five playable characters and the three guests** — do they read at TV distance, and do the
+  seated poses land?
+- **`SEAT_UP_SCALE` (0.80) and `SEAT_CREW_DOWN_DROP` (6)** — both are knobs; nudge them on the TV.
 - **Sitting down** — chairs only prompt within 18 units so they don't steal the prompt from a
-  colleague at the same table; and while seated on a CHAIR `[X]` stands you up rather than talking. Both are
-  judgement calls, easily changed.
+  colleague at the same table; seated at a DESK `[X]` uses the desk, on a CHAIR it stands you up.
+  Both are judgement calls, easily changed.
 - **The two meeting tables and the break/kitchen sets** — spacing and whether the room reads full.
 - **The reception lounge** — and whether the bare marble room needs something.
+- **Meeting a guest** — does a stranger walking in instead of your hire land as a surprise or a bug?
 
 ---
 
