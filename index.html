@@ -917,6 +917,17 @@ let SEAT_SIDE_DOWN  = 22;          // U1 units to slide a LEFT/RIGHT-desk sitter
 let SEAT_ABOVE_DOWN = 34;          // U1 units to slide down a sitter whose seat is ABOVE their desk (Ravinder). deskSeat sets the stand point 26u clear of the desk BOX for walking room; for the chair that reads as parked in open floor, 17u off the desk's drawn top edge
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
+/* The away-facing (UP) pose renders OVERSIZED without this. Every pose is scaled so the character's
+   DOWN pose stands SEAT_PERSON_H tall, but the up-pose art is drawn at a larger character scale in
+   the source: measured at 84-90% of the down pose's content height (Intern 84, Zora 90, Kyle 90)
+   where a head-and-torso back view should be nearer 60%. That is why the BOTTOM row of every table
+   — the row that faces up — read bigger than the top row and the end chairs. Per-character variance
+   means one multiplier cannot be perfect for all; this is a knob, like the rest of them. */
+let SEAT_UP_SCALE   = 0.80;        // shrink the away-facing pose to sit alongside the other three
+/* Crew-chair TOP row only: slide the sitter DOWN toward the table. Their seat point is set clear of
+   the tabletop so the chair reads right, which leaves the figure floating a touch high. Deliberately
+   NOT applied to desk sitters — drawSeated passes no crew flag, so their placement is untouched. */
+let SEAT_CREW_DOWN_DROP = 6;       // U1 units
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
 /* The person art faces RIGHT (back on the left), so a right-facing sitter needs the backrest on the
    LEFT (chair_side_left) and a left-facing sitter needs it on the RIGHT (chair_side). */
@@ -974,9 +985,10 @@ function drawSeated(npc,dir,cx,cyGround){
   else          { drawChairLayer(); drawPersonLayer(); }
   return true;
 }
-function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
+function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH,crew){
   let seatY=cyGround - chairH*SEAT_OFFSET_RATIO;           // the person's placement point, lifted onto the cushion
   if(dir==='up')seatY-=chairH*SEAT_UP_EXTRA;              // away-facing: lift more so the head clears the tall chair back
+  if(crew&&dir==='down')seatY+=U1(SEAT_CREW_DOWN_DROP);   // table TOP row sits a touch high — tuck it toward the table
   if(!isFinite(seatY))return;
   const sp=seatedPersonSpriteFor(npc,dir);
   if(!sp){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
@@ -988,6 +1000,7 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   const refH=(refBB&&refBB.h)||bb.h||im.naturalHeight||1;
   let scale=U1(SEAT_PERSON_H)/refH;
   if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
+  else if(dir==='up')scale*=SEAT_UP_SCALE;                      // the back pose is drawn large in source — bring it back in line
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
   // side poses: nudge the sitter FORWARD (toward their facing) so they sit at the front of the seat,
@@ -7266,7 +7279,7 @@ function drawNPC(n){
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
        const brk=seat?null:seatedBreakState(n);   // on a break chair? person layer only — the chair is already drawn
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
-       else if(brk){ drawSeatedPerson(n,brk.dir,brk.cx,brk.cyGround,brk.cw,brk.ch); }
+       else if(brk){ drawSeatedPerson(n,brk.dir,brk.cx,brk.cyGround,brk.cw,brk.ch,true); }
        else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
      }
    }
@@ -7339,7 +7352,7 @@ function drawPlayer(){
   const seat=playerSeatState();   // the intern face is the player's — sit them down in the real seated art
   {/* A table chair is ALREADY drawn by drawCrewSet, so only the person layer goes on top of it —
       drawSeated would stamp a second, desk-style chair over Kyle's art. Same split drawNPC uses. */
-   if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch);
+   if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch,true);
    else if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
    else if(!drawChar(player,playerChar))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
   /* The "that's you" box follows the DRAWN figure, not the collision box. Seated, the two are not
