@@ -142,11 +142,16 @@
 
   #menu{position:absolute;display:none;background:var(--panel);border:1px solid var(--ink);min-width:250px;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:8}
   #menu h4{margin:0;padding:10px 13px;font-size:13.5px;background:var(--ink);color:#fff;letter-spacing:.5px}
-  #menu button{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
+  #menu button{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
   #menu button:hover{background:#e9e5d8}
   #menu button:disabled{color:#9a9484;cursor:default;font-size:11px;letter-spacing:1.5px}
   #menu button .lab{flex:1 1 auto;min-width:0}
-  #menu button .r{flex:0 0 auto;white-space:nowrap;text-align:right;color:var(--muted);font-size:12px}
+  /* `.r` was flex:0 0 auto + nowrap, so a long risk string ("needs a free SALES chair + ally
+     (friendship 60+)") could neither shrink nor wrap and printed straight over the label — the
+     promote menu showed "Hank" and "needs..." on top of each other. Let it shrink and wrap, cap it
+     at just under half the row, and align rows to the top so a two-line risk pushes height instead
+     of colliding. */
+  #menu button .r{flex:0 1 auto;min-width:0;max-width:46%;white-space:normal;overflow-wrap:anywhere;text-align:right;color:var(--muted);font-size:12px}
   #menu button .r.hot{color:var(--bad)}
   #menu button.menuClose{justify-content:center;text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;background:#eceae2}
   #menu button.menuClose:hover{background:#ddd8c8;color:var(--ink)}
@@ -1072,6 +1077,11 @@ function seatedBreakState(n){
   return {dir:s.dir, cx:s.x, cyGround:s.gy, cw:s.cw, ch:s.ch};
 }
 function seatDirForDesk(d){
+  /* `seatDir` pins which way the sitter FACES, independently of the desk art. Needed where the only
+     WALKABLE side of a desk is not the side its art implies: the art then cannot be trusted to say
+     which way someone at that desk is looking, and without this they sit with their back to their
+     own desk. `seatSide` says WHERE they sit; this says which way they look. */
+  if(d.seatDir)return d.seatDir;
   const a=deskArt(d);
   if(a==='cubicle_desk_up')return 'up';
   if(a==='cubicle_desk_left')return 'left';
@@ -1364,7 +1374,10 @@ const desks=[];
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
 [{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',intern:true,art:'cubicle_desk_left',seatSide:'right'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left',seatSide:'right'},
+ /* the INTERN nook. seatSide:'right' was unreachable — that side is blocked — so deskSeat fell
+    through to UP while the art still said 'left', seating whoever sat here with their back to the
+    desk. Pinned to the side that is actually walkable, facing into the desk. */
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left',seatSide:'up',seatDir:'down'},
  {x:970,y:570,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant) — tucked against east wall (x1015)
  /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
     Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
@@ -2168,7 +2181,11 @@ function shredDoc(){
 }
 
 /* Branch manager (resident, does his rounds) */
-const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true};
+/* seatSide/seatDir pinned: of the four sides only DOWN is walkable (up is blocked, left is in
+   ACCOUNTING), so a sitter must be below the desk — and they have to FACE UP into it. Left to the
+   art alone the facing came out 'down', i.e. the player sat at the manager's desk with their back
+   to it. Dale escaped this because drawDaleSeated uses its own anchor and never asks deskSeat. */
+const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'down',seatDir:'up'};
 desks.push(DALE_DESK);
 const mgr=NPC('Dale Brackett','exec',DALE_DESK); mgr.mgr=true; mgr.speed=0.89; mgr.chatCd=rand(6,14); mgr.lastLine=''; mgr.x=748; mgr.y=452;
 /* authored at 1240x760 — scaleWorld() scales it */
@@ -2178,6 +2195,16 @@ mgr.routeIdx=0; mgr.lap=0; mgr.maxLaps=Math.round(rand(2,3)); mgr.parked=false; 
 
 function activeNPCs(){return NPCS.filter(n=>n.alive);}
 function isWorker(n){return n.alive&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptionist;}
+/* DESKBOUND: staff whose whole job is being AT their desk, so they must not be pulled off it by the
+   ordinary worker routines. Ravinder gatekeeps the CEO's office — ravinderGuarding() only returns
+   him while he is parked within 40u of his seat, so every errand and every break he took opened the
+   door to Sterling's office. Measured before this: he was at his desk 23% of samples, and the
+   biggest slice of the absence was REGULAR WORK (errands), not breaks.
+   He is still a worker in every other respect — delegation, health, feuds, being fired — because
+   isWorker gates all of that and changing it would ripple everywhere. This only stops the wandering.
+   Meetings are deliberately NOT excluded: everyone attends, it is time-boxed, and a predictable
+   window when the gate is down is a fair thing for the player to learn. */
+function deskbound(n){return !!n&&n.name==='Ravinder';}
 function deptName(d){return {sales:'Sales',acct:'Accounting',hr:'HR',exec:'Executive',intern:'Intern'}[d];}
 function deptColor(n){return n.mgr?COL.mgr:{sales:COL.sales,acct:COL.acct,hr:COL.hr,exec:COL.exec,intern:COL.intern}[n.dept];}
 
@@ -2492,6 +2519,14 @@ function hrMorning(n,dt){
 function npcTarget(n){
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
+  /* DESKBOUND staff skip breaks and stay at their post. Removing them from assignBreakSeats was not
+     enough on its own: the break branch below falls back to a fixed point INSIDE the break room for
+     anyone without a seat, so taking Ravinder's chair away just sent him there seatless. Meetings
+     still pull him, on purpose — see deskbound(). */
+  if(deskbound(n)&&/Break/.test(ph)){
+    const hd=n.homeDesk||desks.find(x=>x.owner===n.name);
+    if(hd)return deskSeat(hd);
+  }
   if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(490*S),y:Math.round(455*S)};   // meeting room (380,280,260,220)
   if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
   if(ph==='Clock-Out')return MUSTER;
@@ -2600,7 +2635,7 @@ function updateNPC(n,dt){
   }
 
   const ph=currentPhase().name, workPhase=isWorkPhase(ph);
-  if(n.dept!=='hr'&&workPhase&&!n.errand){n.errandCd-=dt;if(n.errandCd<=0){startErrand(n);n.errandCd=rand(16,36);}}
+  if(n.dept!=='hr'&&!deskbound(n)&&workPhase&&!n.errand){n.errandCd-=dt;if(n.errandCd<=0){startErrand(n);n.errandCd=rand(16,36);}}
 
   let tgt;
   if(n.errand){
@@ -2796,7 +2831,7 @@ function assignBreakSeats(){
   breakChairs.forEach(freeUp);
   breakChairs2.forEach(freeUp);
   kitchenChairs.forEach(freeUp);
-  const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
+  const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome&&!deskbound(n));
   /* Break seating is RANDOM, re-rolled every break. It used to be positional — attendee order
      decided both which room you went to and which chair you got, so the same people sat in the same
      seats all game. Shuffling the attendees randomises the room split; shuffling each room's chair
@@ -7673,7 +7708,9 @@ function drawContainers(){
   sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
   sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
   /* manager's office furnishings (Dale's office, top-centre) */
-  sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
+  /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
+     is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
+     Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
   sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
   /* potted plants — CEO office, reception, meeting room, break room, sales corner */
   /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
