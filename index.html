@@ -529,6 +529,10 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'bat_you','bat_sterling','bat_brenda','bat_marla','bat_peggy','bat_marcus','bat_priya','bat_chad',
   'bat_dana','bat_otis','bat_wren','bat_sana','bat_gil','bat_ramesh','bat_vera','bat_doug','bat_dale',
   'bat_hire_turban','bat_hire_beard','bat_hire_braids','bat_hire_blazer',
+  /* GUEST meltdown sheets. Rod's is a KARATE KICK rather than a bat swing — drawBatFrame
+     sizes each frame from its own aspect, so a 207x301 frame drops in beside the squarer
+     cast sheets with no code change. */
+  'bat_rod',
   /* Seated-character layers: four chair directions (side_left is the exported mirror) + the intern's
      three seated poses (person-only; left reuses the right pose, mirrored in code). Composited by
      drawSeated(); missing files just fall back (onerror) to the standing sprite. */
@@ -562,7 +566,7 @@ const BAT_SHEET={you:'bat_you',sterling:'bat_sterling',brenda:'bat_brenda',marla
 const BAT_BY_INDEX={0:'bat_you',1:'bat_sterling',2:'bat_brenda',3:'bat_marla',4:'bat_peggy',5:'bat_marcus',
   6:'bat_priya',7:'bat_chad',8:'bat_dana',9:'bat_otis',10:'bat_wren',11:'bat_sana',12:'bat_gil',
   13:'bat_ramesh',14:'bat_vera',15:'bat_doug',16:'bat_hire_turban',17:'bat_hire_beard',
-  18:'bat_hire_braids',19:'bat_hire_blazer',20:'bat_dale'};
+  18:'bat_hire_braids',19:'bat_hire_blazer',20:'bat_dale',25:'bat_rod'};   // 25 = Rod Kimble (guest)
 function batSheetFor(n){
   const idx = (typeof charIndexFor==='function') ? charIndexFor(n) : (n.sprite!=null?n.sprite:CAST[n.name]);
   const file = BAT_BY_INDEX[idx];
@@ -2194,11 +2198,15 @@ function shredDoc(){
 }
 
 /* Branch manager (resident, does his rounds) */
-/* seatSide/seatDir pinned: of the four sides only DOWN is walkable (up is blocked, left is in
-   ACCOUNTING), so a sitter must be below the desk — and they have to FACE UP into it. Left to the
-   art alone the facing came out 'down', i.e. the player sat at the manager's desk with their back
-   to it. Dale escaped this because drawDaleSeated uses its own anchor and never asks deskSeat. */
-const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'down',seatDir:'up'};
+/* THE MANAGER SITS BEHIND THE DESK, facing the door — the way Dale does, and the way the chair
+   reads. Getting there took moving the desk: the office's top wall carries a cabinet spanning
+   x880..1040 y0..20, and a container's blocker claims every nav cell it touches, so the cell above a
+   desk at y60 was blocked and the only walkable side was DOWN. That put the player on the little
+   chair BELOW the desk with their back to the room. Dropping the desk to y80 clears the cabinet's
+   reach and opens the seat behind it; seatSide/seatDir then pin it so it can never silently fall
+   back to whichever side happens to be walkable. Dale is unaffected — drawDaleSeated uses its own
+   anchor off this same rect and moves with it. */
+const DALE_DESK={x:900,y:80,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'up',seatDir:'down'};
 desks.push(DALE_DESK);
 const mgr=NPC('Dale Brackett','exec',DALE_DESK); mgr.mgr=true; mgr.speed=0.89; mgr.chatCd=rand(6,14); mgr.lastLine=''; mgr.x=748; mgr.y=452;
 /* authored at 1240x760 — scaleWorld() scales it */
