@@ -2226,6 +2226,13 @@ function isWorker(n){return n.alive&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptio
    Meetings are deliberately NOT excluded: everyone attends, it is time-boxed, and a predictable
    window when the gate is down is a fair thing for the player to learn. */
 function deskbound(n){return !!n&&n.name==='Ravinder';}
+/* NOT ALLOWED INTO A FEUD, because a feud they are in could never be ended. Mediation's odds are
+   clamp(0.25 + 0.75*(minFriend/60)) on the LOWER of the two friendships, and Ravinder's gatekeeper
+   menu is deliberately two verbs with no chat and no task hand-over — so his `friend` never moves
+   and the roll is pinned near its floor forever. As manager, Kyle drew a Hank/Ravinder feud he had
+   no way to resolve. Separate from deskbound() above: that one is about him staying at his post,
+   this one about him being unreachable socially. Both fall out of the same gatekeeper design. */
+function noFeuds(n){return !!n&&n.name==='Ravinder';}
 function deptName(d){return {sales:'Sales',acct:'Accounting',hr:'HR',exec:'Executive',intern:'Intern'}[d];}
 function deptColor(n){return n.mgr?COL.mgr:{sales:COL.sales,acct:COL.acct,hr:COL.hr,exec:COL.exec,intern:COL.intern}[n.dept];}
 
@@ -5547,7 +5554,7 @@ function nextDay(){
       n.mood=n.mood*0.5;n.mistakes=0;n.caughtToday=0;n.supported=false;n.snitched=Math.max(0,(n.snitched||0)-1);
     }
   });
-  clearSeats();assembleAtElevator();rivalsClimb();resetLights();favors=[];missions=[];npcFeuds=[];dale.todayCount=0;dale.cooldown=rand(20,50);for(const k in trkState)delete trkState[k];renderTracker();
+  clearSeats();assembleAtElevator();rivalsClimb();resetLights();favors=[];missions=[];npcFeuds=[];clearUnfeudable();dale.todayCount=0;dale.cooldown=rand(20,50);for(const k in trkState)delete trkState[k];renderTracker();
   processHires();scheduleBoss();scheduleAudit();scheduleDrill();tasks=[];renderTasks();rollContainers();
   hrs().forEach(h=>{h.audit=false;h.auditDesk=null;});
   resetToday();
@@ -8943,8 +8950,20 @@ function betrayMission(m){
   renderTasks();
   setTimeout(()=>{missions=missions.filter(x=>x!==m);renderTasks();},2600);
 }
+/* Existing feuds involving someone who can never mediate out of one — from a save written before
+   noFeuds(), or from a rule change later. Run at the day roll so it heals rather than stranding the
+   player with an unresolvable job. */
+function clearUnfeudable(){
+  NPCS.forEach(n=>{
+    if(!n.feudWith)return;
+    const o=NPCS.find(x=>x.name===n.feudWith);
+    if(noFeuds(n)||noFeuds(o)){ n.feudWith=null; if(o)o.feudWith=null; }
+  });
+}
 function startFeud(a,b){
   if(!a||!b)return;
+  /* Guarded HERE rather than at each caller — there are five, and a sixth would forget. */
+  if(noFeuds(a)||noFeuds(b))return;
   a.feudWith=b.name;b.feudWith=a.name;
   a.mood=clamp(a.mood-15,-100,100);b.mood=clamp(b.mood-15,-100,100);
 }
