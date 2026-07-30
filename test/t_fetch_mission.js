@@ -75,5 +75,44 @@ const deliverOpt = (S, n) => S.missionItems(n).find(it => /Deliver/i.test(it.lab
   ck('delivery is refused when you truly have no item', m.done === false && G.today.favors === 0);
 }
 
+/* --- (6) A FETCH FAVOUR MUST NEVER BE IMPOSSIBLE ------------------------------------------
+   Kyle hit an ask for a hidden coffee stash on a day when no coffee existed anywhere. Loot is
+   rolled at random, so before the fix coffee was absent from the whole floor on ~0.15% of days
+   (measured: 3 of 2000 whole-floor rolls) and snack on ~0.05%. Rare, which is exactly why it
+   survived — a handful of sample days will never show it. This asserts the CONTRACT rather than
+   the odds: after a day roll every fetchable item exists, and an ask is only ever made for
+   something that can actually be brought. */
+{
+  const w = world(), S = w.sandbox, G = w.g;
+  const NEEDS = ['coffee', 'snack', 'stapler', 'letterhead'];
+
+  // (a) the day roll leaves every fetchable item on the floor — enough rolls to catch a 0.15% hole
+  let absent = 0; const ROLLS = 600;
+  for (let i = 0; i < ROLLS; i++) {
+    S.rollContainers();
+    if (NEEDS.some(id => !S.itemOnFloor(id))) absent++;
+  }
+  ck('every fetchable item exists after all ' + ROLLS + ' day rolls', absent === 0, absent + ' rolls short');
+
+  // (b) with one item stripped from the floor AND your pockets, no ask ever asks for it
+  const stripCoffee = () => {
+    (G.layout.containers || []).forEach(c => { if (c.loot) c.loot = c.loot.filter(x => x !== 'coffee'); });
+    (G.desks || []).forEach(d => { if (d.loot) d.loot = d.loot.filter(x => x !== 'coffee'); });
+    G.player.inv.length = 0;
+  };
+  const n = worker(S, G);
+  let fetches = 0, impossible = 0;
+  for (let i = 0; i < 300; i++) {
+    stripCoffee();
+    S.offerMission(n);
+    const m = S.missionFor(n.name);
+    if (!m) continue;
+    if (m.kind === 'fetch') { fetches++; if (!S.itemObtainable(m.need)) impossible++; }
+    m.done = true;                       // free this worker up for the next ask
+  }
+  ck('no fetch ask is ever for something unobtainable', impossible === 0,
+     fetches + ' fetch asks, ' + impossible + ' impossible');
+}
+
 console.log(`\nFETCH MISSION DELIVERY: ${fail === 0 ? 'GREEN ✅' : 'RED ❌'} (${pass} pass, ${fail} fail)`);
 process.exit(fail === 0 ? 0 : 1);

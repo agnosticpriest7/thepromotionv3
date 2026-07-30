@@ -142,11 +142,16 @@
 
   #menu{position:absolute;display:none;background:var(--panel);border:1px solid var(--ink);min-width:250px;box-shadow:3px 3px 0 rgba(0,0,0,.3);z-index:8}
   #menu h4{margin:0;padding:10px 13px;font-size:13.5px;background:var(--ink);color:#fff;letter-spacing:.5px}
-  #menu button{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
+  #menu button{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;width:100%;text-align:left;border:0;background:none;padding:11px 13px;font-family:var(--mono);font-size:14px;cursor:pointer;border-top:1px solid var(--line);color:var(--ink)}
   #menu button:hover{background:#e9e5d8}
   #menu button:disabled{color:#9a9484;cursor:default;font-size:11px;letter-spacing:1.5px}
   #menu button .lab{flex:1 1 auto;min-width:0}
-  #menu button .r{flex:0 0 auto;white-space:nowrap;text-align:right;color:var(--muted);font-size:12px}
+  /* `.r` was flex:0 0 auto + nowrap, so a long risk string ("needs a free SALES chair + ally
+     (friendship 60+)") could neither shrink nor wrap and printed straight over the label — the
+     promote menu showed "Hank" and "needs..." on top of each other. Let it shrink and wrap, cap it
+     at just under half the row, and align rows to the top so a two-line risk pushes height instead
+     of colliding. */
+  #menu button .r{flex:0 1 auto;min-width:0;max-width:46%;white-space:normal;overflow-wrap:anywhere;text-align:right;color:var(--muted);font-size:12px}
   #menu button .r.hot{color:var(--bad)}
   #menu button.menuClose{justify-content:center;text-align:center;color:var(--muted);font-size:12px;letter-spacing:1px;background:#eceae2}
   #menu button.menuClose:hover{background:#ddd8c8;color:var(--ink)}
@@ -917,6 +922,17 @@ let SEAT_SIDE_DOWN  = 22;          // U1 units to slide a LEFT/RIGHT-desk sitter
 let SEAT_ABOVE_DOWN = 34;          // U1 units to slide down a sitter whose seat is ABOVE their desk (Ravinder). deskSeat sets the stand point 26u clear of the desk BOX for walking room; for the chair that reads as parked in open floor, 17u off the desk's drawn top edge
 let SEAT_OFFSET_RATIO = 0.33;      // cushion height as a fraction of chair height — the figure's seat rests here
 let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) sitter so ONLY the head clears the chair back
+/* The away-facing (UP) pose renders OVERSIZED without this. Every pose is scaled so the character's
+   DOWN pose stands SEAT_PERSON_H tall, but the up-pose art is drawn at a larger character scale in
+   the source: measured at 84-90% of the down pose's content height (Intern 84, Zora 90, Kyle 90)
+   where a head-and-torso back view should be nearer 60%. That is why the BOTTOM row of every table
+   — the row that faces up — read bigger than the top row and the end chairs. Per-character variance
+   means one multiplier cannot be perfect for all; this is a knob, like the rest of them. */
+let SEAT_UP_SCALE   = 0.80;        // shrink the away-facing pose to sit alongside the other three
+/* Crew-chair TOP row only: slide the sitter DOWN toward the table. Their seat point is set clear of
+   the tabletop so the chair reads right, which leaves the figure floating a touch high. Deliberately
+   NOT applied to desk sitters — drawSeated passes no crew flag, so their placement is untouched. */
+let SEAT_CREW_DOWN_DROP = 6;       // U1 units
 const SEAT_CHAIR_ASPECT = 884/461; // fallback h/w if the chair PNG has not loaded yet (source is 461x884)
 /* The person art faces RIGHT (back on the left), so a right-facing sitter needs the backrest on the
    LEFT (chair_side_left) and a left-facing sitter needs it on the RIGHT (chair_side). */
@@ -974,9 +990,10 @@ function drawSeated(npc,dir,cx,cyGround){
   else          { drawChairLayer(); drawPersonLayer(); }
   return true;
 }
-function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
+function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH,crew){
   let seatY=cyGround - chairH*SEAT_OFFSET_RATIO;           // the person's placement point, lifted onto the cushion
   if(dir==='up')seatY-=chairH*SEAT_UP_EXTRA;              // away-facing: lift more so the head clears the tall chair back
+  if(crew&&dir==='down')seatY+=U1(SEAT_CREW_DOWN_DROP);   // table TOP row sits a touch high — tuck it toward the table
   if(!isFinite(seatY))return;
   const sp=seatedPersonSpriteFor(npc,dir);
   if(!sp){ seatPlaceholderLog(npc); drawSeatPlaceholder(npc,dir,cx,seatY,chairW); return; }
@@ -988,6 +1005,7 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH){
   const refH=(refBB&&refBB.h)||bb.h||im.naturalHeight||1;
   let scale=U1(SEAT_PERSON_H)/refH;
   if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
+  else if(dir==='up')scale*=SEAT_UP_SCALE;                      // the back pose is drawn large in source — bring it back in line
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
   // side poses: nudge the sitter FORWARD (toward their facing) so they sit at the front of the seat,
@@ -1059,6 +1077,11 @@ function seatedBreakState(n){
   return {dir:s.dir, cx:s.x, cyGround:s.gy, cw:s.cw, ch:s.ch};
 }
 function seatDirForDesk(d){
+  /* `seatDir` pins which way the sitter FACES, independently of the desk art. Needed where the only
+     WALKABLE side of a desk is not the side its art implies: the art then cannot be trusted to say
+     which way someone at that desk is looking, and without this they sit with their back to their
+     own desk. `seatSide` says WHERE they sit; this says which way they look. */
+  if(d.seatDir)return d.seatDir;
   const a=deskArt(d);
   if(a==='cubicle_desk_up')return 'up';
   if(a==='cubicle_desk_left')return 'left';
@@ -1351,7 +1374,10 @@ const desks=[];
    Intern-2 and the Asst-Manager office are reserved:true — intentionally empty (co-op / future
    role tease); the hire+promotion code skips reserved desks so they stay empty. */
 [{x:660,y:600,w:40,h:60,owner:'you',tier:0,dept:'sales',intern:true,art:'cubicle_desk_left',seatSide:'right'},
- {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left',seatSide:'right'},
+ /* the INTERN nook. seatSide:'right' was unreachable — that side is blocked — so deskSeat fell
+    through to UP while the art still said 'left', seating whoever sat here with their back to the
+    desk. Pinned to the side that is actually walkable, facing into the desk. */
+ {x:660,y:700,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,intern:true,art:'cubicle_desk_left',seatSide:'up',seatDir:'down'},
  {x:970,y:570,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // 2-player pod (vacant) — tucked against east wall (x1015)
  /* 2x2 junior pod: Priya & Otis (bottom) + their duplicates directly above, gap closed.
     Marcus keeps his job by taking the top-left desk; top-right stays a vacant duplicate. */
@@ -1371,14 +1397,29 @@ const desks=[];
  {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing — SEATS[1]=5 is full, this chair can never be filled
  {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // set-dressing (SEATS[1] full)
  {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing (SEATS[1] full)
- {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales',art:'cubicle_desk_up'},
- {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales',art:'cubicle_desk_up'},
- {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales',art:'cubicle_desk_up'},
+ /* SENIOR SALES: the plain cubicle_desk sprite, not cubicle_desk_up — Kyle calls the latter the
+    discontinued desk and these three were its only users. The two sprites face OPPOSITE ways:
+    cubicle_desk_up puts the monitor low with its BACK to the camera and the keyboard above it, so it
+    expects a sitter ABOVE the desk, while cubicle_desk shows the screen facing us with the keyboard
+    below, so its sitter belongs BELOW. These sitters were already below, which is why they looked
+    wrong — right position, wrong desk. seatDir:'up' holds the facing they already had, because the
+    art->facing map sends the DEFAULT art to 'down'. */
+ {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
+ {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
+ {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
  {x:680,y:60,w:40,h:60,owner:'Hank',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
  {x:720,y:60,w:40,h:60,owner:'Zora',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Ravinder',tier:0,dept:'exec',seatSide:'up'},
- {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right'}]   // the ASSISTANT MANAGER office desk — claimed at rank 4
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
+ /* ASSISTANT MANAGER office desk — claimed at rank 4. Moved x1120 -> 1100 and pinned to seatSide
+    'left'. It used to sit ON the janitorial wall (box 1120..1160, art out to 1167.2, wall at
+    1155..1165) and deskSeat tries down, up, right, left in that order taking the first WALKABLE
+    side: down was blocked and up is outside, so it returned RIGHT — (1193,41), which is inside the
+    JANITORIAL room. Sitting at your own desk therefore teleported you through the wall into the
+    next room. seatSide makes the seat deterministic instead of a function of what happens to be
+    walkable, and it agrees with the art: cubicle_desk_right faces the sitter RIGHT, so they belong
+    on the desk's LEFT. */
+ {x:1100,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right',seatSide:'left'}]
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,seatDir:d.seatDir||null,rigged:null,planted:null}));   // seatDir was MISSING here, which silently dropped every per-desk facing override
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
@@ -1609,7 +1650,46 @@ function rollContainers(){
   CONTAINERS.forEach(c=>{c.loot=rollLoot(c.kind);});
   desks.forEach(d=>{if(d.owner&&d.owner!=='you')d.loot=rollLoot('desk');});
   plantKeycard();                     // at most ONE on the whole floor, and not every day
+  seedFetchNeeds();                   // ...and every fetchable item exists SOMEWHERE (see below)
 }
+
+/* ===== FETCH SUPPLY ==========================================================================
+   A fetch favour asks for one of FETCH_NEEDS, but loot is rolled at RANDOM — rollLoot() drops 2-3
+   arbitrary items per desk and container and guarantees nothing. So a coworker could ask for a
+   hidden coffee stash on a day when no coffee existed anywhere on the floor, and the favour was
+   simply impossible. `letterhead` was the worst of the four: it appears only in LOOT_PARTS, which
+   is reached on ~16% of item rolls and is then 1-in-6 within that, so it was absent on many days.
+
+   Two guards, because either alone leaves a hole:
+     - seedFetchNeeds() at the day roll makes sure every FETCH_NEEDS item EXISTS somewhere, so any
+       ask is satisfiable from the moment the day starts.
+     - offerMission() only asks for something obtainable RIGHT NOW (on the floor or already in your
+       pockets), and places one if it somehow has to.
+   Seeded items go somewhere plausible: KIND_BIAS already says which containers suit which item, so
+   a seeded coffee lands in the fridge rather than a filing cabinet. */
+function itemOnFloor(id){
+  return (typeof CONTAINERS!=='undefined'&&CONTAINERS.some(c=>c.loot&&c.loot.includes(id)))
+      || (typeof desks!=='undefined'&&desks.some(d=>d.loot&&d.loot.includes(id)));
+}
+/* obtainable = you could still deliver it: it is out there, or you are already carrying it */
+function itemObtainable(id){
+  return itemOnFloor(id) || ((player&&player.inv)||[]).includes(id);
+}
+function placeFetchItem(id){
+  const biased=CONTAINERS.filter(c=>KIND_BIAS[c.kind]&&KIND_BIAS[c.kind].includes(id));
+  const spots=biased.length?biased:CONTAINERS.slice();
+  if(!spots.length)return false;
+  const c=pick(spots);
+  c.loot=c.loot||[];
+  if(!c.loot.includes(id))c.loot.push(id);
+  return true;
+}
+function seedFetchNeeds(){
+  let placed=0;
+  FETCH_NEEDS.forEach(id=>{ if(!itemOnFloor(id)&&placeFetchItem(id))placed++; });
+  return placed;
+}
+
 const INV_CAP=8;
 function invFull(){return player.inv.length>=INV_CAP;}
 function invHas(id){return player.inv.includes(id);}
@@ -2108,7 +2188,11 @@ function shredDoc(){
 }
 
 /* Branch manager (resident, does his rounds) */
-const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true};
+/* seatSide/seatDir pinned: of the four sides only DOWN is walkable (up is blocked, left is in
+   ACCOUNTING), so a sitter must be below the desk — and they have to FACE UP into it. Left to the
+   art alone the facing came out 'down', i.e. the player sat at the manager's desk with their back
+   to it. Dale escaped this because drawDaleSeated uses its own anchor and never asks deskSeat. */
+const DALE_DESK={x:900,y:60,w:60,h:40,owner:'Dale Brackett',rigged:null,planted:null,mgrOffice:true,seatSide:'down',seatDir:'up'};
 desks.push(DALE_DESK);
 const mgr=NPC('Dale Brackett','exec',DALE_DESK); mgr.mgr=true; mgr.speed=0.89; mgr.chatCd=rand(6,14); mgr.lastLine=''; mgr.x=748; mgr.y=452;
 /* authored at 1240x760 — scaleWorld() scales it */
@@ -2118,6 +2202,16 @@ mgr.routeIdx=0; mgr.lap=0; mgr.maxLaps=Math.round(rand(2,3)); mgr.parked=false; 
 
 function activeNPCs(){return NPCS.filter(n=>n.alive);}
 function isWorker(n){return n.alive&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptionist;}
+/* DESKBOUND: staff whose whole job is being AT their desk, so they must not be pulled off it by the
+   ordinary worker routines. Ravinder gatekeeps the CEO's office — ravinderGuarding() only returns
+   him while he is parked within 40u of his seat, so every errand and every break he took opened the
+   door to Sterling's office. Measured before this: he was at his desk 23% of samples, and the
+   biggest slice of the absence was REGULAR WORK (errands), not breaks.
+   He is still a worker in every other respect — delegation, health, feuds, being fired — because
+   isWorker gates all of that and changing it would ripple everywhere. This only stops the wandering.
+   Meetings are deliberately NOT excluded: everyone attends, it is time-boxed, and a predictable
+   window when the gate is down is a fair thing for the player to learn. */
+function deskbound(n){return !!n&&n.name==='Ravinder';}
 function deptName(d){return {sales:'Sales',acct:'Accounting',hr:'HR',exec:'Executive',intern:'Intern'}[d];}
 function deptColor(n){return n.mgr?COL.mgr:{sales:COL.sales,acct:COL.acct,hr:COL.hr,exec:COL.exec,intern:COL.intern}[n.dept];}
 
@@ -2432,6 +2526,14 @@ function hrMorning(n,dt){
 function npcTarget(n){
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
+  /* DESKBOUND staff skip breaks and stay at their post. Removing them from assignBreakSeats was not
+     enough on its own: the break branch below falls back to a fixed point INSIDE the break room for
+     anyone without a seat, so taking Ravinder's chair away just sent him there seatless. Meetings
+     still pull him, on purpose — see deskbound(). */
+  if(deskbound(n)&&/Break/.test(ph)){
+    const hd=n.homeDesk||desks.find(x=>x.owner===n.name);
+    if(hd)return deskSeat(hd);
+  }
   if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(490*S),y:Math.round(455*S)};   // meeting room (380,280,260,220)
   if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
   if(ph==='Clock-Out')return MUSTER;
@@ -2540,7 +2642,7 @@ function updateNPC(n,dt){
   }
 
   const ph=currentPhase().name, workPhase=isWorkPhase(ph);
-  if(n.dept!=='hr'&&workPhase&&!n.errand){n.errandCd-=dt;if(n.errandCd<=0){startErrand(n);n.errandCd=rand(16,36);}}
+  if(n.dept!=='hr'&&!deskbound(n)&&workPhase&&!n.errand){n.errandCd-=dt;if(n.errandCd<=0){startErrand(n);n.errandCd=rand(16,36);}}
 
   let tgt;
   if(n.errand){
@@ -2736,7 +2838,7 @@ function assignBreakSeats(){
   breakChairs.forEach(freeUp);
   breakChairs2.forEach(freeUp);
   kitchenChairs.forEach(freeUp);
-  const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome);
+  const att=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome&&!deskbound(n));
   /* Break seating is RANDOM, re-rolled every break. It used to be positional — attendee order
      decided both which room you went to and which chair you got, so the same people sat in the same
      seats all game. Shuffling the attendees randomises the room split; shuffling each room's chair
@@ -3343,6 +3445,18 @@ function processHires(){
         // but UNPROFILED (a new hire is intel you don't have — not delegation-ready until you profile
         // them). A vouch settles them in fast; unvetted "bad blood" can flare into a feud on day one.
         const c=h.cand;
+        /* THE GUEST SWAP. Rolled HERE, on the day they start, not when the slate was built — so you
+           hire Gary B. and Rod Kimble walks in. The vetting you did was real, it just was not about
+           this person; the surprise is the point. A guest brings their own personality, which is why
+           the ptype below comes off the guest and not off the candidate you vetted. */
+        const gst=rollGuest();
+        if(gst){
+          desk.owner=gst.name;
+          const gn=spawnScaled(gst.name,h.dept,desk,{ptype:gst.ptype}); gn.profiled=false;
+          today.hired.push(gst.name.split(' ')[0]);
+          logLine(`You hired ${c.name}. ${gst.name} is who turned up. HR is not taking questions.`,'g');
+          return false;
+        }
         desk.owner=c.name;
         const n=spawnScaled(c.name,h.dept,desk,{ptype:c.ptype}); n.profiled=false; today.hired.push(c.name.split(' ')[0]);
         if(c.vouched){n.mood=clamp(n.mood+18,-100,100);n.stress=clamp(n.stress-12,0,100);}
@@ -3351,10 +3465,12 @@ function processHires(){
         logLine(`${c.name} started today${c.vouched?' — vouched for, and settled right in':''}.`,'g');
         return false;
       }
-      const name=freshName();
+      const gst2=rollGuest();                 // HR is just as capable of sending someone unexpected
+      const name=gst2?gst2.name:freshName();
       desk.owner=name;
-      spawnScaled(name,h.dept,desk);today.hired.push(name.split(' ')[0]);
-      logLine(`HR hired ${name} to fill the vacancy. Fresh meat.`,'t');
+      spawnScaled(name,h.dept,desk,gst2?{ptype:gst2.ptype}:undefined);today.hired.push(name.split(' ')[0]);
+      logLine(gst2?`HR hired ${name} to fill the vacancy. Nobody can find the paperwork.`
+                  :`HR hired ${name} to fill the vacancy. Fresh meat.`,'t');
       return false;
     }
     return true;
@@ -6036,15 +6152,10 @@ const RESUME={
 };
 function affinityKind(ptype){for(const k in DELEG_MATCH)if(DELEG_MATCH[k]===ptype)return k;return null;}
 function makeCandidate(){
-  /* A guest displaces the generated identity entirely — fixed name, fixed face, fixed personality
-     — but still takes the ordinary feud/vouch rolls below, so meeting one still plays like hiring
-     anyone else. Falls through to a normal candidate when the roll misses or all guests are used. */
-  const g=rollGuest();
-  const ptype=g?g.ptype:pick(PTYPES);
-  const c=g
-    ? {name:g.name,ptype,resume:g.resume||pick(RESUME[ptype]||['Seems fine.']),guest:g.key,
-       feudTarget:null,knownBy:null,vouched:false,known:false}
-    : {name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
+  /* Deliberately NO guest roll here. Kyle's rule: a guest turns up IN PLACE OF whoever you hired,
+     so nothing on the slate can give it away — see the roll in the pendingHires arrival below. */
+  const ptype=pick(PTYPES);
+  const c={name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
   if(ws.length&&Math.random()<0.35)c.feudTarget=pick(ws).name;      // ~1/3 carry history with someone here — the teeth
   if(ws.length&&Math.random()<0.55)c.knownBy=pick(ws).name;         // someone here who can vouch or warn
@@ -6070,7 +6181,7 @@ function hireCandidate(c){
   const desk=hireSlate?desks[hireSlate.deskIdx]:null;
   if(!desk||desk.owner){toast('That desk is no longer open.');hireSlate=null;return;}
   career.hireReqs--;
-  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched,guest:c.guest||null}});   // `guest` is additive — an old save simply has none
+  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched}});
   logLine(`You hired ${c.name}. They start tomorrow.${c.vouched?' Comes vouched — they will settle fast.':(c.known?'':' You did not vet them — could go either way.')} ${career.hireReqs} requisition(s) left.`,'g');
   toast(`Hired ${c.name.split(' ')[0]} — starts tomorrow`);
   hireSlate=null;renderTasks();
@@ -7266,7 +7377,7 @@ function drawNPC(n){
        const seat=seatedDeskState(n); // a worker/you at their desk during work? draw the seated composite
        const brk=seat?null:seatedBreakState(n);   // on a break chair? person layer only — the chair is already drawn
        if(seat){ drawSeated(n,seat.dir,seat.cx,seat.cyGround); }
-       else if(brk){ drawSeatedPerson(n,brk.dir,brk.cx,brk.cyGround,brk.cw,brk.ch); }
+       else if(brk){ drawSeatedPerson(n,brk.dir,brk.cx,brk.cyGround,brk.cw,brk.ch,true); }
        else if(!drawChar(n,charIndexFor(n)))ctx.drawImage(spriteFor(n.dept,n),Math.round(n.x),Math.round(n.y),n.w,n.h);
      }
    }
@@ -7339,7 +7450,7 @@ function drawPlayer(){
   const seat=playerSeatState();   // the intern face is the player's — sit them down in the real seated art
   {/* A table chair is ALREADY drawn by drawCrewSet, so only the person layer goes on top of it —
       drawSeated would stamp a second, desk-style chair over Kyle's art. Same split drawNPC uses. */
-   if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch);
+   if(seat&&seat.kind==='chair')drawSeatedPerson(player,seat.dir,seat.cx,seat.cyGround,seat.cw,seat.ch,true);
    else if(seat)drawSeated(player,seat.dir,seat.cx,seat.cyGround);
    else if(!drawChar(player,playerChar))ctx.drawImage(spriteFor('intern',player),Math.round(player.x),Math.round(player.y),player.w,player.h);}
   /* The "that's you" box follows the DRAWN figure, not the collision box. Seated, the two are not
@@ -7604,7 +7715,9 @@ function drawContainers(){
   sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
   sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
   /* manager's office furnishings (Dale's office, top-centre) */
-  sprAt('office_chair',Math.round(930*S),Math.round(120*S),'office_chair');
+  /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
+     is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
+     Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
   sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
   /* potted plants — CEO office, reception, meeting room, break room, sales corner */
   /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
@@ -8668,7 +8781,15 @@ function offerMission(n){
   const others=activeNPCs().filter(o=>isWorker(o)&&o!==n);
   const targ=(kind.id!=='fetch')?pick(others):null;
   if(kind.id!=='fetch'&&!targ)return;
-  const m={who:n.name,kind:kind.id,dirty:kind.dirty,target:targ?targ.name:null,need:kind.id==='fetch'?pick(FETCH_NEEDS):null,done:false,accepted:false};
+  /* only ask for something they could actually be brought — and if the last one just got drunk,
+     put another out there rather than handing the player an impossible job */
+  let need=null;
+  if(kind.id==='fetch'){
+    const gettable=FETCH_NEEDS.filter(itemObtainable);
+    need=gettable.length?pick(gettable):pick(FETCH_NEEDS);
+    if(!itemObtainable(need))placeFetchItem(need);
+  }
+  const m={who:n.name,kind:kind.id,dirty:kind.dirty,target:targ?targ.name:null,need,done:false,accepted:false};
   m.label=missionLabel(m);
   missions.push(m);
   n.bubble={t:4,text:missionAsk(m)};
