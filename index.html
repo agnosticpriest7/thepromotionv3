@@ -1390,7 +1390,15 @@ const desks=[];
  {x:680,y:60,w:40,h:60,owner:'Hank',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
  {x:720,y:60,w:40,h:60,owner:'Zora',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Ravinder',tier:0,dept:'exec',seatSide:'up'},
- {x:1120,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right'}]   // the ASSISTANT MANAGER office desk — claimed at rank 4
+ /* ASSISTANT MANAGER office desk — claimed at rank 4. Moved x1120 -> 1100 and pinned to seatSide
+    'left'. It used to sit ON the janitorial wall (box 1120..1160, art out to 1167.2, wall at
+    1155..1165) and deskSeat tries down, up, right, left in that order taking the first WALKABLE
+    side: down was blocked and up is outside, so it returned RIGHT — (1193,41), which is inside the
+    JANITORIAL room. Sitting at your own desk therefore teleported you through the wall into the
+    next room. seatSide makes the seat deterministic instead of a function of what happens to be
+    walkable, and it agrees with the art: cubicle_desk_right faces the sitter RIGHT, so they belong
+    on the desk's LEFT. */
+ {x:1100,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right',seatSide:'left'}]
  .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
@@ -3395,6 +3403,18 @@ function processHires(){
         // but UNPROFILED (a new hire is intel you don't have — not delegation-ready until you profile
         // them). A vouch settles them in fast; unvetted "bad blood" can flare into a feud on day one.
         const c=h.cand;
+        /* THE GUEST SWAP. Rolled HERE, on the day they start, not when the slate was built — so you
+           hire Gary B. and Rod Kimble walks in. The vetting you did was real, it just was not about
+           this person; the surprise is the point. A guest brings their own personality, which is why
+           the ptype below comes off the guest and not off the candidate you vetted. */
+        const gst=rollGuest();
+        if(gst){
+          desk.owner=gst.name;
+          const gn=spawnScaled(gst.name,h.dept,desk,{ptype:gst.ptype}); gn.profiled=false;
+          today.hired.push(gst.name.split(' ')[0]);
+          logLine(`You hired ${c.name}. ${gst.name} is who turned up. HR is not taking questions.`,'g');
+          return false;
+        }
         desk.owner=c.name;
         const n=spawnScaled(c.name,h.dept,desk,{ptype:c.ptype}); n.profiled=false; today.hired.push(c.name.split(' ')[0]);
         if(c.vouched){n.mood=clamp(n.mood+18,-100,100);n.stress=clamp(n.stress-12,0,100);}
@@ -3403,10 +3423,12 @@ function processHires(){
         logLine(`${c.name} started today${c.vouched?' — vouched for, and settled right in':''}.`,'g');
         return false;
       }
-      const name=freshName();
+      const gst2=rollGuest();                 // HR is just as capable of sending someone unexpected
+      const name=gst2?gst2.name:freshName();
       desk.owner=name;
-      spawnScaled(name,h.dept,desk);today.hired.push(name.split(' ')[0]);
-      logLine(`HR hired ${name} to fill the vacancy. Fresh meat.`,'t');
+      spawnScaled(name,h.dept,desk,gst2?{ptype:gst2.ptype}:undefined);today.hired.push(name.split(' ')[0]);
+      logLine(gst2?`HR hired ${name} to fill the vacancy. Nobody can find the paperwork.`
+                  :`HR hired ${name} to fill the vacancy. Fresh meat.`,'t');
       return false;
     }
     return true;
@@ -6088,15 +6110,10 @@ const RESUME={
 };
 function affinityKind(ptype){for(const k in DELEG_MATCH)if(DELEG_MATCH[k]===ptype)return k;return null;}
 function makeCandidate(){
-  /* A guest displaces the generated identity entirely — fixed name, fixed face, fixed personality
-     — but still takes the ordinary feud/vouch rolls below, so meeting one still plays like hiring
-     anyone else. Falls through to a normal candidate when the roll misses or all guests are used. */
-  const g=rollGuest();
-  const ptype=g?g.ptype:pick(PTYPES);
-  const c=g
-    ? {name:g.name,ptype,resume:g.resume||pick(RESUME[ptype]||['Seems fine.']),guest:g.key,
-       feudTarget:null,knownBy:null,vouched:false,known:false}
-    : {name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
+  /* Deliberately NO guest roll here. Kyle's rule: a guest turns up IN PLACE OF whoever you hired,
+     so nothing on the slate can give it away — see the roll in the pendingHires arrival below. */
+  const ptype=pick(PTYPES);
+  const c={name:freshName(),ptype,resume:pick(RESUME[ptype]||['Seems fine.']),feudTarget:null,knownBy:null,vouched:false,known:false};
   const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
   if(ws.length&&Math.random()<0.35)c.feudTarget=pick(ws).name;      // ~1/3 carry history with someone here — the teeth
   if(ws.length&&Math.random()<0.55)c.knownBy=pick(ws).name;         // someone here who can vouch or warn
@@ -6122,7 +6139,7 @@ function hireCandidate(c){
   const desk=hireSlate?desks[hireSlate.deskIdx]:null;
   if(!desk||desk.owner){toast('That desk is no longer open.');hireSlate=null;return;}
   career.hireReqs--;
-  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched,guest:c.guest||null}});   // `guest` is additive — an old save simply has none
+  pendingHires.push({desk,deskIdx:hireSlate.deskIdx,dept:desk.dept||'sales',onDay:day+1,cand:{name:c.name,ptype:c.ptype,feudTarget:c.feudTarget,vouched:c.vouched}});
   logLine(`You hired ${c.name}. They start tomorrow.${c.vouched?' Comes vouched — they will settle fast.':(c.known?'':' You did not vet them — could go either way.')} ${career.hireReqs} requisition(s) left.`,'g');
   toast(`Hired ${c.name.split(' ')[0]} — starts tomorrow`);
   hireSlate=null;renderTasks();
