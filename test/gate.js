@@ -54,6 +54,7 @@ const TESTS = [
   't_intro_face.js',      // player always faces the way it walks
 
   't_menu_load.js',
+  't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square
   't_regress.js',         // slow soak — last
 ];
 

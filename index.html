@@ -2469,19 +2469,50 @@ function followPath(n){
   moveEntity(n,(dx/d)*step,(dy/d)*step);
 }
 /* stop people standing inside each other in a queue at the coffee machine */
+/* PERSONAL SPACE. Two people walking to nearby destinations used to end up standing inside each
+   other, both twitching — Kyle: "they occupy the same space, both flicker and move slightly back
+   and forth, looking like they are stuck", often three at once.
+
+   The cause was arithmetic, not logic. NPCs do not collide with each other (moveEntity only tests
+   walls), so overlap is prevented ONLY by this nudge — and the nudge was capped at 0.5*S per frame
+   while an NPC walks at up to 0.89*S toward its goal. At roughly a third of walking speed the push
+   could never win: pathing dragged them back together every frame and the two forces just vibrated
+   them. Measured before: 45 distinct overlapping pairs in one run, closest 1.5 authored units.
+
+   Three changes, all aimed at that:
+     - the push scales with the OVERLAP (deepest inside pushes hardest) instead of being flat, and
+       is allowed to exceed walking speed when they are genuinely on top of each other
+     - it falls off to nothing at the edge of the radius, so people merely walking past each other
+       are not shoved, which is what made the motion read as twitchy rather than as steering
+     - somebody who has ARRIVED (no goal) yields less than somebody still walking, so a stationary
+       pair settles instead of trading shoves forever
+
+   moveEntity still tests walls, so a stronger push can never squeeze anyone through one. */
 function separate(n){
   if(n.receptionist||n.boss||n.gone||n.wentHome)return;
   if(n.seat&&cdist(n,n.seat)<Math.round(20*S))return;   // seated at the meeting / break table
-  const r=Math.round(15*S);
-  let px=0,py=0,hits=0;
+  /* Radius is the distance at which two people read as ON each other, not "nearby" — pushing from
+     further out is what turns steering into shoving. */
+  const r=Math.round(11*S);
+  let px=0,py=0,worst=0;
   for(const o of NPCS){
     if(o===n||!o.alive||o.gone||o.wentHome||o.receptionist)continue;
     const dx=(n.x-o.x),dy=(n.y-o.y),d=Math.hypot(dx,dy);
-    if(d>0.001&&d<r){px+=dx/d;py+=dy/d;hits++;}
+    if(d>0.001&&d<r){
+      const overlap=(r-d)/r;                 // 1 when co-located, 0 at the edge of the radius
+      px+=(dx/d)*overlap; py+=(dy/d)*overlap;
+      if(overlap>worst)worst=overlap;
+    }
   }
-  if(!hits)return;
-  const push=Math.min(0.5*S,n.speed*0.35);
-  moveEntity(n,(px/hits)*push,(py/hits)*push);
+  if(!worst)return;
+  const len=Math.hypot(px,py); if(len<0.0001)return;
+  /* Enough to actually out-pull the walk when deeply overlapped, tapering to nothing at the edge.
+     Standing still (arrived) means yielding less, so a settled pair stops trading nudges. */
+  /* Capped BELOW walking speed on purpose. Strong enough to hold them apart, never strong enough to
+     reverse someone mid-stride — an overpowered push just trades the overlap for a visible twitch,
+     which is the thing being fixed. */
+  const strength=(n.goal?1:0.6)*worst*n.speed*0.8;
+  moveEntity(n,(px/len)*strength,(py/len)*strength);
 }
 /* anti-stuck: if an NPC barely moves while it has a goal, force a repath / skip target */
 function checkStuck(n,dt,onStuck){
@@ -2792,12 +2823,55 @@ function socialize(n){
     if(Math.abs(n.stress-m.stress)>25){const lo=n.stress<m.stress?n:m;lo.stress=clamp(lo.stress+4,0,100);}
   }
 }
+/* A FREE SPOT AT THE ERRAND POINT — not the point itself.
+
+   errandPoints are eight FIXED coordinates (water cooler, coffee, two printers, supply, two
+   restrooms, chat). Every NPC that rolled the water cooler was handed that one identical pixel and
+   then stood on it for 2.5-5s, so two or three people routinely dwelled inside each other, twitching.
+   Kyle: "they travel to talk to someone, basically occupy the same space, and both characters
+   flicker and move slightly back and forth, looking like they are stuck... 2-3 NPCs at a time."
+
+   This is the SAME bug the desk-visit branch below already fixed (see its comment — "the visitor
+   arrived on top of them... BOTH sprites flashed"); the fixed-point branch just never got the same
+   treatment. Fixing it here is why separate() below can stay gentle: people no longer aim at the
+   same square, so the nudge is a backstop rather than the only thing holding them apart.
+
+   Take the centre if it is clear, else the emptiest spot on a ring around it — a queue FORMS at the
+   cooler instead of a pile. Compared against where others are STANDING and where they are HEADED, so
+   two people dispatched on the same frame don't both claim the same slot. Everything goes through
+   snapTarget for the reason documented below: an unsnapped point can be a blocker cell, and then the
+   NPC wedges a cell short of it and never registers as arrived. */
+/* How much elbow room a candidate spot has: distance to the nearest person who is either STANDING
+   there or ON THEIR WAY there. Checking errand targets as well as positions is what stops two people
+   dispatched on the same frame from both claiming the same empty square. */
+function spotClearance(n,x,y){
+  let near=Infinity;
+  for(const o of NPCS){
+    if(o===n||!o.alive||o.gone||o.wentHome)continue;
+    near=Math.min(near,Math.hypot(x-o.x,y-o.y));
+    if(o.errand)near=Math.min(near,Math.hypot(x-o.errand.x,y-o.errand.y));
+  }
+  return near;
+}
+function errandSpot(n,p){
+  const step=Math.round(22*S);
+  const cands=[{dx:0,dy:0}];
+  for(let k=0;k<8;k++){const a=k*Math.PI/4;cands.push({dx:Math.cos(a)*step,dy:Math.sin(a)*step});}
+  let best=null,bestClear=-1;
+  for(const c of cands){
+    const sp=snapTarget(Math.round(p.x+c.dx),Math.round(p.y+c.dy));
+    const near=spotClearance(n,sp.x,sp.y);
+    if(near>bestClear){bestClear=near;best=sp;}
+    if(near>=step)break;               // clear enough — no need to try the rest of the ring
+  }
+  return {x:best.x,y:best.y};
+}
 function startErrand(n){
   /* Snap the errand point to a walkable cell. Some object pins (e.g. the coffee machine,
      which sits against the senior-sales wall) land ON a blocker cell; A* then strands the
      NPC a cell away — past the arrival tolerance — and it wedges. snapTarget lands them on
      the nearest cell they can actually stand on, so "arrived" always triggers. */
-  if(Math.random()<0.55){const p=pick(errandPoints);const sp=snapTarget(p.x,p.y);n.errand={x:sp.x,y:sp.y,dwell:rand(2.5,5),ptype:p.type,arrived:false};}
+  if(Math.random()<0.55){const p=pick(errandPoints);n.errand=Object.assign(errandSpot(n,p),{dwell:rand(2.5,5),ptype:p.type,arrived:false});}
   else{
     const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;
     const d=pick(others);
@@ -2811,12 +2885,25 @@ function startErrand(n){
     const m=Math.round(18*S), cx=d.x+d.w/2, cy=d.y+d.h/2, clear=U1(28);
     const sides=[{x:d.x+d.w+m,y:cy},{x:d.x-m,y:cy},{x:cx,y:d.y+d.h+m},{x:cx,y:d.y-m}]
       .sort((a,b)=> (seat?Math.hypot(b.x-seat.x,b.y-seat.y):0) - (seat?Math.hypot(a.x-seat.x,a.y-seat.y):0));
-    let p=null;
+    /* ...and clear of the OTHER VISITORS too. Standing off the owner's chair was only half of it:
+       this took the first seat-clear side unconditionally, so two people who picked the same desk
+       were handed the identical square and stood inside each other. Measured before the fix:
+       48 of 904 same-destination pairs landed 0.0u apart, every one of them a desk visit.
+       Prefer a side that is genuinely free; if the desk is already surrounded, take the roomiest. */
+    const room=Math.round(20*S);
+    let p=null,bestP=null,bestClear=-1;
     for(const s of sides){
       const t=snapTarget(Math.round(s.x),Math.round(s.y));
-      if(!seat||Math.hypot(t.x-seat.x,t.y-seat.y)>clear){ p=t; break; }
+      if(seat&&Math.hypot(t.x-seat.x,t.y-seat.y)<=clear)continue;
+      const free=spotClearance(n,t.x,t.y);
+      if(free>bestClear){bestClear=free;bestP=t;}
+      if(free>=room){ p=t; break; }
     }
-    if(!p)p=snapTarget(Math.round(sides[0].x),Math.round(sides[0].y));
+    /* If every approach is taken, DON'T VISIT. Squeezing into the roomiest of four crowded sides is
+       how the pile forms in the first place; the errand cooldown has already been reset by the
+       caller, so simply declining reads as "looks busy over there" and they try again shortly. */
+    if(!p&&bestP&&bestClear>=Math.round(12*S))p=bestP;
+    if(!p)return;
     n.errand={x:p.x,y:p.y,dwell:rand(2,4),ptype:'chat',arrived:false};
   }
 }

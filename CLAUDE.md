@@ -154,3 +154,20 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
 - **`W`/`H` are already scaled** — divide `S` back out for authored bounds (see `promotion-world-width`). `placement.js` used to hardcode `1500/760` and needed a hand-edit at every resize; it derives now.
 
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
+
+### 15. A harness world is NOT a populated floor — parked NPCs will fake your data
+A default `createWorld()` sits in the **day-1 intro with the clock frozen**: run it 35,000 frames and
+it is still day 1 "Clock-In". **17 of 19 workers are `gone:true`, parked at exactly `(-400,-400)` —
+mutual distance 0.** Any probe that walks `NPCS` measuring proximity will report those as overlapping
+pairs and hand you a confident, entirely fictional number. This burned most of a session: "45
+overlapping pairs, closest 0.78 authored" was seventeen people standing off-screen on the same pixel,
+and the "fix" that improved it was shoving *those* apart.
+
+- **Filter `gone`/`wentHome` before measuring anything positional**, and sanity-check the count
+  (`onFloor >= 8`) before believing a statistic.
+- **Pose the floor rather than playing into it** — clear `gone` and deal people onto real coordinates
+  (`test/t_errandspace.js` does this). Waiting for workers to arrive does not work; they never do.
+- **A bespoke probe that disagrees with itself three times is broken, not subtle.** Stop tuning
+  against it and go verify the world it is measuring. Prefer a contract assertion (§14) that fails
+  loudly on a posed setup over a whole-sim statistic nobody can check.
+

@@ -281,6 +281,42 @@ override. `cubicle_desk_up` is the discontinued sprite and is no longer referenc
   just sent him there without a chair. Meetings still pull him, on purpose — everyone attends, it is
   time-boxed, and a predictable window is fair for the player to learn.
 
+## NPC collisions when they talk to each other (this session's last fix)
+
+Kyle: *"they travel to talk to someone, basically occupy the same space, and both characters flicker
+and move slightly back and forth, looking like they are stuck. it happens often and with 2-3 NPCs."*
+
+**Root cause: two people were literally handed the same square.** `startErrand`'s desk-visit branch
+picks an approach point around a coworker's desk. It already stood clear of the *owner's chair* (a
+previous fix, with a comment describing this same flicker) — but it took the first seat-clear side
+**unconditionally**, so two visitors who chose the same desk got identical coordinates and stood
+inside each other for the whole dwell. Measured on a posed floor: **48 of 904 same-destination pairs
+landed 0.0u apart**, every one a desk visit.
+
+Three changes, all in `startErrand`:
+- **`spotClearance(n,x,y)`** — room at a candidate spot, counting both where people are standing and
+  where they are *headed* (`o.errand`). Checking targets is what stops two people dispatched on the
+  same frame from claiming one square.
+- **Desk visits prefer a genuinely free side**, and **decline the visit entirely** if all four are
+  taken (~9 in 600 dispatches) rather than squeezing in. The cooldown has already reset, so it just
+  reads as "looks busy over there."
+- **`errandSpot()`** — the eight *fixed* errand pins (cooler, coffee, printers, supply, restrooms)
+  were one shared pixel each; people now take a free slot on a ring around the pin, so a queue forms
+  at the cooler instead of a pile.
+
+`separate()` was also reshaped — the push now scales with overlap depth and tapers to nothing at the
+edge, instead of a flat cap of about a third of walking speed. **Be careful with this one: the
+evidence I originally used to justify it was invalid** (see `CLAUDE.md` §15), so it is a reasoned
+backstop, not a measured result. It is deliberately capped *below* walking speed so it can never
+reverse someone mid-stride, which would trade the overlap for a visible twitch.
+
+Guarded by **`test/t_errandspace.js`** (in `gate.js`): dispatches a posed crowd 60 times and fails if
+any two people with the same destination are handed spots under 10u apart. Verified to bite — it was
+RED at 48 collisions, then 1, then 0.
+
+**Still Kyle's call on the TV.** No valid before/after *simulation* measurement of on-screen crowding
+exists; what is proven is that the dispatcher no longer issues duplicate destinations.
+
 ## Standing TV items (Kyle's verdict, gamepad in hand)
 
 - **The five playable characters and the three guests** — do they read at TV distance, and do the
