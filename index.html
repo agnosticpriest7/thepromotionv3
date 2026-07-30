@@ -913,7 +913,13 @@ function drawChar(ent,idx,scaleTo){
    (the PNGs are square with padding, so we place the figure, not the canvas).
    All three knobs are RATIOS (they transfer across scale); nudge on the TV. ===== */
 // ---- tunables — eyeball on the TV, then fine-tune ----
-let SEAT_CHAIR_W    = 38;          // chair drawn width in U1 world units (independent of the person now)
+/* Chair size. It was 38, which drew the chair 21.1 x 40.5 authored against a STANDING character of
+   21.1 x 33.9 — the chair stood 1.19x taller than a person, which is what Kyle saw when he stood
+   next to it. An office chair has to read SMALLER than the person using it. 33 brings it to
+   18.3 x 35.2, a hair over standing height rather than a fifth taller. The seated figure is
+   anchored by SEAT_OFFSET_RATIO, a fraction of chair height, so it follows the chair down and stays
+   on the cushion. Purely a look knob — nudge it on the TV. */
+let SEAT_CHAIR_W    = 33;          // chair drawn width in U1 world units (independent of the person now)
 let SEAT_PERSON_H   = 59;          // seated figure size: the DOWN-pose content height in U1 units (all poses/characters scale off their own down pose to match)
 let SEAT_SIDE_SCALE = 1.15;        // extra size for the side (left/right) pose — the profile art is narrower, so it reads small without a bump
 let SEAT_SIDE_SHIFT = 8;           // U1 units to nudge the side sitter FORWARD (toward their facing) so legs hang off the seat edge
