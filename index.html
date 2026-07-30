@@ -1622,7 +1622,46 @@ function rollContainers(){
   CONTAINERS.forEach(c=>{c.loot=rollLoot(c.kind);});
   desks.forEach(d=>{if(d.owner&&d.owner!=='you')d.loot=rollLoot('desk');});
   plantKeycard();                     // at most ONE on the whole floor, and not every day
+  seedFetchNeeds();                   // ...and every fetchable item exists SOMEWHERE (see below)
 }
+
+/* ===== FETCH SUPPLY ==========================================================================
+   A fetch favour asks for one of FETCH_NEEDS, but loot is rolled at RANDOM — rollLoot() drops 2-3
+   arbitrary items per desk and container and guarantees nothing. So a coworker could ask for a
+   hidden coffee stash on a day when no coffee existed anywhere on the floor, and the favour was
+   simply impossible. `letterhead` was the worst of the four: it appears only in LOOT_PARTS, which
+   is reached on ~16% of item rolls and is then 1-in-6 within that, so it was absent on many days.
+
+   Two guards, because either alone leaves a hole:
+     - seedFetchNeeds() at the day roll makes sure every FETCH_NEEDS item EXISTS somewhere, so any
+       ask is satisfiable from the moment the day starts.
+     - offerMission() only asks for something obtainable RIGHT NOW (on the floor or already in your
+       pockets), and places one if it somehow has to.
+   Seeded items go somewhere plausible: KIND_BIAS already says which containers suit which item, so
+   a seeded coffee lands in the fridge rather than a filing cabinet. */
+function itemOnFloor(id){
+  return (typeof CONTAINERS!=='undefined'&&CONTAINERS.some(c=>c.loot&&c.loot.includes(id)))
+      || (typeof desks!=='undefined'&&desks.some(d=>d.loot&&d.loot.includes(id)));
+}
+/* obtainable = you could still deliver it: it is out there, or you are already carrying it */
+function itemObtainable(id){
+  return itemOnFloor(id) || ((player&&player.inv)||[]).includes(id);
+}
+function placeFetchItem(id){
+  const biased=CONTAINERS.filter(c=>KIND_BIAS[c.kind]&&KIND_BIAS[c.kind].includes(id));
+  const spots=biased.length?biased:CONTAINERS.slice();
+  if(!spots.length)return false;
+  const c=pick(spots);
+  c.loot=c.loot||[];
+  if(!c.loot.includes(id))c.loot.push(id);
+  return true;
+}
+function seedFetchNeeds(){
+  let placed=0;
+  FETCH_NEEDS.forEach(id=>{ if(!itemOnFloor(id)&&placeFetchItem(id))placed++; });
+  return placed;
+}
+
 const INV_CAP=8;
 function invFull(){return player.inv.length>=INV_CAP;}
 function invHas(id){return player.inv.includes(id);}
@@ -8681,7 +8720,15 @@ function offerMission(n){
   const others=activeNPCs().filter(o=>isWorker(o)&&o!==n);
   const targ=(kind.id!=='fetch')?pick(others):null;
   if(kind.id!=='fetch'&&!targ)return;
-  const m={who:n.name,kind:kind.id,dirty:kind.dirty,target:targ?targ.name:null,need:kind.id==='fetch'?pick(FETCH_NEEDS):null,done:false,accepted:false};
+  /* only ask for something they could actually be brought — and if the last one just got drunk,
+     put another out there rather than handing the player an impossible job */
+  let need=null;
+  if(kind.id==='fetch'){
+    const gettable=FETCH_NEEDS.filter(itemObtainable);
+    need=gettable.length?pick(gettable):pick(FETCH_NEEDS);
+    if(!itemObtainable(need))placeFetchItem(need);
+  }
+  const m={who:n.name,kind:kind.id,dirty:kind.dirty,target:targ?targ.name:null,need,done:false,accepted:false};
   m.label=missionLabel(m);
   missions.push(m);
   n.bubble={t:4,text:missionAsk(m)};
