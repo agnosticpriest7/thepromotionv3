@@ -712,7 +712,7 @@ const ART_W={
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
-  mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:26,
+  mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
      these get compared against box*S. The art is a 1254² square whose opaque content is only 74.88%
@@ -3849,7 +3849,7 @@ function tickCones(dt){
   if(mgrN&&working&&!atDesk&&!alarmActive&&alarmGrace<=0&&!covered&&!meltEvent&&inCone(mgrN,pc)){
     if(player.slack<1)startle(mgrN);
     player.slack=clamp(player.slack+15*dt,0,100);   // ~6.5s to trigger — time to notice and move
-    if(player.slack>=100){player.slack=0;addSuspicion(8,'Dale clocked you away from your desk');mgrN.bubble={t:2.2,text:'Working hard?'};toast('Dale noticed you slacking. Get to your desk!');}
+    if(player.slack>=100){player.slack=0;const mn=mgrN.name.split(' ')[0];addSuspicion(8,mn+' clocked you away from your desk');mgrN.bubble={t:2.2,text:'Working hard?'};toast(mn+' noticed you slacking. Get to your desk!');}
   } else player.slack=clamp(player.slack-45*dt,0,100);
 }
 function checkAlly(n){if(n.friend>=ALLY_THRESHOLD&&!n._wasAlly){n._wasAlly=true;logLine(`${n.name} is now an ally. You can ask them to do your dirty work.`,'g');toast(`${n.name} is now an ally`);}}
@@ -4008,14 +4008,14 @@ function addTask(t){
   tasks.push(task);renderTasks();
 }
 function openTask(via,target){return tasks.find(t=>t.via===via&&!t.done&&(!target||t.target===target));}
-function completeTask(t){if(!t||t.done)return;t.done=true;today.tasks++;SFX.task();markTaskDone(t.label);if(t.kind==='npc'){career.vpFavor++;logLine('Sterling nods. He knows your name now.','g');}const gain=t.bonus?14:8;player.prog=clamp(player.prog+gain,0,100);player.suspicion=clamp(player.suspicion-3,0,100);if(!player.workPass){player.workPass=true;renderLeverage();logLine('Job done for this shift — Dale has no beef. Free time earned.','g');}toast(`Task done. Promotion +${gain}, suspicion −3`);logLine(`Completed: ${t.label}. Promotion +${gain}.`,'g');renderTasks();tryPromote();}
+function completeTask(t){if(!t||t.done)return;t.done=true;today.tasks++;SFX.task();markTaskDone(t.label);if(t.kind==='npc'){career.vpFavor++;logLine('Sterling nods. He knows your name now.','g');}const gain=t.bonus?14:8;player.prog=clamp(player.prog+gain,0,100);player.suspicion=clamp(player.suspicion-3,0,100);if(!player.workPass){player.workPass=true;renderLeverage();logLine('Job done for this shift — '+mgrBeefLine()+'. Free time earned.','g');}toast(`Task done. Promotion +${gain}, suspicion −3`);logLine(`Completed: ${t.label}. Promotion +${gain}.`,'g');renderTasks();tryPromote();}
 function doBusywork(){if(player.workCh||player.act){toast('Already busy.');return;}player.workCh={t:8.0,max:8.0};toast('Working... hold still (8s).');}
 function startAct(sec,label,fn,holdNpc){if(player.workCh||player.act){toast('Already busy.');return;}player.act={t:sec,max:sec,fn};toast(label+'... hold still.');
   /* If this interaction is WITH someone (listening to Dale, sitting through a rehearsal),
      hold them in place and facing you for the duration — they shouldn't wander off mid-story. */
   if(holdNpc){holdNpc.heldT=sec+0.5;holdNpc.heldBy='you';holdNpc.goal=null;holdNpc.path=null;}
 }
-function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);player.suspicion=clamp(player.suspicion-1,0,100);player.busyCount=(player.busyCount||0)+1;if(!player.workPass&&player.busyCount>=3){player.workPass=true;renderLeverage();logLine('Enough visible grind — Dale counts you as working. Free time earned.','g');}toast('Filed. +2');if(Math.random()<0.3)logLine(pick(['Another form filed. Time crawls.','You reformat a spreadsheet nobody asked for.','You reply-all to a dead thread.','You alphabetize your inbox. Again.']),'t');tryPromote();}
+function finishBusywork(){SFX.work();player.prog=clamp(player.prog+2,0,100);player.suspicion=clamp(player.suspicion-1,0,100);player.busyCount=(player.busyCount||0)+1;if(!player.workPass&&player.busyCount>=3){player.workPass=true;renderLeverage();logLine('Enough visible grind — '+mgrCountsLine()+'. Free time earned.','g');}toast('Filed. +2');if(Math.random()<0.3)logLine(pick(['Another form filed. Time crawls.','You reformat a spreadsheet nobody asked for.','You reply-all to a dead thread.','You alphabetize your inbox. Again.']),'t');tryPromote();}
 
 /* ===== INTERACTIONS ===== */
 const menu=document.getElementById('menu');let menuOpen=false;
@@ -4205,7 +4205,7 @@ function buildOptions(t){
       if(eg.length)return {title:`${n.name} · CEO  —  you have him`,items:eg};
       return {title:`${n.name} · CEO`,items:ceoDismissiveItems(n)};
     }
-    if(n.mgr){const mi=[...daleFavorItems(n),{label:'Laugh at his joke (suck up)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);career.daleFavor++;toast('Dale loves you. Suspicion −5'+(career.daleFavor===2?' — he REALLY likes you now':''));logLine("Laughed at Dale's joke. He beams.",'g');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)mi.push({label:'Report to Dale (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to Dale?',onPick:doc=>snitchItem(doc,'the manager')})});return {title:`${n.name} · Branch Manager`,items:mi};}
+    if(n.mgr){const mi=[...daleFavorItems(n),{label:'Laugh at his joke (suck up)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-5,0,100);career.daleFavor++;const mn=n.name.split(' ')[0];toast(mn+' loves you. Suspicion −5'+(career.daleFavor===2?' — he REALLY likes you now':''));logLine('Laughed at '+mn+"'s joke. He beams.",'g');}}];const reps=leverageBySrc(['hrfile']);if(reps.length)mi.push({label:'Report to Dale (over HR)…',risk:'burns the dirt',act:()=>pickDocument(reps,{title:'Report whose file to Dale?',onPick:doc=>snitchItem(doc,'the manager')})});return {title:`${n.name} · Branch Manager`,items:mi};}
     /* the CEO's assistant is a gatekeeper, not a sales worker — two verbs only */
     if(n.name==='Ravinder')return {title:`${n.name} · CEO Assistant`,items:ravinderItems(n)};
     if(n.receptionist){SFX.talk();}
@@ -4397,7 +4397,7 @@ function buildOptions(t){
       items.push(...partGrab('decaf',seen));
       return {title:'Coffee machine',items};
     }
-    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:'Pocket a stapler (petty)',risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{logLine('Swiped office supplies.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},(o.suppliesDay===day?{label:'Supply cupboard is picked clean until tomorrow',disabled:true}:{label:invFull()?'Take assorted prank supplies (pockets full)':'Take assorted prank supplies (wildcard)',disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.suppliesDay=day;player.inv.push('supplies');renderLeverage();logLine('Palmed a handful of assorted supplies. Contraband now — the cupboard is picked clean until tomorrow.','t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take supplies':'Grabbed supplies, unseen');}})]};}
+    if(o.type==='supply'){const sp=openTask('supply');return {title:'Supply station',items:[sp?{label:sp.label+' (task)',risk:'good',act:()=>completeTask(sp)}:{label:'Restock (look busy)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-3,0,100);toast('Suspicion −3');}},{label:invFull()?'Pocket a stapler (pockets full)':'Pocket a stapler (petty)',disabled:invFull(),risk:seen?'SEEN':'sneaky',hot:seen,act:()=>{if(invFull()){toast('Pockets full ('+INV_CAP+' max) — drop something first.');return;}player.inv.push('stapler');renderLeverage();logLine('Swiped a stapler from the supply station.','w');addSuspicion(seen?9:3,seen?'Caught pocketing supplies':'Petty theft, unseen');}},(o.suppliesDay===day?{label:'Supply cupboard is picked clean until tomorrow',disabled:true}:{label:invFull()?'Take assorted prank supplies (pockets full)':'Take assorted prank supplies (wildcard)',disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{o.suppliesDay=day;player.inv.push('supplies');renderLeverage();logLine('Palmed a handful of assorted supplies. Contraband now — the cupboard is picked clean until tomorrow.','t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take supplies':'Grabbed supplies, unseen');}})]};}
     if(o.type==='files')return {title:'HR Files (locked cabinet)',items:[...catfishFileItems(),player.hasKeycard?{label:player.channel?'Already snooping...':'Unlock & crack the files (hold ~3s)',disabled:!!player.channel,risk:seen?seenTag():'very risky',hot:seen,act:()=>startSnoop()}:{label:"Locked — you need HR's keycard",disabled:true}]};
     if(o.type==='toilet'){const seen2=seenByAnyone();return {title:o.label,items:[
       {label:o.rigged?'Already rigged to overflow':'Rig it to overflow (prank)',disabled:o.rigged,risk:seen2?seenTag():'sneaky',hot:seen2,act:()=>startAct(4,'Rigging the plumbing',()=>rigToilet(o))},
@@ -4627,9 +4627,14 @@ function swipePrized(d,own,present){
   const seen=seenByAnyone();
   {const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='steal'&&x.target===(own?own.name:''));if(m)setTimeout(()=>creditMission(m,seen?0.35:0.05),400);}
   if(present){toast('They are right there.');return;}
+  /* Full pockets used to fall straight through: the item was skipped, but the log still said you
+     swiped it and you still took the suspicion hit — so you paid for a theft that never happened.
+     That is half of "it says petty theft but nothing is in our inventory". Bail BEFORE anything
+     is charged, and say why. */
+  if(invFull()){toast('Pockets full ('+INV_CAP+' max) — drop something first.');return;}
   const items=['stapler','mug','charger'];
   const it=pick(items);
-  if(!invFull())player.inv.push(it);
+  player.inv.push(it);
   renderLeverage();
   const bonus=(own&&own.ptype==='peacock')?14:0;
   if(own){
@@ -6010,6 +6015,26 @@ function setRankDown(){
     if(player.rank===4)claimAsstOffice(); else movePlayerDesk();   // back down the corridor (or into the asst office)
     renderDeleg();
   }
+}
+/* THE BRANCH MANAGER, as the game currently knows them — not "Dale" the string literal. Dale starts
+   in the chair but he can be removed (removeDale, below) and the PLAYER can take the job themselves,
+   after which every line that still names him is talking about somebody who is not there. That is
+   what Kyle saw: finishing a task told him "Dale has no beef" while he WAS the manager.
+   Returns null when the chair is empty or the player holds it. */
+function branchMgr(){ return NPCS.find(n=>n.mgr&&n.alive&&!n.gone&&!n.wentHome)||null; }
+function mgrFirst(){ const m=branchMgr(); return m?m.name.split(' ')[0]:null; }
+/* How to refer to whoever is watching you work. Falls back to the situation rather than a name. */
+function mgrBeefLine(){
+  const nm=mgrFirst();
+  if(nm)return nm+' has no beef';
+  if(player.rank>=5)return 'you are the one who signs it off';
+  return 'nobody is left to check';
+}
+function mgrCountsLine(){
+  const nm=mgrFirst();
+  if(nm)return nm+' counts you as working';
+  if(player.rank>=5)return 'you count yourself as working';
+  return 'that counts as working';
 }
 function removeDale(){
   const m=NPCS.find(n=>n.mgr&&n.alive);
