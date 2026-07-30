@@ -1397,9 +1397,16 @@ const desks=[];
  {x:1390,y:596,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing — SEATS[1]=5 is full, this chair can never be filled
  {x:1350,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_right',seatSide:'left'},   // set-dressing (SEATS[1] full)
  {x:1390,y:690,w:40,h:50,owner:null,tier:1,dept:'sales',reserved:true,art:'cubicle_desk_left',seatSide:'right'},   // set-dressing (SEATS[1] full)
- {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales',art:'cubicle_desk_up'},
- {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales',art:'cubicle_desk_up'},
- {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales',art:'cubicle_desk_up'},
+ /* SENIOR SALES: the plain cubicle_desk sprite, not cubicle_desk_up — Kyle calls the latter the
+    discontinued desk and these three were its only users. The two sprites face OPPOSITE ways:
+    cubicle_desk_up puts the monitor low with its BACK to the camera and the keyboard above it, so it
+    expects a sitter ABOVE the desk, while cubicle_desk shows the screen facing us with the keyboard
+    below, so its sitter belongs BELOW. These sitters were already below, which is why they looked
+    wrong — right position, wrong desk. seatDir:'up' holds the facing they already had, because the
+    art->facing map sends the DEFAULT art to 'down'. */
+ {x:1320,y:280,w:60,h:40,owner:'Wren',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
+ {x:1320,y:380,w:60,h:40,owner:'Sana',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
+ {x:1320,y:480,w:60,h:40,owner:'Gil',tier:2,dept:'sales',seatSide:'down',seatDir:'up'},
  {x:680,y:60,w:40,h:60,owner:'Hank',tier:0,dept:'acct',art:'cubicle_desk_right',seatSide:'left'},
  {x:720,y:60,w:40,h:60,owner:'Zora',tier:0,dept:'acct',art:'cubicle_desk_left',seatSide:'right'},
  {x:320,y:160,w:80,h:20,owner:'Ravinder',tier:0,dept:'exec',seatSide:'up'},
@@ -1412,7 +1419,7 @@ const desks=[];
     walkable, and it agrees with the art: cubicle_desk_right faces the sitter RIGHT, so they belong
     on the desk's LEFT. */
  {x:1100,y:0,w:40,h:60,owner:null,tier:0,dept:'sales',reserved:true,asstOffice:true,art:'cubicle_desk_right',seatSide:'left'}]
- .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,rigged:null,planted:null}));
+ .forEach(d=>desks.push({x:d.x,y:d.y,w:d.w,h:d.h,owner:d.owner,tier:d.tier,dept:d.dept,reserved:!!d.reserved,asstOffice:!!d.asstOffice,intern:!!d.intern,art:d.art||null,seatSide:d.seatSide||null,seatDir:d.seatDir||null,rigged:null,planted:null}));   // seatDir was MISSING here, which silently dropped every per-desk facing override
 
 /* Tables. The seats used to be authored around the collision box, but the chairs are
    drawn as part of the table sprite — a different rectangle — so people stood a tile away
