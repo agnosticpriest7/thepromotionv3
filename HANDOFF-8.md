@@ -281,6 +281,42 @@ override. `cubicle_desk_up` is the discontinued sprite and is no longer referenc
   just sent him there without a chair. Meetings still pull him, on purpose — everyone attends, it is
   time-boxed, and a predictable window is fair for the player to learn.
 
+## The intro walk is cardinal-only now
+
+Kyle: *"the diagonal movement in the intro needs to be removed, only up down left right movement
+please. I don't have diagonal sprites drawn so it's just extremely fast switches between up/down
+left/right."*
+
+`INTRO_ROUTE` rounded each corner with a short 45-degree chamfer — eight of them. On a chamfer the
+walk heading is diagonal, and with no diagonal art the sprite picker alternates between the up/down
+and left/right sheets. Measured on the old route: **992 frames facing off-cardinal, and 30 facing
+changes inside a 30-frame window** — a flip essentially every frame at 60fps, exactly as described.
+17% of walking frames travelled diagonally.
+
+- **Every chamfer became a square elbow.** Both elbow options were checked walkable against the real
+  nav grid with an 8-unit lateral margin for all eight; the chosen combination has the FEWEST
+  direction changes (**18, one fewer than the old route**) because several elbows merge into the
+  straight run beside them. Route is 4.3% longer, so `INTRO_SPEED` still paces the dialogue.
+- **The old `(230,210)` waypoint is gone.** Without a diagonal to hide it, it walked Dale 40 left and
+  then straight back right — a visible stumble.
+- **`cardinalFace(dx,dy)`** snaps a heading to the nearest cardinal. The route is already axis-aligned,
+  so this only covers the one frame at each corner where a step spans two segments — and it keeps the
+  guarantee if the route is ever re-authored.
+- **All 11 beat `at` fractions were re-derived by WORLD POSITION** (nearest point on the new route,
+  searched forward so ordering can't invert). Verified with `roomAt()`: **all 11 beats still land in
+  the same room** — ELEVATOR, RECEPTION, KITCHEN, SALES FLOOR, JUNIOR SALES unchanged. Drift is under
+  4u everywhere except the CEO line (29.5u — he stops at the corner rather than 40px further left,
+  still facing the glass box).
+
+Guarded by **`test/t_intro_axis.js`** (in `gate.js`): drives the real intro and asserts cardinal-only
+facings, no thrash, and axis-aligned *movement* — that last one matters, because snapping the facing
+alone would silence the flicker while leaving the walker sliding diagonally under a left/right sprite,
+a moonwalk. Proven to bite: RED on the old route with all three assertions failing.
+
+Confirmed in the BROWSER, not just the harness: 1887 intro frames, **0 non-cardinal facings**, only
+three distinct facing values (exact cardinals), **11 facing changes across 1442 moving frames**, 0 JS
+errors. Normal load unaffected — `window.__dbg === undefined`, 202/228 art assets keyed to canvas.
+
 ## NPC collisions when they talk to each other (this session's last fix)
 
 Kyle: *"they travel to talk to someone, basically occupy the same space, and both characters flicker

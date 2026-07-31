@@ -3645,17 +3645,17 @@ let intro=null;
    sales~0.80, junior~0.94, desk 1.0. */
 const INTRO_BEATS=[
   {at:0.000,t:2.2,hold:true,say:"You must be the new intern. Up out of the elevator — follow me. Quick tour."},
-  {at:0.095,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
-  {at:0.210,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
-  {at:0.315,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
+  {at:0.101,t:2.4,         say:"Paper Supply Co. Whole floor's yours to learn. Keep up."},
+  {at:0.222,t:2.9,hold:true,say:"Top-left glass box — the CEO's office. He watches the floor. You won't be invited in. Not yet."},
+  {at:0.307,t:2.8,hold:true,say:"That's HR — Brenda and Marla. They hunt for wrongdoing. Stay out of their sight."},
   {at:0.435,t:2.7,         say:"You want the top job? Three ways up, and only one won't get you fired."},
-  {at:0.556,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
-  {at:0.605,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
-  {at:0.710,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
+  {at:0.555,t:3.1,hold:true,say:"Assistant Manager's office — sitting empty. There's an opening. Keep your nose clean and it could be yours."},
+  {at:0.602,t:2.6,hold:true,say:"Kitchen's round here. Coffee, snacks, gossip. People let things slip in kitchens."},
+  {at:0.702,t:2.8,hold:true,say:"Senior Sales — the glass offices. Claw your way to senior and one of these is yours."},
   /* fires at wp17 — he is INSIDE the sales floor for this one (it used to go off at 0.782, out in
      the corridor before he'd even entered), and lingers there before moving on. */
-  {at:0.815,t:2.6,hold:true,linger:1.8,say:"The sales floor. It's cutthroat. Guard your stapler."},
-  {at:0.920,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
+  {at:0.817,t:2.6,hold:true,linger:1.8,say:"The sales floor. It's cutthroat. Guard your stapler."},
+  {at:0.918,t:2.6,hold:true,say:"Junior Sales — the clump. Where you'll grind it out."},
   {at:1.000,t:2.9,hold:true,say:"And this is you. The Annex. Two jobs a shift — clear them and you climb. Slowly. Go on."},
 ];
 /* A hand-authored grand tour: elevator -> Annex (SE) -> up the east side -> Kitchen (NE)
@@ -3669,11 +3669,30 @@ const INTRO_BEATS=[
    descent clipped straight through the sales-room wall. Head (up the left + across the top) is the
    original authored path; the tail is A*-verified walkable (test regen, 0 clips). Beat `at` fractions
    below were re-derived so the dialogue still lands at each POI. */
+/* AXIS-ALIGNED ONLY — every segment must be purely horizontal or purely vertical.
+   There is no diagonal walk art. The route used to round each corner with a short diagonal chamfer
+   (150,650 -> 210,590 and seven more like it); on those the walk heading sits at 45 degrees, and the
+   sprite picker flips between the up/down sheet and the left/right sheet every frame or two. Kyle:
+   "I don't have diagonal sprites drawn so it's just extremely fast switches between up/down
+   left/right."
+
+   Each chamfer became a square elbow. Both elbow options (horizontal-first and vertical-first) were
+   checked walkable against the real nav grid with an 8-unit lateral margin for all eight diagonals,
+   and the combination below is the one with the FEWEST direction changes — 18, one fewer than the
+   old route, because several elbows merge into the straight run beside them. The old (230,210)
+   waypoint is gone: without a diagonal to hide it, it walked him 40 left and then straight back
+   right, which reads as a stumble. Route is 4.3% longer, so INTRO_SPEED still paces the dialogue.
+
+   The dip to (1050,650) and back is DELIBERATE and must stay — it puts Dale inside the sales floor
+   for the cutthroat line instead of calling it from the doorway. Keep the final approach dropping at
+   x730, clear of the junior-floor printer at (770,610).
+
+   If you edit this, re-run test/t_intro_axis.js — it fails on any diagonal heading. */
 const INTRO_ROUTE=[
-  {x:150,y:710},{x:150,y:650},{x:210,y:590},{x:210,y:510},{x:270,y:450},{x:270,y:250},
-  {x:230,y:210},{x:490,y:210},{x:530,y:250},{x:750,y:250},{x:770,y:230},{x:1070,y:230},
-  {x:1090,y:210},{x:1210,y:210},{x:1210,y:490},{x:1130,y:550},{x:1050,y:550},{x:1050,y:650},
-  {x:1050,y:550},{x:950,y:550},{x:745,y:550},{x:730,y:630},
+  {x:150,y:710},{x:150,y:590},{x:210,y:590},{x:210,y:450},{x:270,y:450},{x:270,y:210},
+  {x:490,y:210},{x:490,y:250},{x:750,y:250},{x:750,y:230},{x:1070,y:230},{x:1070,y:210},
+  {x:1210,y:210},{x:1210,y:550},{x:1050,y:550},{x:1050,y:650},{x:1050,y:550},{x:730,y:550},
+  {x:730,y:630},
 ];
 /* Tail notes: the sales-floor dip now reaches y650 (70px INSIDE the room, walkable) so Dale is
    properly in the room for the cutthroat line instead of calling it from the doorway. The final
@@ -3718,6 +3737,13 @@ function startIntro(){
   phaseCred['Clock-In']=true;
   logLine('Day 1. Dale is showing you to your desk.','t');
 }
+/* Snap a heading to the nearest of the four cardinals — there is no diagonal walk art, so a 45
+   degree heading makes the sprite picker alternate sheets every frame. The route above is already
+   axis-aligned; this also covers the ONE frame at each corner where the step spans two segments and
+   is briefly diagonal, and keeps the guarantee if the route is ever re-authored. */
+function cardinalFace(dx,dy){
+  return Math.abs(dx)>=Math.abs(dy) ? (dx>=0?0:Math.PI) : (dy>=0?Math.PI/2:-Math.PI/2);
+}
 function tickIntro(dt){
   if(!intro)return true;
   const d=intro.dale;
@@ -3755,8 +3781,8 @@ function tickIntro(dt){
   player.x=pp.x;player.y=pp.y+2;
   // face + animate both — face the direction each is actually walking, so nobody moonwalks
   if(walking&&(Math.abs(odx)>0.01||Math.abs(ody)>0.01)){
-    d.face=Math.atan2(ody,odx);
-    if(Math.abs(pdx)>0.01||Math.abs(pdy)>0.01)player.face=Math.atan2(pdy,pdx);
+    d.face=cardinalFace(odx,ody);
+    if(Math.abs(pdx)>0.01||Math.abs(pdy)>0.01)player.face=cardinalFace(pdx,pdy);
     const step=Math.hypot(odx,ody);
     d.moving=true;d.animT=(d.animT||0)+step;
     player.moving=true;player.animT=(player.animT||0)+step;
