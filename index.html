@@ -1469,6 +1469,30 @@ const meetingChairs2=[{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0,y:0,by:null},{x:0
 function allMeetingChairs(){ return meetingChairs.concat(meetingChairs2); }
 /* Centre of the pair, for the standing ring and the "head of the table" spot. Derived from both
    tables so it stays right if either moves. */
+/* A standing spot at the meeting for someone with no chair. Rings outward from the centre and takes
+   the first slot that is actually free, checking where people ARE and where they are HEADED (the
+   same spotClearance used for errands), so a dozen seatless attendees spread around the table
+   instead of stacking on one square. Cached per person for the phase: recomputing every frame would
+   let two people swap slots back and forth forever. */
+function meetingStand(n){
+  const c=meetingCentre();
+  if(n.mtgStand&&n.mtgStandPh===currentPhase().name)return n.mtgStand;
+  const step=Math.round(26*S);
+  let chosen=null,best=null,bestClear=-1;
+  for(let ring=1;ring<=3&&!chosen;ring++){
+    for(let k=0;k<8;k++){
+      const a=k*Math.PI/4+(ring%2?0:Math.PI/8);
+      const t=snapTarget(Math.round(c.x+Math.cos(a)*step*ring),Math.round(c.y+Math.sin(a)*step*ring));
+      const free=spotClearance(n,t.x,t.y);
+      if(free>bestClear){bestClear=free;best=t;}
+      if(free>=step){chosen=t;break;}
+    }
+  }
+  const p=chosen||best||c;
+  n.mtgStand={x:p.x,y:p.y};
+  n.mtgStandPh=currentPhase().name;
+  return n.mtgStand;
+}
 function meetingCentre(){
   return {x:Math.round((meetingTable.x+meetingTable.w/2 + meetingTable2.x+meetingTable2.w/2)/2),
           y:Math.round((meetingTable.y+meetingTable.h/2 + meetingTable2.y+meetingTable2.h/2)/2)};
@@ -2591,7 +2615,14 @@ function npcTarget(n){
     const hd=n.homeDesk||desks.find(x=>x.owner===n.name);
     if(hd)return deskSeat(hd);
   }
-  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(490*S),y:Math.round(455*S)};   // meeting room (380,280,260,220)
+  /* MEETING. There are 16 chairs and 23 desks, so several people always attend standing — and the
+     seatless used to be handed ONE identical pixel to stand on. They arrived, followPath stopped
+     (moving=false, facing frozen), and separate() then shoved the pile around; because the nudge is
+     applied AFTER facing is set, the shove never turned them, so they slid across the floor locked
+     mid-pose. Kyle: "Zora sometimes walks backwards when traveling forward like some moonwalker."
+     Measured during Meeting before this: 19.4% of her moving frames were 179-180 degrees from her
+     facing. Same shared-destination bug as the errand pins — give each a spot of their own. */
+  if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:meetingStand(n);
   if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
   if(ph==='Clock-Out')return MUSTER;
   if(n.homeDesk)return deskSeat(n.homeDesk);
@@ -2850,6 +2881,10 @@ function spotClearance(n,x,y){
     if(o===n||!o.alive||o.gone||o.wentHome)continue;
     near=Math.min(near,Math.hypot(x-o.x,y-o.y));
     if(o.errand)near=Math.min(near,Math.hypot(x-o.errand.x,y-o.errand.y));
+    /* a meeting standing spot is RESERVED the moment it is handed out — without this, everyone
+       dispatched before anybody has walked anywhere sees an empty room and picks the same slot. */
+    if(o.mtgStand&&o.mtgStandPh===currentPhase().name)
+      near=Math.min(near,Math.hypot(x-o.mtgStand.x,y-o.mtgStand.y));
   }
   return near;
 }
@@ -9770,10 +9805,15 @@ function loop(now){
         if(n===introDale)return;
         const ox=n.x,oy=n.y;
         updateNPC(n,dt);
-        const mdx=n.x-ox,mdy=n.y-oy, sp=Math.hypot(mdx,mdy);
-        n.moving=sp>0.12;
-        if(n.moving){n.face=Math.atan2(mdy,mdx);n.animT=(n.animT||0)+sp;}else n.animT=0;
+        const wdx=n.x-ox,wdy=n.y-oy,wsp=Math.hypot(wdx,wdy);
         separate(n);
+        const tdx=n.x-ox,tdy=n.y-oy, sp=Math.hypot(tdx,tdy);
+        n.moving=sp>0.12;
+        if(n.moving){
+          const agrees=(wsp>0.12)&&(wdx*tdx+wdy*tdy)>0;
+          n.face=agrees?Math.atan2(wdy,wdx):Math.atan2(tdy,tdx);
+          n.animT=(n.animT||0)+sp;
+        } else n.animT=0;
       });
       /* The office keeps its own time during the tour. The clock used to be frozen here, so the
          whole floor was stuck mid-morning until the intro ended — staggered arrivals never fired
@@ -9818,10 +9858,20 @@ function loop(now){
     activeNPCs().forEach(n=>{
       const ox=n.x,oy=n.y;
       updateNPC(n,dt);
-      const mdx=n.x-ox,mdy=n.y-oy;const sp=Math.hypot(mdx,mdy);
+      const wdx=n.x-ox,wdy=n.y-oy,wsp=Math.hypot(wdx,wdy);   // the WALK, before any nudge
+      separate(n);
+      const tdx=n.x-ox,tdy=n.y-oy,sp=Math.hypot(tdx,tdy);     // what actually happened this frame
       n.moving=sp>0.12;
-      if(n.moving){n.face=Math.atan2(mdy,mdx);n.animT=(n.animT||0)+sp;}else n.animT=0;
-      separate(n);                 // after facing, so a nudge never spins them
+      /* Face the WALK when there is one — a nudge must never spin somebody who is steering. Fall back
+         to actual travel when the walk is zero (arrived, frozen mid-pose, shoved sideways — the case
+         that produced the moonwalk) OR when the nudge overpowered the walk and they went the other
+         way entirely. The invariant that buys: you never travel more than 90 degrees from the way
+         you are drawn facing, so there is no backwards walk left to see. */
+      if(n.moving){
+        const agrees=(wsp>0.12)&&(wdx*tdx+wdy*tdy)>0;
+        n.face=agrees?Math.atan2(wdy,wdx):Math.atan2(tdy,tdx);
+        n.animT=(n.animT||0)+sp;
+      } else n.animT=0;
       tickDegrade(n,dt);
     });
     tickInv(dt);

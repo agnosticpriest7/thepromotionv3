@@ -281,6 +281,42 @@ override. `cubicle_desk_up` is the discontinued sprite and is no longer referenc
   just sent him there without a chair. Meetings still pull him, on purpose — everyone attends, it is
   time-boxed, and a predictable window is fair for the player to learn.
 
+## "Zora walks backwards" — it was the meeting, not Zora
+
+Kyle: *"Zora sometimes walks backwards when traveling forward like some moonwalker."*
+
+**It was never Zora and never her art.** Five hypotheses were killed by measurement first: separate()
+shoving people backwards (0.03% floor-wide, **0** for Zora), her walk rows being swapped (all four
+verified against a control at proper zoom — they are correct), her stride/frame order (side rows are
+uniform `f1`-narrow across all 21 characters), facing-vs-travel in normal play (**0** bad frames in
+342), and frozen-pose drift (1 frame in 20,790, none backwards).
+
+**It only happens in the Meeting phase.** There are 16 chairs and 23 desks, and `npcTarget` sent every
+seatless attendee to ONE identical pixel. They arrived, `followPath` stopped — so `moving` went false
+and the facing froze — and `separate()` then shoved the pile around. Because the nudge is applied
+AFTER facing is set (deliberately, so a nudge cannot spin someone who is steering), the shove never
+turned them: they slid across the floor locked mid-pose. Measured during Meeting before the fix:
+**283 of 1456 of Zora's moving frames — 19.4% — were 179-180 degrees off her facing.**
+
+- **`meetingStand(n)`** rings outward from the meeting centre and takes a genuinely free slot, reusing
+  the same `spotClearance` as the errand fix. Cached per phase, and `spotClearance` now treats a
+  handed-out standing spot as RESERVED — without that, everyone dispatched before anyone had walked
+  saw an empty room and picked the same slot.
+- **Facing follows actual travel** when the walk is zero, or when the nudge overpowered the walk and
+  they went the other way. Invariant: *you never travel more than 90 degrees from the way you are
+  drawn facing.* Applied to the main loop and the intro loop.
+
+Worst case (nobody seated): **17 attendees, 17 distinct spots, closest 19.9 authored** (was 1.1).
+In the browser during Meeting: **20,539 moving frames, 0 backwards** floor-wide; Zora 1255 / 0.
+
+Guarded by **`test/t_moonwalk.js`** (in `gate.js`), proven to bite on the pre-fix build. Note it drives
+`w.startNewGame(0)` — a bare `createWorld()` never ticks the per-frame NPC bookkeeping, so the pose
+sits still and the test proves nothing. Posing also needs **`arrived=true`**, or the arrival scheduler
+re-parks everyone off-screen every frame (see `__dbg.seat`, which sets the same three flags).
+
+This also closes the long-standing *"16 meeting seats vs 23 desks"* item — it was not just a seating
+shortfall, it was generating this.
+
 ## The intro walk is cardinal-only now
 
 Kyle: *"the diagonal movement in the intro needs to be removed, only up down left right movement
