@@ -4386,6 +4386,10 @@ function buildOptions(t){
          and it is the only way to the Merit ending. It is also, deliberately, slow, dull
          and thankless, which is the joke. */
       ...((player.rank>=4&&isWorker(n))?[
+        ...((cosignActive()&&n.order)?[{label:'Countersign their order ('+(n.profiled?PTYPE_NAME[n.ptype]:'unread')+')…',risk:'management',act:()=>renderMenu({title:n.name.split(' ')[0]+"'s order",items:[
+            {label:'Countersign it',risk:'management',act:()=>cosignDo(n,true)},
+            {label:'Send it back',risk:'management',act:()=>cosignDo(n,false)},
+            {label:'Cancel',act:()=>{}}]})}]:[]),
         ...((delegActive()&&!delegWorkerBusy(n.name)&&delegOpen().length)?[{label:`Delegate a job to ${n.name.split(' ')[0]}…  (${delegOpen().length} on the tray)`,risk:'management',act:()=>renderMenu(delegAssignMenu(n))}]:[]),
         ...((delegActive()&&delegWorkerBusy(n.name))?[{label:`${n.name.split(' ')[0]} is on a job for you`,disabled:true}]:[]),
         ...(player.rank>=5?[{label:`Send ${n.name.split(' ')[0]} home early (stress −45)`,risk:'costs you their afternoon',
@@ -5604,10 +5608,11 @@ function advanceClock(dt){
   const ph=currentPhase().name;
   if(ph!==lastPhase){
     delegExpireDue();   // jobs from the block that just ended, never handed out, are misses
+    cosignExpire();     // unsigned orders lapse — deliberately free, see cosignExpire
     expireUnacceptedOffers();   // asks nobody answered lapse with the block (before new ones arrive below)
     logLine(`— ${ph} —`,'t');
     if(!intro){playShiftPrinter();toast(`— ${ph} —`);}
-    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();maybeOfferFavor();}
+    if(isWorkPhase(ph)){player.busyCount=0;player.workPass=false;rollTasks();logLine('Shift on. Two jobs on your list — clear them and the rest of the block is yours.','t');renderLeverage();delegArrive();cosignArrive();maybeOfferFavor();}
     if(lastPhase==='Clock-In'&&!phaseCred['Clock-In'])addSuspicion(6,'Late clock-in noted');
     if(lastPhase==='Meeting'&&!meetingCredited)missMeeting();
     if(['Meeting','Lunch / Break','Morning Break','Afternoon Break'].includes(lastPhase)){
@@ -5694,6 +5699,7 @@ function nightLine(){
 const NIGHT_DECAY=0.5;   // overnight the player sheds ~half their heat and stress — a night's sleep, not a clean slate
 function nextDay(){
   day++;clock=DAY_START;lastPhase='Clock-In';meetingCredited=false;phaseCred={};player.channel=null;player.workCh=null;player.act=null;player.hasKeycard=false;player.coffeeFor=null;career.snitchCount=0;player.eavesCd=0;
+  cosignRollDay();  // orders are ephemeral: cleared with the day, and the daily cap resets
   delegRollDay();   // fresh delegation tray for the new day; clean-completion count and the rolling demerit window carry over
   /* Suspicion and stress don't carry over in full: a day's accumulation halves overnight (was a flat
      −10 on suspicion and no stress relief at all). NPCs decay separately below, per the isolation mechanic. */
@@ -6136,6 +6142,8 @@ function daleFavorItems(n){
 function updateRank(){tryPromote();}
 const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},reserved:{1:0,2:0},reqs:[],hireReqs:0,revenue:0,championed:[],
   favors:{},          // per-person favour track: name -> {n, reward, given, armed} — favours you do for someone accumulate; at a threshold they owe you a one-time VERB. Player-held, saved (career is cloned whole), swept by npcLeaving.
+  cosign:{right:0,wrong:0,today:0},   // Senior Sales countersign tally. Additive, so an old save
+                      // simply keeps this default — no SAVE_VERSION bump needed (career is cloned whole).
   auditTipoff:false}; // a cashed tip-off perk (paranoid's favour): the next desk audit is announced early. Not person-tied once given.
 /* the day's ledger — reset every morning, read out every evening */
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
@@ -6622,6 +6630,90 @@ const DELEG_FLAVOUR={grind:'reconcile the order backlog',credit:'a client-facing
 const DELEG_PHASE_TASKS={510:2,645:2,765:2,855:3};   // Regular Work phase.start (min) -> jobs arriving; ~9/day
 const DELEG_NOTE=1.0, DELEG_WRITEUP=2.0;   // rolling-window demerit levels: note -> write-up -> reset (DELEG_RESET 3.0)
 let deleg={q:[],done:0,dem:[],seq:0,esc:0};   // q: live jobs; done: clean completions; dem: rolling demerit window; seq: id counter; esc: how far this stretch has escalated
+/* ===== SENIOR SALES — COUNTERSIGN A JUNIOR'S ORDER ================================
+   Rank 3 had no verb. `youTier()` gave it a seat tier and `yourStanding()` a flat +6, and then
+   rank 4 arrived with the whole delegation layer at once: a tray, five match rules, a rolling
+   escalation ladder and a 12-completion gate. This is that grammar one rank early, at one-job
+   scale, so the AM verb does not drop cold.
+
+   It teaches the SAME table. An order carries a `kind` from DELEG_MATCH, and it is SOUND when the
+   work suited its author — a Peacock told to grind quietly cuts corners; a Paranoid put on
+   something social hedges it into nothing. So the read the player needs at AM is the read they
+   practise here, but as a binary call on one person instead of a five-way assignment to a queue.
+
+   Both wrong answers cost, and they cost DIFFERENT things: signing bad work costs your standing,
+   rejecting good work costs the relationship. That asymmetry is the lesson.
+
+   Penalties route to the BOSS/slack channel (promotion progress) and NEVER to HR suspicion —
+   countersigning badly is bad management, not wrongdoing, and this game keeps those separate.
+   t_countersign has an assertion whose only job is to hold that line.
+
+   Deliberately NOT a second grind: no gate, no target, a hard daily cap, and a free expiry. */
+const COSIGN_PER_PHASE=1, COSIGN_PROG=2, COSIGN_DAILY_CAP=3;
+function cosignActive(){return player.rank===3;}
+/* Juniors = anyone sitting BELOW you, derived from desk tiers rather than a name list, so a
+   re-tiered floor cannot rot it (CLAUDE.md §14). */
+function cosignJuniors(){
+  const mine=youTier();
+  if(mine<0)return [];
+  return desks.filter(d=>d.owner&&d.owner!=='you'&&d.tier<mine)
+    .map(d=>activeNPCs().find(n=>n.name===d.owner))
+    .filter(n=>n&&!n.gone&&!n.wentHome&&isWorker(n)&&!deskbound(n));
+}
+function cosignSound(n){return !!(n&&n.order)&&DELEG_MATCH[n.order.kind]===n.ptype;}
+function cosignArrive(){
+  if(!cosignActive())return 0;
+  const pool=cosignJuniors().filter(n=>!n.order);
+  let k=0;
+  for(let i=0;i<COSIGN_PER_PHASE&&pool.length;i++){
+    const n=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    n.order={kind:pick(Object.keys(DELEG_MATCH)),day:day};
+    /* it has to announce itself, or it is not a mechanic — same lesson as Dale's "D" */
+    logLine(n.name.split(' ')[0]+' left an order on their desk for a senior signature.','a');
+    k++;
+  }
+  return k;
+}
+/* An unsigned order just lapses. Delegation fines you for an unhanded job because administering the
+   tray IS the AM's job; at Senior Sales this is an opportunity, not a duty, and charging for a miss
+   would make rank 3 feel like rank 4 with worse tools. */
+function cosignExpire(){let k=0;NPCS.forEach(n=>{if(n.order){n.order=null;k++;}});return k;}
+function cosignRollDay(){NPCS.forEach(n=>{n.order=null;});career.cosign.today=0;}
+function cosignDo(n,approve){
+  if(!n||!n.order)return;
+  const sound=cosignSound(n), blind=!n.profiled, first=n.name.split(' ')[0];
+  n.order=null;
+  /* BLIND IS NEUTRAL (Kyle's call, for testing). Unlike a prank you cannot profile at leisure first
+     — an order lapses at the end of the block — so charging for a coin-flip read as punishment
+     rather than tension. Costs nothing, pays nothing, and says so. */
+  if(blind){
+    logLine('You '+(approve?'countersigned':'sent back')+' '+first+"'s order without knowing how they work. It could have gone either way.",'t');
+    toast('Signed blind — no effect. Read them first.');
+    return;
+  }
+  const right=approve?sound:!sound;
+  career.cosign[right?'right':'wrong']++;
+  if(right){
+    /* the cap limits the REWARD only — a wrong call always lands */
+    if(career.cosign.today<COSIGN_DAILY_CAP){
+      career.cosign.today++;
+      player.prog=clamp(player.prog+COSIGN_PROG,0,100);
+      toast('Good call. Promotion +'+COSIGN_PROG);
+    } else toast('Good call — but you have signed off enough today.');
+    if(approve){n.mood=clamp(n.mood+4,-100,100);logLine('You countersigned '+first+"'s order. It was sound work, and they saw you notice.",'g');}
+    else{n.stress=clamp(n.stress+5,0,100);logLine('You sent '+first+"'s order back. It was wrong, and they know it — they redo it.",'g');}
+  }else{
+    if(approve){
+      player.prog=clamp(player.prog-COSIGN_PROG,0,100);
+      logLine('You countersigned '+first+"'s order and it was botched. Your name is on it.",'b');
+      toast('Your signature, their mistake. Promotion −'+COSIGN_PROG);
+    }else{
+      n.friend=clamp((n.friend||0)-6,-100,100);n.mood=clamp(n.mood-8,-100,100);
+      logLine('You sent '+first+"'s order back. There was nothing wrong with it.",'b');
+      toast('You rejected good work. They noticed.');
+    }
+  }
+}
 function delegActive(){return player.rank===4&&!career.mgrGone;}   // Assistant Manager only, until the chair opens
 function delegReset(){deleg={q:[],done:0,dem:[],seq:0,esc:0};}
 function delegPruneDem(){deleg.dem=deleg.dem.filter(e=>e.d>=day-1);}          // rolling 2 days: today + yesterday
@@ -7233,6 +7325,34 @@ function deskArt(d){
   if(Math.abs(dy)>=Math.abs(dx)) return dy>=0?'cubicle_desk':'cubicle_desk_up';   // seat below=down, above=up
   return dx>=0?'cubicle_desk_right':'cubicle_desk_left';                          // seat right=right, left=left
 }
+/* a sheet with a signature line — small, high-contrast, reads at TV distance */
+function drawOrderPaper(d){
+  const w=U1(9), h=U1(12);
+  /* ANCHORED TO THE SPRITE, NOT THE COLLISION BOX. Measured on Priya's desk: the box is 97 wide at
+     x1500 while the drawn desk is only 58 wide centred at 1548 — so "box right edge" is a good 20px
+     clear of the furniture and the sheet landed on the cubicle partition behind it. The sprite is
+     drawn centred on cx and upward from the ground anchor cyB, so derive from those and it sits on
+     the front lip of the work surface for every desk art. */
+  const art=deskArt(d);
+  const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
+  const tw=U1(ART_W[art]||38);
+  /* Sits just ABOVE the desk sprite. Two placements were tried on the work surface first and both
+     failed for the same reason: every desk art puts its clear space somewhere different, so a spot
+     that is empty on `cubicle_desk_right` lands on the drawer stack and clips the name plate on
+     `cubicle_desk`. The band above the sprite is empty on ALL of them, and it is already where this
+     game draws its other desk markers (rigged / planted / loot). Height comes from the image so it
+     tracks whatever art the desk is using. */
+  const im=ART[art];
+  const th=(im&&im.naturalWidth)?Math.round(im.naturalHeight*tw/im.naturalWidth):U1(54);
+  const x=Math.round(cx+tw/2-w-U1(2)), y=Math.round(cyB-th-h-U1(1));
+  if(!isFinite(x)||!isFinite(y)||w<=0||h<=0)return;
+  ctx.fillStyle='rgba(20,16,12,.30)'; ctx.fillRect(x+1,y+2,w,h);
+  ctx.fillStyle='#f7f3e6'; ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle='#3a332a'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);
+  ctx.fillStyle='#b9b0a0';
+  for(let i=0;i<3;i++)ctx.fillRect(x+2,y+3+i*3,w-4,1);
+  ctx.fillStyle='#d9a521'; ctx.fillRect(x+2,y+h-4,w-4,2);   // the line you sign on
+}
 function drawDesks(){
   fitDeskBoxes();
   for(const d of desks){
@@ -7248,6 +7368,13 @@ function drawDesks(){
     if(d.rigged){ctx.fillStyle='#c0392b';ctx.fillRect(d.x+d.w-8,d.y+4,6,6);}
     if(d.planted){ctx.fillStyle='#8e44ad';ctx.fillRect(d.x+d.w-8,d.y+14,6,6);}
     if(d.owner&&d.owner!=='you'&&d.loot&&d.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(d.x+d.w-7,d.y-6,5,5);}
+    /* AN ORDER WAITING FOR YOUR SIGNATURE. Drawn rather than a sprite so it cannot be mistaken for
+       the `note` loot item, and so it needs no PNG; swap in art later if it wants one. The owner
+       lookup is guarded by cosignActive() so it only ever costs anything at rank 3. */
+    if(cosignActive()&&d.owner&&d.owner!=='you'){
+      const ow=activeNPCs().find(n=>n.name===d.owner);
+      if(ow&&ow.order)drawOrderPaper(d);
+    }
   }
 }
 /* Desk nameplates in their OWN pass, drawn after the walls so a wall can never occlude one,
@@ -10156,6 +10283,10 @@ function buildSnapshot(over, outcome){ return {
 function applySnapshot(s){
   if(!s||s.v!==SAVE_VERSION) return false;
   day=s.day; clock=s.clock; npcId=s.npcId||0;
+  /* Countersign orders are EPHEMERAL and deliberately not in the snapshot — but the NPC objects are
+     restored by Object.assign onto the live cast, so a field the snapshot never carried is simply
+     left alone. Without this a stale order (and the paper drawn on the desk) outlives the load. */
+  NPCS.forEach(n=>{n.order=null;});
   setPlayerChar(s.player.char!=null?s.player.char:DEFAULT_CHAR);   // pre-select saves have no char
   Object.assign(player,{ x:s.player.x,y:s.player.y,rank:s.player.rank,prog:s.player.prog,
     sprite:playerChar,

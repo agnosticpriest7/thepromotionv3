@@ -56,7 +56,9 @@ Last audited **2026-08-01** against `main`.
 | AM delegation layer (D1) | SHIPPED | `deleg={q,done,dem,seq,esc}`, `DELEG_MATCH`, `DELEG_TARGET=12` |
 | Manager verbs (hire/fire/promote/demote) | SHIPPED | `t_manager_fire`, `t_promote`, `t_demote` |
 | Manager branch-health hold (merit route) | SHIPPED | `MERIT_TARGET=70`, `MERIT_DAYS=3` |
-| **Senior Sales "countersign a junior's order"** | **NOT BUILT** | Rank 3 has **no verb at all** today — `youTier()` gives it a seat tier and `yourStanding()` gives `+6`, nothing else. So delegation lands cold at rank 4 with a tray, five match rules and a 12-completion gate. Spec: **`SPEC-countersign.md`**. |
+| **Senior Sales "countersign a junior's order"** | **SHIPPED** 2026-08-01 | Rank 3 had no verb at all — a seat tier and a flat `+6`. Now: an order appears on a junior's desk with a `kind` from the **same `DELEG_MATCH` table**, and it is *sound* when the work suited its author, so the read the player needs at AM is practised here as a binary call on one person. Signing bad work costs standing; rejecting good work costs the relationship. Penalties route to the boss channel, never HR suspicion. `cosign*` in `index.html`, guarded by `t_countersign.js` (25 assertions, mutation-verified). Full record incl. Kyle's decisions: **`SPEC-countersign.md`**. |
+| ↳ blind (unprofiled) call | **neutral, for testing** | Kyle's call. Costs nothing, pays nothing, says so. Unlike a prank you cannot profile at leisure first — the order lapses at the end of the block. Reversible by deleting the `blind` early-return in `cosignDo`. |
+| ↳ visible artifact on the desk | SHIPPED | `drawOrderPaper` — a ruled sheet with a gold signature band, canvas-drawn so it needs no PNG and cannot be confused with the `note` loot item. Anchored to the desk **sprite**, not the collision box. |
 | Dale's "D" graceful-close upgrade | NOT BUILT | The `npcLeaving` default ships; the "hold the gate and choose" desk-menu doesn't. Consolation must be capped promotion progress, never `vpFavor`. |
 | Manager-appoints-AM / org mechanics | NOT BUILT | No hooks or fields yet, per the D1 spec. |
 
@@ -103,6 +105,7 @@ Last audited **2026-08-01** against `main`.
 
 | Item | Status | Note |
 |---|---|---|
+| Stale countersign order survives a load | **FIXED 2026-08-01** | `applySnapshot` `Object.assign`s onto the live cast, so a field the snapshot never carried is left alone — an ephemeral order (and its paper) outlived the load. Now cleared on load; `t_countersign` asserts the tally persists and the orders do not. |
 | **`botrun` craft-after-loot** | **RESOLVED 2026-08-01** | Never a game bug — **the pockets**. `INV_CAP` is 8 and the looting loop filled it, leaving no room for the kits `doCraft` pushes. The bot now makes room and asserts only recipes `partsStatus()` says it can afford: 2/2 crafted. An earlier "fix" that popped items to make room was worse — it threw away the parts it had just looted. |
 | `doCraft` on a no-part recipe | **FIXED 2026-08-01** | `calendar` / `well` have no `kit_<id>`; crafting them pushed a kit nothing consumes and threw on `ITEMS[...].label` — 6 and 11 throws in a 300-frame window. Unreachable from the menu (the button reads NO CRAFTING NEEDED), which is not the same as safe. `doCraft` now refuses. |
 | Duplicate GRIND row in delegate menu | OPEN | Carried from HANDOFF-7, never investigated. Start at `delegAssignMenu` / `delegOpen()`. |

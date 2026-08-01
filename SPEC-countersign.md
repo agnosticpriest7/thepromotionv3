@@ -1,7 +1,8 @@
 # SPEC — Senior Sales: "Countersign a junior's order"
 
-**Status:** spec only, nothing built. **Rank 3 (SENIOR SALES).**
-Written 2026-08-01. Read alongside `PROJECT.md` §3 "The AM delegation layer" — this deliberately
+**Status: BUILT 2026-08-01** and gated. **Rank 3 (SENIOR SALES).**
+Kyle's calls on the open questions are folded in below (marked **DECIDED**); the rest of the
+document is the spec as written, kept so the reasoning survives. Read alongside `PROJECT.md` §3 "The AM delegation layer" — this deliberately
 borrows that grammar.
 
 ---
@@ -52,9 +53,15 @@ five-way assignment against a queue.
 
 ### Intel gate
 
-Same convention as pranks and delegation. If `!junior.profiled` the menu reads
-**"unread — you are guessing"**, exactly like `planPrank`. Reading people first is the game's
-standing prerequisite and this must not be the one verb that skips it.
+Same convention as pranks and delegation. If `!junior.profiled` the menu reads **"unread"**, exactly
+like `planPrank`.
+
+**DECIDED (Kyle): an unprofiled call is NEUTRAL, for testing.** It costs nothing, pays nothing, and
+scores nothing, and it says so ("Signed blind — no effect. Read them first."). The reasoning: unlike
+a prank you cannot profile at leisure first, because an order lapses at the end of the block — so
+charging for a coin-flip read as punishment rather than tension. The 2×2 below therefore applies
+**only when you have read them**. Easy to make punitive later: delete the `blind` early-return in
+`cosignDo`.
 
 ### The 2×2
 
@@ -126,6 +133,19 @@ holding something for you (already built for favours) is enough. No new HUD.
 
 ## 6. UI
 
+**DECIDED (Kyle): the order gets a visible artifact.** `drawOrderPaper(d)` draws a small ruled sheet
+with a gold signature band on the desk — canvas-drawn rather than a sprite, so it needs no PNG and
+cannot be mistaken for the `note` loot item. Swap in art later if it wants any.
+
+*Placement took three attempts and the reason is worth keeping:* it is anchored to the desk **sprite**
+(`cx`, `cyB`, `ART_W`), not the collision box — measured on Priya's desk the box is 97 wide at x1500
+while the drawn desk is 58 wide centred at 1548, so "box right edge" is 20px clear of the furniture
+and the sheet floated on the partition. Two on-the-desktop placements then failed because every desk
+art puts its clear space somewhere different (a spot that is empty on `cubicle_desk_right` lands on
+the drawer stack and clips the name plate on `cubicle_desk`). It now sits in the band just above the
+sprite, which is empty on all of them and is already where this game draws its rigged / planted /
+loot markers. The owner lookup is guarded by `cosignActive()`, so it costs nothing at any other rank.
+
 One row on the **junior's worker menu**, beside "Delegate a job…" / "Plan a prank on them…":
 
 ```
@@ -178,26 +198,36 @@ sits in the frozen day‑1 intro with 17 of 19 workers parked at `(-400,-400)`; 
 
 ---
 
-## 9. Open questions for Kyle
+## 9. Questions — resolved and outstanding
 
-1. **Does an order need a visible artifact on the desk?** A paper sprite would make it legible at a
-   glance and cost one PNG. Or is the "!" marker enough?
-2. **Should a *sound* order ever be signable blind?** As specced, an unprofiled player is guessing at
-   50/50 with a real cost either way. That is consistent with pranks — but pranks let you profile
-   first at your leisure, and an order expires at phase end. If that feels harsh, the softener is to
-   make a blind countersign merely *neutral* rather than penalised.
-3. **`SAVE_VERSION`** — additive without a bump (recommended, §4), or the strict reading?
-4. **Is the 2×2 too tidy?** It could take a third verb ("sign it and put your own name on it" — the
+1. ~~**Visible artifact?**~~ **DECIDED: yes** — see §6. Canvas-drawn, no PNG needed.
+2. ~~**Blind signing?**~~ **DECIDED: neutral, for testing** — see §2.
+3. ~~**`SAVE_VERSION`?**~~ **Built additive, no bump.** `career` is cloned whole into the snapshot
+   and restored with `Object.assign`, so `career.cosign` rides along and an old save simply keeps the
+   default. One consequence found while testing and fixed: the NPC objects are `Object.assign`-ed
+   onto the live cast, so a field the snapshot never carried is *left alone* — a stale order (and its
+   paper) outlived a load. `applySnapshot` now clears them. `t_countersign` asserts both halves:
+   the tally persists, the orders do not.
+4. **STILL OPEN — is the 2×2 too tidy?** It could take a third verb ("sign it and put your own name on it" — the
    Climber move, stealing a junior's credit for real progress at a friendship cost). That would
    foreshadow the AM climber-credit-theft branch. It is also scope; flagged, not specced.
 
 ---
 
-## 10. Estimate
+## 10. What it cost (was: estimate)
 
-Small. It reuses `DELEG_MATCH`, `n.profiled`, `renderMenu`, the phase-boundary hooks that
+As predicted — small. It reuses `DELEG_MATCH`, `n.profiled`, `renderMenu`, the phase-boundary hooks that
 `delegArrive`/`delegExpireDue` already fire on, and the boss/slack penalty channel. No new UI
 surface, no new art (pending Q1), no nav or geometry work — so the placement linter is not in play
 and the risk is confined to game logic the gate already covers.
 
-The real cost is the test file and one careful pass on the tuning against the rank‑3 bar.
+The real cost was the test file, and one thing the estimate missed: **the first version of the test
+did not bite.** It derived "sound" by asking `cosignSound()` itself, which read as the tidy
+non-duplicating choice and was wrong — inverting `cosignSound` in the build left the whole suite
+GREEN, because the poser and the thing under test moved together. The mapping is the spec, so it is
+now hard-coded in the test as an independent oracle (§14) and checked over all 25 kind × personality
+combinations. Verified by mutation: the inverted build fails 7 assertions.
+
+Tuning was checked against the bar as the spec asked: at `COSIGN_PROG=2` and a cap of 3 a day, this
+contributes at most **6 points of a 100-point bar per day** — against +8 for a task and +2 for
+busywork. Visible, never a shortcut. Left at those values for Kyle to judge in play.

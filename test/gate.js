@@ -55,6 +55,7 @@ const TESTS = [
 
   't_menu_load.js',
   't_intro_axis.js',      // intro walk is cardinal-only — no diagonal art exists
+  't_countersign.js',     // Senior Sales countersign: rank gate, tier-derived pool, the 2x2, no suspicion
   't_moonwalk.js',        // nobody travels backwards; seatless meeting attendees get their own spot
   't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square
   't_regress.js',         // slow soak — last
