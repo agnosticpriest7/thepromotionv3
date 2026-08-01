@@ -5227,6 +5227,11 @@ function craftTabMove(d){
   craftSel=0;SFX.select();renderCraft();
 }
 function doCraft(t){
+  /* `calendar` and `well` are NO_CRAFT — they take no parts and have no `kit_<id>` in ITEMS, so
+     crafting them pushed a kit nothing can consume and then threw on ITEMS[...].label, once per
+     frame. The UI never allowed it (the button reads NO CRAFTING NEEDED), so this only ever fired
+     from a direct call — but "unreachable from the menu" is not the same as safe. */
+  if(NO_CRAFT[t]!==undefined||!ITEMS['kit_'+t]){toast('That one needs no crafting.');return;}
   closeCraft();
   startAct(2.2,'Crafting',()=>{
     SFX.craft();consumeParts(t);player.inv.push('kit_'+t);renderLeverage();

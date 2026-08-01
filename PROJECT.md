@@ -405,7 +405,9 @@ add Steam Input config, then Steamworks. Don't rewrite; ship what exists.
   like a *read* or like sorting mail? is climber credit-theft detectable in play? is walking to
   workers too slow at world width 1500? does AM feel like a different job? (Cut the 2/2/2/3 queue
   size first if it feels administrative.)
-- **3 sprite PNGs 404** — pre-existing, graceful fallback; Kyle's art call whether to add them.
+- ~~**3 sprite PNGs 404**~~ — **RESOLVED 2026-08-01.** `drawer`/`shift_covered`/`coffee_run` are still
+  absent from disk but **nothing requests them any more**: a live load makes 250 asset requests with
+  **0 HTTP errors and 0 broken art**, and all 230 `ART_FILES` entries resolve. Nothing to do.
 - **Old version files** (`V*index.html`) clutter the repo root. Harmless; could move to `/archive`.
 - **Repo must stay public** for GitHub Pages on the free plan (see §9).
 
@@ -427,8 +429,10 @@ add Steam Input config, then Steamworks. Don't rewrite; ship what exists.
 
 ## 10. Roadmap / Next Up
 
-*(Rewritten against reality — the manager verbs, the AM delegation layer, and the npc-leaving
-convention have all shipped and are documented above. What's below is what is actually next.)*
+*(Audited against the code 2026-08-01. Two entries that sat here for months were already SHIPPED —
+the prank assembly pipeline and the paths panel — and one open item had quietly fixed itself. The
+per-feature register with evidence now lives in **`FEATURES.md`**; keep it current and keep this
+section to what is genuinely next.)*
 
 **Next up:**
 - **Dale's "D" — the graceful-close upgrade.** On top of the shipped `npcLeaving` default, give the
@@ -437,14 +441,16 @@ convention have all shipped and are documented above. What's below is what is ac
   shortcut). **Arming must announce itself** (feed line + compass to the desk). Scaled-B (Dale
   recommends you remotely) was rejected — `vpFavor` alone opens CEO, skipping the Manager→CEO hold.
 - **Senior Sales "countersign a junior's order."** The AM delegation grammar, one rank early, so the
-  AM verb doesn't drop cold. Build before/alongside the next AM work.
-- **Paths / progress panel (pure legibility, gates unchanged).** Surface the three summits as
-  thermometers — Merit streak (x/3 days ≥70), Loyalty beats (x/16), Catfish prerequisites with the
-  Manager lock shown — so the intern can watch the hole get deeper. (HANDOFF-3 Part C(b).) Partly
-  present in THE WAY UP; make it a real panel.
-- **Prank assembly pipeline** — intel → materials → execution window → resolution as explicit
-  stages. TP's material-hunt layer; converts "make progress" into "get *this* from *there* before
-  *then*" (TE2's moment-to-moment texture). Long-confirmed as the correct next combat target.
+  AM verb doesn't drop cold. Measured: rank 3 has **no verb at all** today — `youTier()` gives it a
+  seat tier and `yourStanding()` a flat `+6`, and then rank 4 arrives with a tray, five match rules
+  and a 12-completion gate. **Specced in `SPEC-countersign.md`.** Build before/alongside the next AM work.
+- ~~**Paths / progress panel**~~ — **SHIPPED.** `renderPaths()` builds THE WAY UP with all three
+  thermometers (`meritCard`/`loyCard`/`catCard`); `t_paths.js` guards it and cites HANDOFF-3 Part
+  C(b) by name.
+- ~~**Prank assembly pipeline**~~ — **SHIPPED**, all four stages (see `FEATURES.md` for the symbols).
+  Two genuinely missing pieces remain, both small: the execution window is *opportunistic* and never
+  time-boxed (nothing expires, so "get this from there **before then**" isn't literally true yet),
+  and a half-built prank is invisible until you walk to that person.
 - **The floor system** — Manager-appoints-AM and the broader floor/org mechanics (no hooks/fields
   added yet, per the D1 spec).
 

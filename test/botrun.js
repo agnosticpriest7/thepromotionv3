@@ -150,24 +150,40 @@ guard('items', 'craft + loot + plant', () => {
      The intro is ~3740 frames (t_intro_face measures it), so a bot that crafts at frame 2000 sees
      player.act.t frozen at 2.20 forever and concludes the harness cannot do timed actions. It can;
      I got that wrong first time round. This scenario starts at 6500 frames for that reason. */
+  /* RESOLVED (was "craft-after-loot yields no kit"). It was THE POCKETS, not the game: INV_CAP is
+     8 and the looting loop above deliberately fills most of it, so there was no room left for the
+     kits doCraft pushes. Make room first — which is what a player does. Verified by hand: past the
+     intro, with parts and space, every craftable tier-0 recipe yields a kit.
+     Keep looting BEFORE crafting (the parts have to come from somewhere), just don't arrive full.
+     Separately, `calendar` and `well` need no parts and have no kit_<id>; doCraft on them used to
+     throw once per frame. The game now refuses them, and they are excluded here. */
+  /* the two NO_CRAFT ids, spelled out: consts are not reachable from the harness sandbox, and
+     "these two need no parts" is a game rule, so it is a legitimate literal (CLAUDE.md §14). */
+  const NO_PARTS = ['calendar', 'well'];
+  const craftable = recipes.filter(id => NO_PARTS.indexOf(id) < 0);
+  const skipped = recipes.filter(id => craftable.indexOf(id) < 0);
+  if (skipped.length) note('items', 'no-part recipes skipped (correct)', skipped.join(',') + ' need no parts, have no kit');
   let started = 0, crafted = 0;
-  recipes.forEach(id => {
+  /* Only assert the ones we actually have the parts for — partsStatus() is the game's own answer,
+     so this can never disagree with the craft screen. Blindly popping items to make room was the
+     previous mistake here: it threw away the very parts the looting loop had just collected. */
+  const partsStatus = S.partsStatus;
+  const ready = craftable.filter(id => { try { return (partsStatus(id).missing || []).length === 0; }
+                                        catch (e) { return false; } });
+  ck('items', 'some recipe is craftable after looting', ready.length > 0,
+     ready.length + '/' + craftable.length + ' have parts: ' + ready.join(','));
+  ready.forEach(id => {
+    if (p.inv.length >= 8) p.inv.splice(p.inv.findIndex(x => String(x).indexOf('kit_') === 0), 1);
     const before = p.inv.filter(x => x === 'kit_' + id).length;
     try { S.doCraft(id); } catch (e) { return; }
     if (p.act) started++;
     w.run(400, { ignoreGameOver: true });              // let startAct tick out
     if (p.inv.filter(x => x === 'kit_' + id).length > before) crafted++;
   });
-  ck('items', 'every recipe starts a craft action', started === recipes.length,
-     started + '/' + recipes.length + ' started');
-  /* OPEN QUESTION, deliberately a note and not a pass or a fail. Crafting on its own works here:
-     past the intro, doCraft('mislabel') ticks out and kit_mislabel lands in the inventory. Do it
-     AFTER this scenario's looting loop and no kit ever appears. Not chased down — a probe of
-     takeItem() threw, so this bot may simply be calling it wrong rather than the game misbehaving.
-     Either way it should be answered before anyone trusts a green here to mean "crafting works". */
-  if (crafted === recipes.length) ck('items', 'crafting yields kits', true, crafted + '/' + recipes.length);
-  else note('items', 'craft-after-loot yields no kit (UNRESOLVED)',
-       crafted + '/' + recipes.length + ' — works standalone; see the comment');
+
+  ck('items', 'every recipe starts a craft action', started === ready.length,
+     started + '/' + ready.length + ' started');
+  ck('items', 'crafting yields kits', crafted === ready.length, crafted + '/' + ready.length + ' crafted');
 
   /* PLANT — on somebody else's desk, and it must actually mark the desk */
   const victim = w.g.desks.find(d => d.owner && d.owner !== 'you');

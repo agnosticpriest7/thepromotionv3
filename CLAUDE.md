@@ -47,6 +47,11 @@ In `meltdown(n)`: `n.printerMode = Math.random()<0.07;` — already at the shipp
 Prefer running the build over inspecting it. Fix **root causes, not symptoms**.
 
 ### 7. Full context
+**`FEATURES.md`** is the per-feature register — status (SHIPPED / PARTIAL / NOT BUILT / DELAYED /
+REMOVED) with the evidence for each. Check it before proposing to build anything: the roadmap in
+`PROJECT.md` §10 pointed at the prank assembly pipeline as "next" for months while it was already
+shipping. A status only moves with evidence — a symbol, a passing test, or a measurement.
+
 Read **`PROJECT.md`** and the latest **`HANDOFF-*`** doc (currently **`HANDOFF-8.md`** — rooms, seating, the test audit and character select; `HANDOFF-7.md` is the preview-loop/`__dbg` run, now complete).
 
 ⚠️ **`HANDOFF-8` carries one open trap worth reading before you touch furniture or seats:** the test harness stubs `Image` at 64x64, so anything measured off a sprite is wrong under test. Verify seating and footprints in the BROWSER, not the harness.
