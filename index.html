@@ -7730,18 +7730,24 @@ function drawNPC(n){
      }
    }
    n.x=ox; n.y=oy;}
-  if(n.mgr){ctx.fillStyle='#c9a24a';ctx.fillRect(n.x+2,n.y-3,n.w-4,2);}
-  /* the VP's gold bar used to be drawn at the top of the 29px collision box — which is
-     now the middle of a 61px sprite, i.e. across his face. Everything overhead is measured
-     from the top of the ART. */
-  if(n.boss){ctx.fillStyle='#e8c23a';ctx.fillRect(n.x+2,headTop(n)-U1(5),n.w-4,3);}
+  /* NO RANK BARS. Dale and Sterling used to get a gold bar over the head and nobody else did —
+     and Dale's was still pinned to the top of his 29px COLLISION BOX, which is 24px below the top
+     of his 61px sprite, i.e. straight across his face. The same bug was found and fixed for
+     Sterling once (that is what `headTop` is for) and never carried across to Dale.
+
+     Removed rather than repositioned, on Kyle's call, and it agrees with the rule stated a few
+     lines below: no name tags, everyone has a face, learn them. These two are the most
+     recognisable sprites in the cast — silver hair and a three-piece, navy jacket and a loud tie —
+     so a marker bought nothing that the art was not already saying. Two lines to restore if the
+     role ever needs flagging again; measure from headTop(n), never from n.y. */
   if(isWorker(n)){
     // always-on stress meter under the NPC
     ctx.fillStyle='#00000022';ctx.fillRect(n.x-1,n.y+n.h+1,n.w+2,3);
     const sc=n.stress>85?'#c0392b':n.stress>65?'#e07b1a':n.stress>40?'#c9a41a':'#4a8c5a';
     ctx.fillStyle=sc;ctx.fillRect(n.x-1,n.y+n.h+1,(n.w+2)*(n.stress/100),3);
-    // one red pip per prior meltdown (2 = fired)
-    for(let i=0;i<n.meltdowns;i++){ctx.fillStyle='#c0392b';ctx.fillRect(n.x+n.w-4-i*5,n.y-3,3,3);}
+    /* one red pip per prior meltdown (2 = fired). SAME BUG as the rank bars above and unreported:
+       these were at n.y-3 too, so anyone who had melted down wore their pips across the face. */
+    for(let i=0;i<n.meltdowns;i++){ctx.fillStyle='#c0392b';ctx.fillRect(n.x+n.w-4-i*5,headTop(n)-U1(4),3,3);}
     // near-meltdown warning
     if(n.stress>=75){ctx.fillStyle='#c0392b';ctx.font='bold 12px monospace';ctx.textAlign='center';ctx.fillText('!',n.x+n.w/2,n.y+n.h+13);ctx.textAlign='left';}
   }
