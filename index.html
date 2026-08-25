@@ -2456,6 +2456,12 @@ function levelSpawnPoint(){return {x:levelSpawn.x,y:levelSpawn.y};}
 /* the level's tables, for tests: LEVEL_TABLES is a const and unreachable from the harness, and
    "is there seating here" is otherwise unaskable. */
 function levelTableRects(){return LEVEL_TABLES.map(f=>({x:f.t.x,y:f.t.y,w:f.t.w,h:f.t.h}));}
+/* test seams: RANKS and tasks are module `let`s and unreachable from the harness sandbox, and
+   "what does the HUD say" and "what is on the list" are otherwise unaskable. Read-only copies. */
+function rankNames(){return RANKS.slice();}
+function taskLabels(){return tasks.map(t=>t.label);}
+function taskPoolLabels(r){const b=vocab().tasks||TASK_POOL_BY_RANK;return (b[r]||[]).map(t=>t.label);}
+function taskPoolVias(r){const b=vocab().tasks||TASK_POOL_BY_RANK;return (b[r]||[]).map(t=>t.via);}
 const levelBoxes=[];     // authored rects this level created; scaleWorld scales these
 function buildGrid(){
   grid=[];
@@ -4210,6 +4216,82 @@ const TASK_POOL_BY_RANK={
     {via:'phones',label:'Close the Sterling account personally'},
   ],
 };
+/* ===== LEVEL VOCABULARY ==========================================================
+   The WORDS change per level; the MECHANICS never do. Every entry below keeps the `via` kind and
+   the per-rank COUNT of the office pool it stands in for, so a task fires at the same trigger, for
+   the same duration, with the same effect, and only reads differently. If a string cannot be made
+   level-aware without changing what a task DOES, it stays office-flavoured and goes in the report.
+
+   `via` is where a task completes. Save-Rite has no printer, water cooler, supply station, phones
+   or whiteboard — loadLevel clears `objects` and `errandPoints` — so those tasks are named in
+   store words but are NOT completable there yet. That is a fixture gap, not a vocabulary one, and
+   fixing it means giving grocery objects, which is mechanics and out of this branch. */
+const GROCERY_TASKS={
+  0:[ /* BAGGER — same 7 entries, same vias, as the office rank-0 pool */
+    {via:'desk',   label:'Face the shelves in your aisle'},
+    {via:'desk',   label:'Zone the endcaps before close'},
+    {via:'printer',label:'Run the go-backs to the floor'},
+    {via:'printer',label:'Break down the cardboard in receiving'},
+    {via:'supply', label:'Restock the shelves from the back'},
+    {via:'water',  label:'Check the date codes in your aisle'},
+    {via:'coffee', label:'Bring a coffee to {name}'},
+  ],
+  1:[ /* CASHIER */
+    {via:'desk',   label:'Face the shelves in your aisle'},
+    {via:'desk',   label:'Count your till before the rush'},
+    {via:'phones', label:'Take the price checks on the intercom'},
+    {via:'printer',label:'Run the go-backs to the floor'},
+    {via:'supply', label:'Break down the cardboard in receiving'},
+  ],
+  2:[ /* CLERK */
+    {via:'desk',   label:'Build a display for the weekly ad'},
+    {via:'desk',   label:'Reconcile the shrink sheet'},
+    {via:'phones', label:'Chase the late delivery'},
+    {via:'phones', label:'Call the vendor about the short order'},
+    {via:'printer',label:'Print the shelf tags for the new planogram'},
+  ],
+  3:[ /* DEPARTMENT LEAD */
+    {via:'desk',   label:'Close out the department numbers'},
+    {via:'desk',   label:"Review the clerks' zoning before close"},
+    {via:'phones', label:'Win back the standing bakery order'},
+    {via:'phones', label:'Book the holiday delivery window'},
+    {via:'npc',    label:'Train {name} on the department'},
+  ],
+  4:[ /* ASSISTANT MANAGER */
+    {via:'desk',   label:'Approve the shift schedule'},
+    {via:'desk',   label:'Write the weekly shrink summary'},
+    {via:'npc',    label:'Give {name} their performance review'},
+    {via:'phones', label:'Handle the escalated customer call'},
+    {via:'board',  label:'Update the department board for the huddle'},
+  ],
+  5:[ /* STORE MANAGER */
+    {via:'desk',   label:'Sign off on the department budget'},
+    {via:'desk',   label:'Prepare the district report'},
+    {via:'npc',    label:'Discipline {name} (someone has to)'},
+    {via:'board',  label:'Present the numbers at the board'},
+    {via:'phones', label:'Take the call from the district manager'},
+  ],
+};
+/* ⚠️ PLACEHOLDER LADDER, KNOWN TO BE WRONG. These are labels mapped 1:1 onto the office's seven
+   rungs so the TV stops saying INTERN in a supermarket. The DESIGNED grocery ladder is six rungs
+   with a BRANCH in the middle — Bagger, then you pick a department, then that department's floor
+   role, then Department Manager, then AM, Manager, Owner. The office ladder is a straight line and
+   a 1:1 relabel cannot express a branch; it is not trying to. The real ladder is its own branch and
+   will replace this table wholesale. Nobody should read this as a design decision. */
+const GROCERY_RANKS=['BAGGER','CASHIER','CLERK','DEPARTMENT LEAD','ASSISTANT MANAGER','STORE MANAGER','OWNER'];
+const GROCERY_DETENTIONS=['Break down a pallet of cardboard','Face every shelf in frozen',
+  'Scrub the loading dock','Re-date the whole dairy case','Collect carts in the rain — twice'];
+const VOCAB={
+  office:{ ranks:null,           tasks:null,          detentions:null,
+           clockIn:'Clock in at the elevator', clockOut:'Head to the elevator — day over',
+           clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting' },
+  grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, detentions:GROCERY_DETENTIONS,
+           clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
+           clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle' },
+};
+/* office entries are null where the office keeps its original array, so those arrays are never
+   copied and the office's strings cannot drift from what they are today. */
+function vocab(){ return VOCAB[currentLevel]||VOCAB.office; }
 const TASK_POOL=[
   {via:'desk',label:'Finish the TPS cover sheets at your desk'},
   {via:'desk',label:'Reconcile the expense report at your desk'},
@@ -4226,7 +4308,8 @@ const TASK_POOL=[
 ];
 function rollTasks(){
   tasks=[];player.coffeeFor=null;
-  const pool=TASK_POOL_BY_RANK[player.rank]||TASK_POOL_BY_RANK[0];
+  const byRank=vocab().tasks||TASK_POOL_BY_RANK;
+  const pool=byRank[player.rank]||byRank[0];
   const deskT=pool.filter(t=>t.via==='desk');
   const outT=pool.filter(t=>t.via!=='desk');
   addTask(pick(deskT));
@@ -5641,7 +5724,7 @@ function inRoomNamed(n){ const r=roomAt(player.x+player.w/2, player.y+player.h/2
 function inBreakZone(){ return inRoomNamed('BREAK ROOM'); }
 function inKitchenZone(){ return inRoomNamed('KITCHEN'); }
 function phaseCheckins(ph){
-  if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine('Clocked in at the elevator, right on time.','t');}
+  if(ph==='Clock-In'&&!phaseCred[ph]&&cdist(player,ELEVATOR)<Math.round(80*S)){phaseCred[ph]=true;player.suspicion=clamp(player.suspicion-5,0,100);toast('Clocked in on time. Suspicion −5');logLine(vocab().clockedIn,'t');}
   if((ph==='Morning Break'||ph==='Afternoon Break'||ph==='Lunch / Break')&&!phaseCred[ph]&&(inBreakZone()||inKitchenZone())){phaseCred[ph]=true;player.stress=clamp(player.stress-10,0,100);player.suspicion=clamp(player.suspicion-4,0,100);toast('Break taken. Stress −10, suspicion −4');logLine('Took your break like a normal employee. Suspicion −4.','g');}
 }
 function checkMeeting(){if(currentPhase().name==='Meeting'&&!meetingCredited&&cdist(player,{x:Math.round(510*S),y:Math.round(390*S)})<Math.round(130*S)){meetingCredited=true;phaseCred['Meeting']=true;const mt=openTask('meeting');if(mt)completeTask(mt);else{player.prog=clamp(player.prog+5,0,100);player.suspicion=clamp(player.suspicion-4,0,100);player.suspicion=clamp(player.suspicion-6,0,100);toast('Seen at meeting. Promotion +5, suspicion −6');logLine('Attended the meeting, looking engaged. +5.','g');checkWin();}}}
@@ -5658,7 +5741,7 @@ function missMeeting(){
   const rank=player.rank;
   if(rank<2){
     // INTERN / JUNIOR SALES: nobody expects the new blood to run the room.
-    logLine('You skipped the 10:00 meeting. At your level, nobody thought to look for you.','t');
+    logLine('You skipped '+vocab().standup+'. At your level, nobody thought to look for you.','t');
     return;
   }
   career.meetingMisses=(career.meetingMisses||0)+1;
@@ -6336,7 +6419,7 @@ function triggerDiscipline(){
       toast(`HR searched you — ${taken} item(s) seized`);
     }
   }
-  discipline={count:0,need:30,task:pick(DETENTIONS)};
+  discipline={count:0,need:30,task:pick(vocab().detentions||DETENTIONS)};
   paused=true;
   document.getElementById('punishTask').textContent=discipline.task+" — tap the button (or press E) until it's done.";
   document.getElementById('punish').style.display='flex';
@@ -8315,7 +8398,7 @@ function fmtTime(m){let h=Math.floor(m/60),mm=Math.floor(m%60);const ap=h<12?'AM
 function phaseObjective(){
   if(intro)return {text:'Follow Dale',done:false};
   const ph=currentPhase().name;
-  if(ph==='Clock-In')return {text:'Clock in at the elevator',done:!!phaseCred['Clock-In']};
+  if(ph==='Clock-In')return {text:vocab().clockIn,done:!!phaseCred['Clock-In']};
   if(ph==='Regular Work'){
     const allDone=tasks.length>0&&tasks.every(t=>t.done);
     if(allDone)return {text:'Work complete — free time',done:true};
@@ -8326,7 +8409,7 @@ function phaseObjective(){
   }
   if(ph==='Meeting')return {text:meetingCredited?'Meeting handled — you may leave':'Attend the meeting (take notes to leave early)',done:!!meetingCredited};
   if(ph==='Morning Break'||ph==='Afternoon Break'||ph==='Lunch / Break')return {text:phaseCred[ph]?'Break taken':'Take a break (break room or kitchen)',done:!!phaseCred[ph]};
-  if(ph==='Clock-Out')return {text:'Head to the elevator — day over',done:false};
+  if(ph==='Clock-Out')return {text:vocab().clockOut,done:false};
   return {text:ph,done:false};
 }
 function drawObjective(){
@@ -10367,6 +10450,8 @@ function loadLevel(id){
   return 'grocery';
 }
 loadLevel(currentLevel);
+/* the ladder's LABELS follow the level; its length, thresholds and promotion logic do not. */
+if(vocab().ranks)RANKS=vocab().ranks.slice();
 scaleWorld();
 buildGrid();buildSprites();scheduleBoss();scheduleAudit();scheduleDrill();rollContainers();renderLeverage();assembleAtElevator();/* intro starts when a New Game is chosen from the menu */
 document.getElementById('punishBtn').onclick=()=>punishTap();
