@@ -29,8 +29,13 @@ const CHUNK = 300;              // a phase is ~3000 frames, so this cannot miss 
 const w = createWorld({ storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } });
 const S = w.sandbox, g = w.g, sv = w.rawSave();
 
-ck('the soak world is grocery, and empty', g.NPCS.length === 0 && g.desks.length === 0,
-   g.NPCS.length + ' NPCs, ' + g.desks.length + ' desks');
+/* "empty" now means NO CAST, not no furniture: the player has a station since the fixtures
+   branch, so the assertion is that nobody ELSE owns a desk. It went correctly red when the
+   station arrived. */
+ck('the soak world is grocery, with a cast of nobody', g.NPCS.length === 0 &&
+   g.desks.filter(d => d.owner && d.owner !== 'you').length === 0,
+   g.NPCS.length + ' NPCs, ' + g.desks.length + ' desks (' +
+   g.desks.filter(d => d.owner === 'you').length + ' yours)');
 
 /* count autosaves by wrapping the Store method the game really calls, not by inferring */
 let saves = 0, lastSaved = null;

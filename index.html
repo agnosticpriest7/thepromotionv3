@@ -2462,6 +2462,8 @@ function rankNames(){return RANKS.slice();}
 function taskLabels(){return tasks.map(t=>t.label);}
 function taskPoolLabels(r){const b=vocab().tasks||TASK_POOL_BY_RANK;return (b[r]||[]).map(t=>t.label);}
 function taskPoolVias(r){const b=vocab().tasks||TASK_POOL_BY_RANK;return (b[r]||[]).map(t=>t.via);}
+function taskVias(){return tasks.map(t=>t.via);}
+function taskDoneCount(){return tasks.filter(t=>t.done).length;}
 const levelBoxes=[];     // authored rects this level created; scaleWorld scales these
 function buildGrid(){
   grid=[];
@@ -4292,20 +4294,9 @@ const VOCAB={
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
 function vocab(){ return VOCAB[currentLevel]||VOCAB.office; }
-const TASK_POOL=[
-  {via:'desk',label:'Finish the TPS cover sheets at your desk'},
-  {via:'desk',label:'Reconcile the expense report at your desk'},
-  {via:'desk',label:'Update the CRM entries at your desk'},
-  {via:'desk',label:'Draft the quarterly summary at your desk'},
-  {via:'printer',label:'Make copies at the printer'},
-  {via:'printer',label:'Shred the old contracts at the printer'},
-  {via:'supply',label:'Restock the supply station'},
-  {via:'supply',label:'Organize the supply closet'},
-  {via:'water',label:'Refill the water cooler'},
-  {via:'meeting',label:'Be seen at the 10:00 meeting'},
-  {via:'npc',label:'Deliver a memo to {name}'},
-  {via:'npc',label:'Bring coffee to {name}'},
-];
+/* TASK_POOL (a flat, rank-less pool) was DELETED here: defined, never referenced, and sitting
+   directly beside the live TASK_POOL_BY_RANK it is one character away from. Dead code next to
+   the task system is exactly what gets edited by mistake. Recover it from git if ever wanted. */
 function rollTasks(){
   tasks=[];player.coffeeFor=null;
   const byRank=vocab().tasks||TASK_POOL_BY_RANK;
@@ -7583,7 +7574,9 @@ function labelBox(txt,cx,by){
 function drawObjects(){
   for(const o of objects){
     if(!inView(o.x,o.y,o.w,o.h))continue;
-    const art=OBJ_ART[o.type];
+    /* a level may stand a different prop in for a trigger kind — the same per-entry `art`
+       override containers already support. The TYPE still decides the interaction. */
+    const art=o.art||OBJ_ART[o.type];
     const cx=o.x+o.w/2, cyB=o.y+o.h+U1(4);
     let drew=false;
     /* A printer that's been executed shows its wreck stage (0..3). Stage is driven by how
@@ -10428,6 +10421,28 @@ function loadLevel(id){
     levelBlockers.push({x:x0-11, y:CHK_Y+22-CTR+1, w:CTR*3-2, h:CTR-2});
   };
   checkout(140); checkout(360); checkout(1000); checkout(1220);
+  /* ---- FIXTURES: what the tasks complete against -------------------------------------------
+     A bagger's day was named in store words but none of it was completable, because Save-Rite had
+     no objects at all — loadLevel clears `objects`, and every task's `via` resolves against one.
+     These reuse the office's trigger kinds WHOLESALE: same `type`, so the same interaction menu,
+     the same completion path and the same effects. Only the label and the prop differ.
+
+     `via:'desk'` completes at YOUR OWN desk, and a store has no desks — so the player gets ONE
+     station at the end of a shelf run. That is the "designated spot in the player's aisle" rather
+     than a new zone-trigger system: the two aisle tasks (facing, date codes) resolve there.
+     Reported as a limitation, not worked around. */
+  objects.push(
+    {type:'printer',x:250,y:600,w:34,h:26,label:'Go-back cart',   art:'supply_shelf',  jammed:false},
+    {type:'printer',x:930,y:300,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
+    {type:'supply', x:BOH_X+60,y:120,w:34,h:26,label:'Baler'},
+    {type:'water',  x:1300,y:120,w:30,h:24,label:'Water station'},
+    {type:'coffee', x:1360,y:120,w:30,h:24,label:'Coffee machine'},
+    {type:'phones', x:640,y:600,w:26,h:20,label:'Intercom'},
+    {type:'board',  x:BOH_X+150,y:250,w:40,h:26,label:'Department board'});
+  /* the player's station: one desk, at the end of an aisle. Desks are the ownership spine, so this
+     is also what gives a grocery player somewhere to store contraband and be audited from. */
+  desks.push({x:895,y:250,w:40,h:60,owner:'you',tier:0,dept:'sales',reserved:false,
+              art:'cubicle_desk_left',seatSide:'left',seatDir:'right',rigged:null,planted:null});
   /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
   CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
                   {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
@@ -10443,6 +10458,9 @@ function loadLevel(id){
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
      in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.
      MUSTER and HR_OFFICE stay where they are; both are NPC-only and there are no NPCs. ------- */
+  /* the machines are things you walk UP TO, not through — the office gets this from
+     buildBlockers, which only runs once art loads; levelBlockers makes them solid from frame 0. */
+  objects.forEach(o=>levelBlockers.push({x:o.x+1,y:o.y+1,w:o.w-2,h:o.h-2}));
   EXIT.x=Math.round(DOOR_X+DOOR_W/2); EXIT.y=STORE_S+T+10;
   /* ---- SPAWN: just inside the doors, where every run begins. ----------------------------- */
   player.x=Math.round(DOOR_X+DOOR_W/2); player.y=STORE_S-28;   // just inside the doors
