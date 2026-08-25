@@ -7967,8 +7967,12 @@ function tickLights(dt){
     if(lightSeqT<=0){
       const order=lightsUp?[0,4,1,5,2,6,3,7,8,9]:[0,4,1,5,2,6,3,7,8,9];
       if(lightSeq<order.length){
+        /* `order` is a fixed index list into LIGHT_BANKS, written for the office's ten banks. A
+           level with no authored lighting has none, so this dereferenced undefined EVERY FRAME
+           from 8:15 — and because advanceClock() runs after tickLights() in the same block, the
+           throw froze the clock. That is why no grocery day had ever rolled. */
         const b=LIGHT_BANKS[order[lightSeq]];
-        b.on=lightsUp;
+        if(b) b.on=lightsUp;
         /* no flicker on switch-on */
         SFX.select();
         lightSeq++;
@@ -7976,7 +7980,9 @@ function tickLights(dt){
       } else lightSeq=-1;
     }
   }
-  {const lit=LIGHT_BANKS.reduce((s,b)=>s+b.t,0)/LIGHT_BANKS.length;try{setHum(lit);}catch(e){}}
+  /* 0/0 with no banks. A level that authored no lighting is not a dark level, it is an unlit
+     ONE — treat it as fully lit rather than feeding NaN into the hum and the overlay. */
+  {const n=LIGHT_BANKS.length;const lit=n?LIGHT_BANKS.reduce((s,b)=>s+b.t,0)/n:1;try{setHum(lit);}catch(e){}}
   LIGHT_BANKS.forEach((b,i)=>{
     const target=b.on?1:0;
     b.t+=(target-b.t)*Math.min(1,dt*(b.on?9:3));
@@ -10573,8 +10579,12 @@ function startGame(slot, fresh){
     try{ localStorage.setItem('promo:newgame', String(slot)); localStorage.setItem('promo:char', String(playerChar));
          localStorage.setItem('promo:level', String(pendingLevel)); }catch(e){}
     if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
-    // harness / no-reload fallback: start intro in place
-    currentLevel=levelBuilt(pendingLevel)?pendingLevel:DEFAULT_LEVEL;
+    /* harness / no-reload fallback: start the intro in place. It must NOT touch currentLevel.
+       The world was built at boot and cannot be rebuilt here, so adopting the level the menu
+       picked would label a grocery world 'office' and write a save that lies about which world
+       it holds — the same mislabel the cross-level load guard exists to prevent. In the browser
+       the reload above always happens, so this path only ever runs where the world is already
+       whatever boot made it. */
     screen='play'; renderMenuDOM(); startIntro(); autosave(); paused=false; return;
   }
   /* A SAVE FROM ANOTHER LEVEL CANNOT BE APPLIED IN PLACE. The world is built at boot — loadLevel()

@@ -113,6 +113,20 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
   osave.Store.clear(1);
 }
 
+/* ---- 8. a new run cannot RELABEL the world it is already in -----------------------------
+   startGame's no-reload fallback used to adopt the level the menu had picked, which in a world
+   built as grocery meant currentLevel became 'office' while the floor stayed grocery — and the
+   next save would claim a world it did not hold. */
+{
+  const gw = createWorld({ storage: { 'promo:level': 'grocery' } });
+  const gsave = gw.rawSave();
+  const before = gsave.buildSnapshot(false, null).level;
+  gw.startNewGame(0);
+  const after = gsave.buildSnapshot(false, null).level;
+  ck('starting a run cannot relabel the level', before === 'grocery' && after === 'grocery',
+     before + ' -> ' + after + ' (world: ' + gw.g.desks.length + ' desks, ' + gw.g.NPCS.length + ' NPCs)');
+}
+
 console.log(`grocery: ${pass} pass, ${fail} fail`);
 console.log(fail ? 'GROCERY: RED ❌' : 'GROCERY: GREEN ✅ (the seam holds an empty room)');
 process.exit(fail ? 1 : 0);
