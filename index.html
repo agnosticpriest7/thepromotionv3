@@ -2425,6 +2425,22 @@ function promptKey(){return (typeof padSeen!=='undefined'&&padSeen)?'X':'E';}
 const CELL=Math.round(20*S), COLS=Math.floor(W/CELL), ROWS=Math.floor(H/CELL);
 let grid=[];
 const sealedZones=[];   // level overhaul: sales-room gating rewired later
+/* THE CURRENT LEVEL'S FURNITURE.
+   renderInner used to say "if office, draw these five tables" — which was right for a level that
+   had none, and wrong the moment grocery needed its own. It now says "draw the current level's
+   furniture", and each level registers its own in loadLevel().
+   `levelBoxes` holds rects CREATED by loadLevel, in authored units, so scaleWorld() scales them on
+   its single pass. The office's five tables are consts scaleWorld already scales by name, so they
+   are only REFERENCED here — never pushed to levelBoxes, or they would be scaled twice. */
+const LEVEL_TABLES=[];   // {t, chairs} in draw order
+/* WHERE THIS LEVEL PUTS THE PLAYER, recorded by loadLevel and scaled by scaleWorld on its single
+   pass. It exists because a test cannot safely guess it: the soak used to derive "the middle of the
+   world", which was true of one empty room and wrong the moment the store gained an entrance to
+   spawn beside. Stating it makes the assertion about the CONTRACT rather than about a rule the
+   floor plan is free to change. */
+const levelSpawn={x:0,y:0};
+function levelSpawnPoint(){return {x:levelSpawn.x,y:levelSpawn.y};}
+const levelBoxes=[];     // authored rects this level created; scaleWorld scales these
 function buildGrid(){
   grid=[];
   for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++){
@@ -7234,17 +7250,23 @@ function fitTableSeats(){
   if(!ok('crew_table')||!ok('meet_table'))return;
   /* every set is now a crew-style rig — the sprite IS the tabletop, so its rect is the blocker
      (no middle-band guess). The last conference_table, in the meeting room, is gone. */
-  const mr=crewRect(meetingTable), mr2=crewRect(meetingTable2),
-        br=crewRect(breakTable), br2=crewRect(breakTable2), kr=crewRect(kitchenTable);
+  /* THE CURRENT LEVEL'S TABLES, not the office's five by name. This was the LAST place the office
+     leaked into another world, and the nastiest, because it is invisible: it takes crewRect of the
+     five office table consts — which still hold their office coordinates in every level — makes
+     BLOCKERS out of them and bakes them into the nav grid. In Save-Rite that put a solid,
+     undrawable meeting table across a grocery aisle. Nothing rendered, the placement linter saw
+     nothing (it lints props, not blockers), and it only appeared after boot because it waits on
+     art to load. "Clearing the arrays is not clearing the world" — and this was the layer under
+     the one already fixed in renderInner. */
+  const rects=LEVEL_TABLES.map(f=>crewRect(f.t));
   /* blockers FIRST, then rebuild the grid, THEN place the seats — so snapTarget knows
      about the tabletop and can never drop a seat inside the furniture */
-  buildBlockers([],[mr,mr2,br,br2,kr]);
+  buildBlockers([],rects);
   buildGrid();
-  crewSeatRing(mr,meetingChairs,MEET_CHAIR_ART);
-  crewSeatRing(mr2,meetingChairs2,MEET_CHAIR_ART);
-  crewSeatRing(br,breakChairs.filter(c=>!c.couch));
-  crewSeatRing(br2,breakChairs2);
-  crewSeatRing(kr,kitchenChairs);
+  LEVEL_TABLES.forEach((f,i)=>{
+    const ring=f.couchFilter?f.chairs.filter(c=>!c.couch):f.chairs;
+    if(ring&&ring.length)crewSeatRing(rects[i],ring,f.chairArt);
+  });
   tableSeatsFitted=true;
   NPCS.forEach(n=>{n.goal=null;n.path=null;n.wp=0;unstickEnt(n);});
   unstickPlayer();
@@ -8066,11 +8088,24 @@ function drawLighting(){
     ctx.fillRect(b.x,b.y,b.w,b.h);
   });
 }
+/* The store's fascia. Canvas text, like the office's PAPER SUPPLY CO. board it stands beside in
+   spirit — no art, and it reads at TV distance because it is drawn at world scale. */
+function drawStoreSign(){
+  /* `U` is a LOCAL alias inside drawDecor and friends, not a global — declared here rather than
+     assumed, which is what the first version got wrong (U is not defined, once per frame). */
+  const U=(v)=>Math.round(v*S);
+  const x=U(600), y=U(690), w=U(300), h=U(26);
+  if(!isFinite(x)||!isFinite(y))return;
+  ctx.fillStyle='#241d16';ctx.fillRect(x,y,w,h);
+  ctx.fillStyle='#2b2b2b';ctx.fillRect(x+U(3),y+U(3),w-U(6),h-U(6));
+  ctx.fillStyle='#e8c23a';ctx.font='bold '+U1(15)+'px monospace';ctx.textAlign='center';
+  ctx.fillText("MERV'S",x+w/2,y+h-U(8));ctx.textAlign='left';
+}
 function drawDecor(){
   /* every prop in here is authored at an office coordinate, including the PAPER SUPPLY CO.
      sign, which is canvas-drawn and hardcoded separately from LEVELS[0].name. None of it
      belongs in another level. */
-  if(currentLevel!=='office') return;
+  if(currentLevel!=='office'){ if(currentLevel==='grocery')drawStoreSign(); return; }
   const U=(v)=>Math.round(v*S);
   /* wall-mounted safety + clocks (office-manager amenity pass; decor, non-blocking) */
   sprAt('wall_clock',U(510),U(300),'wall_clock');                 // meeting room
@@ -8220,7 +8255,8 @@ function renderInner(){
      arrays loadLevel() clears — so they kept rendering in the grocery room: a conference set
      and a lift lobby floating in an empty shop. Guarded at the CALL SITE rather than inside
      drawFurniture, which is generic and which a later level will want for its own tables. */
-  if(currentLevel==='office'){drawFurniture(meetingTable,meetingChairs);drawFurniture(meetingTable2,meetingChairs2);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(kitchenTable,kitchenChairs);drawElevator();}
+  LEVEL_TABLES.forEach(f=>drawFurniture(f.t,f.chairs));
+  if(currentLevel==='office')drawElevator();   // the lift is office fabric, not furniture
   drawLabels();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
@@ -10115,6 +10151,8 @@ function scaleWorld(){
   scaleBox(MUSTER);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
   ROOMS.forEach(scaleBox);
+  levelBoxes.forEach(scaleBox);
+  scaleBox(levelSpawn);   // furniture a non-office level authored; office's five are scaled by name above
   if(typeof mgr!=='undefined'&&mgr.route)mgr.route.forEach(scaleBox);
   /* remember where each desk SPRITE sits, so fitDeskBoxes() can move the collision
      box onto the art without dragging the drawing along with it */
@@ -10150,7 +10188,19 @@ seedTiers();
    A second level REPLACES the CONTENTS of those arrays. They are `const` bindings, not const
    contents, so all ~300 references to desks/walls/objects keep working untouched. */
 function loadLevel(id){
-  if(id!=='grocery') return 'office';
+  if(id!=='grocery'){
+    /* The office's five tables are module consts that scaleWorld() already scales by name, so they
+       are only REGISTERED here for the draw list — never pushed to levelBoxes. Registering is not
+       the same as authoring: no office data changes, which is what keeps the office boot identical. */
+    LEVEL_TABLES.push(
+      {t:meetingTable, chairs:meetingChairs,  chairArt:MEET_CHAIR_ART},
+      {t:meetingTable2,chairs:meetingChairs2, chairArt:MEET_CHAIR_ART},
+      {t:breakTable,   chairs:breakChairs,    couchFilter:true},   // the couch is not a crew chair
+      {t:breakTable2,  chairs:breakChairs2},
+      {t:kitchenTable, chairs:kitchenChairs});
+    levelSpawn.x=player.x; levelSpawn.y=player.y;   // the office then walks you to the lift at boot
+    return 'office';
+  }
   /* ---- SAVE-RITE: one empty room, and nothing else. No props, no cast, no ladder. ----
      Everything the office authored is cleared rather than left lying around: a stray office
      wall in the grocery world would be invisible (nothing draws it there) but still solid in
@@ -10164,13 +10214,68 @@ function loadLevel(id){
      world resize carries it (CLAUDE.md §14); W and H are consts computed at module load and are
      already scaled, which is why S is divided back out here. */
   const AW=Math.round(W/S), AH=Math.round(H/S), T=16;
-  walls.push({x:0,      y:0,      w:AW, h:T },   // north
-             {x:0,      y:AH-T,   w:AW, h:T },   // south
-             {x:0,      y:0,      w:T,  h:AH},   // west
-             {x:AW-T,   y:0,      w:T,  h:AH});  // east
-  ROOMS.push({name:'SHOP FLOOR', x:T, y:T, w:AW-2*T, h:AH-2*T, c:'#4a8c5a'});
-  /* spawn in the middle. scaleWorld scales the player, so this is authored too. */
-  player.x=Math.round(AW/2); player.y=Math.round(AH/2);
+  /* ---- SHELL. Perimeter, with the customer entrance broken out of the south wall. -------- */
+  /* The doors are an opening in the STORE's south wall, which is inset from the world edge — not
+     an opening in the world perimeter. The first cut put them in the perimeter itself, which meant
+     walking out of Save-Rite walked you off the map: the enclosure assertion caught it. The strip
+     between the two walls is the vestibule you arrive in, and it is bounded on all four sides. */
+  const DOOR_X=690, DOOR_W=120, STORE_S=655;         // entrance gap, in the store's south wall
+  walls.push({x:0,y:0,w:AW,h:T},                                        // world north
+             {x:0,y:AH-T,w:AW,h:T},                                     // world south — SOLID
+             {x:0,y:0,w:T,h:AH},                                        // world west
+             {x:AW-T,y:0,w:T,h:AH},                                     // world east
+             {x:0,y:STORE_S,w:DOOR_X,h:T},                              // store south, west of the doors
+             {x:DOOR_X+DOOR_W,y:STORE_S,w:AW-DOOR_X-DOOR_W,h:T});       // store south, east of the doors
+  /* ---- BACK OF HOUSE, walled off in the north-east with ONE opening onto the sales floor.
+       The opening is a 90-unit gap in the dividing wall — the nav grid inflates a blocker by 2px
+       a side and cells are 20 authored, so a narrow gap is not reliably walkable. ------------- */
+  const BOH_X=1030, BOH_Y=350, GAP_Y=170, GAP_H=90;
+  walls.push({x:BOH_X,y:0,w:T,h:GAP_Y},                                 // divider, above the gap
+             {x:BOH_X,y:GAP_Y+GAP_H,w:T,h:BOH_Y-(GAP_Y+GAP_H)+T},       // divider, below the gap
+             {x:BOH_X,y:BOH_Y,w:AW-BOH_X,h:T});                         // BOH south wall
+  /* ---- ZONES. Captions only; roomAt() reads these, nothing collides with them. ------------ */
+  ROOMS.push({name:'FRONT END',    x:T,   y:470, w:AW-2*T, h:STORE_S-470, c:'#c9a41a'},
+             /* the bounded strip you arrive in, between the store's south wall and the world's */
+             {name:'ENTRANCE',     x:T,   y:STORE_S+T, w:AW-2*T, h:AH-STORE_S-2*T, c:'#7c7768'},
+             {name:'GROCERY',      x:320, y:210, w:690,    h:260,      c:'#4a8c5a'},
+             {name:'PRODUCE',      x:T,   y:210, w:290,    h:260,      c:'#7fae83'},
+             {name:'BAKERY',       x:T,   y:T,   w:360,    h:180,      c:'#8a6a3a'},
+             {name:'DELI',         x:450, y:T,   w:560,    h:180,      c:'#c98a1a'},
+             {name:'RECEIVING',    x:BOH_X+T, y:T,   w:220, h:150,     c:'#7c7768'},
+             {name:'BREAK ROOM',   x:1280,    y:T,   w:AW-1280-T, h:150, c:'#4a8c5a'},
+             {name:'STORE MANAGER',x:BOH_X+T, y:190, w:150, h:150,     c:'#3b6ea5'},
+             {name:'OWNER',        x:1210,    y:190, w:140, h:150,     c:'#c0392b'},
+             {name:'STAFF WC',     x:1370,    y:190, w:AW-1370-T, h:150, c:'#7c7768'});
+  /* ---- GROCERY SHELF RUNS. supply_shelf draws 61x88 authored, so runs are pitched 96 down and
+       spaced 150 across: ~89 units of clear aisle, which is over four nav cells. Aisle width is
+       the single thing that decides whether a store feels good to walk, so it is authored
+       generously and Kyle can tighten it on the TV. --------------------------------------- */
+  /* Three rows, not four: a checkout's crew set draws 205x102 authored and reaches up out of the
+     front end, so the shelf block stops well clear of it. The band it leaves between GROCERY and
+     FRONT END is the cross-aisle every store has along the front. */
+  for(let rx=345; rx<=945; rx+=150)
+    for(let ry=225; ry<=425; ry+=96)
+      CONTAINERS.push({x:rx,y:ry,w:28,h:22,label:'Shelf',kind:'box'});
+  /* ---- PRODUCE. Chilled cases against the west wall, no aisles. fridge draws 72x112. ------ */
+  for(let py=235; py<=425; py+=124)
+    CONTAINERS.push({x:38,y:py,w:30,h:24,label:'Produce case',kind:'fridge'});   // flush to the west wall: the fridge sprite draws 72 wide about the box centre
+  /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
+  CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
+                  {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
+                  {x:1300,     y:60,  w:30,h:24,label:'Staff lockers',    kind:'locker'},
+                  {x:BOH_X+40, y:250, w:30,h:24,label:'Manager cabinet',  kind:'cabinet'},
+                  {x:1230,     y:250, w:30,h:24,label:'Owner cabinet',    kind:'cabinet'});
+  /* ---- FURNITURE. Placeholder office tables standing in for counters and checkouts. Each is
+       an authored rect pushed to levelBoxes so scaleWorld scales it exactly once. ----------- */
+  const table=(x,y)=>{ const t={x:x,y:y,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]}); return t; };
+  table(120,120); table(250,120);                       // BAKERY counter run (north-west)
+  table(560,120); table(700,120); table(840,120);       // DELI counter run (north, east of the break)
+  table(180,585); table(400,585);                       // checkout lanes, west of the doors
+  table(1050,585); table(1270,585);                     // checkout lanes, east of the doors
+  table(1330,250);                                      // break-room table (back of house)
+  /* ---- SPAWN: just inside the doors, where every run begins. ----------------------------- */
+  player.x=Math.round(DOOR_X+DOOR_W/2); player.y=STORE_S-28;   // just inside the doors
+  levelSpawn.x=player.x; levelSpawn.y=player.y;
   return 'grocery';
 }
 loadLevel(currentLevel);

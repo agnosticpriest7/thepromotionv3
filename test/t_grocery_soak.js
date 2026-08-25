@@ -37,12 +37,12 @@ let saves = 0, lastSaved = null;
 const realSave = sv.Store.save.bind(sv.Store);
 sv.Store.save = (slot, o) => { saves++; lastSaved = o; return realSave(slot, o); };
 
-/* WHERE THE LEVEL PUT THEM, derived from the live world rather than captured from the player.
-   Capturing the player's position at this point is worthless: assembleAtElevator fires at BOOT as
-   well as at every day roll, so a captured "spawn" already has the office coordinate baked in and
-   the drift from it is zero. loadLevel spawns in the middle of the world; that is the contract, and
-   it is what the assertion has to compare against. */
-const spawn = { x: Math.round((g.layout && g.layout.W || 0) / 2), y: Math.round((g.layout && g.layout.H || 0) / 2) };
+/* WHERE THE LEVEL PUT THEM — asked of the level, not guessed at. The first version derived "the
+   middle of the world", which was true of one empty room and went red the moment the floor plan
+   gave the store an entrance to spawn beside. Capturing the player's position instead is worse
+   still: assembleAtElevator fires at BOOT as well as at every day roll, so a captured spawn
+   already has the office coordinate baked in and the drift from it is zero. */
+const spawn = S.levelSpawnPoint();
 let phaseChanges = 0, prevPhase = S.currentPhase().name;
 const phasesSeen = {};
 let worstAway = 0;

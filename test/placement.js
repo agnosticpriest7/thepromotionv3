@@ -55,8 +55,10 @@ const OBJ_LET  = { printer:'P', water:'W', coffee:'C', supply:'U', files:'F',
 const CONT_LET = { cabinet:'c', box:'x', locker:'L', fridge:'G' };
 const DESK_LET = 'D';
 
-function buildContext() {
-  const w = createWorld();
+/* opts.storage seeds the boot handoff so a world other than the office can be linted. The level
+   is decided before scaleWorld() runs, so it cannot be chosen after createWorld() returns. */
+function buildContext(opts) {
+  const w = createWorld(opts && opts.storage ? { storage: opts.storage } : undefined);
   const L = w.g.layout;
   const S = L.S || 1.8;
   const U1 = v => Math.round(v * S / 1.8);          // game's U1(), replicated
@@ -302,7 +304,7 @@ function lint(ctx) {
 /* ---------- entry point --------------------------------------------------- */
 function checkPlacement(opts) {
   opts = opts || {};
-  const ctx = buildContext();
+  const ctx = buildContext(opts);
   const lines = [];
   if (!opts.noMap) lines.push(drawMap(ctx, opts.cell));
   const { fails, warns, nDoors } = lint(ctx);
@@ -321,7 +323,25 @@ function checkPlacement(opts) {
 module.exports = { checkPlacement, buildContext };
 
 if (require.main === module) {
-  const r = checkPlacement();
-  process.stdout.write(r.text + '\n');
-  process.exit(r.fail === 0 ? 0 : 1);
+  /* BOTH WORLDS. The linter used to cover only the default (office) build; grocery had nothing
+     to stamp, and that ended the moment it got a floor plan. A store is mostly narrow aisles
+     between long blockers, which is the worst case for the nav grid's 2px-a-side blocker
+     inflation -- so it is exactly the world that most needs linting. 0 FAIL required on each. */
+  const worlds = [
+    { name: 'OFFICE  (Paper Supply Co.)', opts: {} },
+    { name: 'GROCERY (Save-Rite)', opts: { storage: { 'promo:level': 'grocery' } } },
+  ];
+  let bad = 0;
+  worlds.forEach((wd, i) => {
+    if (i) console.log('');
+    console.log('################  ' + wd.name + '  ################');
+    const r = checkPlacement(wd.opts);
+    console.log(r.text);
+    bad += r.fail;
+  });
+  console.log('');
+  console.log(bad === 0
+    ? 'PLACEMENT (both worlds): GREEN ✅'
+    : 'PLACEMENT (both worlds): RED ❌ (' + bad + ' FAIL)');
+  process.exit(bad === 0 ? 0 : 1);
 }
