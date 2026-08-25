@@ -139,7 +139,14 @@ The standard gate (§1) **plus**:
 2. confirmation that a **normal load without `?debug=1` is unaffected** (`window.__dbg === undefined`, game boots, art loads).
 
 ### 13. The standing line
-A green soak means **NOT BROKEN**. A clean screenshot means **IT RENDERS**. **Neither means GOOD.** That verdict is Kyle's, on the TV, with a gamepad. Never merge a visual change on green alone.
+A green soak means **NOT BROKEN**. A clean screenshot means **IT RENDERS**. **Neither means GOOD.** That verdict is Kyle's, on the TV, with a gamepad.
+
+⚠️ **MERGE FIRST, THEN HE TESTS** (Kyle, 2026-08-04). *"I cannot test on my TV unless the version is
+merged and live."* Pages serves `main`, so **merging is the only way a change reaches the TV at all** —
+holding a green branch back for approval doesn't protect him, it just blocks him. So: gate green →
+merge → push → tell him what to look at. His verdict still governs, it simply arrives after, and a bad
+one is one `git revert` away. Any brief that says "stop for Kyle's TV pass before merging" has this
+backwards; merge anyway and say so.
 
 ---
 

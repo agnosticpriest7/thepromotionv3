@@ -60,14 +60,17 @@ function main() {
   const lvHTML = menuHTML();
   lck('level pick offers both levels',
       /Paper Supply Co\./.test(lvHTML) && /Save-Rite/.test(lvHTML), 'office + grocery listed');
-  lck('the unbuilt level is labelled', /not built yet/i.test(lvHTML));
-
-  // 2. choosing the unbuilt level EXPLAINS ITSELF and does not boot a world
+  /* Grocery became BUILT in the grocery-empty-room branch, so the three assertions that used to
+     live here — that it was labelled unbuilt, that choosing it showed a notice, and that the
+     notice offered a way back — went correctly RED. They are not deleted quietly: the `nolevel`
+     stub path is still in renderMenuDOM for the next unbuilt level, it simply has nothing to act
+     on while every registered level is built, and LEVELS is a const so a test cannot flip one to
+     drive it. What IS still assertable is that a built level starts rather than explains itself. */
   S.goToLevelPick(0); menuHTML();
-  S.menuMove(1); S.menuActivate();
-  const stubHTML = menuHTML();
-  lck('grocery shows a not-built notice', /is not built yet/i.test(stubHTML));
-  lck('  ^ and offers a way back rather than starting', /Back to levels/i.test(stubHTML));
+  S.menuMove(1); S.menuActivate();                  // row 1 = grocery, now built
+  const afterGrocery = menuHTML();
+  lck('a built level advances instead of showing a notice',
+      !/is not built yet/i.test(afterGrocery) && /The Intern/i.test(afterGrocery));
 
   /* 3. picking a level and starting carries it through the New Game handoff.
         Clear the flag first: startNewGame() at the top of this file has already been through

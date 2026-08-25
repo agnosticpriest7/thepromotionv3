@@ -331,6 +331,11 @@ function createWorld(opts) {
   /* ---- assemble the sandbox global ---- */
   const AudioContextStub = makeAudioContextClass();
   const localStorageStub = makeLocalStorage();
+  /* PRE-SEEDED localStorage. Some state is read at script-eval time and can never be set
+     afterwards from a test — the level a world boots into is decided before scaleWorld() runs,
+     which is long before createWorld() returns. opts.storage lets a test choose it.
+     Empty by default, so every existing test builds exactly the world it built before. */
+  if (opts.storage) { Object.keys(opts.storage).forEach(k => localStorageStub.setItem(k, opts.storage[k])); }
   const sandbox = {
     console: makeQuietConsole(opts.verbose),
     document: documentStub,
