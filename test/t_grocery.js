@@ -205,8 +205,70 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
   mids.forEach(mx => {
     for (let y = gz.y + CE / 2; y < gz.y + gz.h; y += CE) if (!walk(mx, y)) { blocked.push(mx); break; }
   });
-  ck('every grocery aisle is walkable end to end', mids.length >= 3 && blocked.length === 0,
+  /* ANCHORED COUNT. Last branch's aisle mutant was ABSORBED: a blocker labelled 'Shelf' joined the
+     column set, the midpoints recomputed around it, four aisles became five and the test went
+     green. A derived test can quietly redefine the world to include the mutation. The count is an
+     authoring fact, so it is fixed here (§14) — add or remove a shelf column and this goes red
+     whether or not the remaining aisles happen to be walkable. */
+  const AISLES = 5;
+  ck('the shelf block still forms the authored number of aisles', mids.length === AISLES,
+     mids.length + ' aisles, expected ' + AISLES + ' — at x=' + mids.join(','));
+  ck('every grocery aisle is walkable end to end', blocked.length === 0,
      mids.length + ' aisles at x=' + mids.join(',') + (blocked.length ? ' — BLOCKED: ' + blocked.join(',') : ''));
+
+  /* ---- SERVICE COUNTERS: staff space behind them, and nobody sits at them ------------------- */
+  {
+    const counters = (FL.containers || []).filter(c => /counter/i.test(c.label || ''));
+    ck('the service run is a counter, not a scatter of tables', counters.length >= 8,
+       counters.length + ' counter units');
+    /* the strip between the counter and the north wall has to be walkable, because staff will
+       stand in it the moment there are any */
+    const bad = [];
+    ['BAKERY', 'DELI'].forEach(nm => {
+      const z = (FL.ROOMS || []).find(r => r.name === nm);
+      if (!z) { bad.push(nm + ' (no zone)'); return; }
+      let open = 0;
+      for (let x = z.x + CE; x < z.x + z.w - CE; x += CE)
+        if (walk(x, z.y + CE)) open++;          // the row nearest the wall, behind the counter
+      if (open < 3) bad.push(nm + ' (' + open + ' walkable cells behind the counter)');
+    });
+    ck('Bakery and Deli have walkable staff space behind the counter', bad.length === 0,
+       bad.length ? bad.join(', ') : 'both clear');
+    /* A table is the only thing that brings a chair ring (drawCrewSet rings every one with eight),
+       so "no seating" means no TABLE inside these zones. Checking containers for a chairs field was
+       hollow — containers never have one, so it could not have failed. */
+    const tables = S.levelTableRects ? S.levelTableRects() : [];
+    const seated = tables.filter(t => ['BAKERY','DELI'].some(nm => {
+      const z = (FL.ROOMS || []).find(r => r.name === nm);
+      return z && t.x < z.x + z.w && t.x + t.w > z.x && t.y < z.y + z.h && t.y + t.h > z.y;
+    }));
+    ck('  ^ and no table (so no chair ring) in the service run', seated.length === 0,
+       tables.length + ' tables in the level, ' + seated.length + ' inside Bakery/Deli');
+  }
+
+  /* ---- ZONE LABELS resolve inside the zone they name --------------------------------------- */
+  {
+    const outside = (FL.ROOMS || []).filter(r => {
+      const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+      return !(cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h);
+    });
+    ck('every zone label anchors inside its own zone', outside.length === 0,
+       (FL.ROOMS || []).length + ' zones' + (outside.length ? ' — OUTSIDE: ' + outside.map(r => r.name).join(', ') : ''));
+  }
+
+  /* ---- EXIT points at the store's own door -------------------------------------------------
+     Anchored on the LEVEL SPAWN, not on the ENTRANCE zone. The first version asked "is EXIT inside
+     ENTRANCE", and ENTRANCE spans the store's whole width — so the office lift at authored (60,720)
+     genuinely falls inside it and the mutant passed. Spawn is "just inside the doors" by the
+     level's own contract, and a mutant that leaves EXIT in the office cannot move it. */
+  {
+    const ex = FL.EXIT, sp = S.levelSpawnPoint();
+    const d = ex ? Math.hypot(ex.x - sp.x, ex.y - sp.y) : Infinity;
+    ck("grocery's EXIT is the store's own door, not the office lift", d <= CE * 4,
+       ex ? Math.round(d) + 'px from the spawn (limit ' + CE * 4 + ') — EXIT ' +
+            Math.round(ex.x) + ',' + Math.round(ex.y) + ' spawn ' + Math.round(sp.x) + ',' + Math.round(sp.y)
+          : 'no EXIT');
+  }
 }
 
 console.log(`grocery: ${pass} pass, ${fail} fail`);
