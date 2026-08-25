@@ -807,15 +807,25 @@ const PLAYABLE=[
    startGame at all — it shows a DOM notice and hands you back to the menu. */
 const LEVELS=[
   {id:'office',  name:'Paper Supply Co.', sub:'the office — floor 1', built:true},
-  {id:'grocery', name:'Save-Rite',        sub:'not built yet',        built:false},
+  {id:'grocery', name:'Save-Rite',        sub:'one empty room (in progress)', built:true},
 ];
 const DEFAULT_LEVEL='office';
 function levelById(id){ return LEVELS.find(L=>L.id===id) || LEVELS[0]; }
 function levelName(id){ return levelById(id).name; }
 function levelBuilt(id){ return !!levelById(id).built; }
-/* the level this run is in. Only ever 'office' in play today — grocery cannot boot — but the
-   plumbing is real so the second level is a data change rather than a code change. */
-let currentLevel=DEFAULT_LEVEL;
+/* The level this run is in. Read from the boot handoff at the TOP of the script rather than in
+   boot(), because loadLevel(currentLevel) has to run before scaleWorld() — and boot() runs long
+   after that. The handoff flag is cleared by boot() as before; this only peeks at it. */
+let currentLevel=(function(){
+  const known=v=>!!v&&LEVELS.some(L=>L.id===v&&L.built);
+  /* an explicit pick, from New Game / Test Game / a cross-level Load */
+  try{ const v=localStorage.getItem('promo:level'); if(known(v)) return v; }catch(e){}
+  /* otherwise the level of the save we are about to resume, so Continue lands in the right world */
+  try{ const slot=localStorage.getItem('promo:loadgame')||localStorage.getItem('promo:newgame')||'0';
+       const raw=localStorage.getItem('promo:slot:'+slot);
+       if(raw){ const j=JSON.parse(raw); if(known(j&&j.level)) return j.level; } }catch(e){}
+  return DEFAULT_LEVEL;
+})();
 const DEFAULT_CHAR=0;          // the orange-haired intern — the default everywhere, incl. Test Game
 let playerChar=DEFAULT_CHAR;   // which face the player is wearing this run
 function charPlayable(i){ const e=PLAYABLE.find(p=>p.idx===i); return !!e&&!e.locked; }
@@ -2046,7 +2056,11 @@ function assembleAtElevator(){
     }
     i++;
   });
-  player.x=ELEVATOR.x+Math.round(4*S);player.y=ELEVATOR.y+Math.round(26*S);
+  /* THE ELEVATOR IS OFFICE FURNITURE. ELEVATOR is EXIT, an authored office coordinate, so this
+     line teleported the grocery player into a corner of an empty world at boot and again at every
+     day roll — the level's own spawn was set and then immediately overwritten. Guarded rather than
+     generalised: giving every level a muster point is a real design decision, not a bug fix. */
+  if(currentLevel==='office'){ player.x=ELEVATOR.x+Math.round(4*S);player.y=ELEVATOR.y+Math.round(26*S); }
   unstickPlayer();
 }
 /* The seat is where the owner stands. It used to always be BELOW the desk, which for the
@@ -3774,6 +3788,11 @@ let INTRO_LEN=routeLen(INTRO_ROUTE);   // recomputed after scaleWorld()
 const INTRO_SPEED=Math.round(62*S);   // px/sec — paced so the ~44s walk matches the dialogue, keeping beats in sync with the route
 const INTRO_GAP=Math.round(26*S);     // how far you trail behind Dale
 function startIntro(){
+  /* THE TOUR IS OFFICE CONTENT. It walks Dale along an authored route reciting authored beats;
+     with no manager and no route there is nothing to run, and dereferencing the missing Dale is
+     what would take the boot down. Guarded here rather than at the call site so every caller —
+     boot, New Game, and anything added later — is covered by one check. */
+  if(currentLevel!=='office' || !INTRO_ROUTE.length || !NPCS.some(n=>n.mgr&&n.alive)){ intro=null; return; }
   const dale=NPCS.find(n=>n.mgr&&n.alive);
   const myD=desks.find(d=>d.owner==='you');
   if(!dale||!myD)return;
@@ -6964,6 +6983,13 @@ function drawExterior(){
 }
 function drawFloor(){
   const T=Math.round(64*S/1.8);
+  /* A level with no authored floor gets a flat one. Deliberately flat colour, not art — the
+     grocery room is a walkable box and nothing more until it earns more. */
+  if(currentLevel!=='office'){
+    ctx.fillStyle='#3f4a42'; ctx.fillRect(0,0,W,H);
+    ROOMS.forEach(r=>{ ctx.fillStyle='#586b5c'; ctx.fillRect(r.x,r.y,r.w,r.h); });
+    return;
+  }
   /* base office carpet everywhere */
   if(!tileFloor('carpet_grey',0,0,W,H,T)){
     ctx.fillStyle=COL.floor;ctx.fillRect(0,0,W,H);
@@ -8035,6 +8061,10 @@ function drawLighting(){
   });
 }
 function drawDecor(){
+  /* every prop in here is authored at an office coordinate, including the PAPER SUPPLY CO.
+     sign, which is canvas-drawn and hardcoded separately from LEVELS[0].name. None of it
+     belongs in another level. */
+  if(currentLevel!=='office') return;
   const U=(v)=>Math.round(v*S);
   /* wall-mounted safety + clocks (office-manager amenity pass; decor, non-blocking) */
   sprAt('wall_clock',U(510),U(300),'wall_clock');                 // meeting room
@@ -8179,7 +8209,13 @@ function renderInner(){
   const shx=shakeT>0?rand(-shakeMag,shakeMag):0, shy=shakeT>0?rand(-shakeMag,shakeMag):0;
   ctx.save();ctx.scale(ZOOM,ZOOM);ctx.translate(-Math.round(cam.x)+shx,-Math.round(cam.y)+shy);
   fitTableSeats();
-  drawExterior();drawFloor();drawWindowLight();drawDecor();drawFurniture(meetingTable,meetingChairs);drawFurniture(meetingTable2,meetingChairs2);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(kitchenTable,kitchenChairs);drawLabels();drawElevator();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
+  drawExterior();drawFloor();drawWindowLight();drawDecor();
+  /* The five tables and the elevator are office FIXTURES held in their own consts, not in the
+     arrays loadLevel() clears — so they kept rendering in the grocery room: a conference set
+     and a lift lobby floating in an empty shop. Guarded at the CALL SITE rather than inside
+     drawFurniture, which is generic and which a later level will want for its own tables. */
+  if(currentLevel==='office'){drawFurniture(meetingTable,meetingChairs);drawFurniture(meetingTable2,meetingChairs2);drawFurniture(breakTable,breakChairs);drawFurniture(breakTable2,breakChairs2);drawFurniture(kitchenTable,kitchenChairs);drawElevator();}
+  drawLabels();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -10095,6 +10131,43 @@ function scaleWorld(){
 }
 seedFriendships();
 seedTiers();
+/* ===== loadLevel — THE SEAM =======================================================
+   Runs ONCE per page load, immediately before scaleWorld(), which multiplies every authored
+   coordinate by S *in place*: run that twice and the world doubles. So nothing in here may
+   scale anything. Author in the same small space everything else is authored in and let
+   scaleWorld do its single pass.
+
+   The office is the literals already sitting in the arrays, so `office` is a deliberate
+   NO-OP — the office boots down exactly the code path it booted down before this existed,
+   which is the whole reason a level swap is safe to add to a build in playtest.
+
+   A second level REPLACES the CONTENTS of those arrays. They are `const` bindings, not const
+   contents, so all ~300 references to desks/walls/objects keep working untouched. */
+function loadLevel(id){
+  if(id!=='grocery') return 'office';
+  /* ---- SAVE-RITE: one empty room, and nothing else. No props, no cast, no ladder. ----
+     Everything the office authored is cleared rather than left lying around: a stray office
+     wall in the grocery world would be invisible (nothing draws it there) but still solid in
+     the nav grid, which is the worst kind of bug to chase. */
+  const clear=a=>{ if(Array.isArray(a)) a.length=0; };
+  [walls,desks,objects,CONTAINERS,errandPoints,hrPatrol,sealedZones,LIGHT_BANKS,WINDOWS,
+   INTRO_ROUTE,ROOMS,NPCS,meetingChairs,meetingChairs2,breakChairs,breakChairs2].forEach(clear);
+  /* The room IS the world. A smaller box floating inside it would leave a walkable field outside
+     the walls with nothing in it — the player could stroll out of the shop into a void and the
+     room would not really be enclosed. Derived from W/H rather than the authored 1500x760, so a
+     world resize carries it (CLAUDE.md §14); W and H are consts computed at module load and are
+     already scaled, which is why S is divided back out here. */
+  const AW=Math.round(W/S), AH=Math.round(H/S), T=16;
+  walls.push({x:0,      y:0,      w:AW, h:T },   // north
+             {x:0,      y:AH-T,   w:AW, h:T },   // south
+             {x:0,      y:0,      w:T,  h:AH},   // west
+             {x:AW-T,   y:0,      w:T,  h:AH});  // east
+  ROOMS.push({name:'SHOP FLOOR', x:T, y:T, w:AW-2*T, h:AH-2*T, c:'#4a8c5a'});
+  /* spawn in the middle. scaleWorld scales the player, so this is authored too. */
+  player.x=Math.round(AW/2); player.y=Math.round(AH/2);
+  return 'grocery';
+}
+loadLevel(currentLevel);
 scaleWorld();
 buildGrid();buildSprites();scheduleBoss();scheduleAudit();scheduleDrill();rollContainers();renderLeverage();assembleAtElevator();/* intro starts when a New Game is chosen from the menu */
 document.getElementById('punishBtn').onclick=()=>punishTap();
@@ -10504,9 +10577,24 @@ function startGame(slot, fresh){
     currentLevel=levelBuilt(pendingLevel)?pendingLevel:DEFAULT_LEVEL;
     screen='play'; renderMenuDOM(); startIntro(); autosave(); paused=false; return;
   }
+  /* A SAVE FROM ANOTHER LEVEL CANNOT BE APPLIED IN PLACE. The world is built at boot — loadLevel()
+     runs before scaleWorld(), which scales in place and may only run once — so restoring a grocery
+     save onto an office floor would put the right state in the wrong world: desk owners that do not
+     exist, rooms that are not there, a player standing in a wall. It would read as a level bug for
+     weeks. Hand off and reload instead, exactly as New Game does. This is what makes the old
+     grocery-falls-back-to-office redirect unnecessary rather than merely dead. */
+  const peek = Store.load(slot);
+  if(peek && peek.level && peek.level!==currentLevel && levelBuilt(peek.level)){
+    try{ localStorage.setItem('promo:loadgame', String(slot)); localStorage.setItem('promo:level', String(peek.level)); }catch(e){}
+    if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
+    /* harness / no-reload fallback: the arrays cannot be rebuilt here, so refuse rather than
+       silently load the wrong world. */
+    toast('That save is in a different level — restart the game to open it.');
+    screen='menu'; renderMenuDOM(); return;
+  }
   screen='play';
   renderMenuDOM();
-  const snap = Store.load(slot);
+  const snap = peek;
   if(snap && !applySnapshot(snap)){
     toast('That save is from an older version and can\'t be loaded.');
     screen='menu'; renderMenuDOM(); return;
@@ -10549,6 +10637,21 @@ function boot(){
     }
     requestAnimationFrame(loop);
     return;
+  }
+  /* resume a LOAD that had to reload to change level (see startGame) */
+  let lg=null; try{ lg=localStorage.getItem('promo:loadgame'); }catch(e){}
+  if(lg!==null && lg!==undefined && lg!==''){
+    try{ localStorage.removeItem('promo:loadgame'); localStorage.removeItem('promo:level'); }catch(e){}
+    const slot=parseInt(lg,10)||0;
+    activeSlot=slot;
+    const snap=Store.load(slot);
+    if(snap && applySnapshot(snap)){
+      screen='play'; paused=false; renderMenuDOM();
+      requestAnimationFrame(loop);
+      return;
+    }
+    /* the save went away or is from an older schema — fall through to the menu rather than
+       booting into a half-applied world */
   }
   screen='title';
   paused=true;

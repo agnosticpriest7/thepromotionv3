@@ -1,6 +1,8 @@
 # SPEC — Level select, and a second level (the grocery store)
 
-**Status:** preparation / Phase 0 complete. **Nothing built.** Written 2026-08-04.
+**Status: Phases 1 and 2 SHIPPED 2026-08-04.** Written 2026-08-04 as Phase-0 preparation; the
+sections below are the plan as written, kept because the reasoning held up. Phase 3 (authoring the
+store) has not started.
 Read alongside `FEATURES.md` (this supersedes its "floor system" entry) and `PROJECT.md` §2.
 
 Kyle: *"I want to start developing a new level within the game. So from the main menu you can
@@ -117,7 +119,17 @@ all differ. So:
 
 ## 5. Phasing
 
-**Phase 1 — the seam, with one level.** Introduce `LEVELS` + `loadLevel(id)`, convert the world
+**Phase 1 — DONE.** Shipped as `level-select`. One correction to what is written below: the save
+schema decision went the OTHER way. `level` is **additive and `SAVE_VERSION` stayed 4** rather than
+bumping — §4 below argued for a bump, and that was wrong for the situation: there were live playtest
+saves, and an absent field with a correct default is not a schema break. The bump would have refused
+Stacie's saves for nothing.
+
+**Phase 2 — DONE.** Shipped as `grocery-empty-room`: `loadLevel(id)` before `scaleWorld()`, one empty
+room, office a deliberate no-op. §4's other prediction *was* right and bit exactly as described —
+loading must reload, because a save cannot be applied to a world that was built at boot.
+
+**Phase 1 (as originally written) — the seam, with one level.** Introduce `LEVELS` + `loadLevel(id)`, convert the world
 literals to populated arrays, add `promo:level` and the `levelpick` menu mode, bump `SAVE_VERSION`,
 make loading reload. **Register only the office.** Ship when the office plays *identically* and the
 gate is green. This is the risky structural step and it deliberately carries no new content, so if
