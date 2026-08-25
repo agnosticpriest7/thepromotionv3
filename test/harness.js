@@ -47,7 +47,16 @@ function makeCtx2D(canvasEl) {
   const store = { canvas: canvasEl || { width: 860, height: 500 } };
   const gradient = () => ({ addColorStop() {} });
   const returning = {
-    measureText: () => ({ width: 0 }),
+    /* width 0 made every measured layout collapse: the room banner sizes its background plate as
+       measureText(label).width + 18, so under the stub the plate was 18px wide behind a full room
+       name and any test comparing plate-to-text disagreed with the browser. Approximate from the
+       current font size the way a monospace face actually behaves (~0.6em per char) — still not
+       real metrics, but the same ORDER as the browser instead of zero. */
+    measureText(t) {
+      const m = /(\d+(?:\.\d+)?)px/.exec(this.font || '');
+      const px = m ? parseFloat(m[1]) : 11;
+      return { width: String(t == null ? '' : t).length * px * 0.6 };
+    },
     createLinearGradient: () => gradient(),
     createRadialGradient: () => gradient(),
     createConicGradient: () => gradient(),

@@ -331,7 +331,11 @@
   @media (pointer:coarse){#feed{top:56px;width:44vw}}
 
   /* ===== TRACKED OBJECTIVE (under the minimap) ===== */
-  #track{position:fixed;z-index:6;pointer-events:none;width:270px;display:none}
+  /* A PLATE, not a text-shadow. Light text on a busy light floor is unreadable at TV distance,
+     and the shop floor is a great deal brighter than office carpet. Width is set by hudColumn(). */
+  #track{position:fixed;z-index:6;pointer-events:none;display:none;
+    background:rgba(18,17,14,.82);border-left:3px solid rgba(217,165,33,.85);
+    padding:8px 10px;border-radius:2px;box-sizing:border-box}
   #track .th{font:700 14px var(--mono);color:#f3f1ea;letter-spacing:.5px;
     text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 2px rgba(0,0,0,.9);
     border-bottom:2px solid rgba(217,165,33,.85);padding-bottom:4px;margin-bottom:6px}
@@ -7757,13 +7761,9 @@ function drawRoomCaption(dt){
   else roomFade=Math.min(1,roomFade+dt*5);
   if(roomFade<=0.02||!roomShown)return;
   const label=(roomShown.name==='SALES ROOM'&&!salesUnlocked)?'SALES ROOM — LOCKED':roomShown.name;
-  const rct=cv.getBoundingClientRect();
-  const topOff=rct.height>0?Math.ceil(52*(VH/rct.height)):28;
-  const mw=Math.round(W*MINI_S);
-  /* sit BELOW the tracker HUD (the TODAY / mission block), not on top of it. trackHpx is
-     the tracker's measured height in canvas units; fall back to a safe gap if it's 0. */
-  const trackGap=(trackHpx&&Number.isFinite(trackHpx))?trackHpx:0;
-  const x=VW-mw-8, y=8+topOff+Math.round(H*MINI_S)+62+trackGap+8;   // under the compass AND the tracker
+  const B=hudColumn().banner;
+  if(!B)return;   // this level names its zones on the floor; the HUD copy is suppressed
+  const x=B.x, y=B.y;
   ctx.font='bold 13px monospace';ctx.textAlign='left';
   const tw=ctx.measureText(label).width;
   const a=roomFade;
@@ -8625,15 +8625,15 @@ function renderTrackHUD(){
   const rct=cv.getBoundingClientRect();
   if(rct.width>0){
     const sx=rct.width/VW, sy=rct.height/VH;
-    const mw=Math.round(W*MINI_S), mh=Math.round(H*MINI_S);
-    const topOff=Math.ceil(52*(VH/rct.height));
-    const rightEdge=rct.left+(VW-8)*sx;
-    const topCanvas=8+topOff+mh+62;                 // under the compass
-    const ow=el.offsetWidth||270, oh=el.offsetHeight||0;
-    el.style.left=Math.round(rightEdge-ow)+'px';
-    el.style.top=Math.round(rct.top+topCanvas*sy)+'px';
+    /* the OWNER says where this goes and how wide it is — it no longer measures itself into the
+       column and it can no longer be wider than the column it is meant to sit in */
+    const B=hudColumn().today, C=hudColumn().col;
+    el.style.width=Math.round(C.w*sx)+'px';
+    el.style.left=Math.round(rct.left+C.x*sx)+'px';
+    el.style.top=Math.round(rct.top+B.y*sy)+'px';
+    const oh=el.offsetHeight||0;
     const h=Math.round(oh/Math.max(0.001,sy))+10;
-    trackHpx=Number.isFinite(h)?h:0;      // a DOM that hasn't laid out yet must never poison the canvas
+    trackHpx=Number.isFinite(h)?h:0;      // still published: the office feed sits below this block
   }
 }
 /* ===== THE OBJECTIVE COMPASS =====
@@ -8686,9 +8686,14 @@ function drawCompass(){
   const tgt=objectiveTarget();
   const rct=cv.getBoundingClientRect();
   const topOff=rct.height>0?Math.ceil(52*(VH/rct.height)):28;
-  const mw=Math.round(W*MINI_S);
-  const cx=VW-mw/2-8, cy=8+topOff+Math.round(H*MINI_S)+24;
+  const B=hudColumn().compass, mw=Math.round(W*MINI_S);
+  const cx=B.x+B.w-mw/2, cy=B.y+20;
   const R=17;
+  /* A PLATE. The needle sat on bare world art and the two text lines under it had nothing but a
+     shadow — over a bright shop floor "your break" was unreadable, and it is the element the room
+     banner used to land on. */
+  ctx.fillStyle='rgba(18,17,14,.72)';
+  ctx.fillRect(B.x+B.w-mw-2,B.y-2,mw+4,B.h);
   /* the housing */
   ctx.fillStyle='rgba(26,24,20,.86)';
   ctx.beginPath();ctx.arc(cx,cy,R+3,0,Math.PI*2);ctx.fill();
@@ -8722,10 +8727,51 @@ function drawCompass(){
   ctx.fillText(nm,cx,cy+R+24);
   ctx.textAlign='left';
 }
+/* ===== THE RIGHT-HAND HUD COLUMN — ONE OWNER ======================================
+   Four elements shared this strip with no stacking rule and each computed its own `y` from a
+   different starting point, so they printed over each other and over the world. The zone banner
+   landed on the compass's "your break" line (they were ONE pixel apart), the TODAY checklist
+   struck through the banner, and TODAY itself is 270px wide against a 194px column, so it hung
+   out over the floor with nothing behind it.
+
+   hudColumn() is now the only thing that decides what sits in the column and where. Every element
+   asks for its box; none of them computes a position. Each RESERVES its height whether or not it
+   has anything to say, so the stack cannot shuffle when a room caption fades in or a break starts —
+   the collisions Kyle caught were all phase-dependent, which is exactly the case a "draw it under
+   whatever happened to be there" rule gets wrong.
+
+   Adding a fifth element is one entry in the list below. */
+const HUD_PAD=8, HUD_GAP=6;
+const HUD_COMPASS_H=68;   // housing (R+3) plus the two text lines under it
+const HUD_BANNER_H=26;    // the room plate
+function hudColumnTopOff(){
+  const rct=cv.getBoundingClientRect();
+  return rct.height>0?Math.ceil(52*(VH/rct.height)):28;
+}
+/* Does this level name its zones ON THE FLOOR? If it does, the HUD banner is a second copy of
+   information the world already carries, so it is not shown and does not reserve a slot. */
+function hudBannerShown(){ return !levelById(currentLevel).zoneLabels; }
+function hudColumn(){
+  const mw=Math.round(W*MINI_S), mh=Math.round(H*MINI_S);
+  /* the column is as wide as its WIDEST element, so nothing hangs over the world */
+  const w=Math.max(mw,HUD_TRACK_W);
+  const x=VW-w-HUD_PAD;
+  let y=HUD_PAD+hudColumnTopOff();
+  const slot=(h)=>{ const b={x:x,y:y,w:w,h:h}; y+=h+HUD_GAP; return b; };
+  const L={ col:{x:x,y:HUD_PAD+hudColumnTopOff(),w:w}, minimapW:mw, minimapH:mh };
+  L.minimap = slot(mh);
+  L.compass = slot(HUD_COMPASS_H);
+  L.banner  = hudBannerShown() ? slot(HUD_BANNER_H) : null;
+  L.today   = slot(0);          // DOM: the owner fixes its TOP; its own content sets its height
+  L.col.h   = y-L.col.y;
+  return L;
+}
+const HUD_TRACK_W=248;
 function drawMinimap(){
-  const s=MINI_S,mw=Math.round(W*s),mh=Math.round(H*s),mx=VW-mw-8;
-  const rct=cv.getBoundingClientRect();const topOff=rct.height>0?Math.ceil(52*(VH/rct.height)):28;
-  const my=8+topOff;
+  const s=MINI_S,mw=Math.round(W*s),mh=Math.round(H*s);
+  const B=hudColumn().minimap;
+  /* right-aligned in the column: the map is narrower than the column when TODAY is the widest */
+  const mx=B.x+B.w-mw, my=B.y;
   ctx.fillStyle='rgba(32,36,42,.88)';ctx.fillRect(mx-2,my-2,mw+4,mh+4);
   ctx.fillStyle='rgba(216,210,196,.9)';ctx.fillRect(mx,my,mw,mh);
   ctx.fillStyle='rgba(120,110,90,.85)';
