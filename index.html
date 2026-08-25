@@ -807,7 +807,7 @@ const PLAYABLE=[
    startGame at all — it shows a DOM notice and hands you back to the menu. */
 const LEVELS=[
   {id:'office',  name:'Paper Supply Co.', sub:'the office — floor 1', built:true},
-  {id:'grocery', name:'Save-Rite',        sub:'one empty room (in progress)', built:true},
+  {id:'grocery', name:'Save-Rite',        sub:'the shop floor (in progress)', built:true, zoneLabels:true},
 ];
 const DEFAULT_LEVEL='office';
 function levelById(id){ return LEVELS.find(L=>L.id===id) || LEVELS[0]; }
@@ -2401,7 +2401,7 @@ function aabb(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
    blockers[] is rebuilt whenever the furniture moves. */
 let blockers=[];
 function solid(box){
-  return walls.some(w=>aabb(box,w))||desks.some(d=>aabb(box,d))||blockers.some(b=>aabb(box,b));
+  return walls.some(w=>aabb(box,w))||desks.some(d=>aabb(box,d))||blockers.some(b=>aabb(box,b))||levelBlockers.some(b=>aabb(box,b));
 }
 function moveEntity(ent,dx,dy){
   let nx=clamp(ent.x+dx,4,W-ent.w-4),box={x:nx,y:ent.y,w:ent.w,h:ent.h};
@@ -2439,7 +2439,23 @@ const LEVEL_TABLES=[];   // {t, chairs} in draw order
    spawn beside. Stating it makes the assertion about the CONTRACT rather than about a rule the
    floor plan is free to change. */
 const levelSpawn={x:0,y:0};
+/* SOLID FIXTURES THIS LEVEL AUTHORED. Containers are DECOR — buildGrid and solid() test walls,
+   desks, blockers and sealedZones, and never CONTAINERS — so the first cut of the grocery shelving
+   was scenery the player walked straight through, and every "aisle is walkable" assertion passed
+   for the wrong reason. A shelf run has to be a real blocker or it is not an aisle wall.
+   Authored rects, scaled by scaleWorld on its single pass, consulted by BOTH the grid and
+   moveEntity so a level's fixtures are solid from the first frame and do not depend on art
+   loading the way the table blockers do. */
+const levelBlockers=[];
+/* WHAT IS OUTSIDE THIS LEVEL. drawExterior tiles grass and plants shrubs around the building,
+   which is right for an office standing in a lawn and wrong for a shop whose walls are the edge of
+   the world — it put a hedge across the top of the back room. Each level says what surrounds it
+   instead of grocery being special-cased off, so the next level needs no third guard. */
+const levelExterior={tile:'grass', fill:'#3f4a35', bushes:true};
 function levelSpawnPoint(){return {x:levelSpawn.x,y:levelSpawn.y};}
+/* the level's tables, for tests: LEVEL_TABLES is a const and unreachable from the harness, and
+   "is there seating here" is otherwise unaskable. */
+function levelTableRects(){return LEVEL_TABLES.map(f=>({x:f.t.x,y:f.t.y,w:f.t.w,h:f.t.h}));}
 const levelBoxes=[];     // authored rects this level created; scaleWorld scales these
 function buildGrid(){
   grid=[];
@@ -2450,6 +2466,7 @@ function buildGrid(){
     if(!b&&desks.some(d=>aabb(cell,d)))b=1;
     if(!b&&blockers.some(bl=>aabb(cell,bl)))b=1;
     if(!b&&sealedZones.some(z=>aabb(cell,z)))b=1;
+    if(!b&&levelBlockers.some(bl=>aabb(cell,bl)))b=1;   // the level's own fixtures — shelf runs, counters
     grid[r][c]=b;
   }}
 }
@@ -6980,15 +6997,15 @@ function drawExterior(){
   const T=Math.round(64*S/1.8);
   const x0=Math.floor(cam.x/T)*T-T, y0=Math.floor(cam.y/T)*T-T;
   const w=Math.ceil(vw)+T*3, h=Math.ceil(vh)+T*3;
-  if(!tileFloor('grass',x0,y0,w,h,T)){
-    /* no grass art yet: a dark lawn, so it never reads as "unfinished white" */
-    ctx.fillStyle='#3f4a35';ctx.fillRect(x0,y0,w,h);
+  if(!(levelExterior.tile&&tileFloor(levelExterior.tile,x0,y0,w,h,T))){
+    /* no tile (or none wanted): a flat surround, so it never reads as "unfinished white" */
+    ctx.fillStyle=levelExterior.fill;ctx.fillRect(x0,y0,w,h);
     ctx.fillStyle='rgba(0,0,0,.05)';
     for(let ty=y0;ty<y0+h;ty+=T)for(let tx=x0+(((ty/T)|0)%2?T:0);tx<x0+w;tx+=T*2)ctx.fillRect(tx,ty,T,T);
   }
   /* shrubs hugging the outside of the walls — fixed positions, so they never crawl */
   const pad=Math.round(30*S), step=Math.round(150*S), bs=Math.round(50*S);
-  const bush=(bx,by)=>{ if(inView(bx-bs/2,by-bs,bs,bs))sprAt('bush',bx,by,'bush'); };   // cull off-screen shrubs
+  const bush=(bx,by)=>{ if(!levelExterior.bushes)return; if(inView(bx-bs/2,by-bs,bs,bs))sprAt('bush',bx,by,'bush'); };
   for(let bx=-pad;bx<=W+pad;bx+=step){bush(bx,-pad);bush(bx+step/2,H+pad);}
   for(let by=Math.round(60*S);by<=H;by+=step){bush(-pad,by);bush(W+pad,by+step/2);}
   /* a drop shadow, so the block reads as a building standing on the ground */
@@ -7568,6 +7585,25 @@ function drawAlarm(x,y,w,h){
   ctx.fillStyle='#c0392b';ctx.font='4px monospace';
   ctx.fillStyle='#f4d03f';ctx.fillRect(x+3,y+h-9,w-6,5);
   ctx.fillStyle='#241d16';ctx.fillRect(x+4,y+h-8,w-8,2);
+}
+/* ZONE NAMES, IN THE WORLD, over the zone they name. drawRoomCaption is a HUD readout pinned under
+   the compass — it tells you where you ARE, so it is always away from what it names and can never
+   answer "what is that department over there". Anchors are the zone CENTROID, derived from the
+   bounds every time, so moving an aisle moves its label and nothing needs re-authoring. */
+function drawZoneLabels(){
+  ctx.font='bold '+U1(11)+'px monospace';
+  ctx.textAlign='center';
+  for(const r of ROOMS){
+    const cx=Math.round(r.x+r.w/2), cy=Math.round(r.y+r.h/2);
+    if(!isFinite(cx)||!isFinite(cy))continue;
+    if(!inView(cx-U1(60),cy-U1(10),U1(120),U1(20)))continue;
+    const tw=ctx.measureText(r.name).width;
+    ctx.fillStyle='rgba(26,24,20,.42)';
+    ctx.fillRect(Math.round(cx-tw/2-U1(5)),Math.round(cy-U1(8)),Math.round(tw+U1(10)),U1(15));
+    ctx.fillStyle='rgba(243,241,234,.72)';
+    ctx.fillText(r.name,cx,cy+U1(3));
+  }
+  ctx.textAlign='left';
 }
 function drawLabels(){
   const U=(v)=>Math.round(v*S);
@@ -8255,6 +8291,7 @@ function renderInner(){
      arrays loadLevel() clears — so they kept rendering in the grocery room: a conference set
      and a lift lobby floating in an empty shop. Guarded at the CALL SITE rather than inside
      drawFurniture, which is generic and which a later level will want for its own tables. */
+  if(levelById(currentLevel).zoneLabels)drawZoneLabels();
   LEVEL_TABLES.forEach(f=>drawFurniture(f.t,f.chairs));
   if(currentLevel==='office')drawElevator();   // the lift is office fabric, not furniture
   drawLabels();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
@@ -10152,6 +10189,7 @@ function scaleWorld(){
   scaleBox(HR_OFFICE);
   ROOMS.forEach(scaleBox);
   levelBoxes.forEach(scaleBox);
+  levelBlockers.forEach(scaleBox);
   scaleBox(levelSpawn);   // furniture a non-office level authored; office's five are scaled by name above
   if(typeof mgr!=='undefined'&&mgr.route)mgr.route.forEach(scaleBox);
   /* remember where each desk SPRITE sits, so fitDeskBoxes() can move the collision
@@ -10246,33 +10284,83 @@ function loadLevel(id){
              {name:'STORE MANAGER',x:BOH_X+T, y:190, w:150, h:150,     c:'#3b6ea5'},
              {name:'OWNER',        x:1210,    y:190, w:140, h:150,     c:'#c0392b'},
              {name:'STAFF WC',     x:1370,    y:190, w:AW-1370-T, h:150, c:'#7c7768'});
-  /* ---- GROCERY SHELF RUNS. supply_shelf draws 61x88 authored, so runs are pitched 96 down and
-       spaced 150 across: ~89 units of clear aisle, which is over four nav cells. Aisle width is
-       the single thing that decides whether a store feels good to walk, so it is authored
-       generously and Kyle can tighten it on the TV. --------------------------------------- */
-  /* Three rows, not four: a checkout's crew set draws 205x102 authored and reaches up out of the
-     front end, so the shelf block stops well clear of it. The band it leaves between GROCERY and
-     FRONT END is the cross-aisle every store has along the front. */
-  for(let rx=345; rx<=945; rx+=150)
-    for(let ry=225; ry<=425; ry+=96)
-      CONTAINERS.push({x:rx,y:ry,w:28,h:22,label:'Shelf',kind:'box'});
-  /* ---- PRODUCE. Chilled cases against the west wall, no aisles. fridge draws 72x112. ------ */
-  for(let py=235; py<=425; py+=124)
-    CONTAINERS.push({x:38,y:py,w:30,h:24,label:'Produce case',kind:'fridge'});   // flush to the west wall: the fridge sprite draws 72 wide about the box centre
+  /* ---- GROCERY: CONTINUOUS SHELF RUNS ---------------------------------------------------
+     ⚠️ ART_W IS IN SCALED PIXELS, NOT AUTHORED UNITS. `U1(v)` is the identity at S=1.8, so
+     ART_W.supply_shelf = 61 is the sprite's drawn width in SCALED px — 34 AUTHORED. Its drawn
+     height is 88 scaled, i.e. 49 authored. The first cut read those numbers as authored, which
+     pitched the units at nearly double their own height: the run came out as a dotted line with
+     70 scaled px of floor between each shelf, which is precisely the "warehouse that lost its
+     stock" look this pass exists to kill. Divide ART_W by S before authoring with it.
+
+     An aisle is a corridor between two CONTINUOUS walls of product, so a run is units butted end
+     to end (pitch = the sprite's own authored height) plus ONE blocker for the whole run.
+
+     Runs sit 92 apart: 92 - 34 = 58 authored of clear aisle, three nav cells. Not two — cells are
+     20 authored and buildGrid inflates every blocker 2px a side, so a two-cell aisle welds itself
+     shut and reads as a pathfinding bug (HANDOFF-8 §5).
+
+     No cross-aisle break: a run is 5 units / 245 authored, with open floor above (the service run)
+     and below (the front end), so circulation never needs to cut through one. */
+  const SHELF_W=34, SHELF_H=49, RUN_GAP=92, RUN_TOP=250, RUN_N=5;
+  for(let rx=380; rx<=840; rx+=RUN_GAP){
+    for(let i=0;i<RUN_N;i++)
+      CONTAINERS.push({x:rx,y:RUN_TOP+i*SHELF_H,w:28,h:22,label:'Shelf',kind:'box'});
+    /* one solid rect for the whole run, derived from the same loop that placed the units so the
+       two can never drift. Inset 1 authored a side, for the reason the tabletops are inset. */
+    const cx=rx+14, top=RUN_TOP+22-SHELF_H;
+    levelBlockers.push({x:Math.round(cx-SHELF_W/2+1), y:top+1,
+                        w:SHELF_W-2,                  h:RUN_N*SHELF_H-2});
+  }
+  /* ---- PRODUCE. Chilled cases against the west wall, no aisles. fridge is 72 scaled = 40
+     authored wide, 62 authored tall. ------------------------------------------------------- */
+  for(let py=300; py<=440; py+=70)
+    CONTAINERS.push({x:38,y:py,w:30,h:24,label:'Produce case',kind:'fridge'});
+  /* ---- SERVICE RUN along the north wall: BAKERY north-west, DELI north/north-east, with a
+     visible break between them so they read as two departments and not one long bar.
+
+     A counter, not a boardroom. The first cut used free-standing tables, and drawCrewSet rings
+     every table with eight chairs — which is what a meeting room looks like. A deli is a
+     continuous counter with the customer on the floor side and staff behind it, and nobody sits
+     at it. So: counter_plain butted end to end (ART_W 90 scaled = 50 authored, and the png is
+     square, so 50 x 50), ONE blocker per counter, NO chairs, and a 60-unit walkable strip between
+     counter and wall for staff to stand in once there are any — three nav cells, the same floor
+     the aisles get. */
+  const CTR=50, CTR_TOP=76, CTR_Y=CTR_TOP+CTR-22;     // sprite bottom lands at CTR_Y+22
+  const counterRun=(x0,x1,label)=>{
+    for(let cx=x0+CTR/2; cx<x1; cx+=CTR)
+      CONTAINERS.push({x:Math.round(cx-14),y:CTR_Y,w:28,h:22,label:label,kind:'cabinet',art:'counter_plain'});
+    levelBlockers.push({x:x0+1, y:CTR_TOP+1, w:(x1-x0)-2, h:CTR-2});
+  };
+  counterRun(40,400,'Bakery counter');                // north-west
+  counterRun(470,1010,'Deli counter');                // north / north-east, after the break
+  /* ---- CHECKSTANDS. Same defect as the counters and the same fix: they were tables, so each wore
+     eight office chairs. The brief named Deli and Bakery, but leaving the checkouts as boardrooms
+     would have looked identical to the thing being fixed. Sat well clear of the shelf block: a
+     counter draws 28 authored ABOVE the row it sits on, and at the first attempt that reached up
+     into GROCERY and quietly capped the two western aisles. */
+  const CHK_Y=560;
+  const checkout=(x0)=>{
+    for(let i=0;i<3;i++)
+      CONTAINERS.push({x:x0+i*CTR,y:CHK_Y,w:28,h:22,label:'Checkstand',kind:'cabinet',art:'counter_plain'});
+    levelBlockers.push({x:x0-11, y:CHK_Y+22-CTR+1, w:CTR*3-2, h:CTR-2});
+  };
+  checkout(140); checkout(360); checkout(1000); checkout(1220);
   /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
   CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
                   {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
                   {x:1300,     y:60,  w:30,h:24,label:'Staff lockers',    kind:'locker'},
                   {x:BOH_X+40, y:250, w:30,h:24,label:'Manager cabinet',  kind:'cabinet'},
                   {x:1230,     y:250, w:30,h:24,label:'Owner cabinet',    kind:'cabinet'});
-  /* ---- FURNITURE. Placeholder office tables standing in for counters and checkouts. Each is
-       an authored rect pushed to levelBoxes so scaleWorld scales it exactly once. ----------- */
-  const table=(x,y)=>{ const t={x:x,y:y,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]}); return t; };
-  table(120,120); table(250,120);                       // BAKERY counter run (north-west)
-  table(560,120); table(700,120); table(840,120);       // DELI counter run (north, east of the break)
-  table(180,585); table(400,585);                       // checkout lanes, west of the doors
-  table(1050,585); table(1270,585);                     // checkout lanes, east of the doors
-  table(1330,250);                                      // break-room table (back of house)
+  /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
+     in the store, which is also a live check that the LEVEL_TABLES path still works with one. --- */
+  {
+    const t={x:1330,y:250,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]});
+  }
+  /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
+     lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
+     in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.
+     MUSTER and HR_OFFICE stay where they are; both are NPC-only and there are no NPCs. ------- */
+  EXIT.x=Math.round(DOOR_X+DOOR_W/2); EXIT.y=STORE_S+T+10;
   /* ---- SPAWN: just inside the doors, where every run begins. ----------------------------- */
   player.x=Math.round(DOOR_X+DOOR_W/2); player.y=STORE_S-28;   // just inside the doors
   levelSpawn.x=player.x; levelSpawn.y=player.y;
