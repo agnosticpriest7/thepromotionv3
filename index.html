@@ -794,6 +794,28 @@ const PLAYABLE=[
   {idx:23, name:'Raelee',      sub:'Kill Crew tank, crocs',              locked:false},
   {idx:24, name:'Jax',         sub:'green work shirt, stubble',          locked:false},
 ];
+/* ===== LEVELS =====================================================================
+   WHICH WORLD YOU PLAY. Sits beside PLAYABLE on purpose: the two are the same shape of
+   decision, made one after the other on a New Game, and neither is ever asked again on a
+   Continue or a Load — both are taken out of the save.
+
+   `id` is the only part that lands in a save file, so renaming one later means writing a
+   migration. Display names are free to change and do not persist.
+
+   `built:false` is honest rather than a placeholder world. A stub that boots an empty floor
+   is indistinguishable from a bug three weeks later, so an unbuilt level never reaches
+   startGame at all — it shows a DOM notice and hands you back to the menu. */
+const LEVELS=[
+  {id:'office',  name:'Paper Supply Co.', sub:'the office — floor 1', built:true},
+  {id:'grocery', name:'Save-Rite',        sub:'not built yet',        built:false},
+];
+const DEFAULT_LEVEL='office';
+function levelById(id){ return LEVELS.find(L=>L.id===id) || LEVELS[0]; }
+function levelName(id){ return levelById(id).name; }
+function levelBuilt(id){ return !!levelById(id).built; }
+/* the level this run is in. Only ever 'office' in play today — grocery cannot boot — but the
+   plumbing is real so the second level is a data change rather than a code change. */
+let currentLevel=DEFAULT_LEVEL;
 const DEFAULT_CHAR=0;          // the orange-haired intern — the default everywhere, incl. Test Game
 let playerChar=DEFAULT_CHAR;   // which face the player is wearing this run
 function charPlayable(i){ const e=PLAYABLE.find(p=>p.idx===i); return !!e&&!e.locked; }
@@ -10247,7 +10269,8 @@ const Store = {
   load(s){ try{ const v=localStorage.getItem(this.key(s)); return v?JSON.parse(v):null; }catch(e){ return null; } },
   clear(s){ try{ localStorage.removeItem(this.key(s)); }catch(e){} },
   list(){ const out=[]; for(let i=0;i<SAVE_SLOTS;i++){ const r=this.load(i);
-      out.push((!r||r.v!==SAVE_VERSION)?null:{day:r.meta.day,rank:r.meta.rank,suspicion:r.meta.suspicion,stamp:r.meta.stamp,over:r.meta.over,outcome:r.meta.outcome}); }
+      out.push((!r||r.v!==SAVE_VERSION)?null:{day:r.meta.day,rank:r.meta.rank,suspicion:r.meta.suspicion,stamp:r.meta.stamp,over:r.meta.over,outcome:r.meta.outcome,
+        level:(r.meta&&r.meta.level)||(r.level)||DEFAULT_LEVEL}); }
     return out; },
 };
 
@@ -10265,7 +10288,13 @@ function deskSnap(d){ return { owner:d.owner,tier:d.tier,x:d.x,y:d.y,rigged:d.ri
 
 function buildSnapshot(over, outcome){ return {
   v:SAVE_VERSION,
-  meta:{ day:day, rank:RANKS[player.rank], suspicion:Math.round(player.suspicion), stamp:Date.now(), over:!!over, outcome:outcome||null },
+  meta:{ day:day, rank:RANKS[player.rank], suspicion:Math.round(player.suspicion), stamp:Date.now(), over:!!over, outcome:outcome||null, level:currentLevel },
+  /* `level` is ADDITIVE and deliberately does NOT bump SAVE_VERSION, exactly as `char` did before
+     it (HANDOFF-8 §4, Kyle's call). A save written before level select simply has no `level`, and
+     it can only ever have been the office, because that is the only level that existed when it was
+     written — so defaulting an absent field to 'office' is not a guess, it is the fact. Bumping
+     would refuse live playtest saves for nothing. */
+  level:currentLevel,
   day, clock, npcId,
   /* `char` is ADDITIVE and deliberately does NOT bump SAVE_VERSION (Kyle's call). A save written
      before character select simply has no `char`, and applySnapshot defaults it to DEFAULT_CHAR —
@@ -10288,6 +10317,9 @@ function buildSnapshot(over, outcome){ return {
 
 function applySnapshot(s){
   if(!s||s.v!==SAVE_VERSION) return false;
+  /* Absent means office — see the note on `level` in buildSnapshot. This is what protects saves
+     written before level select existed. */
+  currentLevel=(s.level&&levelBuilt(s.level))?s.level:DEFAULT_LEVEL;
   day=s.day; clock=s.clock; npcId=s.npcId||0;
   /* Countersign orders are EPHEMERAL and deliberately not in the snapshot — but the NPC objects are
      restored by Object.assign onto the live cast, so a field the snapshot never carried is simply
@@ -10363,7 +10395,9 @@ function slotText(i){
   const s = Store.list()[i];
   if(!s) return { title:`Slot ${i+1}`, sub:'— empty —', empty:true };
   const tag = s.over ? (s.outcome||'ended') : `${s.rank}`;
-  return { title:`Slot ${i+1} — Day ${s.day}`, sub:`${tag} · suspicion ${s.suspicion}% · ${fmtStamp(s.stamp)}`, over:s.over };
+  /* the level a save is in belongs on the slot row: once there is more than one world, "Day 6,
+     ASSISTANT MANAGER" is ambiguous without it. */
+  return { title:`Slot ${i+1} — Day ${s.day}`, sub:`${levelName(s.level)} · ${tag} · suspicion ${s.suspicion}% · ${fmtStamp(s.stamp)}`, over:s.over };
 }
 
 function mostRecentSlot(){ const l=Store.list(); let best=-1,bt=-1;
@@ -10401,12 +10435,27 @@ function renderMenuDOM(){
     for(let i=0;i<SAVE_SLOTS;i++){ const st=slotText(i);
       rows.push({label:st.title, sub:st.sub, cls:st.empty?'empty':(st.over?'over':''),
         act:()=>{ if(menuMode==='loadpick'){ if(!st.empty)startGame(i,false); }
-                  else { if(st.empty)goToCharPick(i); else { menuMode='confirm'; confirmSlot=i; menuSel=1; renderMenuDOM(); } } }}); }
+                  else { if(st.empty)goToLevelPick(i); else { menuMode='confirm'; confirmSlot=i; menuSel=1; renderMenuDOM(); } } }}); }
     rows.push({label:'‹ Back', sub:'', act:()=>{ menuMode='main'; menuSel=0; renderMenuDOM(); }});
   } else if(menuMode==='confirm'){
     rows.push({label:`Overwrite ${slotText(confirmSlot).title}?`, sub:'this cannot be undone', cls:'head', act:()=>{}});
     rows.push({label:'Cancel', sub:'', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
-    rows.push({label:'Overwrite & start', sub:'', cls:'danger', act:()=>{ Store.clear(confirmSlot); goToCharPick(confirmSlot); }});
+    rows.push({label:'Overwrite & start', sub:'', cls:'danger', act:()=>{ Store.clear(confirmSlot); goToLevelPick(confirmSlot); }});
+  } else if(menuMode==='levelpick'){
+    /* WHICH WORLD. Before the character pick, per Kyle: you choose where you work, then who
+       you are. An unbuilt level is shown rather than hidden so the roster reads as intended,
+       and selecting it explains itself instead of booting something broken. */
+    LEVELS.forEach(L=>{
+      rows.push({label:L.name, sub:L.sub, cls:L.built?'':'empty',
+        act:()=>{ if(L.built){ pendingLevel=L.id; goToCharPick(charSlot); }
+                  else { pendingLevel=L.id; menuMode='nolevel'; menuSel=0; renderMenuDOM(); } }});
+    });
+    rows.push({label:'‹ Back', sub:'pick a different slot', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
+  } else if(menuMode==='nolevel'){
+    const L=levelById(pendingLevel);
+    rows.push({label:`${L.name} is not built yet`, cls:'head',
+      sub:'The office is the only playable level right now. This slot has not been touched.', act:()=>{}});
+    rows.push({label:'‹ Back to levels', sub:'', act:()=>{ menuMode='levelpick'; menuSel=0; renderMenuDOM(); }});
   } else if(menuMode==='charpick'){
     /* WHO YOU PLAY. Sits between picking a slot and starting, so it only ever asks on a NEW run —
        Continue and Load Game take the character out of the save instead. Locked entries are shown
@@ -10416,7 +10465,7 @@ function renderMenuDOM(){
       rows.push({label:pc.name, sub:pc.locked?'locked — '+pc.sub:pc.sub, dis:pc.locked,
         cls:pc.locked?'empty':'', act:()=>{ if(pc.locked)return; setPlayerChar(pc.idx); startGame(charSlot,true); }});
     });
-    rows.push({label:'‹ Back', sub:'pick a different slot', act:()=>{ menuMode='newpick'; menuSel=0; renderMenuDOM(); }});
+    rows.push({label:'‹ Back', sub:'pick a different level', act:()=>{ menuMode='levelpick'; menuSel=0; renderMenuDOM(); }});
   }
   menuSel = Math.max(0, Math.min(menuSel, rows.length-1));
   rows.forEach((r,i)=>{ idx=i; const b=add(r.label,r.sub,i===menuSel,(r.dis?'dis ':'')+(r.cls||''),r.act);
@@ -10433,7 +10482,9 @@ function menuBack(){ if(menuMode==='main'){ screen='title'; renderMenuDOM(); } e
 /* ---- transitions --------------------------------------------------------- */
 function goToMenu(){ screen='menu'; menuMode='main'; menuSel=0; renderMenuDOM(); }
 
-let charSlot=0;   // which slot the character pick is choosing for
+let charSlot=0;   // which slot the level+character pick is choosing for
+let pendingLevel=DEFAULT_LEVEL;   // chosen at levelpick, consumed by startGame's reload handoff
+function goToLevelPick(slot){ charSlot=slot; pendingLevel=DEFAULT_LEVEL; menuMode='levelpick'; menuSel=0; renderMenuDOM(); }
 function goToCharPick(slot){ charSlot=slot; menuMode='charpick'; menuSel=0; renderMenuDOM(); }
 
 function startGame(slot, fresh){
@@ -10442,9 +10493,15 @@ function startGame(slot, fresh){
     // A brand-new run needs a pristine world. Rather than un-pick apart a possibly
     // ended/mutated world in place (double-scaling, fired NPCs, reowned desks), we
     // reload the page — boot rebuilds everything clean — and resume into this slot.
-    try{ localStorage.setItem('promo:newgame', String(slot)); localStorage.setItem('promo:char', String(playerChar)); }catch(e){}
+    /* `promo:level` rides across the reload exactly like `promo:char` does — same mechanism,
+       one scalar per datum. It has to be a boot-handoff flag rather than save data because on a
+       New Game there is no save yet: boot builds the world, THEN autosave() writes the first
+       snapshot, which is where the level gets recorded for good. */
+    try{ localStorage.setItem('promo:newgame', String(slot)); localStorage.setItem('promo:char', String(playerChar));
+         localStorage.setItem('promo:level', String(pendingLevel)); }catch(e){}
     if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
     // harness / no-reload fallback: start intro in place
+    currentLevel=levelBuilt(pendingLevel)?pendingLevel:DEFAULT_LEVEL;
     screen='play'; renderMenuDOM(); startIntro(); autosave(); paused=false; return;
   }
   screen='play';
@@ -10463,7 +10520,9 @@ function startGame(slot, fresh){
 function startTestGame(rank){
   activeSlot=0; testGame=true;
   setPlayerChar(DEFAULT_CHAR);   // a dev run is always the default face
-  try{ localStorage.setItem('promo:newgame','0'); localStorage.setItem('promo:testrank',String(rank)); localStorage.setItem('promo:char',String(DEFAULT_CHAR)); }catch(e){}
+  currentLevel=DEFAULT_LEVEL;     // a dev run is always the office, like it is always the default face
+  try{ localStorage.setItem('promo:newgame','0'); localStorage.setItem('promo:testrank',String(rank)); localStorage.setItem('promo:char',String(DEFAULT_CHAR));
+       localStorage.setItem('promo:level',DEFAULT_LEVEL); }catch(e){}
   if(typeof location!=='undefined' && location.reload){ location.reload(); return; }
   // harness / no-reload fallback: fresh in place, then jump straight to the rank (no intro)
   screen='play'; renderMenuDOM(); jumpToRank(rank); paused=false;
@@ -10471,12 +10530,15 @@ function startTestGame(rank){
 
 function boot(){
   // resume a fresh New Game (or Test Game) requested just before a reload
-  let ng=null, tr=null, pc=null; try{ ng=localStorage.getItem('promo:newgame'); tr=localStorage.getItem('promo:testrank'); pc=localStorage.getItem('promo:char'); }catch(e){}
+  let ng=null, tr=null, pc=null, lv=null; try{ ng=localStorage.getItem('promo:newgame'); tr=localStorage.getItem('promo:testrank'); pc=localStorage.getItem('promo:char'); lv=localStorage.getItem('promo:level'); }catch(e){}
   if(ng!==null && ng!==undefined && ng!==''){
-    try{ localStorage.removeItem('promo:newgame'); localStorage.removeItem('promo:testrank'); localStorage.removeItem('promo:char'); }catch(e){}
+    try{ localStorage.removeItem('promo:newgame'); localStorage.removeItem('promo:testrank'); localStorage.removeItem('promo:char'); localStorage.removeItem('promo:level'); }catch(e){}
     /* the character chosen just before the reload — setPlayerChar falls back to the default for a
        missing, malformed or locked value, so a hand-edited key can't put you in unfinished art */
     setPlayerChar(pc!==null&&pc!==undefined&&pc!==''?parseInt(pc,10):DEFAULT_CHAR);
+    /* and the level chosen just before it. An unbuilt or hand-edited id falls back to the office
+       rather than booting nothing — the same defensiveness setPlayerChar applies to a locked face. */
+    currentLevel=(lv&&levelBuilt(lv))?lv:DEFAULT_LEVEL;
     activeSlot=parseInt(ng,10)||0;
     screen='play'; paused=false; renderMenuDOM();
     if(tr!==null && tr!==undefined && tr!==''){
