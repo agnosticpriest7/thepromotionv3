@@ -164,6 +164,13 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
 - **Prefer a brute-force cross-check** where the contract allows one. `t_printer` now verifies its answer against the true minimum at 722 sample points using the game's own `cdist`, so the test cannot disagree with the implementation about what "nearest" means — and it never goes stale when a printer moves.
 - **Prove a new test bites.** Mutate the thing it guards and watch it go RED before trusting it green. Both rewrites were verified this way. **Read the failure message** — confirm it failed for the reason you think, not merely that the exit code flipped.
 - ⚠️ **A MUTANT THE DERIVATION CAN ABSORB PROVES NOTHING.** Anchor every mutation check on something the mutant cannot move. `t_grocery` derived its aisle positions from wherever the shelf columns happened to be; a blocker dropped mid-aisle and labelled `'Shelf'` joined the column set, the midpoints recomputed *around* it, four aisles became five, and the suite went **green**. The test redefined the world to include the mutation. The same shape bit twice more: an "is the player inside the room" check passed with the player on the office elevator because the room *was* the whole world, and an "is EXIT in the ENTRANCE zone" check passed with EXIT in the office because that zone spanned the store's full width. The fix each time is an anchor the mutation cannot shift — a count fixed at authoring time, a spawn the level *records* rather than one a test infers, a distance to a known point. **If a mutant passes, assume the test is broken until you have proved otherwise** — every one of these was a test bug, not a code bug.
+- ⚠️ **`ART_W` IS IN SCALED PIXELS, NOT AUTHORED UNITS.** `U1(v)` is the identity at S=1.8, so
+  `ART_W.supply_shelf = 61` is the sprite's drawn width in **scaled** px — **34 authored**. Divide by
+  `S` before authoring a layout with it. Getting this wrong pitched a shelf run at nearly double the
+  sprite's own height and produced a dotted line of floating units; **every test passed and only the
+  screenshot caught it.** This is the production counterpart to the harness's 64x64 `Image` stub
+  (§7): between them a prop can look right and be wrong from two directions at once — the harness
+  lies about the sprite, and `ART_W` lies about the units.
 - **`W`/`H` are already scaled** — divide `S` back out for authored bounds (see `promotion-world-width`). `placement.js` used to hardcode `1500/760` and needed a hand-edit at every resize; it derives now.
 
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.

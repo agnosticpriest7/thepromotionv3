@@ -28,8 +28,11 @@ const S = w.sandbox, g = w.g, p = g.player, L = g.layout || {};
 const CELL = Math.round(20 * 1.8);
 
 /* ---- 1. it built, and it built EMPTY ---------------------------------------------------- */
-ck('grocery builds with no cast and no furniture',
-   g.NPCS.length === 0 && g.desks.length === 0,
+/* No CAST. Furniture arrived with the fixtures branch — the player has a station — so this
+   asserts nobody else owns a desk, and that the station itself exists. */
+ck('grocery builds with no cast, and exactly one station (yours)',
+   g.NPCS.length === 0 && g.desks.filter(d => d.owner === 'you').length === 1 &&
+   g.desks.filter(d => d.owner && d.owner !== 'you').length === 0,
    g.NPCS.length + ' NPCs, ' + g.desks.length + ' desks');
 /* The zone list IS the spec for this floor, so it is named here deliberately (§14: game-rule
    constants belong hard-coded — a test SHOULD fail when the store is re-planned). This replaced
