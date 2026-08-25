@@ -250,8 +250,14 @@ Durability is enforced by a test invariant, not discipline — see §5.
   scheduler, **and `deleg`** — the AM delegation state). `applySnapshot()` restores values then
   regenerates everything derived (paths, goals, seats, nav grid). **Desks stay ground truth;
   nothing derived is saved.**
-- **Versioned** (`SAVE_VERSION = 2`; v2 added the `deleg` state). A save from an older schema
-  refuses to load rather than restoring garbage.
+- **Versioned** (`SAVE_VERSION = 4`, verified against `index.html` 2026-08-04 — this line said `2`
+  for several versions and was wrong; `HANDOFF-8` §4 was the accurate one). v2 added the `deleg`
+  state, v3 put candidate hires on `pendingHires`, v4 added the per-person favour track. A save from
+  an older schema refuses to load rather than restoring garbage.
+- **Additive fields do NOT bump the version.** `player.char` (character select), `cand.guest`,
+  `career.cosign` and now `level` (level select) all ride along with a safe default on load, so live
+  playtest saves keep working. An absent field with a correct default is not a schema break — a
+  bump is for a change that would restore *garbage*, not for one that restores *less*.
 - **Finished runs are held** in their slot (title shows "Day 8 — CEO") until overwritten.
   New Game on an occupied slot routes through an overwrite confirmation.
 
