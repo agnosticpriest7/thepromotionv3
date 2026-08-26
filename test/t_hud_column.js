@@ -147,6 +147,53 @@ function sweep(level) {
      texts.length + ' text runs, ' + rects.length + ' rects' + (covered ? '' : ' — text not covered'));
 }
 
+/* ---- 6. THE COLUMN IS PAINTED LAST -------------------------------------------------------
+   Bounding boxes cannot see z-order: two elements can miss each other entirely and one still
+   draw over the other. So this asserts ORDER, using the boundary the renderer already has —
+   the world is drawn inside a save()/restore() pair that carries the camera transform, and
+   everything after the final restore() is screen-space HUD.
+
+   The assertion: the LAST paint that touches the column rect happens AFTER the frame's last
+   restore(). If any HUD slot were composited mid-world (the bug this is guarding), its pixels
+   would be laid down before the restore and a tall prop drawn afterwards would punch through it.
+
+   This is also what proves the *reported* symptom was not a z-order bug at all: a plant looked
+   like it drew over the compass because the compass plate was translucent, not because it was
+   composited early. Ordering was already correct; this pins it so it stays correct. */
+{
+  const w = mk('grocery');
+  w.run(9000, { ignoreGameOver: true });
+  const S = w.sandbox;
+  const cvv = S.document.getElementById('c'), ctx = cvv.getContext('2d');
+  const col = S.hudColumn().col;
+  let seq = 0, lastRestore = -1, lastColumnPaint = -1, worldPaints = 0;
+  const touches = (x, y, ww, hh) => x < col.x + col.w && x + ww > col.x && y < col.y + col.h + 400 && y + hh > col.y;
+  const sv = {};
+  const wrap = (n, m) => { sv[n] = ctx[n]; ctx[n] = function () { try { m.apply(null, arguments); } catch (e) {} return sv[n].apply(ctx, arguments); }; };
+  wrap('restore', () => { seq++; lastRestore = seq; });
+  wrap('save',    () => { seq++; });
+  const paint = (x, y, ww, hh) => {
+    seq++;
+    if (![x, y, ww, hh].every(Number.isFinite)) return;
+    if (touches(x, y, ww, hh)) lastColumnPaint = seq; else worldPaints++;
+  };
+  wrap('fillRect',   (x, y, ww, hh) => paint(x, y, ww, hh));
+  wrap('strokeRect', (x, y, ww, hh) => paint(x, y, ww, hh));
+  wrap('drawImage',  function () { const a = arguments; const n = a.length;
+    if (n >= 9) paint(a[5], a[6], a[7], a[8]); else if (n >= 5) paint(a[1], a[2], a[3], a[4]); else paint(a[1], a[2], 1, 1); });
+  wrap('fillText',   (t, x, y) => { let tw = 0; try { tw = ctx.measureText(String(t)).width; } catch (e) {}
+    paint(x, y - 11, tw || String(t).length * 7, 14); });
+  try { S.render(); } catch (e) {}
+  Object.keys(sv).forEach(k => { ctx[k] = sv[k]; });
+
+  ck('the frame actually drew a world and a HUD', worldPaints > 20 && lastRestore > 0 && lastColumnPaint > 0,
+     worldPaints + ' world paints, last restore at #' + lastRestore + ', last column paint at #' + lastColumnPaint);
+  ck('the right column is painted AFTER every world layer', lastColumnPaint > lastRestore,
+     'last column paint #' + lastColumnPaint + (lastColumnPaint > lastRestore ? ' > ' : ' <= ') +
+     'last restore #' + lastRestore);
+}
+
+
 console.log(`\nhud column: ${pass} pass, ${fail} fail`);
 console.log(fail ? 'HUD COLUMN: RED ❌' : 'HUD COLUMN: GREEN ✅ (one owner, nothing overlaps)');
 process.exit(fail ? 1 : 0);

@@ -27,13 +27,24 @@ const w = createWorld({ storage: { 'promo:level': 'grocery' } });
 const S = w.sandbox, g = w.g, p = g.player, L = g.layout || {};
 const CELL = Math.round(20 * 1.8);
 
-/* ---- 1. it built, and it built EMPTY ---------------------------------------------------- */
-/* No CAST. Furniture arrived with the fixtures branch — the player has a station — so this
-   asserts nobody else owns a desk, and that the station itself exists. */
-ck('grocery builds with no cast, and exactly one station (yours)',
-   g.NPCS.length === 0 && g.desks.filter(d => d.owner === 'you').length === 1 &&
-   g.desks.filter(d => d.owner && d.owner !== 'you').length === 0,
-   g.NPCS.length + ' NPCs, ' + g.desks.length + ' desks');
+/* ---- 1. it built, and it built a CREW ---------------------------------------------------
+   This assertion used to read "grocery builds with no cast" and it was correct for exactly as
+   long as the room was empty. It is kept rather than deleted because the shape of the claim is
+   still the one that matters — WHO owns a desk in this level — and it is the assertion that
+   catches an office worker leaking into the store through a cleared array. */
+{
+  const mine = g.desks.filter(d => d.owner === 'you');
+  const staff = g.desks.filter(d => d.owner && d.owner !== 'you');
+  ck('grocery builds one player station and one desk per crew member',
+     mine.length === 1 && staff.length === g.NPCS.length && g.NPCS.length > 0,
+     g.NPCS.length + ' NPCs, ' + mine.length + ' player station, ' + staff.length + ' crew stations');
+  ck('every crew member is standing staff, not a seated office worker',
+     staff.length > 0 && staff.every(d => d.station === true),
+     staff.filter(d => d.station === true).length + '/' + staff.length + ' marked station');
+  ck("the player's own station is still a real desk",
+     mine.length === 1 && !mine[0].station,
+     mine.length ? ('station=' + mine[0].station) : 'no player desk');
+}
 /* The zone list IS the spec for this floor, so it is named here deliberately (§14: game-rule
    constants belong hard-coded — a test SHOULD fail when the store is re-planned). This replaced
    "1 room, 4 walls", which was the empty-room shape and went correctly red when a floor arrived. */
@@ -275,5 +286,5 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
 }
 
 console.log(`grocery: ${pass} pass, ${fail} fail`);
-console.log(fail ? 'GROCERY: RED ❌' : 'GROCERY: GREEN ✅ (the seam holds an empty room)');
+console.log(fail ? 'GROCERY: RED ❌' : 'GROCERY: GREEN ✅ (the seam holds a populated store)');
 process.exit(fail ? 1 : 0);
