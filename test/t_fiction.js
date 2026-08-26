@@ -103,16 +103,32 @@ const OFFICE_NOUNS = /\b(TPS|binder|binders|printer|photocop|cubicle|CRM|cold-ca
      quietly became a mechanics change: same number of tasks per rank, and the same `via` kinds
      in the same order, so every task still fires at the same trigger. ----------------------- */
 {
-  const badLen = [], badVia = [];
-  for (let r = 0; r <= 5; r++) {
-    const ov = OS.taskPoolVias(r), gv = GS.taskPoolVias(r);
-    if (ov.length !== gv.length) badLen.push('rank' + r + ': ' + ov.length + ' vs ' + gv.length);
-    if (JSON.stringify(ov) !== JSON.stringify(gv)) badVia.push('rank' + r);
+  /* THIS USED TO ASSERT THAT BOTH LEVELS HAD THE SAME POOL SIZE AND THE SAME VIA LIST, RANK FOR
+     RANK, and it was the right invariant for the fiction pass: that branch was a pure RELABEL, so
+     a changed count or a changed trigger would have meant it had quietly done more than rename
+     things. grocery-flavour is the branch where the store's pool legitimately stops matching the
+     office's: each department brings four jobs of its own, and the aisle work moved out of the
+     shared list into GROCERY's. So the old assertion went correctly RED and is replaced.
+
+     What still matters is the claim underneath it — THE STORE INVENTED NO NEW MACHINERY. Its
+     triggers must all be triggers the office already had, and a shift must still roll the same
+     number of tasks. Those hold; pool size no longer does, on purpose. */
+  const KINDS = {};
+  for (let r = 0; r <= 6; r++) (OS.taskPoolVias(r) || []).forEach(v => { KINDS[v] = 1; });
+  const invented = [];
+  for (let r = 0; r <= 5; r++) (GS.taskPoolVias(r) || []).forEach(v => { if (!KINDS[v]) invented.push('rank' + r + ':' + v); });
+  ck('the store uses only trigger kinds the office already had', invented.length === 0,
+     invented.length ? invented.join(', ') : 'kinds in play: ' + Object.keys(KINDS).join(', '));
+
+  /* and the store's pool is genuinely its own now, which is the thing that replaced the old
+     equality — asserted so this cannot silently collapse back to a relabel */
+  const differs = [];
+  for (let r = 0; r <= 2; r++) {
+    if ((OS.taskPoolVias(r) || []).length === (GS.taskPoolVias(r) || []).length) continue;
+    differs.push('rank' + r);
   }
-  ck('every rank offers the same NUMBER of tasks in both levels', badLen.length === 0,
-     badLen.length ? badLen.join(', ') : 'ranks 0-5 match');
-  ck('  ^ and the same trigger kinds, in the same order', badVia.length === 0,
-     badVia.length ? 'differ at ' + badVia.join(', ') : 'via lists identical');
+  ck('  ^ but the floor rungs carry their own department work, not the office shape',
+     differs.length >= 2, differs.length + ' of the three floor rungs differ in size from the office');
 }
 ck('the same number of tasks is rolled in both levels',
    OS.taskLabels().length === GS.taskLabels().length,

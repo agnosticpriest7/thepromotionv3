@@ -626,6 +626,9 @@ const EPILOGUE = `
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   // the in-game menu's open flag: a module-scope let, invisible from the sandbox, so a test that
   // reads it off the sandbox gets undefined and compares that to false -- passing for the wrong reason.
+  // the live task list: a module-scope let, invisible from the sandbox. A test that reads it off
+  // the sandbox gets undefined and counts null forever, which is how "exactly two tasks" read {null:40}.
+  def(G,'tasks', function(){ return (typeof tasks!=='undefined')?tasks:null; });
   def(G,'menuOpen', function(){ return (typeof menuOpen!=='undefined')?menuOpen:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });

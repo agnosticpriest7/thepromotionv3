@@ -9,6 +9,37 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-flavour` (2026-08-26)
+
+### 1. Does the store sound like a shop now? ⭐ the point of the branch
+Ten people have voices. Walk up to each one. The intent:
+
+- **Russ Pelletier** won't move — bad back, thirty-one years, *"Ask Curtis. Curtis can reach it."*
+- **Gita Mahal** runs Produce like her own business. *"Everything in here is dying. The job is
+  deciding how fast."*
+- **Doreen Stapp** is sweet and ruthless. Sweetheart, love — and *"I have outlasted six store
+  managers, love."*
+- **Bruno Sarr** guards his counter. **Danika Osei** is managing a queue that never ends.
+- **Priya** is unbothered, **Marguerite** knows everyone, **Bekah** barely speaks (mostly "...").
+- **Lorne Petrie** is warm and always slightly asking for something.
+
+They also talk to themselves ambiently. **Worth knowing: they were never silent** — before this
+they were saying office lines (*"Did the boss see?"*, *"You did NOT hear this…"*) with randomised
+personalities. So the change is a voice swap, not new noise.
+
+### 2. Do the departments feel different to work? ⭐
+Each department now has its own four jobs. A Bakery clerk pulls racks, marks down yesterday's
+bread, ices cakes, sets the proof. A Produce clerk culls, mists, rotates berries, builds the wall
+display. **This is words on the same triggers** — no new mechanics — so the honest question is
+whether that's enough to make one run feel unlike another, or whether it needs real differences.
+
+### 3. Placeholder by intent
+Both parts are deliberately shallow. No branching dialogue, no consequences, no department-specific
+mechanics. If the flavour lands, that's the argument for going deeper; if it doesn't, better to
+know before building more on top.
+
+---
+
 ## From `grocery-unseating` (2026-08-26)
 
 ### 0. Do three ways of removing one person feel like three different games? ⭐⭐ THE BIG ONE
