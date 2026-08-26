@@ -173,6 +173,21 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   lies about the sprite, and `ART_W` lies about the units.
 - **`W`/`H` are already scaled** — divide `S` back out for authored bounds (see `promotion-world-width`). `placement.js` used to hardcode `1500/760` and needed a hand-edit at every resize; it derives now.
 
+- ⚠️ **AN UNEXPLORED PATH IS NOT A HOLLOW ASSERTION — IT IS A MISSING ONE.** The department picker
+  shipped with a **softlock**: it sat behind the once-per-gate latch, so pressing B or tapping its
+  ✕ meant it never came back — promotion pinned at 100%, a Bagger for the rest of the run. A
+  54-assertion suite was **green through it**, and no mutant would have found it, because every
+  test chose a department the instant it was offered. Tests behave correctly by construction, so
+  they never walk the routes players walk. The rule: **any modal that must be answered gets a test
+  that tries to dismiss it, refuse it, or leave it.** Extend it to arcs — abandon one partway,
+  run two at once, finish one after its target is already gone, save and load mid-way.
+- ⚠️ **A GATE THAT MATCHES ON A DISPLAY STRING WILL COLLIDE.** `gateFor` switches on `RANKS[i]`,
+  and Save-Rite's rung 4 is *also* called `ASSISTANT MANAGER` — so the store silently demanded
+  Dale's approval in a building with no Dale, and **the grocery ladder was unclimbable past rung 3
+  with nothing saying so.** The same collision then turned up a second time in `ladderSteps`, the
+  one panel whose job is telling the player what to do next. When you add a level, **grep for
+  gates that key on display text** and assume there is another one.
+
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
 
 ### 15. A harness world is NOT a populated floor — parked NPCs will fake your data
