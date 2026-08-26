@@ -29,6 +29,18 @@ const OFFICE_LADDER = ['INTERN', 'JUNIOR SALES', 'SALES', 'SENIOR SALES', 'ASSIS
 
 const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } });
 
+/* CLEAR THE RUNG-3 GATE THE WAY A PLAYER WOULD. grocery-unseating put a real gate on the
+   Department Manager rung — one named occupant, three roads to move them — so a climb that used
+   to run straight up now stops there, correctly. This drives the LOYALTY road with the same two
+   real functions the game uses: build the Store Manager's favour track, then press the verb.
+   Nothing here sets career.unseat.done, which would be the uncraftable-recipes failure. */
+function clearRung3(S, g) {
+  const boss = S.storeBoss();
+  if (!boss) return false;
+  for (let i = 0; i < 12 && !S.loyalReady(); i++) { try { S.creditFavor(boss); } catch (e) { break; } }
+  try { return S.askBossToMove() === true; } catch (e) { return false; }
+}
+
 /* pick a department through the REAL menu action, not by calling the setter */
 function chooseVia(S, deptId) {
   const menu = S.storeDeptMenu();
@@ -72,7 +84,7 @@ DEPTS.forEach(dept => {
   };
 
   const climb = [];
-  let held = 0;
+  let held = 0, unseated = 0;
   for (let step = 0; step < 40; step++) {
     const before = P.rank;
     P.prog = 100;
@@ -87,6 +99,8 @@ DEPTS.forEach(dept => {
         if (P.rank !== before) climb.push(P.rank + ':' + g.RANKS[P.rank]);
         continue;
       }
+      /* the other legitimate block: somebody still runs the department you picked */
+      if (S.unseatTarget() && clearRung3(S, g)) { unseated++; continue; }
       break;
     }
     climb.push(P.rank + ':' + g.RANKS[P.rank]);
@@ -116,6 +130,8 @@ DEPTS.forEach(dept => {
   ck(dept + ': the department prompt opened exactly once, at the Bagger rung',
      prompts === 1 && promptAtRank.length === 1 && promptAtRank[0] === 0,
      prompts + ' prompt(s) at rank(s) [' + promptAtRank.join(',') + '], ' + held + ' held step(s)');
+  ck(dept + ': the Department Manager rung really was gated on their chair',
+     unseated === 1, unseated + ' unseating(s) needed to finish the climb');
 });
 
 /* ---- 2b. BACKING OUT OF THE CHOICE CANNOT END THE RUN -----------------------------------
@@ -147,7 +163,10 @@ DEPTS.forEach(dept => {
 
   /* and the run is still climbable afterwards, which is the thing that actually matters */
   chooseVia(S, 'deli');
-  for (let i = 0; i < 10 && P.rank < RUNGS - 1; i++) { P.prog = 100; S.tryPromote(); }
+  for (let i = 0; i < 12 && P.rank < RUNGS - 1; i++) {
+    P.prog = 100; S.tryPromote();
+    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+  }
   ck('  ^ and the ladder still goes all the way up afterwards', P.rank === RUNGS - 1,
      'reached ' + g.RANKS[P.rank] + ' (rank ' + P.rank + ')');
 }
@@ -257,7 +276,10 @@ DEPTS.forEach(dept => {
   const w = mk(), S = w.sandbox, g = w.g, P = g.player;
   w.run(9000, { ignoreGameOver: true });
   P.prog = 100; S.tryPromote(); chooseVia(S, 'front');
-  for (let i = 0; i < 10 && P.rank < RUNGS - 1; i++) { P.prog = 100; S.tryPromote(); }
+  for (let i = 0; i < 12 && P.rank < RUNGS - 1; i++) {
+    P.prog = 100; S.tryPromote();
+    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+  }
   ck('the store player really is at the top rung before this is tested', P.rank === RUNGS - 1,
      'rank ' + P.rank + ' = ' + g.RANKS[P.rank]);
 
@@ -307,7 +329,10 @@ DEPTS.forEach(dept => {
   const w = mk(), S = w.sandbox, g = w.g, P = g.player;
   w.run(9000, { ignoreGameOver: true });
   P.prog = 100; S.tryPromote(); chooseVia(S, 'grocery');
-  for (let i = 0; i < 10 && P.rank < RUNGS - 2; i++) { P.prog = 100; S.tryPromote(); }
+  for (let i = 0; i < 12 && P.rank < RUNGS - 2; i++) {
+    P.prog = 100; S.tryPromote();
+    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+  }
   const rankAt = P.rank, ladderAt = g.RANKS.join('|');
   let throws = 0, firstThrow = null;
   for (let f = 0; f < 60000; f += 500) {
@@ -333,6 +358,7 @@ DEPTS.forEach(dept => {
   const w = mk(), S = w.sandbox, g = w.g, P = g.player;
   w.run(9000, { ignoreGameOver: true });
   P.prog = 100; S.tryPromote(); chooseVia(S, 'front');
+  clearRung3(S, g);                      // the next rung is gated on the manager's chair
   const rank0 = P.rank;
   P.prog = 96;                                   // one task's worth short of the next rung
   let done = false;

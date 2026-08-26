@@ -44,6 +44,30 @@ ck('  ^ and it borrows no office job title beyond the generic management ones',
      .every(r => r === 'ASSISTANT MANAGER'),
    'shared with the office: ' + (gr.filter(r => OFFICE_RANKS.indexOf(r) >= 0).join(', ') || 'nothing'));
 
+/* ---- 1b. a HELD promotion reads as a refusal in the office and a QUESTION in the store ----
+   The HUD decorates a held promotion with a lead-in shared by both levels. The office's gates
+   really are refusals — a chair is taken, Dale does not rate you — so BLOCKED is honest there.
+   Save-Rite's only held promotion is the department choice, where the player has not failed
+   anything: they are being asked something the ladder cannot continue without. */
+{
+  const note = W => { try { W.sandbox.updateHUD(); } catch (e) {} 
+    return W.sandbox.document.getElementById('rankNote').textContent; };
+
+  /* office: drive it to a rung that really is gated, and read the live HUD */
+  o.g.player.rank = 3; o.g.player.prog = 100;
+  try { OS.tryPromote(); } catch (e) {}
+  const on = note(o);
+  ck('the office still says BLOCKED on a gate that really is a refusal',
+     on.indexOf('BLOCKED: ') >= 0, on);
+
+  /* grocery: the department choice is the only held promotion in the store */
+  g.g.player.prog = 100;
+  try { GS.tryPromote(); } catch (e) {}
+  const gn = note(g);
+  ck('the store does not tell the player they are BLOCKED', gn.indexOf('BLOCKED') < 0, gn);
+  ck('  ^ it invites them to pick a department instead', /pick a department/i.test(gn), gn);
+}
+
 /* ---- 2. the office task pool is byte-identical ------------------------------------------- */
 const OFFICE_R0 = [
   'Finish the TPS cover sheets at your desk',

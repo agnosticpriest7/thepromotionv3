@@ -3472,6 +3472,17 @@ function npcLeaving(n){
   }
   if(typeof pendingHires!=='undefined')pendingHires.forEach(h=>{if(h.cand&&h.cand.feudTarget===n.name)h.cand.feudTarget=null;});   // a candidate's "bad blood" points at a named worker — dead when they leave
   if(typeof hireSlate!=='undefined'&&hireSlate)hireSlate.cands.forEach(c=>{if(c.feudTarget===n.name)c.feudTarget=null;if(c.knownBy===n.name)c.knownBy=null;});
+  /* ⚠️ THE INVESTMENT INVARIANT (PROJECT.md §5). This branch adds NO pointer-to-NPC state — the
+     three roads are counts, and who they are aimed at is derived from the world every time it is
+     asked. So there is nothing here to null out. What there IS is accrued PROGRESS against a post
+     that just emptied, and leaving it standing would silently carry over to their replacement:
+     you would inherit three days of somebody else's good run. Cleared, with a line, so the player
+     is told rather than quietly credited. */
+  if(currentLevel!=='office'&&n.storeRole==='manager'&&n.storeDept&&n.storeDept===player.storeDept&&career.unseat&&!career.unseat.done){
+    const had=(career.unseat.merit||0)+(career.unseat.sabo||0);
+    career.unseat.merit=0; career.unseat.sabo=0;
+    if(had>0)logLine(`Whatever you were building against ${who} stops mattering — the chair is empty and nobody is in it to unseat.`,'t');
+  }
   if(n.rival)pickNewRival();
   if(n.mgr&&dale.active&&!dale.done){dale.active=false;logLine('Dale is gone. Whatever you were building with him — that road closed when he left.','b');renderTasks&&renderTasks();}
 }
@@ -4355,6 +4366,226 @@ function setStoreDept(id){
 function applyLadder(){
   if(currentLevel!=='office'&&vocab().ranks)RANKS=storeLadder(player.storeDept||null);
 }
+/* WHO RUNS A DEPARTMENT, asked of the world rather than remembered. Returns null once they are
+   gone for good, which is what lets every arc below survive its target leaving by other means.
+
+   ⚠️ `alive` ONLY — NOT `gone`/`wentHome`. Those are ATTENDANCE (parked off-map before the shift,
+   walked out at close); `alive` is EMPLOYMENT, which is what npcLeaving/fireNPC actually clear.
+   The first cut filtered attendance too, and every one of these returned null at boot because §15
+   parks the whole cast off-map until they clock in — so "who runs Produce?" answered NOBODY every
+   morning before 8am, and any arc keyed on it would have silently reset daily. */
+function deptManager(id){
+  return NPCS.find(n=>n.alive&&n.storeDept===id&&n.storeRole==='manager')||null;
+}
+/* everyone on a department's roster, manager included — the population its health is measured
+   over. Also employment, not attendance: a department does not shrink overnight. */
+function deptStaff(id){
+  return NPCS.filter(n=>n.alive&&n.storeDept===id);
+}
+/* the store's Dale: the favour-giver the loyalty path routes through */
+function storeBoss(){
+  return NPCS.find(n=>n.alive&&n.storeRole==='store')||null;
+}
+/* SAVE-RITE'S PATHS PANEL. The same three roads the WAY UP checklist lists, with progress bars —
+   and, above rung 3, an honest statement that the rest of the ladder is not gated yet rather than
+   an invented route. */
+function renderStorePaths(el){
+  const bar=(lab,val,col)=>`<div class="pbar"><span>${lab}</span><div class="tr"><div class="fl" style="width:${clamp(Math.round(val),0,100)}%;background:${col}"></div></div><b style="font-size:11px">${Math.round(val)}%</b></div>`;
+  const esc=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if(!player.storeDept){
+    el.innerHTML=`<div class="pblk"><h5>THE WAY UP — pick a department first</h5>
+      <div class="psub">You are ${esc(RANKS[player.rank])}. The ladder branches at your first promotion: the department you put in for decides whose job you are after, and it cannot be changed.</div></div>`;
+    return;
+  }
+  const dept=storeDeptName(player.storeDept), t=unseatTarget(), st=unseatState(), b=storeBoss();
+  if(!t){
+    el.innerHTML=`<div class="pblk"><h5>THE WAY UP — ${esc(dept)}</h5>
+      <div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} There is nothing left to take — the rungs above this one are not gated yet.</div></div>`;
+    return;
+  }
+  const who=esc(t.name.split(' ')[0]);
+  const meritPct=Math.round(100*(st.merit||0)/UNSEAT_MERIT_DAYS);
+  const loyalPct=Math.round(100*Math.min(loyalCount(),UNSEAT_LOYAL_TARGET)/UNSEAT_LOYAL_TARGET);
+  const saboPct =Math.round(100*Math.min(st.sabo||0,UNSEAT_SABO_TARGET)/UNSEAT_SABO_TARGET);
+  el.innerHTML=
+    `<div class="pblk"><h5>THE WAY UP — three roads to ${who}'s chair</h5>
+       <div class="psub">You are ${esc(RANKS[player.rank])} in ${esc(dept)}. You only need one of these.</div></div>
+     <div class="pblk"><h5>MERIT — run it better than they do</h5>
+       <div class="psub">Keep ${esc(dept)} healthy (${deptHealth(player.storeDept)}/${UNSEAT_MERIT_TARGET}) on days you actually work. ${who} gets moved up, not out.</div>
+       ${bar('Good days',meritPct,'#4a8c5a')}
+       <div class="psub">${st.merit||0}/${UNSEAT_MERIT_DAYS} days running. Slow, safe, nobody gets hurt.</div></div>
+     <div class="pblk"><h5>LOYALTY — ${b?esc(b.name.split(' ')[0]):'the Store Manager'} moves them</h5>
+       <div class="psub">Do his work for him until he owes you, then ask.</div>
+       ${bar('Favours',loyalPct,'#c9a41a')}
+       <div class="psub">${esc(loyalStatus())}</div></div>
+     <div class="pblk"><h5>SABOTAGE — make it fail in their name</h5>
+       <div class="psub">Date codes, shrink, the order, the rota. It lands on ${who} because it is ${who}'s department.</div>
+       ${bar('Failures',saboPct,'#c0392b')}
+       <div class="psub">${st.sabo||0}/${UNSEAT_SABO_TARGET}. Fastest road, and the only one that raises suspicion.${storeMasterBlocked()?' The MASTER tier is shut here — it needs an HR office this store does not have.':''}</div></div>`;
+}
+/* SAVE-RITE'S WAY UP. Only rung 3 has roads to describe; the rest of the store's ladder is open
+   until the branches that gate it are built, and it says so rather than showing an empty box. */
+function storeLadderSteps(next,g){
+  const title='THE WAY UP \u2192 '+RANKS[next];
+  const steps=[];
+  if(next===1){
+    steps.push({done:!!player.storeDept, text:'Pick a department — it is permanent, and it decides whose job you are after'});
+    return {title,steps,ok:g.ok};
+  }
+  if(next===2&&player.storeDept){
+    const t=unseatTarget(), dept=storeDeptName(player.storeDept), st=unseatState();
+    if(!t)return {title,steps:[{done:true,text:`Nobody runs ${dept}. The chair is empty — take it.`}],ok:true};
+    const who=t.name.split(' ')[0], b=storeBoss();
+    steps.push({head:`THREE ROADS TO ${who.toUpperCase()}'S CHAIR — you only need one`});
+    steps.push({head:'RUN IT BETTER THAN THEY DO'});
+    steps.push({done:st.merit>=UNSEAT_MERIT_DAYS,
+      text:`${dept} health ${deptHealth(player.storeDept)}/${UNSEAT_MERIT_TARGET} on a day you actually worked — ${st.merit||0}/${UNSEAT_MERIT_DAYS} good days running`});
+    steps.push({done:false,text:'Nobody gets hurt on this road. They get moved up, and you are the obvious replacement.'});
+    steps.push({head:'OR GET THE STORE MANAGER TO DO IT'});
+    steps.push({done:loyalReady(), text:loyalStatus()});
+    if(b)steps.push({done:false,text:`${b.name.split(' ')[0]} will remember that he did it for you.`});
+    steps.push({head:'OR MAKE THE DEPARTMENT FAIL IN THEIR NAME'});
+    steps.push({done:st.sabo>=UNSEAT_SABO_TARGET,
+      text:`Failures landed on ${dept} — ${st.sabo||0}/${UNSEAT_SABO_TARGET}. Date codes, shrink, the order, the rota.`});
+    steps.push({done:false,text:'Fastest road, and the only one that raises suspicion.'});
+    if(storeMasterBlocked())
+      steps.push({done:false,text:'The MASTER tier needs an HR office to walk the paperwork over. This store has none — those three are shut.'});
+    return {title,steps,ok:g.ok};
+  }
+  steps.push({done:g.ok, text:g.ok?'Nothing stands between you and this one yet — just earn it.':g.hint});
+  return {title,steps,ok:g.ok};
+}
+/* ============================================================================
+   UNSEATING THE DEPARTMENT MANAGER — three ways to move one named person.
+   Rung 3 of Save-Rite's ladder is a single occupant with no alternative seat, which would
+   normally be a dead end. The redundancy comes from the PATHS, not from more bodies: merit
+   routes through the department, loyalty through the Store Manager, sabotage through a failure
+   that lands on them. They map onto the office's three victory routes.
+   ========================================================================== */
+const UNSEAT_MERIT_TARGET=72;   // department health that counts as a good day (a dial)
+const UNSEAT_MERIT_DAYS=3;      // consecutive good days before the department is visibly yours
+const UNSEAT_LOYAL_TARGET=4;    // favours done for the Store Manager before you can ask
+const UNSEAT_SABO_TARGET=2;     // failures landed on their department before it costs them the job
+
+function unseatState(){ if(!career.unseat)career.unseat={merit:0,sabo:0,done:null}; return career.unseat; }
+/* the person all three paths are aimed at, DERIVED — null once they are gone by any means */
+function unseatTarget(){ return currentLevel==='office'?null:deptManager(player.storeDept); }
+/* the loyalty leg is READ, not stored: the favour track already counts per person */
+function loyalCount(){ const b=storeBoss(); const fv=b&&career.favors[b.name]; return (fv&&fv.n)||0; }
+function unseatDone(){ return !!unseatState().done; }
+/* has the post been cleared, by any route at all? This is what the promotion gate asks, so a
+   manager removed by something else — another path, a future event — opens the rung too, and no
+   arc can dangle waiting for somebody who already left. */
+function unseatOpen(){ return currentLevel!=='office' && !!player.storeDept && !unseatTarget(); }
+
+/* ---- THE ONE PLACE A MANAGER IS UNSEATED --------------------------------------------------
+   Every path funnels through here, and it refuses a second resolution. That is what stops two
+   paths pursued at once unseating the same person twice, and it is structural rather than a
+   convention: no path removes anybody itself. */
+function resolveUnseat(path){
+  if(unseatDone())return false;                       // one manager, one unseating, ever
+  const m=unseatTarget();
+  if(!m)return false;                                 // already gone by other means — nothing to do
+  const st=unseatState();
+  st.done=path;
+  const who=m.name.split(' ')[0], dept=storeDeptName(player.storeDept);
+  /* ⚠️ npcLeaving() FIRST, ALWAYS. It is the hook that clears everything pointing at them —
+     pranks in flight, leverage, other people's jobs, favours owed. Removing them without it is
+     exactly the dangle the invariant exists to prevent. */
+  npcLeaving(m);
+  m.alive=false; m.onFloor=false;
+  if(path==='merit'){
+    logLine(`${dept} has been running visibly better than it did, and everyone knows whose hands it happened in. Head office moved ${who} up and across. Nobody got hurt; you were simply the obvious replacement.`,'g');
+    toast(`${who} moved up — ${dept} is yours to take.`);
+  }else if(path==='loyal'){
+    const b=storeBoss();
+    logLine(`${b?b.name.split(' ')[0]:'The Store Manager'} moved ${who} to another store without much explanation. He did not need one — he has been letting you do his job for weeks, and this is what that was worth.`,'a');
+    toast(`${who} transferred. You owe him.`);
+  }else{
+    addSuspicion(18,`${dept} failed badly and you were close to it`);
+    logLine(`${dept} failed a check it should have passed, and it failed in ${who}'s name because it is ${who}'s department. They did not survive it. Somebody may wonder how it happened.`,'b');
+    toast(`${who} is out — and suspicion is up.`);
+  }
+  SFX.promote();
+  buildGrid();
+  return true;
+}
+
+/* ---- MERIT: the department thrives, visibly, because of you -------------------------------
+   Judged at the day boundary on the DEPARTMENT's health, using the same four per-person terms
+   branchHealth uses (see healthCore). "Your contribution the majority of it" is proxied by
+   requiring you actually worked that day — the store has no per-person output ledger, and
+   inventing one would be a bigger change than this branch is allowed to make. Reported as a
+   proxy rather than dressed up as a measurement. */
+function unseatRollDay(){
+  if(currentLevel==='office'||!player.storeDept)return;
+  const st=unseatState();
+  if(st.done)return;
+  if(!unseatTarget()){ st.merit=0; st.sabo=0; return; }     // post already empty: nothing to accrue
+  const h=deptHealth(player.storeDept), worked=(today&&today.tasks>0);
+  if(h>=UNSEAT_MERIT_TARGET&&worked){
+    st.merit=(st.merit||0)+1;
+    if(st.merit<UNSEAT_MERIT_DAYS)
+      logLine(`${storeDeptName(player.storeDept)} ran well again today — ${st.merit}/${UNSEAT_MERIT_DAYS}. People are starting to say it out loud.`,'g');
+    if(st.merit>=UNSEAT_MERIT_DAYS)resolveUnseat('merit');
+  }else if(st.merit>0){
+    st.merit=0;
+    logLine(`${storeDeptName(player.storeDept)} had an ordinary day. The run of good ones is broken.`,'t');
+  }
+}
+
+/* ---- LOYALTY: Lorne moves them --------------------------------------------------------------
+   ⚠️ EXPLICITLY NOT SHAPED LIKE THE DALE ARC. Dale is a 16-beat authored script advanced only by
+   completeDaleFavor(), which only runs when he OFFERS — and offering needs a beat to exist, a
+   cooldown, a work phase, a daily cap and a living manager. Any one of those failing stalls the
+   whole arc with daleStatus() still saying "he will ask again soon", which reads identically
+   whether the next beat is thirty seconds away or unreachable. That is how it dead-ended at 8/16
+   in silence.
+
+   So this has NO script and NO scheduler. It is a COUNT of ordinary favours (the per-person track
+   every coworker already has) and a VERB the player presses. Nothing has to fire on its own, so
+   nothing can fail to fire; and loyalStatus() below reports the live count and, when the path is
+   shut, says exactly why instead of promising more. */
+function loyalReady(){ return !unseatDone() && !!unseatTarget() && !!storeBoss() && loyalCount()>=UNSEAT_LOYAL_TARGET; }
+function loyalStatus(){
+  const b=storeBoss();
+  if(!b)return 'There is no Store Manager to ask. This road is shut.';
+  if(unseatDone())return 'Settled. Nothing left to ask him for.';
+  if(!unseatTarget())return 'The job is already open. There is nothing to ask him for.';
+  const c=loyalCount();
+  return c>=UNSEAT_LOYAL_TARGET
+    ? `${b.name.split(' ')[0]} owes you. Ask him to move them.`
+    : `Do ${b.name.split(' ')[0]}'s work for him — ${c}/${UNSEAT_LOYAL_TARGET} favours.`;
+}
+function askBossToMove(){
+  if(!loyalReady())return false;
+  return resolveUnseat('loyal');
+}
+
+/* ---- SABOTAGE: a failure lands on them -------------------------------------------------------
+   Reuses the prank pipeline wholesale — same tiers, same build, same hit/miss — and only changes
+   what a landed one MEANS when the victim runs your department: it becomes a failure on their
+   department's record. The store's fictions (date codes, shrink, stock, the schedule) are a
+   per-level relabel of the existing prank list, the same way the task pool was relabelled.
+
+   ⚠️ THE MASTER TIER IS UNAVAILABLE IN THE STORE, and that is a finding rather than a choice:
+   masterPlant() ends in tipHR(), which needs an NPC with dept:'hr'. Save-Rite has none by design
+   (adding one arms triggerAudit), so hrs() is empty, tipHR pushes onto hrTipQueue and NOTHING
+   EVER COMES. A master prank in the store is planted and silently never resolves. Blocked with a
+   visible reason rather than left as a trap. */
+function saboCredit(target){
+  if(currentLevel==='office')return;
+  const st=unseatState();
+  if(st.done||!player.storeDept)return;
+  const m=unseatTarget();
+  if(!m||target!==m)return;                            // only failures on YOUR manager count
+  st.sabo=(st.sabo||0)+1;
+  if(st.sabo<UNSEAT_SABO_TARGET)
+    logLine(`That lands on ${storeDeptName(player.storeDept)}'s record, not yours — ${st.sabo}/${UNSEAT_SABO_TARGET}.`,'a');
+  if(st.sabo>=UNSEAT_SABO_TARGET)resolveUnseat('sabo');
+}
+function storeMasterBlocked(){ return currentLevel!=='office' && hrs().length===0; }
+
 function storeDeptMenu(){
   return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
     items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
@@ -4370,14 +4601,37 @@ const VOCAB={
   office:{ ranks:null,           tasks:null,          detentions:null,
            clockIn:'Clock in at the elevator', clockOut:'Head to the elevator — day over',
            clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting',
-           ownStation:'your desk' },
+           ownStation:'your desk',
+           /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
+              taken, Dale does not rate you — so BLOCKED is the honest word there. */
+           gateLead:'BLOCKED: ', prankLabels:null },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
            /* the marker points at the player's own station, which in a store is the aisle they
               are working — the single most-visible string in the game, and the fiction pass
               missed it because it lives in the compass rather than in a task table. */
-           ownStation:'your aisle' },
+           ownStation:'your aisle',
+           /* NOT "BLOCKED". Save-Rite's only held promotion is the department choice, and the
+              player has not failed anything at that moment — they are being asked a question the
+              ladder cannot continue without. Kyle: it "reads like the player failed something at
+              the exact moment they're being invited to choose". */
+           gateLead:'',
+           /* THE STORE'S SABOTAGE FICTIONS. The prank pipeline is reused wholesale — same tiers,
+              same build, same hit/miss — and only the words change, exactly the way the task pool
+              was relabelled. These are the things a real grocery manager actually gets fired
+              over: date codes, shrink, the order, the rota. */
+           prankLabels:{
+             mislabel:'Mislabel the date codes on their facing',
+             calendar:'Lose a shift off their rota',
+             gaslight_s:'Move stock so their counts never tie',
+             stain:'Ruin their whites before the walk-round',
+             well:'Start a rumour on the shop floor',
+             violation:'Forge a failed temperature log in their name',
+             memo:'Forge a sour note to head office in their name',
+             gaslight:'The full count discrepancy (three plants)',
+             image:'Humiliate them in front of the queue',
+             expose:'Expose them as the one leaking the rota' } },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -4633,6 +4887,15 @@ function buildOptions(t){
             {label:'Countersign it',risk:'management',act:()=>cosignDo(n,true)},
             {label:'Send it back',risk:'management',act:()=>cosignDo(n,false)},
             {label:'Cancel',act:()=>{}}]})}]:[]),
+        /* THE LOYALTY ROAD, as a verb the player presses rather than a beat that must fire.
+           Shown even when it is not ready, with the count on it, so the road is legible from the
+           first favour instead of appearing out of nowhere at the threshold. */
+        ...((n.storeRole==='store'&&currentLevel!=='office'&&player.storeDept&&!unseatDone()&&unseatTarget())?[{
+          label:loyalReady()?`Ask him to move ${unseatTarget().name.split(' ')[0]} on…`
+                            :`Ask about ${storeDeptName(player.storeDept)}…  (${loyalCount()}/${UNSEAT_LOYAL_TARGET} favours)`,
+          disabled:!loyalReady(),
+          risk:loyalReady()?'he owes you, and he will remember that he did':'do his work for him first',
+          act:()=>askBossToMove()}]:[]),
         ...((delegActive()&&!delegWorkerBusy(n.name)&&delegOpen().length)?[{label:`Delegate a job to ${n.name.split(' ')[0]}…  (${delegOpen().length} on the tray)`,risk:'management',act:()=>renderMenu(delegAssignMenu(n))}]:[]),
         ...((delegActive()&&delegWorkerBusy(n.name))?[{label:`${n.name.split(' ')[0]} is on a job for you`,disabled:true}]:[]),
         ...(player.rank>=5?[{label:`Send ${n.name.split(' ')[0]} home early (stress −45)`,risk:'costs you their afternoon',
@@ -5531,6 +5794,8 @@ function consumeParts(type){
   }
   renderLeverage();
 }
+/* the store's word for a prank, or the office's if the level does not relabel it */
+function prankLabel(p){ const L=vocab().prankLabels; return (L&&L[p.id])||p.label; }
 function planPrank(own){
   const items=[];
   const mine=own.profiled?own.ptype:null;
@@ -5541,7 +5806,7 @@ function planPrank(own){
     const kitReady=invHas('kit_'+p.id)||PARTS[p.id].length===0;
     const t=PTYPE_OF[p.id];
     return {
-      label:`${PTYPE_NAME[t].toUpperCase()} · ${TIER_NAME[prankTier(p.id)]} — ${p.label}${right?'  ★ THEIR TYPE':''}${kitReady?'  ✓ ready':''}`,
+      label:`${PTYPE_NAME[t].toUpperCase()} · ${TIER_NAME[prankTier(p.id)]} — ${prankLabel(p)}${right?'  ★ THEIR TYPE':''}${kitReady?'  ✓ ready':''}`,
       risk: wrong?'wrong type — it will backfire':(isMaster(p.id)?(masterVulnerable(own)?'a STRIKE on their file':'they are too clean — break them first'):(st.ok?'':RECIPE_HINT[p.id])),
       hot: wrong||(isMaster(p.id)&&!masterVulnerable(own)),
       disabled:false,
@@ -5662,6 +5927,10 @@ function blameYou(target){target.yourWork=(target.yourWork||0)+1;}
 function youDidThis(n){return (n.yourWork||0)>0;}
 function prankHit(target,type,tier){
   SFX.prank();
+  /* a landed prank on the person who runs YOUR department is not a prank, it is a failure on
+     their department's record — the sabotage road. Credited here so every tier and every
+     delivery route funnels through one place. */
+  saboCredit(target);
   target.profiled=true;
   const R=prankResist(target,type);
   const seenThis=(target.prankSeen&&target.prankSeen[type])||0;
@@ -5953,6 +6222,7 @@ function nextDay(){
   day++;clock=DAY_START;lastPhase='Clock-In';meetingCredited=false;phaseCred={};player.channel=null;player.workCh=null;player.act=null;player.hasKeycard=false;player.coffeeFor=null;career.snitchCount=0;player.eavesCd=0;
   cosignRollDay();  // orders are ephemeral: cleared with the day, and the daily cap resets
   delegRollDay();   // fresh delegation tray for the new day; clean-completion count and the rolling demerit window carry over
+  unseatRollDay();  // the MERIT road is judged on the day that just ended, before today is reset
   /* Suspicion and stress don't carry over in full: a day's accumulation halves overnight (was a flat
      −10 on suspicion and no stress relief at all). NPCs decay separately below, per the isolation mechanic. */
   player.suspicion=clamp(player.suspicion*NIGHT_DECAY,0,100);
@@ -6396,7 +6666,24 @@ const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},res
   favors:{},          // per-person favour track: name -> {n, reward, given, armed} — favours you do for someone accumulate; at a threshold they owe you a one-time VERB. Player-held, saved (career is cloned whole), swept by npcLeaving.
   cosign:{right:0,wrong:0,today:0},   // Senior Sales countersign tally. Additive, so an old save
                       // simply keeps this default — no SAVE_VERSION bump needed (career is cloned whole).
-  auditTipoff:false}; // a cashed tip-off perk (paranoid's favour): the next desk audit is announced early. Not person-tied once given.
+  auditTipoff:false,  // a cashed tip-off perk (paranoid's favour): the next desk audit is announced early. Not person-tied once given.
+  /* ---- UNSEATING A DEPARTMENT MANAGER (Save-Rite rung 3) ------------------------------------
+     ⚠️ COUNTS, NOT POINTERS — deliberately, and this is the branch the investment invariant
+     exists for. The target of all three paths is ONE NAMED PERSON, which is exactly the shape
+     that broke the catfish route before it was made count-based. So nothing here names them:
+     `merit` is good days for YOUR department, `sabo` is failures landed on it, and the loyalty
+     leg is not stored at all — it is read off career.favors[storeBoss().name].n, which the
+     per-person favour track already keeps and npcLeaving already sweeps.
+
+     Which department is likewise not stored: it is player.storeDept, and who runs it is
+     deptManager() asked of the world. There is therefore NO new pointer-to-NPC in this branch,
+     which is the strongest form of holding the invariant — nothing to dangle.
+
+     `done` records which path resolved, and is the structural guarantee that one manager cannot
+     be unseated twice. Additive: a save without it is a save where no path has been started,
+     which is true of every save written before this branch. No SAVE_VERSION bump (career is
+     cloned whole, so it rides along). */
+  unseat:{merit:0,sabo:0,done:null}};
 /* the day's ledger — reset every morning, read out every evening */
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
 function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
@@ -6411,7 +6698,17 @@ function gateFor(nextIdx){
      is what makes reaching rung 6 in a debug run the bar for this branch. */
   if(currentLevel!=='office'){
     if(nextIdx===1&&!player.storeDept)
-      return {ok:false,hint:'you have to put in for a department first'};
+      return {ok:false,hint:'Pick a department to move up.'};
+    /* RUNG 3: the department's manager. One named occupant, three ways to move them. The gate
+       asks the WORLD whether the post is empty rather than checking an arc flag, so a manager
+       removed by anything at all — your path, another path, some future event — opens it. */
+    if(nextIdx===2&&player.storeDept&&unseatTarget()){
+      const t=unseatTarget();
+      /* SHORT. The HUD's rank note is a narrow slot and a long hint wraps to three lines, runs off
+         the top-left and clips behind the rank title — unreadable on a TV. The three roads are
+         spelled out in THE WAY UP; this only has to point at it. */
+      return {ok:false,hint:`${t.name.split(' ')[0]} has the chair — see THE WAY UP`};
+    }
     return {ok:true};
   }
   switch(RANKS[nextIdx]){
@@ -6802,24 +7099,48 @@ function promoteMenu(){
    NO LONGER MEASURED here: it became leverage (allies look away, accept delegation, make mediation
    land, vouch for hires). The old formula could only be raised by grinding mood+allies; this one is
    raised by managing. (Branch 1 rebalance; the target itself is retuned separately.) */
-function branchHealth(){
-  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
-  if(!ws.length)return 0;
+/* THE PER-PERSON CORE OF BRANCH HEALTH, factored out so a DEPARTMENT can be measured with the
+   identical formula rather than a fork of it. Unclamped and unrounded on purpose: the caller adds
+   its own scope-wide terms and clamps once, so branchHealth() below is arithmetically the same
+   expression it always was (t_legibility asserts healthBreakdown().health===branchHealth(), and
+   that still holds).
+
+   WHAT DID *NOT* GENERALISE, reported rather than forked: `vacant` desks, `today.meltdowns`,
+   `today.fired` and `career.revenue` are all STORE-WIDE or office-shaped. A department does not
+   have its own vacancy list (every station is owned), does not book client revenue, and cannot
+   own a share of a store-wide meltdown. So deptHealth() measures the four terms that ARE
+   per-person — average stress, the broken tail, feuds and strikes — and says so. */
+function healthCore(ws){
+  if(!ws.length)return null;
   const avgStress=ws.reduce((a,n)=>a+n.stress,0)/ws.length;      // 0..100 — the dominant lever
   const feuds=ws.filter(n=>n.feudWith).length/2;
   const strikes=ws.reduce((a,n)=>a+(n.strikes||0),0);
-  const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
   const broken=ws.filter(n=>stressTier(n)>=3).length;
-  let h=40
+  return 40
     + (100-avgStress)*0.42     // a calm floor: avgStress 0 -> +42, avgStress 100 -> +0
     - broken*8                 // stress DISTRIBUTION — people on the edge
     - feuds*8                  // active feuds
+    - strikes*5;               // mistakes on file
+}
+function branchHealth(){
+  const ws=activeNPCs().filter(n=>isWorker(n)&&!n.gone);
+  const core=healthCore(ws);
+  if(core===null)return 0;
+  const vacant=desks.filter(d=>!d.owner&&!d.mgrOffice&&!d.retired&&!d.reserved).length;
+  let h=core
     - vacant*6                 // unfilled desks
-    - strikes*5                // mistakes on file
     - (today?today.meltdowns*12:0)
     - (today?today.fired.length*16:0)
     + (career.revenue||0);     // client wins (persists, capped) — the one banked operational bonus
   return Math.round(clamp(h,0,100));
+}
+/* A DEPARTMENT IS A BRANCH, measured with the same four per-person terms. Attendance filtered
+   here (not in deptStaff) because health is about how the department is running TODAY, while the
+   roster is about who works there. */
+function deptHealth(id){
+  const ws=deptStaff(id).filter(n=>!n.gone&&!n.wentHome);
+  const core=healthCore(ws);
+  return core===null?0:Math.round(clamp(core,0,100));
 }
 /* READ-ONLY legibility (branch: manager-legibility). The player used to see only the final
    branchHealth() number with no way to learn where it came from — a ten-term formula behind a
@@ -9246,6 +9567,13 @@ function renderOrg(){
    Pure DOM/CSS (%-based), so there are no fixed world coords to scale by S. */
 function renderPaths(){
   const el=document.getElementById('pathsBody'); if(!el)return;
+  /* ⚠️ A THIRD OFFICE-SHAPED PANEL, and a DIFFERENT failure mode from the other two. gateFor and
+     ladderSteps both COLLIDED ON A RANK NAME; this one never matches a string at all — it is
+     simply hardcoded office content behind `player.rank>=5`. So the grep for display-string gates
+     did not find it, and a DELI CLERK opening PATHS was reading about Dale's 16-beat errand arc,
+     the catfish, Sterling, and "three roads to CEO" — a job that does not exist in this level.
+     Two panels describing routes, one correct and one entirely fictional. */
+  if(currentLevel!=='office'){ renderStorePaths(el); return; }
   const bar=(lab,val,col)=>`<div class="pbar"><span>${lab}</span><div class="tr"><div class="fl" style="width:${clamp(Math.round(val),0,100)}%;background:${col}"></div></div><b style="font-size:11px">${Math.round(val)}%</b></div>`;
   const rankName=RANKS[player.rank];
   const isMgr=player.rank>=5;                              // MANAGER (RANKS index 5)
@@ -9385,7 +9713,7 @@ function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=n
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);
-}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' (BLOCKED: '+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
+}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
 /* ================= MISSIONS: favors, dirty jobs, betrayal, and office feuds ================= */
 /* friendship-only economy — never promotion points */
 const MISSION_KINDS=[
@@ -9813,6 +10141,15 @@ function ladderSteps(){
   if(next>=RANKS.length)return null;
   const g=gateFor(next);
   const steps=[];
+  /* ⚠️ THE SECOND NAME-MATCHED GATE, and the brief was right to say assume there is another.
+     The switch below keys on the rank STRING, and Save-Rite's rung 4 is ALSO called ASSISTANT
+     MANAGER — so the store's WAY UP panel was telling the player to "Ask Dale if he needs
+     anything (start sucking up)" and ticking "he likes you 0/30" as DONE, in a shop with no Dale
+     and no such mechanic. Same collision that made the ladder unclimbable past rung 3, in the
+     one panel whose whole job is explaining what to do next.
+
+     The store's roads are not the office's, so it gets its own branch rather than a case. */
+  if(currentLevel!=='office')return storeLadderSteps(next,g);
   switch(RANKS[next]){
     case 'SALES':
     case 'SENIOR SALES':
@@ -10712,21 +11049,46 @@ function loadLevel(id){
     /* checkstand lane: below the checkstands, above the store's south wall. */
     const LANE_Y=CHK_Y+34;
     const chkLane=i=>chkXs[i]+CTR*3/2;
+    /* ---- WHO WORKS WHERE. The crew had no department field at all until now: Danika was the
+       "Front End Manager" in the commit message and in nothing else, and the game could not
+       answer "who runs Produce?" for any of the five. The ladder promised a choice of five
+       departments and three of them had nobody in them — Produce, Deli and Bakery — so three of
+       five routes through the game dead-ended at rung 3 with no one to succeed.
+
+       `storeDept`/`storeRole`, NOT `dept`. `dept` is the field hrs() and triggerAudit() read, and
+       keeping the store's departments in a separate namespace is what makes it structurally
+       impossible for a Deli manager to satisfy an HR check rather than merely unlikely. Same
+       reasoning, and the same field name, as player.storeDept.
+
+       Rung 3's occupant is therefore DERIVED from the world (find the living manager of a
+       department) rather than stored as a pointer in the save — the catfish lesson, applied
+       before there is anything to fix. */
     const CREW=[
       /* chkLane(1), not chkLane(0)+60: that put her box straight through the go-back cart's
          blocker, which the crew test caught as "Priya Raval stands inside a blocker". */
-      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right'],   // cashier, west checkstands
-      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' ],   // cashier, east checkstands
-      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' ],   // Front End Manager, on the front end
-      ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' ],   // stocker, first aisle
-      ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' ],   // stocker, fourth aisle
-      ['Russ Pelletier',    960,           420,      'left' ]];  // Grocery Manager, off the aisle ends
-    for(const [name,x,y,side] of CREW){
+      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right', 'front',  'staff'  ],
+      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' , 'front',  'staff'  ],
+      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' , 'front',  'manager'],
+      ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
+      ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' , 'grocery','staff'  ],
+      ['Russ Pelletier',    960,           420,      'left' , 'grocery','manager'],
+      /* ---- THE THREE MISSING DEPARTMENT MANAGERS. Placeholder art, like the rest of the crew.
+         Positions derive from the fixtures their departments are built around, so redrawing the
+         floor moves them with it. */
+      ['Gita Mahal',        150,           370,      'right', 'produce','manager'],   // the chilled cases
+      ['Bruno Sarr',        (470+1010)/2,  CTR_Y+52, 'down' , 'deli',   'manager'],   // behind the deli counter
+      ['Doreen Stapp',      (40+400)/2,    CTR_Y+52, 'down' , 'bakery', 'manager'],   // behind the bakery counter
+      /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
+         work you can do for him. He has no storeDept on purpose: he is above all five, and the
+         loyalty path routes through him rather than through any one department. */
+      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ]];
+    for(const [name,x,y,side,sdept,srole] of CREW){
       const d=stationDesk(x,y,name,side);
       /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
          Save-Rite and triggerAudit() returns at its second line, which is what keeps the whole
          audit/HR apparatus dormant in a level that has no HR office to run it from. */
       const n=NPC(name,'sales',d);
+      n.storeDept=sdept; n.storeRole=srole;
       n.x=d.x+d.w/2; n.y=d.y+d.h/2;      // start ON the station rather than at a desk-shaped offset
       NPCS.push(n);
     }
@@ -11035,6 +11397,13 @@ function applySnapshot(s){
   NPCS.length=0; restored.forEach(n=>NPCS.push(n));
   rival=NPCS.find(n=>n.rival)||null;
   Object.assign(dale,s.dale); Object.assign(career,s.career);
+  /* ⚠️ career is MERGED, not replaced, so a key the save does not carry keeps whatever the CURRENT
+     run had. For an additive field that is a live bug rather than a nicety: load a pre-branch save
+     in the middle of a run with two good days banked and you would keep them. "A save without it
+     is a save where no path has been started" has to be MADE true, not assumed. */
+  career.unseat=(s.career&&s.career.unseat)?{merit:s.career.unseat.merit|0,sabo:s.career.unseat.sabo|0,
+                                             done:s.career.unseat.done||null}
+                                          :{merit:0,sabo:0,done:null};
   if(s.catfish)Object.assign(catfish,s.catfish);
   daleArcAnnounced=s.daleArcAnnounced; salesUnlocked=s.salesUnlocked;
   tasks=JSON.parse(JSON.stringify(s.tasks||[])); favors=JSON.parse(JSON.stringify(s.favors||[]));
