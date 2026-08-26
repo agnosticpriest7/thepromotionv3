@@ -4355,6 +4355,26 @@ function setStoreDept(id){
 function applyLadder(){
   if(currentLevel!=='office'&&vocab().ranks)RANKS=storeLadder(player.storeDept||null);
 }
+/* WHO RUNS A DEPARTMENT, asked of the world rather than remembered. Returns null once they are
+   gone for good, which is what lets every arc below survive its target leaving by other means.
+
+   ⚠️ `alive` ONLY — NOT `gone`/`wentHome`. Those are ATTENDANCE (parked off-map before the shift,
+   walked out at close); `alive` is EMPLOYMENT, which is what npcLeaving/fireNPC actually clear.
+   The first cut filtered attendance too, and every one of these returned null at boot because §15
+   parks the whole cast off-map until they clock in — so "who runs Produce?" answered NOBODY every
+   morning before 8am, and any arc keyed on it would have silently reset daily. */
+function deptManager(id){
+  return NPCS.find(n=>n.alive&&n.storeDept===id&&n.storeRole==='manager')||null;
+}
+/* everyone on a department's roster, manager included — the population its health is measured
+   over. Also employment, not attendance: a department does not shrink overnight. */
+function deptStaff(id){
+  return NPCS.filter(n=>n.alive&&n.storeDept===id);
+}
+/* the store's Dale: the favour-giver the loyalty path routes through */
+function storeBoss(){
+  return NPCS.find(n=>n.alive&&n.storeRole==='store')||null;
+}
 function storeDeptMenu(){
   return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
     items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
@@ -10720,21 +10740,46 @@ function loadLevel(id){
     /* checkstand lane: below the checkstands, above the store's south wall. */
     const LANE_Y=CHK_Y+34;
     const chkLane=i=>chkXs[i]+CTR*3/2;
+    /* ---- WHO WORKS WHERE. The crew had no department field at all until now: Danika was the
+       "Front End Manager" in the commit message and in nothing else, and the game could not
+       answer "who runs Produce?" for any of the five. The ladder promised a choice of five
+       departments and three of them had nobody in them — Produce, Deli and Bakery — so three of
+       five routes through the game dead-ended at rung 3 with no one to succeed.
+
+       `storeDept`/`storeRole`, NOT `dept`. `dept` is the field hrs() and triggerAudit() read, and
+       keeping the store's departments in a separate namespace is what makes it structurally
+       impossible for a Deli manager to satisfy an HR check rather than merely unlikely. Same
+       reasoning, and the same field name, as player.storeDept.
+
+       Rung 3's occupant is therefore DERIVED from the world (find the living manager of a
+       department) rather than stored as a pointer in the save — the catfish lesson, applied
+       before there is anything to fix. */
     const CREW=[
       /* chkLane(1), not chkLane(0)+60: that put her box straight through the go-back cart's
          blocker, which the crew test caught as "Priya Raval stands inside a blocker". */
-      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right'],   // cashier, west checkstands
-      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' ],   // cashier, east checkstands
-      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' ],   // Front End Manager, on the front end
-      ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' ],   // stocker, first aisle
-      ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' ],   // stocker, fourth aisle
-      ['Russ Pelletier',    960,           420,      'left' ]];  // Grocery Manager, off the aisle ends
-    for(const [name,x,y,side] of CREW){
+      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right', 'front',  'staff'  ],
+      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' , 'front',  'staff'  ],
+      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' , 'front',  'manager'],
+      ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
+      ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' , 'grocery','staff'  ],
+      ['Russ Pelletier',    960,           420,      'left' , 'grocery','manager'],
+      /* ---- THE THREE MISSING DEPARTMENT MANAGERS. Placeholder art, like the rest of the crew.
+         Positions derive from the fixtures their departments are built around, so redrawing the
+         floor moves them with it. */
+      ['Gita Mahal',        150,           370,      'right', 'produce','manager'],   // the chilled cases
+      ['Bruno Sarr',        (470+1010)/2,  CTR_Y+52, 'down' , 'deli',   'manager'],   // behind the deli counter
+      ['Doreen Stapp',      (40+400)/2,    CTR_Y+52, 'down' , 'bakery', 'manager'],   // behind the bakery counter
+      /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
+         work you can do for him. He has no storeDept on purpose: he is above all five, and the
+         loyalty path routes through him rather than through any one department. */
+      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ]];
+    for(const [name,x,y,side,sdept,srole] of CREW){
       const d=stationDesk(x,y,name,side);
       /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
          Save-Rite and triggerAudit() returns at its second line, which is what keeps the whole
          audit/HR apparatus dormant in a level that has no HR office to run it from. */
       const n=NPC(name,'sales',d);
+      n.storeDept=sdept; n.storeRole=srole;
       n.x=d.x+d.w/2; n.y=d.y+d.h/2;      // start ON the station rather than at a desk-shaped offset
       NPCS.push(n);
     }

@@ -20,7 +20,14 @@ const ck = (n, c, d) => { console.log('  ' + (c ? 'PASS' : 'FAIL') + '  ' + n + 
 
 /* The crew list is a SPEC, so it is named here deliberately (§14: game-rule constants are the
    exception and should be hard-coded — a test SHOULD fail when the cast changes). */
-const CREW = ['Priya Raval', 'Marguerite Dubois', 'Danika Osei', 'Curtis Lam', 'Bekah Thorne', 'Russ Pelletier'];
+const CREW = ['Priya Raval', 'Marguerite Dubois', 'Danika Osei', 'Curtis Lam', 'Bekah Thorne', 'Russ Pelletier',
+              /* the three departments that had no manager, plus the store's own — added because the
+                 ladder offers five departments and three of them dead-ended at rung 3 with nobody
+                 to succeed. */
+              'Gita Mahal', 'Bruno Sarr', 'Doreen Stapp', 'Lorne Petrie'];
+/* every department the ladder offers must have somebody running it, or that route through the
+   game has no rung 3. This is the spec, so it is named (§14). */
+const DEPTS = ['front', 'grocery', 'produce', 'deli', 'bakery'];
 
 const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } });
 
@@ -286,6 +293,52 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
      cleared ? (threw || eg.NPCS.length * 40 + ' errand starts, no throw') : 'could not clear errandPoints');
 }
 
+/* ---- 6d. EVERY DEPARTMENT HAS SOMEBODY RUNNING IT ---------------------------------------
+   The ladder lets the player put in for any of five departments and rung 3 is that department's
+   manager. Before this, only Front End and Grocery had one — and even those two were "managers"
+   in the commit message and nowhere else: no crew member carried a department at all, so the game
+   could not answer "who runs Produce?" for any of the five. */
+{
+  const dw = mk(), DS = dw.sandbox, dg = dw.g;
+  const missing = DEPTS.filter(d => !DS.deptManager(d));
+  ck('every department the ladder offers has a manager', missing.length === 0,
+     missing.length ? 'no manager for: ' + missing.join(', ')
+                    : DEPTS.map(d => d + '=' + DS.deptManager(d).name.split(' ')[0]).join(', '));
+  ck('no two departments share a manager',
+     new Set(DEPTS.map(d => DS.deptManager(d) && DS.deptManager(d).name)).size === DEPTS.length,
+     DEPTS.map(d => DS.deptManager(d).name).join(' / '));
+  ck('the store has a Store Manager for the loyalty path to route through',
+     !!DS.storeBoss() && DS.storeBoss().storeDept == null,
+     DS.storeBoss() ? DS.storeBoss().name + ' (storeDept=' + DS.storeBoss().storeDept + ')' : 'nobody');
+
+  /* each manager's STATION is in their own department's zone — not where they happen to be
+     standing, which is wherever an errand took them */
+  const wrongZone = [];
+  DEPTS.forEach(d => {
+    const m = DS.deptManager(d);
+    const desk = dg.desks.find(x => x.owner === (m && m.name));
+    if (!desk) { wrongZone.push(d + ':no station'); return; }
+    let rm = null; try { rm = DS.roomAt(desk.x + desk.w / 2, desk.y + desk.h / 2); } catch (e) {}
+    const want = { front: 'FRONT END', grocery: 'GROCERY', produce: 'PRODUCE', deli: 'DELI', bakery: 'BAKERY' }[d];
+    if (!rm || rm.name !== want) wrongZone.push(d + ':' + (rm ? rm.name : 'none'));
+  });
+  ck('every manager stands in the department they run', wrongZone.length === 0,
+     wrongZone.length ? wrongZone.join(', ') : 'all five in their own zone');
+
+  /* ⚠️ EMPLOYMENT, NOT ATTENDANCE. §15 parks the whole cast off-map until they clock in, so an
+     accessor that filtered `gone` answered "nobody runs Produce" every morning before 8am. */
+  ck('the manager of a department is still its manager before the shift starts',
+     dg.NPCS.filter(n => n.gone).length > 0 && DEPTS.every(d => !!DS.deptManager(d)),
+     dg.NPCS.filter(n => n.gone).length + ' parked off-map, all five departments still staffed');
+
+  /* and the whole point of Part B: the audit apparatus must stay asleep */
+  ck('none of the four new arrivals is HR', dg.NPCS.every(n => n.dept !== 'hr'),
+     'depts on the floor: ' + dg.NPCS.map(n => n.dept).filter((v, i, a) => a.indexOf(v) === i).join(', '));
+  let hrN = -1; try { hrN = DS.hrs().length; } catch (e) {}
+  ck('  ^ so hrs() is still empty and triggerAudit still returns at its second line', hrN === 0,
+     hrN + ' hr');
+}
+
 /* ---- 7. the crew round-trips through a save --------------------------------------------- */
 {
   const rw = mk(), rg = rw.g, save = rw.rawSave();
@@ -355,5 +408,5 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
 }
 
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
-console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (six on the floor, nobody in a shelf)');
+console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (ten on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
