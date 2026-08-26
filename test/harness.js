@@ -624,6 +624,9 @@ const EPILOGUE = `
       }catch(e){ return []; } })() }; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
+  // the in-game menu's open flag: a module-scope let, invisible from the sandbox, so a test that
+  // reads it off the sandbox gets undefined and compares that to false -- passing for the wrong reason.
+  def(G,'menuOpen', function(){ return (typeof menuOpen!=='undefined')?menuOpen:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });
   def(G,'screen',   function(){ return (typeof screen!=='undefined')?screen:null; });

@@ -811,7 +811,10 @@ const PLAYABLE=[
    startGame at all — it shows a DOM notice and hands you back to the menu. */
 const LEVELS=[
   {id:'office',  name:'Paper Supply Co.', sub:'the office — floor 1', built:true},
-  {id:'grocery', name:'Save-Rite',        sub:'the shop floor (in progress)', built:true, zoneLabels:true},
+  /* standupDiscipline:false — missMeeting() writes you up for skipping the boardroom all-hands.
+     There isn't one here. See missMeeting(). */
+  {id:'grocery', name:'Save-Rite',        sub:'the shop floor (in progress)', built:true, zoneLabels:true,
+                 standupDiscipline:false},
 ];
 const DEFAULT_LEVEL='office';
 function levelById(id){ return LEVELS.find(L=>L.id===id) || LEVELS[0]; }
@@ -1829,7 +1832,12 @@ const errandPoints=[{x:440,y:680,type:'restroom'},{x:580,y:680,type:'restroom'},
    Ravinder at your own desk ever since seated art landed (a1893c7). Only the standing path was
    right, because it passes YOU_SPRITE explicitly. Setting it here fixes every path at once, and
    freeSprite() already refuses to hand out any index in CAST, so no hire can wear this face. */
-const player={x:400,y:180,w:16,h:16,speed:1.7,sprite:DEFAULT_CHAR,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0,sit:null};
+const player={x:400,y:180,w:16,h:16,speed:1.7,sprite:DEFAULT_CHAR,rank:0,prog:0,suspicion:0,stress:0,leverage:[],channel:null,hasKeycard:false,carrying:null,inv:[],deskItems:[],deskHidden:[],path:null,goal:null,wp:0,lastX:400,lastY:180,stuckT:0,noRepathT:0,sit:null,
+  /* SAVE-RITE ONLY: which department you put in for at the Bagger->Clerk promotion. `storeDept`,
+     NOT `dept`, on purpose — `dept` is the NPC field that hrs() and triggerAudit() read, and a
+     separate name makes it STRUCTURALLY impossible for a Deli clerk to satisfy an HR check rather
+     than merely unlikely. (The player is not in NPCS either, so activeNPCs() never sees this.) */
+  storeDept:null};
 
 let RANKS=['INTERN','JUNIOR SALES','SALES','SENIOR SALES','ASSISTANT MANAGER','MANAGER','CEO'];
 
@@ -4300,7 +4308,62 @@ const GROCERY_TASKS={
    role, then Department Manager, then AM, Manager, Owner. The office ladder is a straight line and
    a 1:1 relabel cannot express a branch; it is not trying to. The real ladder is its own branch and
    will replace this table wholesale. Nobody should read this as a design decision. */
-const GROCERY_RANKS=['BAGGER','CASHIER','CLERK','DEPARTMENT LEAD','ASSISTANT MANAGER','STORE MANAGER','OWNER'];
+/* ---- SAVE-RITE'S LADDER: SIX RUNGS WITH A BRANCH IN THE MIDDLE ---------------------------
+   The store used to run the office's straight seven-rung ladder with grocery words painted on
+   it. This is its own shape:
+
+       0. BAGGER              Front End. Everyone starts here.
+              |  <- the player chooses a department at this promotion, once, for good
+       1. <DEPARTMENT> CLERK
+       2. <DEPARTMENT> MANAGER
+       3. ASSISTANT MANAGER   inherits ALL FIVE departments, including the four you ignored
+       4. STORE MANAGER
+       5. OWNER
+
+   NOT A LADDER SYSTEM. RANKS is a mutable global that the level seam ALREADY swaps wholesale at
+   boot (`if(vocab().ranks)RANKS=vocab().ranks.slice()`), so a branching ladder needs nothing but
+   a function that returns the right array and a call to re-apply it when the branch is taken.
+   41 places read RANKS as a flat global array indexed by rung; every one of them keeps working,
+   because it still IS one — the department only decides what two of its strings say. */
+const STORE_DEPTS=[
+  {id:'front',  name:'FRONT END', sub:'the checkstands and the door — where every run starts'},
+  {id:'grocery',name:'GROCERY',   sub:'the aisles: facing, date codes, endcaps'},
+  {id:'produce',name:'PRODUCE',   sub:'the wet wall and the cases — everything spoils'},
+  {id:'deli',   name:'DELI',      sub:'the counter, the slicer and the queue'},
+  {id:'bakery', name:'BAKERY',    sub:'the ovens, and a 4am that nobody else sees'}];
+function storeDeptName(id){const d=STORE_DEPTS.find(x=>x.id===id);return d?d.name:'DEPARTMENT';}
+/* Rung 3's title is department-specific in the fiction, and the cast roster already establishes
+   the form: Danika Osei is the FRONT END MANAGER, Russ Pelletier is the GROCERY MANAGER. */
+function storeLadder(id){
+  const who=storeDeptName(id);
+  return ['BAGGER', who+' CLERK', who+' MANAGER', 'ASSISTANT MANAGER', 'STORE MANAGER', 'OWNER'];
+}
+/* the NEUTRAL ladder — what a Bagger who has not chosen yet sees above them */
+const GROCERY_RANKS=storeLadder(null);
+/* THE ONE PLACE THE DEPARTMENT IS EVER WRITTEN DURING PLAY. Irreversibility is structural rather
+   than a UI convention: the setter refuses a second write, so no menu, no debug hook and no future
+   caller can change it. (applySnapshot restores the field wholesale, which is a RESTORE and not a
+   choice — a save that already holds a department is a run that already made it.) */
+function setStoreDept(id){
+  if(player.storeDept)return false;                       // chosen once, ever
+  if(!STORE_DEPTS.some(d=>d.id===id))return false;
+  player.storeDept=id;
+  applyLadder();
+  return true;
+}
+/* Re-derive RANKS for the current level and department. Safe to call any number of times. */
+function applyLadder(){
+  if(currentLevel!=='office'&&vocab().ranks)RANKS=storeLadder(player.storeDept||null);
+}
+function storeDeptMenu(){
+  return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
+    items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
+      act:()=>{ if(setStoreDept(d.id)){
+        logLine(`You put in for ${d.name}. That is your department now — clerk it, then run it.`,'g');
+        toast(d.name+' it is.');
+        tryPromote();                                     // the promotion that was held now lands
+      } }}))};
+}
 const GROCERY_DETENTIONS=['Break down a pallet of cardboard','Face every shelf in frozen',
   'Scrub the loading dock','Re-date the whole dairy case','Collect carts in the rain — twice'];
 const VOCAB={
@@ -4520,8 +4583,9 @@ function renderMenu(o){
   menu.innerHTML='';const title=document.createElement('h4');menu.appendChild(title);title.textContent=o.title;
   menuBtns=[];gpSel=0;
   o.items.forEach(it=>{const b=document.createElement('button');b.innerHTML=`<span class="lab">${it.label}</span>`+(it.risk?`<span class="r ${it.hot?'hot':''}">${it.risk}</span>`:'');b.disabled=!!it.disabled;b.onclick=()=>{SFX.select();closeMenu();it.act&&it.act();};menu.appendChild(b);menuBtns.push(b);});
-  /* a tappable way out for touch/mouse (gamepad still uses B, keyboard Esc) */
-  {const cb=document.createElement('button');cb.className='menuClose';cb.textContent='✕ Close';cb.onclick=()=>{SFX.close();closeMenu();};menu.appendChild(cb);}
+  /* a tappable way out for touch/mouse (gamepad still uses B, keyboard Esc) — unless the menu is
+     a decision the game is waiting on, in which case offering a way out offers a dead end. */
+  if(!o.noClose){const cb=document.createElement('button');cb.className='menuClose';cb.textContent='✕ Close';cb.onclick=()=>{SFX.close();closeMenu();};menu.appendChild(cb);}
   while(menuBtns.length&&menuBtns[gpSel]&&menuBtns[gpSel].disabled)gpSel++;
   if(gpSel>=menuBtns.length)gpSel=0;
   gpHighlight();
@@ -5761,6 +5825,15 @@ let lastPhase='Clock-In';
    `career` (already snapshotted), so no new save field. HANDOFF-3 Part C(a). */
 function missMeeting(){
   const rank=player.rank;
+  /* DISARMED AT THE LEVEL, NOT BY RANK. This was harmless in Save-Rite only because the player
+     could not get past rank 0 there — the grocery ladder branch is exactly what takes them past
+     it, so it would have gone live as a side effect of shipping a ladder. A store has no all-hands
+     in a boardroom to be written up for missing; whatever the shop's equivalent is, it is not two
+     strikes and a disciplinary from a manager who does not work here. The fiction line stays. */
+  if(levelById(currentLevel).standupDiscipline===false){
+    logLine('You were not at '+vocab().standup+'. The shop kept moving without you.','t');
+    return;
+  }
   if(rank<2){
     // INTERN / JUNIOR SALES: nobody expects the new blood to run the room.
     logLine('You skipped '+vocab().standup+'. At your level, nobody thought to look for you.','t');
@@ -6328,6 +6401,19 @@ const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},res
 let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
 function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
 function gateFor(nextIdx){
+  /* GATES ARE OFFICE POLITICS. Every case below names a person or a seat that exists in the
+     office and nowhere else — and the switch keys on the rank STRING, so Save-Rite's rung 3 is
+     also called ASSISTANT MANAGER and was silently inheriting "Dale has to like you" in a store
+     with no Dale. The grocery ladder was unclimbable past rung 3 and nothing said so.
+
+     The store's own gates are the three ways to unseat a Department Manager — merit, loyalty,
+     sabotage — and they are the NEXT branch. Until they exist the store's rungs are open, which
+     is what makes reaching rung 6 in a debug run the bar for this branch. */
+  if(currentLevel!=='office'){
+    if(nextIdx===1&&!player.storeDept)
+      return {ok:false,hint:'you have to put in for a department first'};
+    return {ok:true};
+  }
   switch(RANKS[nextIdx]){
     case 'JUNIOR SALES': return {ok:true};
     case 'SALES': refreshRanks(); return {ok:seatsFree[1]>=1||career.reserved[1]>0,hint:'all '+SEATS[1]+' sales chairs are taken — one has to open up, and you have to be the obvious pick when it does',consume:()=>{if(career.reserved[1]>0)career.reserved[1]--;}};
@@ -6346,6 +6432,27 @@ function tryPromote(){
   if(player.rank>=RANKS.length-1)return;
   if(player.prog<100)return;
   const next=player.rank+1, g=gateFor(next);
+  /* THE DEPARTMENT CHOICE. It belongs at Bagger->Clerk because that is the rung where the ladder
+     actually branches, and it is the only real decision in the climb. Held, not skipped: the
+     promotion is blocked by its own gate until the choice is made, and picking calls tryPromote
+     again so the rung lands immediately. career.gateShown is the existing once-per-gate latch, so
+     the menu opens once rather than every time a task completes. */
+  if(!g.ok&&currentLevel!=='office'&&next===1&&!player.storeDept){
+    /* ⚠️ NOT LATCHED WITH career.gateShown, WHICH IS WHAT THE OTHER GATES USE. updateRank() calls
+       this EVERY FRAME, so the latch exists to stop the gate hint spamming the log — but latching
+       a MENU meant that a player who pressed B or hit the tappable ✕ never saw the picker again:
+       prog pinned at 100, tryPromote returning early forever, stuck as a Bagger for the rest of
+       the run. A softlock, found by screenshotting the thing rather than by any test.
+
+       So the picker re-opens whenever no menu is up. The `!menuOpen` guard is doing real work and
+       is not just belt-and-braces: renderMenu resets gpSel to 0, so re-rendering an OPEN menu
+       every frame would snap the gamepad cursor back to the first item and make it unnavigable on
+       a stick. Combined with noClose above, the choice is genuinely forced — which is what an
+       irreversible decision the ladder cannot continue without ought to be. */
+    if(!menuOpen)renderMenu(storeDeptMenu());
+    player.prog=100;
+    return;
+  }
   if(!g.ok){
     if(!career.gateShown[next]){career.gateShown[next]=true;logLine(`You have earned the next promotion, but ${g.hint}.`,'a');toast('Promotion blocked — see THE WAY UP');}
     player.prog=100; // hold at the gate
@@ -6353,10 +6460,17 @@ function tryPromote(){
   }
   if(g.consume)g.consume();
   player.rank=next;player.prog=0;career.gateShown={};SFX.promote();
-  if(next>=5)claimManagerOffice();      // MANAGER: the corner office
-  else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
-  else movePlayerDesk();                // worker ranks: the room that matches the badge
-  if(next>=2)unlockSales();
+  /* THE ROOM YOU MOVE INTO IS OFFICE FURNITURE. claimManagerOffice writes MGR_DESK, an office
+     const that loadLevel('grocery') cleared out of `desks` — claiming it at rung 5 would have
+     handed the player a desk that is not in the world AND blanked the station they actually
+     stand at. claimAsstOffice and movePlayerDesk are tier-and-room shaped in the same way.
+     A store has one player station and you keep it the whole climb. */
+  if(currentLevel==='office'){
+    if(next>=5)claimManagerOffice();      // MANAGER: the corner office
+    else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
+    else movePlayerDesk();                // worker ranks: the room that matches the badge
+    if(next>=2)unlockSales();
+  }
   renderDeleg();                        // the delegation tray appears at AM, hides again above it
   logLine(`PROMOTED: you are now ${RANKS[next]}.`,'g');toast('Promoted: '+RANKS[next]);
   if(RANKS[next]==='MANAGER'){
@@ -7075,7 +7189,10 @@ function ceoByMerit(){
 }
 function checkWin(){
   if(career.meritReady&&!career.ceoDone){ceoByMerit();return;}
-  if(player.rank>=RANKS.length-1)endGame(true,'PROMOTED TO CEO','You climbed every rung. The office is yours. You have become the walls.');
+  /* the top rung is CEO in an office and OWNER in a shop — ask the ladder rather than the office */
+  if(player.rank>=RANKS.length-1)endGame(true,'PROMOTED TO '+RANKS[RANKS.length-1],
+    currentLevel==='office'?'You climbed every rung. The office is yours. You have become the walls.'
+                           :'You climbed every rung. They are taking MERV’S off the sign and putting yours up.');
 }
 
 /* end states */
@@ -10859,6 +10976,8 @@ function buildSnapshot(over, outcome){ return {
      exists to stop CORRUPT loads; a new optional field with a correct default cannot corrupt one. */
   player:{ x:player.x,y:player.y,rank:player.rank,prog:player.prog,suspicion:player.suspicion,stress:player.stress,
     char:playerChar,
+    /* ADDITIVE, exactly as `char`, `level` and `career.cosign` were — no SAVE_VERSION bump. */
+    storeDept:(player.storeDept||null),
     hasKeycard:!!player.hasKeycard,workPass:!!player.workPass,busyCount:player.busyCount||0,
     inv:player.inv.slice(),deskItems:player.deskItems.slice(),deskHidden:player.deskHidden.slice(),
     leverage:JSON.parse(JSON.stringify(player.leverage||[])) },
@@ -10888,9 +11007,15 @@ function applySnapshot(s){
     suspicion:s.player.suspicion,stress:s.player.stress,hasKeycard:s.player.hasKeycard,
     workPass:s.player.workPass,busyCount:s.player.busyCount,
     inv:s.player.inv.slice(),deskItems:s.player.deskItems.slice(),deskHidden:s.player.deskHidden.slice(),
+    /* ADDITIVE, no SAVE_VERSION bump. A save with no storeDept is a run that had not chosen one —
+     which is exactly true of every save written before this branch, because the choice did not
+     exist. That is a correct default, not a guess: the player is asked at the Bagger promotion and
+     the field is null until they answer. Restoring less is not restoring garbage. */
+    storeDept:(s.player.storeDept||null),
     leverage:JSON.parse(JSON.stringify(s.player.leverage||[])),
     path:null,goal:null,wp:0,carrying:null,channel:null,workCh:null,act:null,coffeeFor:null,
     lastX:s.player.x,lastY:s.player.y,stuckT:0,noRepathT:0,moving:false,animT:0 });
+  applyLadder();   // a loaded run must show ITS department's titles, not the neutral ladder
   desks.forEach(d=>{ const src=s.desks.find(ds=>ds.x===d.x&&ds.y===d.y);
     if(src){ d.owner=src.owner;d.tier=src.tier;d.rigged=src.rigged;d.planted=src.planted; if(src.loot)d.loot=src.loot.slice(); } });
   const byName={}; NPCS.forEach(n=>byName[n.name]=n); const restored=[];

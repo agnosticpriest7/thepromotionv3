@@ -27,8 +27,22 @@ ck('the office ladder is untouched', JSON.stringify(OS.rankNames()) === JSON.str
    OS.rankNames().join(' / '));
 const gr = GS.rankNames();
 ck('grocery has its own ladder labels', gr[0] !== 'INTERN' && /BAGGER/i.test(gr[0]), gr.join(' / '));
-ck('  ^ with the SAME NUMBER OF RUNGS (labels only, no ladder change)',
-   gr.length === OFFICE_RANKS.length, gr.length + ' vs ' + OFFICE_RANKS.length);
+/* THIS USED TO ASSERT "the SAME NUMBER OF RUNGS (labels only, no ladder change)" and it was the
+   right invariant for the fiction pass: that branch relabelled the office ladder and a changed
+   rung count would have meant it had quietly done more than relabel. grocery-ladder is the branch
+   where changing the shape IS the change — six rungs with a department branch in the middle — so
+   the old assertion went correctly RED and is replaced rather than deleted.
+
+   What still matters here is the same thing it always was: THE TWO LADDERS ARE INDEPENDENT. The
+   store's is its own length and shares no rung with the office except the two generic management
+   titles a real shop would also use. The climb itself is t_grocery_ladder's business. */
+ck("  ^ and it is its OWN ladder, not the office's with new words on it",
+   gr.length !== OFFICE_RANKS.length && gr[gr.length - 1] !== 'CEO',
+   gr.length + " rungs vs the office's " + OFFICE_RANKS.length + ", top rung " + gr[gr.length - 1]);
+ck('  ^ and it borrows no office job title beyond the generic management ones',
+   gr.filter(r => OFFICE_RANKS.indexOf(r) >= 0)
+     .every(r => r === 'ASSISTANT MANAGER'),
+   'shared with the office: ' + (gr.filter(r => OFFICE_RANKS.indexOf(r) >= 0).join(', ') || 'nothing'));
 
 /* ---- 2. the office task pool is byte-identical ------------------------------------------- */
 const OFFICE_R0 = [
