@@ -4290,10 +4290,15 @@ const GROCERY_DETENTIONS=['Break down a pallet of cardboard','Face every shelf i
 const VOCAB={
   office:{ ranks:null,           tasks:null,          detentions:null,
            clockIn:'Clock in at the elevator', clockOut:'Head to the elevator — day over',
-           clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting' },
+           clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting',
+           ownStation:'your desk' },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
-           clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle' },
+           clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
+           /* the marker points at the player's own station, which in a store is the aisle they
+              are working — the single most-visible string in the game, and the fiction pass
+              missed it because it lives in the compass rather than in a task table. */
+           ownStation:'your aisle' },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -7767,9 +7772,8 @@ function drawRoomCaption(dt){
   ctx.font='bold 13px monospace';ctx.textAlign='left';
   const tw=ctx.measureText(label).width;
   const a=roomFade;
-  ctx.fillStyle=`rgba(26,24,20,${(0.88*a).toFixed(2)})`;
-  ctx.fillRect(x,y,tw+18,20);
-  ctx.fillStyle=roomShown.c;ctx.fillRect(x,y,3,20);
+  hudPlate(x,y,tw+18,20);
+  ctx.fillStyle=roomShown.c;ctx.fillRect(x,y,3,20);   // the room's own colour replaces the gold rule
   ctx.fillStyle=`rgba(243,241,234,${a.toFixed(2)})`;
   ctx.fillText(label,x+9,y+14);
 }
@@ -8367,10 +8371,15 @@ function renderInner(){
      arrays loadLevel() clears — so they kept rendering in the grocery room: a conference set
      and a lift lobby floating in an empty shop. Guarded at the CALL SITE rather than inside
      drawFurniture, which is generic and which a later level will want for its own tables. */
-  if(levelById(currentLevel).zoneLabels)drawZoneLabels();
   LEVEL_TABLES.forEach(f=>drawFurniture(f.t,f.chairs));
   if(currentLevel==='office')drawElevator();   // the lift is office fabric, not furniture
-  drawLabels();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
+  drawLabels();drawDesks();drawObjects();drawContainers();drawWalls();drawWindowGlass();drawDeskPlates();drawDeskChairs();activeNPCs().forEach(drawNPC);drawPuffs();drawPlayer();drawBubbles();
+  /* ZONE LABELS AFTER THE PROPS. They used to be drawn before the furniture, so a counter or a
+     shelf run painted straight over them and BAKERY read as "BAK". They are the authoritative zone
+     naming in a level whose HUD banner is suppressed, so a clipped one is not doing its job.
+     Still world-space (they belong ON the floor and must scroll with it) — just last. */
+  if(levelById(currentLevel).zoneLabels)drawZoneLabels();
+  drawLighting();if(propMap)drawPropMap();if(seatTest)drawSeatAnchorTest();
   ctx.restore();
   drawMinimap();
   drawCompass();
@@ -8657,7 +8666,7 @@ function objectiveTarget(){
        mid-day — point at their own desk, the natural place to idle and where the next
        task usually starts. At Clock-Out the phase branch above already points home. */
     const myDesk=desks.find(d=>d.owner==='you');
-    return myDesk?{p:center(myDesk),txt:'your desk'}:null;
+    return myDesk?{p:center(myDesk),txt:vocab().ownStation}:null;
   }
   const myDesk=desks.find(d=>d.owner==='you');
   const objOf=(type)=>{const o=objByType(type);return o?{x:o.x+o.w/2,y:o.y+o.h/2}:null;};
@@ -8689,11 +8698,12 @@ function drawCompass(){
   const B=hudColumn().compass, mw=Math.round(W*MINI_S);
   const cx=B.x+B.w-mw/2, cy=B.y+20;
   const R=17;
-  /* A PLATE. The needle sat on bare world art and the two text lines under it had nothing but a
-     shadow — over a bright shop floor "your break" was unreadable, and it is the element the room
-     banner used to land on. */
-  ctx.fillStyle='rgba(18,17,14,.72)';
-  ctx.fillRect(B.x+B.w-mw-2,B.y-2,mw+4,B.h);
+  /* THE SAME PLATE AS TODAY — same opacity, same gold rule. It was .72 with no border while the
+     checklist directly below it in the same column was .82 with one, and two treatments in one
+     column read as two different kinds of thing. Worse, .72 let bright world art through: a potted
+     plant behind the compass looked like it was drawn ON TOP of the panel, which reads as a z-order
+     bug and is not one (see hudPlate below). One helper now paints every slot in the column. */
+  hudPlate(B.x+B.w-mw-2,B.y-2,mw+4,B.h);
   /* the housing */
   ctx.fillStyle='rgba(26,24,20,.86)';
   ctx.beginPath();ctx.arc(cx,cy,R+3,0,Math.PI*2);ctx.fill();
@@ -8767,6 +8777,16 @@ function hudColumn(){
   return L;
 }
 const HUD_TRACK_W=248;
+/* ONE PLATE TREATMENT FOR THE WHOLE COLUMN. Matches #track's CSS exactly — same fill, same 3px
+   gold rule — so every slot reads as the same kind of object. Opaque enough that no floor colour
+   in any level shows through: a translucent panel over bright art reads as a smear, or as the art
+   drawing over the HUD. */
+const HUD_PLATE_FILL='rgba(18,17,14,.88)', HUD_PLATE_RULE='rgba(217,165,33,.85)';
+function hudPlate(x,y,w,h){
+  if(![x,y,w,h].every(Number.isFinite))return;
+  ctx.fillStyle=HUD_PLATE_FILL; ctx.fillRect(x,y,w,h);
+  ctx.fillStyle=HUD_PLATE_RULE; ctx.fillRect(x,y,3,h);
+}
 function drawMinimap(){
   const s=MINI_S,mw=Math.round(W*s),mh=Math.round(H*s);
   const B=hudColumn().minimap;
