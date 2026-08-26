@@ -4370,14 +4370,22 @@ const VOCAB={
   office:{ ranks:null,           tasks:null,          detentions:null,
            clockIn:'Clock in at the elevator', clockOut:'Head to the elevator — day over',
            clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting',
-           ownStation:'your desk' },
+           ownStation:'your desk',
+           /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
+              taken, Dale does not rate you — so BLOCKED is the honest word there. */
+           gateLead:'BLOCKED: ' },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
            /* the marker points at the player's own station, which in a store is the aisle they
               are working — the single most-visible string in the game, and the fiction pass
               missed it because it lives in the compass rather than in a task table. */
-           ownStation:'your aisle' },
+           ownStation:'your aisle',
+           /* NOT "BLOCKED". Save-Rite's only held promotion is the department choice, and the
+              player has not failed anything at that moment — they are being asked a question the
+              ladder cannot continue without. Kyle: it "reads like the player failed something at
+              the exact moment they're being invited to choose". */
+           gateLead:'' },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -6411,7 +6419,7 @@ function gateFor(nextIdx){
      is what makes reaching rung 6 in a debug run the bar for this branch. */
   if(currentLevel!=='office'){
     if(nextIdx===1&&!player.storeDept)
-      return {ok:false,hint:'you have to put in for a department first'};
+      return {ok:false,hint:'Pick a department to move up.'};
     return {ok:true};
   }
   switch(RANKS[nextIdx]){
@@ -9385,7 +9393,7 @@ function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=n
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);
-}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' (BLOCKED: '+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
+}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
 /* ================= MISSIONS: favors, dirty jobs, betrayal, and office feuds ================= */
 /* friendship-only economy — never promotion points */
 const MISSION_KINDS=[
