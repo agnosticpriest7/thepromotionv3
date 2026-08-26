@@ -5,12 +5,14 @@
    Office code runs on the clock and grocery inherits all of it. t_regress cannot help; it builds
    the office default.
 
-   ⚠️ A GREEN SOAK IS NEARLY FREE HERE AND NEARLY MEANINGLESS. Grocery has no NPCs: nobody to path,
-   nobody to seat, no meltdown to roll. A run that survives because nothing happened has proved
-   almost nothing. So this asserts that the day cycle ACTUALLY RAN — days advanced, phases changed,
-   autosaves were written — and it asserts the player's POSITION, not merely that nothing threw.
-   assembleAtElevator never threw; it moved the player to an office coordinate. A throw counter
-   would have missed it completely.
+   ⚠️ THIS SOAK USED TO BE NEARLY FREE AND NEARLY MEANINGLESS: grocery had no NPCs, so there was
+   nobody to path, nobody to seat and no meltdown to roll, and a run survived because nothing
+   happened. Save-Rite has a crew now, so the run does real work — but the assertions below are
+   still the ones that matter, because they check that the day cycle ACTUALLY RAN (days advanced,
+   phases changed, autosaves were written) and they check the player's POSITION, not merely that
+   nothing threw. assembleAtElevator never threw; it moved the player to an office coordinate. A
+   throw counter would have missed it completely. Who the crew are and where they stand is
+   t_grocery_crew's job.
 
    Numbers are printed so a real soak can be told apart from an idle one. */
 'use strict';
@@ -29,13 +31,16 @@ const CHUNK = 300;              // a phase is ~3000 frames, so this cannot miss 
 const w = createWorld({ storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } });
 const S = w.sandbox, g = w.g, sv = w.rawSave();
 
-/* "empty" now means NO CAST, not no furniture: the player has a station since the fixtures
-   branch, so the assertion is that nobody ELSE owns a desk. It went correctly red when the
-   station arrived. */
-ck('the soak world is grocery, with a cast of nobody', g.NPCS.length === 0 &&
-   g.desks.filter(d => d.owner && d.owner !== 'you').length === 0,
+/* This asserted "a cast of nobody" through the empty-room and fixtures branches and went correctly
+   RED when the crew arrived. What it is really guarding is that the SOAK WORLD IS POPULATED — a
+   soak of an empty shop proves almost nothing, which is the warning at the top of this file — so it
+   now asserts the opposite of what it used to and means the same thing. */
+ck('the soak world is grocery, and it has a crew to soak', g.NPCS.length > 0 &&
+   g.desks.filter(d => d.owner === 'you').length === 1 &&
+   g.desks.filter(d => d.owner && d.owner !== 'you').length === g.NPCS.length,
    g.NPCS.length + ' NPCs, ' + g.desks.length + ' desks (' +
-   g.desks.filter(d => d.owner === 'you').length + ' yours)');
+   g.desks.filter(d => d.owner === 'you').length + ' yours, ' +
+   g.desks.filter(d => d.station).length + ' stations)');
 
 /* count autosaves by wrapping the Store method the game really calls, not by inferring */
 let saves = 0, lastSaved = null;

@@ -1107,6 +1107,7 @@ function seatedDeskState(n){
   const own=(n===player)?'you':n.name;
   const d=desks.find(x=>x.owner===own);
   if(!d)return null;
+  if(d.station)return null;         // station staff STAND at their station; there is no chair to sit in
   let seat; try{ seat=deskSeat(d); }catch(e){ return null; }
   if(!seat||!isFinite(seat.x)||!isFinite(seat.y))return null;
   if(cdist(n,seat)>=U1(24))return null;          // parked AT their seat (idle workers keep a residual goal/1-waypoint path — don't gate on those)
@@ -1282,7 +1283,7 @@ function peggySeatState(n){
    chair. Runs just before the NPC pass, so a person walking past their chair draws over it. */
 function drawDeskChairs(){
   for(const d of desks){
-    if(!d.owner||d.mgrOffice)continue;                                  // no owner, or Dale's desk (its sprite has its own chair)
+    if(!d.owner||d.mgrOffice||d.station)continue;                                  // no owner, or Dale's desk (its sprite has its own chair)
     const owner=(d.owner==='you')?player:activeNPCs().find(n=>n.name===d.owner);
     if(!owner||seatedDeskState(owner))continue;                         // gone / or currently sitting (composite draws the chair)
     if(!inView(d.x,d.y,d.w,d.h))continue;
@@ -1410,6 +1411,10 @@ const walls=[
 const EXIT={x:60,y:720};           // the lift doors (SW elevator lobby)
 const ELEVATOR=EXIT;
 const MUSTER={x:150,y:720};       // where people gather: spawn, clock-out, fire drill
+/* WHERE STAFF GO ON BREAK. This was a literal buried in npcTarget -- an office coordinate that was
+   harmless only for as long as no non-office level had anyone to route. The moment Save-Rite got a
+   crew it would have marched all six into the middle of the shop floor and called it a break. */
+const BREAK_SPOT={x:960,y:460};   // scaled by scaleWorld; loadLevel re-authors it per level
 
 const desks=[];
 /* rows are 95 apart (was 80) and columns 150 (was 130) — the art is bigger than the
@@ -2405,7 +2410,11 @@ function aabb(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
    blockers[] is rebuilt whenever the furniture moves. */
 let blockers=[];
 function solid(box){
-  return walls.some(w=>aabb(box,w))||desks.some(d=>aabb(box,d))||blockers.some(b=>aabb(box,b))||levelBlockers.some(b=>aabb(box,b));
+  /* STATIONS ARE NOT FURNITURE. A station is a desk record with no desk in the world -- it is the
+     spot a member of staff works, and in a store that is a stretch of open floor. Leaving it solid
+     put an invisible 24-unit block in a 60-unit aisle, which is both a lie to the player and a
+     deadlock risk for the two stockers who share that aisle. */
+  return walls.some(w=>aabb(box,w))||desks.some(d=>!d.station&&aabb(box,d))||blockers.some(b=>aabb(box,b))||levelBlockers.some(b=>aabb(box,b));
 }
 function moveEntity(ent,dx,dy){
   let nx=clamp(ent.x+dx,4,W-ent.w-4),box={x:nx,y:ent.y,w:ent.w,h:ent.h};
@@ -2475,7 +2484,10 @@ function buildGrid(){
     const cell={x:c*CELL-2,y:r*CELL-2,w:CELL+4,h:CELL+4};
     let b=0;
     if(walls.some(w=>aabb(cell,w)))b=1;
-    if(!b&&desks.some(d=>aabb(cell,d)))b=1;
+    /* !d.station: the nav grid tests `desks` DIRECTLY rather than through solid(), so making
+       stations non-solid there was not enough — the grid still walled them off, and three of the
+       five aisles came back blocked. Two places, one rule. */
+    if(!b&&desks.some(d=>!d.station&&aabb(cell,d)))b=1;
     if(!b&&blockers.some(bl=>aabb(cell,bl)))b=1;
     if(!b&&sealedZones.some(z=>aabb(cell,z)))b=1;
     if(!b&&levelBlockers.some(bl=>aabb(cell,bl)))b=1;   // the level's own fixtures — shelf runs, counters
@@ -2704,7 +2716,7 @@ function npcTarget(n){
      Measured during Meeting before this: 19.4% of her moving frames were 179-180 degrees from her
      facing. Same shared-destination bug as the errand pins — give each a spot of their own. */
   if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:meetingStand(n);
-  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:Math.round(960*S),y:Math.round(460*S)};   // NEW break room (840,280,260,220)
+  if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:BREAK_SPOT.x,y:BREAK_SPOT.y};   // office: the break room (840,280,260,220); grocery re-authors it
   if(ph==='Clock-Out')return MUSTER;
   if(n.homeDesk)return deskSeat(n.homeDesk);
   return {x:Math.round(430*S),y:Math.round(250*S)};
@@ -2987,7 +2999,11 @@ function startErrand(n){
      which sits against the senior-sales wall) land ON a blocker cell; A* then strands the
      NPC a cell away — past the arrival tolerance — and it wedges. snapTarget lands them on
      the nearest cell they can actually stand on, so "arrived" always triggers. */
-  if(Math.random()<0.55){const p=pick(errandPoints);n.errand=Object.assign(errandSpot(n,p),{dwell:rand(2.5,5),ptype:p.type,arrived:false});}
+  /* errandPoints.length: a level is allowed to have none. loadLevel('grocery') clears the array,
+     and pick([]) is undefined, so this line threw on the first errand any grocery worker started —
+     a hundred times a day once there was a crew to start them. The empty room could not expose it
+     because an empty room has nobody to send on an errand. Fall through to a desk visit instead. */
+  if(errandPoints.length&&Math.random()<0.55){const p=pick(errandPoints);n.errand=Object.assign(errandSpot(n,p),{dwell:rand(2.5,5),ptype:p.type,arrived:false});}
   else{
     const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;
     const d=pick(others);
@@ -4327,7 +4343,13 @@ function addTask(t){
        coffee run aimed at him could never be completed. */
     const who=activeNPCs().filter(n=>isWorker(n)&&!n.gone&&!n.wentHome&&n.name!=='Ravinder');
     const w=pick(who);
-    task.target=w?w.name:'Marcus';
+    /* NO SILENT FALLBACK TO A NAME. This used to be the literal 'Marcus' -- an office worker who
+       does not exist in Save-Rite, so an empty floor produced a task addressed to a stranger that
+       could never be completed, and it looked exactly like a real task. There is no correct name to
+       guess here: if nobody is available the task should not have been offered. Drop it and say so
+       in the log, which is loud without being a crash in a shipped build. */
+    if(!w){ logLine('A task was dropped: nobody was on the floor to hand it to.','t'); return; }
+    task.target=w.name;
   }
   if(task.target)task.label=task.label.replace('{name}',task.target.split(' ')[0]);
   tasks.push(task);renderTasks();
@@ -7467,6 +7489,7 @@ function fitDeskBoxes(){
   if(deskBoxesFitted)return;
   if(!ok('cubicle_desk')||!ok('manager_desk'))return;
   desks.forEach(d=>{
+    if(d.station)return;            // no sprite, so nothing to fit the box to — leave the spot alone
     if(d.ax===undefined)return;
     const art=d.mgrOffice?'manager_desk':'cubicle_desk';
     const im=ART[art];
@@ -7526,6 +7549,7 @@ function drawOrderPaper(d){
 function drawDesks(){
   fitDeskBoxes();
   for(const d of desks){
+    if(d.station)continue;          // a station has no furniture to draw
     if(!inView(d.x,d.y,d.w,d.h))continue;
     const isMine=(d.owner==='you');
     const art=deskArt(d);
@@ -7553,6 +7577,7 @@ function drawDesks(){
    the side where it used to vanish. */
 function drawDeskPlates(){
   for(const d of desks){
+    if(d.station)continue;          // no nameplate on a patch of floor
     if(!inView(d.x,d.y,d.w,d.h))continue;
     if(!d.owner&&d.reserved)continue;   // set-dressing / held desks are NOT real vacancies — no misleading "VACANT" plate (a chair you can never fill)
     const art=deskArt(d);
@@ -10327,7 +10352,7 @@ function scaleWorld(){
   breakChairs.filter(c=>c.couch).forEach(scaleBox);
   scaleBox(meetingTable); scaleBox(meetingTable2); scaleBox(breakTable); scaleBox(breakTable2); scaleBox(kitchenTable);
   scaleBox(EXIT);
-  scaleBox(MUSTER);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
+  scaleBox(MUSTER); scaleBox(BREAK_SPOT);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
   ROOMS.forEach(scaleBox);
   levelBoxes.forEach(scaleBox);
@@ -10387,7 +10412,13 @@ function loadLevel(id){
      the nav grid, which is the worst kind of bug to chase. */
   const clear=a=>{ if(Array.isArray(a)) a.length=0; };
   [walls,desks,objects,CONTAINERS,errandPoints,hrPatrol,sealedZones,LIGHT_BANKS,WINDOWS,
-   INTRO_ROUTE,ROOMS,NPCS,meetingChairs,meetingChairs2,breakChairs,breakChairs2].forEach(clear);
+   INTRO_ROUTE,ROOMS,NPCS,meetingChairs,meetingChairs2,breakChairs,breakChairs2,
+   /* kitchenChairs was missing from this list until the crew arrived, and it was invisible for the
+      same reason everything else on this branch was: an empty room has nobody to seat. The office
+      kitchen chairs survived into Save-Rite unfitted, at (0,0). assignBreakSeats deals attendees
+      alternately into two rooms, so HALF the crew was handed a chair at the world's top-left
+      corner every single break and walked into the north-west wall. */
+   kitchenChairs].forEach(clear);
   /* The room IS the world. A smaller box floating inside it would leave a walkable field outside
      the walls with nothing in it — the player could stroll out of the shop into a void and the
      room would not really be enclosed. Derived from W/H rather than the authored 1500x760, so a
@@ -10444,7 +10475,9 @@ function loadLevel(id){
      No cross-aisle break: a run is 5 units / 245 authored, with open floor above (the service run)
      and below (the front end), so circulation never needs to cut through one. */
   const SHELF_W=34, SHELF_H=49, RUN_GAP=92, RUN_TOP=250, RUN_N=5;
+  const runXs=[];                                  // the crew's aisles are derived from these
   for(let rx=380; rx<=840; rx+=RUN_GAP){
+    runXs.push(rx);
     for(let i=0;i<RUN_N;i++)
       CONTAINERS.push({x:rx,y:RUN_TOP+i*SHELF_H,w:28,h:22,label:'Shelf',kind:'box'});
     /* one solid rect for the whole run, derived from the same loop that placed the units so the
@@ -10481,7 +10514,9 @@ function loadLevel(id){
      counter draws 28 authored ABOVE the row it sits on, and at the first attempt that reached up
      into GROCERY and quietly capped the two western aisles. */
   const CHK_Y=560;
+  const chkXs=[];
   const checkout=(x0)=>{
+    chkXs.push(x0);
     for(let i=0;i<3;i++)
       CONTAINERS.push({x:x0+i*CTR,y:CHK_Y,w:28,h:22,label:'Checkstand',kind:'cabinet',art:'counter_plain'});
     levelBlockers.push({x:x0-11, y:CHK_Y+22-CTR+1, w:CTR*3-2, h:CTR-2});
@@ -10501,8 +10536,10 @@ function loadLevel(id){
     {type:'printer',x:250,y:600,w:34,h:26,label:'Go-back cart',   art:'supply_shelf',  jammed:false},
     {type:'printer',x:930,y:300,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
     {type:'supply', x:BOH_X+60,y:120,w:34,h:26,label:'Baler'},
-    {type:'water',  x:1300,y:120,w:30,h:24,label:'Water station'},
-    {type:'coffee', x:1360,y:120,w:30,h:24,label:'Coffee machine'},
+    /* along the break room's west wall. They were spread across the middle of the room, which
+       left nowhere for the table to go once the crew actually needed somewhere to take a break. */
+    {type:'water',  x:1290,y:40, w:30,h:24,label:'Water station'},
+    {type:'coffee', x:1290,y:90, w:30,h:24,label:'Coffee machine'},
     {type:'phones', x:640,y:600,w:26,h:20,label:'Intercom'},
     {type:'board',  x:BOH_X+150,y:250,w:40,h:26,label:'Department board'});
   /* the player's station: one desk, at the end of an aisle. Desks are the ownership spine, so this
@@ -10512,18 +10549,94 @@ function loadLevel(id){
   /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
   CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
                   {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
-                  {x:1300,     y:60,  w:30,h:24,label:'Staff lockers',    kind:'locker'},
+                  {x:1290,     y:135, w:30,h:24,label:'Staff lockers',    kind:'locker'},
                   {x:BOH_X+40, y:250, w:30,h:24,label:'Manager cabinet',  kind:'cabinet'},
                   {x:1230,     y:250, w:30,h:24,label:'Owner cabinet',    kind:'cabinet'});
   /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
      in the store, which is also a live check that the LEVEL_TABLES path still works with one. --- */
   {
-    const t={x:1330,y:250,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]});
+    /* IN THE BREAK ROOM. It used to sit at (1330,250), which is the STORE MANAGER / OWNER / STAFF
+       WC band — the store's only break table was in the owner's office, and nothing noticed while
+       there was nobody to sit at it. */
+    const t={x:1350,y:74,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]});
+    /* AND THE OFFICE TABLES ARE RE-POINTED AT IT. assignBreakSeats() seats people in breakChairs,
+       which this level clears — so everybody takes the STANDING fallback, and that fallback rings
+       `breakTable`, an office const nobody re-authored. Measured before this: the whole crew spent
+       every break standing in the middle of aisle 5, around a table at authored (900,422) that
+       does not exist in this level. Exactly the MUSTER problem: an office coordinate that was
+       harmless only for as long as there was nobody to route. */
+    Object.assign(breakTable,t); Object.assign(breakTable2,t); Object.assign(kitchenTable,t);
   }
+  /* ---- THE FIRST CREW. Six people, Front End and Grocery only. -----------------------------
+     A STATION IS A DESK THAT ISN'T DRAWN. That is the whole mechanism, and it was the question
+     worth answering before writing any of this: npcTarget() resolves a work phase with exactly
+     `if(n.homeDesk) return deskSeat(n.homeDesk)`, so "go and work your station" is already
+     implemented — as a desk. Ownership, spawning, pathing, the seat double-booking fixes and
+     save/load are all keyed off desks too. Modelling a station as anything else would have meant
+     a second, untested copy of all of it.
+
+     So a station is a desk record carrying `station:true`, which suppresses exactly five things:
+     the furniture (drawDesks), the nameplate (drawDeskPlates), the chair (drawDeskChairs), the
+     sitting pose (seatedDeskState — store staff STAND) and its collision box (solid). Everything
+     else is a desk and behaves like one.
+
+     Positions are DERIVED from the fixtures — aisle centres from the shelf runs that were just
+     placed, checkout positions from the checkstand runs — so redesigning the floor moves the crew
+     with it instead of stranding them inside a shelf. */
+  const stationDesk=(x,y,owner,side)=>{
+    const d={x:Math.round(x-12),y:Math.round(y-12),w:24,h:24,owner:owner,tier:0,dept:'sales',
+             reserved:false,station:true,seatSide:side,rigged:null,planted:null};
+    desks.push(d); return d;
+  };
+  {
+    /* aisle centres: the gap between consecutive shelf runs. A run is SHELF_W wide about rx+14. */
+    const aisle=i=>((runXs[i]+14)+(runXs[i+1]+14))/2;
+    const AISLE_Y=RUN_TOP+Math.round(RUN_N*SHELF_H/2)-SHELF_H;      // halfway down the run
+    /* checkstand lane: below the checkstands, above the store's south wall. */
+    const LANE_Y=CHK_Y+34;
+    const chkLane=i=>chkXs[i]+CTR*3/2;
+    const CREW=[
+      /* chkLane(1), not chkLane(0)+60: that put her box straight through the go-back cart's
+         blocker, which the crew test caught as "Priya Raval stands inside a blocker". */
+      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right'],   // cashier, west checkstands
+      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' ],   // cashier, east checkstands
+      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' ],   // Front End Manager, on the front end
+      ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' ],   // stocker, first aisle
+      ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' ],   // stocker, fourth aisle
+      ['Russ Pelletier',    960,           420,      'left' ]];  // Grocery Manager, off the aisle ends
+    for(const [name,x,y,side] of CREW){
+      const d=stationDesk(x,y,name,side);
+      /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
+         Save-Rite and triggerAudit() returns at its second line, which is what keeps the whole
+         audit/HR apparatus dormant in a level that has no HR office to run it from. */
+      const n=NPC(name,'sales',d);
+      n.x=d.x+d.w/2; n.y=d.y+d.h/2;      // start ON the station rather than at a desk-shaped offset
+      NPCS.push(n);
+    }
+  }
+  /* ---- WHERE THE CREW GATHERS. Both of these were office coordinates, and the comment below used
+     to say they were safe because there were no NPCs. That stopped being true on this branch:
+     MUSTER is clock-out and the fire drill, BREAK_SPOT is every break phase, and left alone all six
+     staff would have walked to a spot chosen for a floor plan this level does not have. */
+  /* ---- WHERE STAFF WANDER. Errands are how anybody crosses the floor for a reason other than
+     their own station, so with none of these the crew ping-pongs between six fixed spots and the
+     store looks dead. Derived from the fixtures that were just placed — move the baler and its
+     errand point moves with it. `type` reuses the office's own errand kinds wholesale. */
+  {
+    const near=(t,dx,dy)=>{const o=objects.find(x=>x.type===t); if(o)errandPoints.push({x:o.x+dx,y:o.y+dy,type:t});};
+    near('water',   15, 40); near('coffee', 15, 40); near('supply', 17, 40);
+    near('phones',  13, 34); near('printer',17, 40);
+    errandPoints.push({x:Math.round(DOOR_X+DOOR_W/2),y:STORE_S-90,type:'chat'},   // the front end
+                      {x:1374,y:130,type:'restroom'},                             // back of house
+                      {x:(runXs[2]+runXs[3])/2+14, y:RUN_TOP+Math.round(RUN_N*SHELF_H/2)-SHELF_H, type:'chat'});   // the middle aisle
+  }
+  MUSTER.x=Math.round(DOOR_X+DOOR_W/2); MUSTER.y=STORE_S-60;      // the front end, by the doors
+  BREAK_SPOT.x=1370; BREAK_SPOT.y=120;                            // beside the break-room table
   /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
      in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.
-     MUSTER and HR_OFFICE stay where they are; both are NPC-only and there are no NPCs. ------- */
+     MUSTER is re-authored above now that there IS a crew. HR_OFFICE is left alone deliberately:
+     nobody in Save-Rite is dept:'hr', so it is unreachable rather than merely unused. ---------- */
   /* the machines are things you walk UP TO, not through — the office gets this from
      buildBlockers, which only runs once art loads; levelBlockers makes them solid from frame 0. */
   objects.forEach(o=>levelBlockers.push({x:o.x+1,y:o.y+1,w:o.w-2,h:o.h-2}));
@@ -10703,7 +10816,10 @@ logLine('Intern at Paper Supply Co. Rise on tasks — or sabotage rivals into me
    ============================================================================ */
 
 /* ---------- Store: the only code that knows where saves live -------------- */
-const SAVE_VERSION = 4, SAVE_SLOTS = 3;   // v4: per-person favour track (career.favors + auditTipoff). v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
+const SAVE_VERSION = 5, SAVE_SLOTS = 3;   // v5: Save-Rite has a crew. Loading REPLACES NPCS wholesale
+  // (NPCS.length=0 then push the restored list), so a grocery save written when the store was empty
+  // would load into the crewed world and delete all six staff — an empty shop that boots clean and
+  // is permanently unstaffed. Refusing the old save is the whole point of the version. v4: per-person favour track (career.favors + auditTipoff). v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
 const Store = {
   key(s){ return 'promo:slot:' + s; },
   save(s, o){ try{ localStorage.setItem(this.key(s), JSON.stringify(o)); return true; }catch(e){ console.warn('save fail',e); return false; } },

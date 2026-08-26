@@ -59,7 +59,8 @@ const TESTS = [
   't_fiction.js',         // level vocabulary: store words in the store, office byte-identical
   't_grocery_tasks.js',   // a bagger's day completes through the REAL interaction menu
   't_grocery.js',
-  't_grocery_soak.js',    // 5 in-game days in a NON-office world; asserts the cycle ran, not just that it survived         // the loadLevel seam, proved with one empty room; office default unchanged
+  't_grocery_soak.js',    // 5 in-game days in a NON-office world; asserts the cycle ran, not just that it survived
+  't_grocery_crew.js',    // Save-Rite's six staff: a station is a desk that isn't drawn         // the loadLevel seam, proved with one empty room; office default unchanged
   't_countersign.js',     // Senior Sales countersign: rank gate, tier-derived pool, the 2x2, no suspicion
   't_moonwalk.js',        // nobody travels backwards; seatless meeting attendees get their own spot
   't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square

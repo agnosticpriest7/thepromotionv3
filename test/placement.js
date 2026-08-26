@@ -112,7 +112,11 @@ function buildContext(opts) {
   const cc = e => ({ x: A(e.x + e.w / 2), y: A(e.y + e.h / 2) });
   // the three linted arrays, tagged with id + label + footprint + collision centre
   const props = [];
-  (L.desks || []).forEach((e, i) => props.push({
+  /* STATIONS DRAW NOTHING, so they have no footprint to lint. A station is a desk record used to
+     give a member of shop-floor staff somewhere to work — drawDesks, drawDeskPlates, drawDeskChairs
+     and solid() all skip it. Stamping a cubicle-desk sprite on it reported the two cashiers as
+     overlapping the checkstands they are meant to be standing at. */
+  (L.desks || []).filter(e => !e.station).forEach((e, i) => props.push({
     id: 'D' + (i + 1), arr: 'desks', letter: DESK_LET,
     label: (e.owner || 'VACANT'), e, cc: cc(e), fp: spriteFootprint(e, 'desks') }));
   (L.objects || []).forEach((e, i) => props.push({

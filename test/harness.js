@@ -599,7 +599,9 @@ const EPILOGUE = `
   def(G,'catfish',  function(){ return (typeof catfish!=='undefined')?catfish:null; });
   def(G,'layout',   function(){ var pick=function(n,d){ try{ return eval(n); }catch(e){ return d; } };
     return { S:pick('S',1), objects:pick('objects',[]), desks:pick('desks',[]), walls:pick('walls',[]),
-      ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]), meetingTable:pick('meetingTable',null),
+      ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]),
+      /* the LIVE array, not a copy — a test can empty it to pose a level that authors none */
+      errandPoints:pick('errandPoints',[]), meetingTable:pick('meetingTable',null),
       meetingTable2:pick('meetingTable2',null),
       meetingChairs:pick('meetingChairs',[]), meetingChairs2:pick('meetingChairs2',[]),
       breakTable:pick('breakTable',null), kitchenTable:pick('kitchenTable',null),
