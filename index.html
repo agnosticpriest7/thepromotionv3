@@ -4456,6 +4456,10 @@ function deptStaff(id){
 function storeBoss(){
   return NPCS.find(n=>n.alive&&n.storeRole==='store')||null;
 }
+/* the sitting Assistant Manager, and the owner whose name is on the sign. `alive` only, for the
+   same reason as deptManager: that is EMPLOYMENT, and gone/wentHome is who turned up today. */
+function storeAM(){    return NPCS.find(n=>n.alive&&n.storeRole==='am')||null; }
+function storeOwner(){ return NPCS.find(n=>n.alive&&n.storeRole==='owner')||null; }
 /* SAVE-RITE'S PATHS PANEL. The same three roads the WAY UP checklist lists, with progress bars —
    and, above rung 3, an honest statement that the rest of the ladder is not gated yet rather than
    an invented route. */
@@ -11270,7 +11274,19 @@ function loadLevel(id){
       /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
          work you can do for him. He has no storeDept on purpose: he is above all five, and the
          loyalty path routes through him rather than through any one department. */
-      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ]];
+      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ],
+      /* ---- THE TWO RUNGS THAT HAD NOBODY IN THEM. The ladder runs six deep and the crew only
+         reached the fifth: rung 4 (Assistant Manager) and rung 6 (Owner) were chairs the player
+         climbed into with no one to succeed. Same gap as the three missing Department Managers,
+         one storey up. Placeholder art, like everyone else.
+
+         ⚠️ NEITHER IS HR. storeRole/storeDept is a separate namespace from `dept`, which is what
+         hrs() and triggerAudit() read — that separation is what has kept the audit apparatus
+         dormant since the store was empty, and it is why adding two more people cannot wake it. */
+      ['Garret Voss',       BOH_X+70,      95,       'down' , null,     'am'     ],   // receiving, with a clipboard
+      /* MERV IS FINDABLE ON PURPOSE. His name is on the building and he is the last rung, so the
+         player should be able to walk up to the man they intend to succeed. */
+      ['Merv Kastelic',     1280,          300,      'up'   , null,     'owner'  ]];
     for(const [name,x,y,side,sdept,srole] of CREW){
       const d=stationDesk(x,y,name,side);
       /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
