@@ -1976,7 +1976,12 @@ function rollGuest(){
    that is the whole point of a guest. Everyone else falls through to TELLS[ptype] as before. */
 function tellsFor(n){
   const g=n&&n.guest?guestByName(n.name):null;
-  return (g&&g.lines&&g.lines.length)?g.lines:TELLS[n.ptype];
+  if(g&&g.lines&&g.lines.length)return g.lines;
+  /* the store's crew speak for themselves. Without this they fall through to TELLS[n.ptype] and
+     stand in a supermarket saying office-politics lines, randomised per run. */
+  const L=storeLines(n);
+  if(L&&L.idle&&L.idle.length)return L.idle;
+  return TELLS[n.ptype];
 }
 function NPC(name,dept,desk){
   /* hold the real desk object. A {x,y} copy has no w/h, and deskSeat() on one of those
@@ -4268,17 +4273,26 @@ const TASK_POOL_BY_RANK={
    store words but are NOT completable there yet. That is a fixture gap, not a vocabulary one, and
    fixing it means giving grocery objects, which is mechanics and out of this branch. */
 const GROCERY_TASKS={
-  0:[ /* BAGGER — same 7 entries, same vias, as the office rank-0 pool */
-    {via:'desk',   label:'Face the shelves in your aisle'},
-    {via:'desk',   label:'Zone the endcaps before close'},
+  /* ⚠️ THE AISLE JOBS MOVED OUT OF HERE. "Face the shelves in your aisle", "Zone the endcaps" and
+     "Check the date codes" were in the SHARED store pool, which had two consequences once
+     departments arrived: a Produce clerk was handed aisle work that is not their department, and
+     a Grocery clerk got each of them TWICE — once shared, once from their own list — which
+     doubles their roll weight. That second one is a mechanics change hiding inside vocabulary,
+     which is the exact thing this branch is not allowed to do. They live in GROCERY_DEPT_TASKS
+     now, where they belong, and reach a grocery clerk exactly once. */
+  0:[ /* BAGGER — store-wide work; the department half comes from GROCERY_DEPT_TASKS */
     {via:'printer',label:'Run the go-backs to the floor'},
     {via:'printer',label:'Break down the cardboard in receiving'},
     {via:'supply', label:'Restock the shelves from the back'},
-    {via:'water',  label:'Check the date codes in your aisle'},
+    /* the shared pool kept a `water` job when "Check the date codes in your aisle" lived here.
+       That one is GROCERY's now, correctly — but moving it left the Water station with nothing
+       pointing at it for four of the five departments, and t_grocery_tasks caught the store
+       dropping to three usable fixtures. This is its store-wide replacement: any department, any
+       bagger, and it is the errand the break-room water station is actually for. */
+    {via:'water',  label:'Change the water bottle in the break room'},
     {via:'coffee', label:'Bring a coffee to {name}'},
   ],
-  1:[ /* CASHIER */
-    {via:'desk',   label:'Face the shelves in your aisle'},
+  1:[ /* CLERK */
     {via:'desk',   label:'Count your till before the rush'},
     {via:'phones', label:'Take the price checks on the intercom'},
     {via:'printer',label:'Run the go-backs to the floor'},
@@ -4313,6 +4327,62 @@ const GROCERY_TASKS={
     {via:'phones', label:'Take the call from the district manager'},
   ],
 };
+/* ---- DEPARTMENT WORK -----------------------------------------------------------------------
+   The store's task pool is rank-aware already (keyed by rung, above) but not DEPARTMENT-aware, so
+   a Produce Clerk and a Deli Clerk did identical work with identical words. These are the four
+   jobs that belong to each department; they are CONCATENATED onto the rung's shared pool rather
+   than replacing it, so bagging, cardboard and the coffee run stay store-wide and the count and
+   timing of a day's tasks do not move.
+
+   ⚠️ NO `phones` ENTRIES, and that is a constraint rather than a preference. unlockSales() is
+   office-only since the ladder branch, so `salesUnlocked` is permanently false in Save-Rite:
+   rollTasks filters every phones task out of the pool, and the Intercom's own menu answers
+   "Locked — make SALES rank first". A phones task here would be a job that never rolls, at a
+   fixture that could not complete it. Reported, not worked around — see the Intercom note.
+
+   ⚠️ THESE ARE ALL CLERK-LEVEL JOBS, which is what the brief specified, so they apply at the
+   rungs where you are actually ON a department floor (bagger, clerk, department manager) and not
+   above it. Rank differentiation at AM and up therefore comes from the shared pool, as before —
+   rather than inventing manager-tier department fiction that was not asked for. */
+const GROCERY_DEPT_TASKS={
+  front:[
+    {via:'desk',   label:'Bag the orders at your lane'},
+    {via:'printer',label:'Bring the carts in from the lot'},
+    /* `desk`, NOT `board`. The department board is dual-purpose in the office and belongs to the
+       MEETING phase while one is running — its menu offers only "take meeting notes" then, so a
+       board-bound task rolled before a huddle cannot be completed until the huddle ends.
+       t_grocery_tasks caught it: "no task item in menu". A price check happens at your own till
+       anyway, which is a better fiction and completable in every phase. */
+    {via:'desk',   label:'Run a price check for a lane'},
+    {via:'printer',label:'Clear the go-backs off the belt'},
+  ],
+  grocery:[
+    {via:'desk',   label:'Face the shelves in your aisle'},
+    {via:'water',  label:'Check the date codes in your aisle'},
+    {via:'supply', label:'Work the pallet down in your aisle'},
+    {via:'desk',   label:'Zone the endcaps before close'},
+  ],
+  produce:[
+    {via:'supply', label:'Cull the wilted stock off the racks'},
+    {via:'water',  label:'Mist the greens'},
+    {via:'desk',   label:'Rotate the berries to the front'},
+    {via:'desk',   label:'Build the display on the wall'},
+  ],
+  deli:[
+    {via:'desk',   label:'Rotate the case before open'},
+    {via:'supply', label:'Break down and wipe the slicer'},
+    {via:'desk',   label:'Take the counter for a stretch'},
+    {via:'water',  label:'Pull the short-dated trays'},
+  ],
+  bakery:[
+    {via:'desk',   label:'Pull the racks when the timer goes'},
+    {via:'printer',label:"Mark down yesterday's bread"},
+    {via:'desk',   label:"Ice the day's cakes"},
+    {via:'supply', label:'Set the morning proof'},
+  ],
+};
+/* the rungs where you work a department floor: BAGGER, <DEPT> CLERK, <DEPT> MANAGER */
+const DEPT_TASK_RANKS=[0,1,2];
 /* ⚠️ PLACEHOLDER LADDER, KNOWN TO BE WRONG. These are labels mapped 1:1 onto the office's seven
    rungs so the TV stops saying INTERN in a supermarket. The DESIGNED grocery ladder is six rungs
    with a BRANCH in the middle — Bagger, then you pick a department, then that department's floor
@@ -4586,6 +4656,105 @@ function saboCredit(target){
 }
 function storeMasterBlocked(){ return currentLevel!=='office' && hrs().length===0; }
 
+/* ============================================================================
+   SAVE-RITE — WHAT THE CREW SAY.  Placeholder quality by intent: words, no mechanics.
+
+   NOT A DIALOGUE SYSTEM. Every line goes out through machinery that already exists — `n.bubble`
+   is the same speech bubble gossip, spats and Ravinder's coffee use, and `tellsFor()` already had
+   a per-character override for guests, which is the seam the idle lines borrow.
+
+   ⚠️ THE STORE WAS ALREADY TALKING, IN THE WRONG VOICE. tellsFor() falls back to TELLS[n.ptype],
+   and NPC() assigns a personality unconditionally — so before this the crew stood in a supermarket
+   saying "Did the boss see?", "You did NOT hear this..." and "Who moved this?", randomised per
+   run. The store had no lines of its own, so it borrowed the office's.
+
+   Flavour is by DEPARTMENT and ROLE, never by personality: PTYPES are randomised per run and the
+   store is not supposed to have them.
+
+   ⚠️ NOTHING HERE PROMISES A MECHANIC. Lines that implied one were cut rather than written — see
+   the note above Lorne. An NPC who says "come and see me about the schedule" when there is no
+   schedule is the silent-dead-end failure wearing a costume. */
+const STORE_LINES={
+  /* ---- FRONT END ------------------------------------------------------------------------- */
+  'Priya Raval':{role:'Cashier · Front End',
+    greet:['Hey.','Oh — hi.','You need something, or are you just wandering?'],
+    idle:['Four more hours.','My drawer is fine. Probably.','If nobody comes to my lane I am not calling out for them.',
+          'I am not doing the carts. I did the carts yesterday.'],
+    busy:['Bit busy.','In a minute.']},
+  'Marguerite Dubois':{role:'Cashier · Front End',
+    greet:['Hello, love.','There you are.','Come here, I want to tell you something.'],
+    idle:['I have been on this lane since it was lane four.','I knew his mother.','They redid the floor in ninety-one. It was worse.',
+          'Everyone in here has been through my till.'],
+    busy:['One moment, love.','Let me just finish this one.']},
+  'Danika Osei':{role:'Front End Manager',
+    greet:['What do you need?','Make it quick, the queue is building.','Front End is mine. What is it?'],
+    idle:['Two on, one on break, and a queue. Every time.','If a lane goes down I want to hear it from me, not from a customer.',
+          'Nobody leaves early on a Saturday.'],
+    busy:['Not now.','I am covering a lane. Later.']},
+  /* ---- GROCERY --------------------------------------------------------------------------- */
+  'Curtis Lam':{role:'Stocker · Grocery',
+    greet:['Yeah?','All right.','What is up.'],
+    idle:['This pallet has been here since Tuesday.','Whoever built this endcap did not measure it.',
+          'I face this aisle every night and every morning it looks like this.'],
+    busy:['Working.','Hands full, sorry.']},
+  'Bekah Thorne':{role:'Stocker · Grocery',
+    greet:['...hi.','Mm.','Yeah?'],
+    idle:['...','Mm.','Nearly done.'],
+    busy:['Busy.','...']},
+  'Russ Pelletier':{role:'Grocery Manager',
+    greet:['You will have to come to me, my back is going.','What do you want, then.','Speak up.'],
+    idle:['I am not bending down for that.','Thirty-one years and a back brace to show for it.',
+          'The aisles run themselves if you leave them alone. That is management.',
+          'Ask Curtis. Curtis can reach it.'],
+    busy:['Give me a minute.','Sitting down for a second.']},
+  /* ---- PRODUCE --------------------------------------------------------------------------- */
+  'Gita Mahal':{role:'Produce Manager',
+    greet:['Careful — do not lean on the display.','Yes? Quickly.','Do not touch the berries.'],
+    idle:['This is my department. The rest of the store is somebody else\u2019s problem.',
+          'Everything in here is dying. The job is deciding how fast.',
+          'I built that wall myself. Nobody else builds it.',
+          'Water, rotate, cull. That is the whole job and nobody does it right.'],
+    busy:['Working. Come back.','Not while I have my hands in this.']},
+  /* ---- DELI ------------------------------------------------------------------------------ */
+  'Bruno Sarr':{role:'Deli Manager',
+    greet:['Take a number.','Ah — you. What is it.','Behind the counter is mine, remember that.'],
+    idle:['The slicer gets stripped every night. Every night.','People wait ten minutes for cold cuts and complain about nine.',
+          'You put a tray out short-dated and it is my name on it.'],
+    busy:['I have a queue.','One second, I am slicing.']},
+  /* ---- BAKERY ---------------------------------------------------------------------------- */
+  'Doreen Stapp':{role:'Bakery Manager',
+    greet:['Hello, sweetheart.','Oh, hello. Are you eating?','There you are, love.'],
+    idle:['I am in at four. Every day. Four.','Sweet as anything until somebody touches my proof.',
+          'That is yesterday\u2019s. I mark it down, I do not throw it out.',
+          'I have outlasted six store managers, love.'],
+    busy:['The racks are coming out, love, hold on.','Hands in the dough, sorry.']},
+  /* ---- THE STORE MANAGER ------------------------------------------------------------------
+     ⚠️ LINES CUT HERE. Lorne wanted to say "come and see me about the schedule" and "I will get
+     you on the good shifts" — both promise a mechanic that does not exist. He asks for help and
+     is warm about it, which IS backed: doing his work builds the favour track the loyalty road
+     reads. Nothing he says points at anything unbuilt. */
+  'Lorne Petrie':{role:'Store Manager',
+    greet:['There he is! The man himself.','Just the person. Have you got a second?',
+           'Good to see you. Genuinely.'],
+    idle:['I like a happy store. That is all I want, really.','Everybody gets on here. I make sure of it.',
+          'If you ever need anything, you come to me first.','I do not forget a favour. Ask anyone.'],
+    busy:['With you in a tick.','Two minutes and I am all yours.']},
+};
+/* the store's own lines for this person, or null in the office (which must not change) */
+function storeLines(n){ return (currentLevel!=='office'&&n&&STORE_LINES[n.name])||null; }
+/* what a store NPC is called in the menu title. deptName(n.dept) reads "Sales" for every one of
+   them, because the whole crew is dept:'sales' so hrs() stays empty — an office word on ten
+   supermarket badges. */
+function storeRoleName(n){ const L=storeLines(n); return L?L.role:null; }
+/* say one line, through the bubble everything else already speaks through */
+function storeSay(n,kind){
+  const L=storeLines(n); if(!L)return false;
+  const busy=!!(n.errand||n.mission);
+  const set=(kind==='greet'&&busy&&L.busy&&L.busy.length)?L.busy:(L[kind]||L.greet);
+  if(!set||!set.length)return false;
+  n.bubble={t:2.6,text:pick(set)};
+  return true;
+}
 function storeDeptMenu(){
   return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
     items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
@@ -4598,14 +4767,14 @@ function storeDeptMenu(){
 const GROCERY_DETENTIONS=['Break down a pallet of cardboard','Face every shelf in frozen',
   'Scrub the loading dock','Re-date the whole dairy case','Collect carts in the rain — twice'];
 const VOCAB={
-  office:{ ranks:null,           tasks:null,          detentions:null,
+  office:{ ranks:null,           tasks:null,          deptTasks:null,      detentions:null,
            clockIn:'Clock in at the elevator', clockOut:'Head to the elevator — day over',
            clockedIn:'Clocked in at the elevator, right on time.', standup:'the 10:00 meeting',
            ownStation:'your desk',
            /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
               taken, Dale does not rate you — so BLOCKED is the honest word there. */
            gateLead:'BLOCKED: ', prankLabels:null },
-  grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, detentions:GROCERY_DETENTIONS,
+  grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, deptTasks:GROCERY_DEPT_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
            /* the marker points at the player's own station, which in a store is the aisle they
@@ -4639,10 +4808,27 @@ function vocab(){ return VOCAB[currentLevel]||VOCAB.office; }
 /* TASK_POOL (a flat, rank-less pool) was DELETED here: defined, never referenced, and sitting
    directly beside the live TASK_POOL_BY_RANK it is one character away from. Dead code next to
    the task system is exactly what gets edited by mistake. Recover it from git if ever wanted. */
+/* The pool for a rung, plus the department's own work when you are standing on a department
+   floor. The office returns exactly what it always did (deptTasks is null there), so its pool is
+   byte-identical. Before a department is chosen the default is FRONT END — which is where a
+   bagger works, so a bagger's list is right from the first shift rather than generic. */
+function taskPoolFor(rank){
+  const byRank=vocab().tasks||TASK_POOL_BY_RANK;
+  const base=byRank[rank]||byRank[0];
+  const dept=vocab().deptTasks;
+  if(!dept||DEPT_TASK_RANKS.indexOf(rank)<0)return base;
+  /* DEDUPED BY LABEL. A job appearing twice in the pool is not a cosmetic problem — pick() is
+     uniform, so a duplicate silently doubles that job's chance of being rolled. Belt and braces
+     for the move above: if a department's list ever re-acquires a shared label, the pool stays
+     honest instead of quietly reweighting the day. */
+  const out=base.slice(), seen={};
+  out.forEach(t=>{seen[t.label]=1;});
+  (dept[player.storeDept||'front']||dept.front).forEach(t=>{ if(!seen[t.label]){seen[t.label]=1;out.push(t);} });
+  return out;
+}
 function rollTasks(){
   tasks=[];player.coffeeFor=null;
-  const byRank=vocab().tasks||TASK_POOL_BY_RANK;
-  const pool=byRank[player.rank]||byRank[0];
+  const pool=taskPoolFor(player.rank);
   const deskT=pool.filter(t=>t.via==='desk');
   const outT=pool.filter(t=>t.via!=='desk');
   addTask(pick(deskT));
@@ -5047,7 +5233,10 @@ function buildOptions(t){
     }
     const fr=Math.round(n.friend);
     const frTxt=n.friend>=ALLY_THRESHOLD?`friend ${fr} — ALLY ✓ (+2.5 branch health)`:`friend ${fr}/${ALLY_THRESHOLD} — ${ALLY_THRESHOLD-fr} more to become an ally`;
-    return {title:`${n.name} · ${deptName(n.dept)}${n.profiled?' · '+PTYPE_NAME[n.ptype]:''}${n.rival?' · RIVAL':''}${n.friend>=ALLY_THRESHOLD?' · ALLY':''}${dirtOn(n.name)?' · DIRT HELD':''}  (mood ${Math.round(n.mood)} / stress ${Math.round(n.stress)} / ${frTxt})`,items};
+    /* a store badge says the job, not "Sales", and they say something when you walk up. The
+       greeting rides the same bubble as everything else — no new surface, no state. */
+    storeSay(n,'greet');
+    return {title:`${n.name} · ${storeRoleName(n)||deptName(n.dept)}${(n.profiled&&!storeLines(n))?' · '+PTYPE_NAME[n.ptype]:''}${n.rival?' · RIVAL':''}${n.friend>=ALLY_THRESHOLD?' · ALLY':''}${dirtOn(n.name)?' · DIRT HELD':''}  (mood ${Math.round(n.mood)} / stress ${Math.round(n.stress)} / ${frTxt})`,items};
   }
   if(t.kind==='obj'){
     const o=t.ref;
