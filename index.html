@@ -4890,7 +4890,7 @@ const VOCAB={
            ownStation:'your desk',
            /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
               taken, Dale does not rate you — so BLOCKED is the honest word there. */
-           gateLead:'BLOCKED: ', prankLabels:null },
+           gateLead:'BLOCKED: ', prankLabels:null, boardName:null, boardIdle:null },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, deptTasks:GROCERY_DEPT_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
@@ -4917,7 +4917,9 @@ const VOCAB={
              memo:'Forge a sour note to head office in their name',
              gaslight:'The full count discrepancy (three plants)',
              image:'Humiliate them in front of the queue',
-             expose:'Expose them as the one leaking the rota' } },
+             expose:'Expose them as the one leaking the rota' },
+           boardName:'Department board',
+           boardIdle:'Read the weekly ad plan (look keen)' },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -5425,7 +5427,28 @@ function buildOptions(t){
       if(player.rank>=5&&!store)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
       return {title:store?(o.label||'Intercom'):'Sales phones',items};
     }
-    if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';return {title:'Whiteboard',items:[inMtg?{label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})}:(openTask('board')?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:'Study the sales chart (look keen)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}})]};}
+    if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';
+      /* ⚠️ THE BOARD USED TO BE MEETING-ONLY DURING A MEETING. A board task rolled before the
+         huddle could not be completed until the huddle ended, because the menu offered only
+         "take meeting notes" — the fixture was silently unavailable at exactly the moment a
+         board is the obvious thing to use. Silent unavailability is the failure mode (the same
+         one the master prank tier was correctly blocked with a VISIBLE reason for).
+
+         Both are offered now. Notes still come first during a huddle, because that is what the
+         phase is for; the task sits under it rather than vanishing. */
+      const bt=openTask('board');
+      const items=[];
+      if(inMtg)items.push({label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})});
+      /* ⚠️ DURING A HUDDLE: NOTES, PLUS THE TASK IF THERE IS ONE — BUT NOT THE IDLE FILLER.
+         The first cut of this fix appended the whole task-or-study expression, which meant the
+         OFFICE gained "Study the sales chart" during meetings: a live behaviour change in a
+         level that is in playtest, for no benefit, and I had written "office unchanged" in the
+         commit before measuring it. Measured against main afterwards, it was not.
+         The bug worth fixing is the uncompletable TASK. Loitering at the board instead of
+         taking notes is not, so the office's meeting reads exactly as it did. */
+      if(inMtg){ if(bt)items.push({label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}); }
+      else items.push(bt?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:(vocab().boardIdle||'Study the sales chart (look keen)'),risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}});
+      return {title:vocab().boardName||'Whiteboard',items};}
     if(o.type==='alarm')return {title:'Fire alarm',items:[{label:alarmActive?'Already ringing':'Pull it (clears the whole floor!)',disabled:alarmActive,risk:seen?seenTag():'chaos',hot:seen,act:()=>pullAlarm()}]};
   }
   if(t.kind==='elevator'){
