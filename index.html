@@ -1361,7 +1361,44 @@ function unstickEnt(e){
 }
 function playerStuck(){return entStuck(player);}
 function unstickPlayer(){unstickEnt(player);}
-function updateCamera(){const vw=VW/ZOOM,vh=VH/ZOOM;cam.x=player.x+player.w/2-vw/2;cam.y=player.y+player.h/2-vh/2;}
+/* ---- THE ENDING LOOKS AT THE SIGN ---------------------------------------------------------
+   The whole payoff of six rungs is a change to the world, and the player was nowhere near it when
+   it happened: Merv is in the back office and the fascia is at the front door, so the sign changed
+   off-camera and the modal covered the screen a frame later.
+
+   A COUNTDOWN, NOT A MODE. signCam holds a number of seconds and nothing has to dismiss it — when
+   it reaches zero the camera returns and the ending fires. There is no state the player can get
+   stuck in, which is the picker-softlock lesson applied to a camera: a camera that moves and does
+   not come back is the same bug wearing a different hat.
+
+   The OFFICE has no equivalent (ceoByMerit goes straight to endGame), so this is a grocery-only
+   flourish and the office's ending is untouched. */
+const SIGN_BEAT_SECONDS=3.6;      // long enough to read at TV distance. A dial.
+let signCam=null, signBeatDone=false;
+function signBeatActive(){ return !!signCam; }
+function startSignBeat(){
+  if(signCam||signBeatDone||currentLevel==='office')return false;
+  signCam={t:SIGN_BEAT_SECONDS};
+  SFX.promote();
+  return true;
+}
+function tickSignBeat(dt){
+  if(!signCam)return;
+  signCam.t-=dt;
+  if(signCam.t>0)return;
+  signCam=null; signBeatDone=true;
+  finishStoreRun();                 // the modal, now that they have seen it
+}
+function finishStoreRun(){
+  endGame(true,'THE STORE IS YOURS','They changed the sign on a Tuesday. Nobody made a speech.');
+}
+function updateCamera(){
+  const vw=VW/ZOOM,vh=VH/ZOOM;
+  /* during the beat the camera sits on the fascia rather than the player — the player may still
+     be walking, and it does not matter, because this is the last four seconds of the run */
+  if(signCam){ const R=storeSignRect(); cam.x=R.x+R.w/2-vw/2; cam.y=R.y+R.h/2-vh/2; return; }
+  cam.x=player.x+player.w/2-vw/2;cam.y=player.y+player.h/2-vh/2;
+}
 /* Viewport culling: only ~15% of the 2520x1368 world is on-screen at once, so drawing every
    wall/desk/container/object/NPC every frame wasted ~85% of the work (and it grew as props were
    added). Skip anything whose sprite can't touch the view. Margin covers sprites, which draw
@@ -8041,10 +8078,14 @@ function checkWin(){
        — checkWin runs after the rank does, and drawStoreSign reads the rank. The player has just
        spent six rungs taking things from people; narrating it back at them is weaker than letting
        them look at the fascia. The office keeps its own line, unchanged. */
-    endGame(true, currentLevel==='office'?'PROMOTED TO '+RANKS[RANKS.length-1]:'THE STORE IS YOURS',
-      currentLevel==='office'
-        ?'You climbed every rung. The office is yours. You have become the walls.'
-        :'They changed the sign on a Tuesday. Nobody made a speech.');
+    if(currentLevel!=='office'){
+      if(signCam)return;                       // the beat is running; the modal waits for it
+      if(startSignBeat())return;               // ...and this is where it starts
+      finishStoreRun();                        // beat already done (or refused): end normally
+      return;
+    }
+    endGame(true,'PROMOTED TO '+RANKS[RANKS.length-1],
+      'You climbed every rung. The office is yours. You have become the walls.');
   }
 }
 
@@ -9231,11 +9272,15 @@ function signName(){
 }
 /* The store's fascia. Canvas text, like the office's PAPER SUPPLY CO. board it stands beside in
    spirit — no art, and it reads at TV distance because it is drawn at world scale. */
-function drawStoreSign(){
-  /* `U` is a LOCAL alias inside drawDecor and friends, not a global — declared here rather than
-     assumed, which is what the first version got wrong (U is not defined, once per frame). */
+/* WHERE THE FASCIA IS. Factored out so the camera and the draw cannot drift apart — the same
+   reasoning as the sign's NAME being read from the roster rather than written twice. */
+function storeSignRect(){
   const U=(v)=>Math.round(v*S);
-  const x=U(600), y=U(690), w=U(300), h=U(26);
+  return {x:U(600), y:U(690), w:U(300), h:U(26)};
+}
+function drawStoreSign(){
+  const R=storeSignRect(), x=R.x, y=R.y, w=R.w, h=R.h;
+  const U=(v)=>Math.round(v*S);
   if(!isFinite(x)||!isFinite(y))return;
   const txt=signName()||"MERV'S";
   const yours=(player.rank>=RANKS.length-1);
@@ -11344,6 +11389,7 @@ function loop(now){
     tickFx(dt);
     tickToilets(dt);
     tickDale(dt);
+    tickSignBeat(dt);   // the ending's look at the fascia, and the modal that follows it
     tickLights(dt);
     tickMeltEvent(dt);
     tickSting(dt);

@@ -629,6 +629,8 @@ const EPILOGUE = `
   // the live task list: a module-scope let, invisible from the sandbox. A test that reads it off
   // the sandbox gets undefined and counts null forever, which is how "exactly two tasks" read {null:40}.
   def(G,'tasks', function(){ return (typeof tasks!=='undefined')?tasks:null; });
+  // the camera, so a test can see where it is actually pointing rather than inferring it
+  def(G,'cam', function(){ return (typeof cam!=='undefined')?cam:null; });
   def(G,'menuOpen', function(){ return (typeof menuOpen!=='undefined')?menuOpen:null; });
   def(G,'paused',   function(){ return (typeof paused!=='undefined')?paused:null; });
   def(G,'intro',    function(){ return (typeof intro!=='undefined')?intro:null; });
