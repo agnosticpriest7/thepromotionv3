@@ -4474,9 +4474,44 @@ function renderStorePaths(el){
     return;
   }
   const dept=storeDeptName(player.storeDept), t=unseatTarget(), st=unseatState(), b=storeBoss();
+  /* ⚠️ THIS PANEL USED TO SAY "the rungs above this one are not gated yet" AT EVERY RUNG ABOVE
+     THE THIRD. That was true when it was written and stopped being true one branch later, when the
+     upper rungs got their gates — so the panel whose entire job is telling the player what to do
+     next was describing half the ladder as a formality. Found by opening it in a browser at rank
+     5, which is the only instrument that has ever caught a stale panel. */
+  if(!t||player.rank>=2){
+    const bar2=(lab,val,col)=>bar(lab,val,col);
+    const blocks=[];
+    if(!t&&player.rank<2)
+      blocks.push(`<div class="pblk"><h5>THE WAY UP — ${esc(dept)}</h5><div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} The chair is yours to take.</div></div>`);
+    if(player.rank===2){
+      const mine=deptHealthToday(player.storeDept), best=Math.max.apply(null,otherDepts().map(deptHealthToday));
+      blocks.push(`<div class="pblk"><h5>ASSISTANT MANAGER — out-manage the other four</h5>
+        <div class="psub">The job goes to whoever's department is working. Yours has to finish ahead of all four others, and keep doing it.</div>
+        ${bar2('Days ahead',Math.round(100*(st.lead||0)/AM_LEAD_DAYS),'#4a8c5a')}
+        <div class="psub">${st.lead||0}/${AM_LEAD_DAYS} days · today ${esc(dept)} ${mine} against the best of the rest at ${best}, need +${AM_LEAD_MARGIN}. ${storeAM()?esc(storeAM().name.split(' ')[0])+' is passed over, not pushed.':'Nobody holds the post.'}</div></div>`);
+    }
+    if(player.rank===3){
+      const who=b?esc(b.name.split(' ')[0]):'The Store Manager';
+      blocks.push(`<div class="pblk"><h5>STORE MANAGER — ${who} helped you up</h5>
+        <div class="psub">And now you want his job. Settle what you owe him first, one way or the other.</div>
+        ${bar2('Debt repaid',Math.round(100*Math.min(loyalCount(),lorneDebt())/Math.max(1,lorneDebt())),'#c9a41a')}
+        <div class="psub">${loyalCount()}/${lorneDebt()} favours${(career.unseat&&career.unseat.done==='loyal')?' — more, because you used him to take rung 3':''}. ${lorneLeverage()?'Or use what you have on him: faster, and it costs suspicion.':'Or find something on him.'}</div></div>`);
+    }
+    if(player.rank===4){
+      const m=storeOwner();
+      blocks.push(`<div class="pblk"><h5>OWNER — ${m?esc(m.name.split(' ')[0]):'the owner'} is not fought</h5>
+        <div class="psub">He sells. Run the whole store well enough for long enough and he will come and ask you himself.</div>
+        ${bar2('Good days',Math.round(100*Math.min(st.mervDays||0,MERV_DAYS)/MERV_DAYS),'#4a8c5a')}
+        <div class="psub">${healthToday()}/${MERV_TARGET} today · ${st.mervDays||0}/${MERV_DAYS} days${st.refused?' · you have told him not yet '+st.refused+'x':''}</div></div>`);
+    }
+    if(player.rank>=5)
+      blocks.push(`<div class="pblk"><h5>THE TOP OF THE LADDER</h5><div class="psub">The sign says your name. There is nothing above this.</div></div>`);
+    if(blocks.length){ el.innerHTML=blocks.join(''); return; }
+  }
   if(!t){
     el.innerHTML=`<div class="pblk"><h5>THE WAY UP — ${esc(dept)}</h5>
-      <div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} There is nothing left to take — the rungs above this one are not gated yet.</div></div>`;
+      <div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} The chair is yours to take.</div></div>`;
     return;
   }
   const who=esc(t.name.split(' ')[0]);
@@ -4526,6 +4561,45 @@ function storeLadderSteps(next,g){
     steps.push({done:false,text:'Fastest road, and the only one that raises suspicion.'});
     if(storeMasterBlocked())
       steps.push({done:false,text:'The MASTER tier needs an HR office to walk the paperwork over. This store has none — those three are shut.'});
+    return {title,steps,ok:g.ok};
+  }
+  /* ⚠️ THE UPPER RUNGS USED TO FALL THROUGH TO A ONE-LINE HINT. grocery-upper-rungs gave rungs
+     4, 5 and 6 real gates and neither of the store's two explanation panels learned about them —
+     found by opening them in a browser, which is the only instrument that has ever caught this
+     class. Each rung gets its own shape here because each gate has one. */
+  const st=unseatState();
+  if(next===3){
+    const mine=player.storeDept?deptHealthToday(player.storeDept):0;
+    const best=player.storeDept?Math.max.apply(null,otherDepts().map(deptHealthToday)):0;
+    steps.push({head:'OUT-MANAGE THE OTHER FOUR'});
+    steps.push({done:st.lead>=AM_LEAD_DAYS,
+      text:`Finish the day ahead of every other department — ${st.lead||0}/${AM_LEAD_DAYS} days running`});
+    steps.push({done:(mine-best)>=AM_LEAD_MARGIN,
+      text:`Today: ${storeDeptName(player.storeDept)} ${mine} against the best of the rest at ${best} (need +${AM_LEAD_MARGIN})`});
+    const am=storeAM();
+    if(am)steps.push({done:false,text:`${am.name.split(' ')[0]} is not in your way — he is simply passed over when yours is the department that works.`});
+    return {title,steps,ok:g.ok};
+  }
+  if(next===4){
+    const b=storeBoss();
+    if(!b)return {title,steps:[{done:true,text:'There is no Store Manager. The job is open.'}],ok:true};
+    const who=b.name.split(' ')[0];
+    steps.push({head:`${who.toUpperCase()} HELPED YOU UP. NOW YOU WANT HIS JOB.`});
+    steps.push({done:lorneRepaid(),
+      text:`Do his work until the debt is square — ${loyalCount()}/${lorneDebt()} favours${(career.unseat&&career.unseat.done==='loyal')?' (more, because you used him at rung 3)':''}`});
+    steps.push({done:lorneLeverage(),
+      text:`OR find something on him. Faster, and it costs you suspicion.`});
+    steps.push({done:lorneSettled(),text:'Either way, settle it to his face before you take the chair.'});
+    return {title,steps,ok:g.ok};
+  }
+  if(next===5){
+    const m=storeOwner();
+    if(!m)return {title,steps:[{done:true,text:'Nobody owns this place. Take it.'}],ok:true};
+    steps.push({head:`${m.name.split(' ')[0].toUpperCase()} IS NOT FOUGHT. HE SELLS.`});
+    steps.push({done:st.mervDays>=MERV_DAYS,
+      text:`Run the whole store well — ${healthToday()}/${MERV_TARGET} today, ${st.mervDays||0}/${MERV_DAYS} days running`});
+    steps.push({done:st.offered,text:'He will come to you when he is ready. You can tell him not yet.'});
+    if(st.refused)steps.push({done:false,text:`You have said not yet ${st.refused} time${st.refused>1?'s':''}. He is not in a hurry.`});
     return {title,steps,ok:g.ok};
   }
   steps.push({done:g.ok, text:g.ok?'Nothing stands between you and this one yet — just earn it.':g.hint});
