@@ -9,6 +9,37 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-shelf-art` (2026-08-27)
+
+### 1. The grocery aisles have real shelf art ⭐⭐⭐ — and this one is a look-at-it call
+Five purpose-built runs replace the placeholder `supply_shelf`. Each asset is a **whole aisle run**
+drawn top-down: fixture spine down the centre, product banding facing out into both aisles. Six runs
+over five variants, assigned **a,b,c,d,e,a** — deterministic, so the same aisle looks the same every
+load and you can judge a layout twice.
+
+**The couch-distance question is whether five faces read as VARIED or as NOISY.** No test answers
+that. Walk the block and look at it side on.
+
+**⚠️ The runs are shorter than they were: 245 → 199 authored.** Not a compression fudge — a sprite's
+height is derived from its width, so six runs at the art's native aspect would each need 74 wide,
+and six of those plus 58-wide aisles needs 734 where the floor has 652. Keeping six aisles and the
+aisle width meant spending the difference on run length. It shows up as a **wider cross-aisle along
+the south end of the block**. If that reads as a hole rather than a cross-aisle, the fix is
+**five runs instead of six**, which fits at full native size — your call, and a small change.
+
+**Aisle width is untouched.** Blocker-to-blocker is 60 authored, exactly what it was.
+
+### 2. Three things moved because the runs got wider
+- **Russ Pelletier** now stands in the south cross-aisle at the foot of his aisles (was inside the
+  new run 6).
+- **The Endcap** now sits at the head of a run rather than across an aisle mouth.
+- **Your own station** moved to the head of the last run. It used to be "at the end of an aisle",
+  which stopped being true when the band widened — it ended up standing *in* aisle 4.
+
+Worth checking these three feel like they're in sensible places, since I chose the spots.
+
+---
+
 ## From `grocery-rank-index-leaks` (2026-08-27)
 
 ### 1. The store has its own ORG chart now ⭐⭐

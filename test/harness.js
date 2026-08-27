@@ -600,6 +600,10 @@ const EPILOGUE = `
   def(G,'layout',   function(){ var pick=function(n,d){ try{ return eval(n); }catch(e){ return d; } };
     return { S:pick('S',1), objects:pick('objects',[]), desks:pick('desks',[]), walls:pick('walls',[]),
       ROOMS:pick('ROOMS',[]), containers:pick('CONTAINERS',[]),
+      /* the level's own fixture rects — shelf runs, counters, checkstands. These are what
+         buildGrid() actually reads, so an aisle-width assertion has to measure THESE and not the
+         cosmetic container boxes that sit on top of them. */
+      levelBlockers:pick('levelBlockers',[]),
       /* the LIVE array, not a copy — a test can empty it to pose a level that authors none */
       errandPoints:pick('errandPoints',[]), meetingTable:pick('meetingTable',null),
       meetingTable2:pick('meetingTable2',null),
@@ -622,6 +626,9 @@ const EPILOGUE = `
                   cx:Math.round(p.x*S), yB:Math.round(p.yB*S), w:U1(ART_W[p.art]||40)};
         });
       }catch(e){ return []; } })() }; });
+  /* the loaded sprite table. ART is a module-scope const, so a test asking "did this art actually
+     load?" cannot reach it from the sandbox — and "it is in ART_FILES" is not the same claim. */
+  def(G,'ART',      function(){ return (typeof ART!=='undefined')?ART:null; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   // the in-game menu's open flag: a module-scope let, invisible from the sandbox, so a test that
