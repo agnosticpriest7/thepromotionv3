@@ -6870,7 +6870,11 @@ function endDay(){
     stat('Allies',allies),
     stat('On the edge',wobbly?`${wobbly} coworker(s)`:'nobody'),
     stat('Your rival',rivalN?`${rivalN.name.split(' ')[0]} — ${Math.min(99,Math.round(rivalN.career||0))}%`:'none left'),
-    ...((player.rank===4&&!career.mgrGone)?[
+    /* ⚠️ A SECOND COPY OF A GATE GOES STALE THE DAY THE FIRST ONE LEARNS SOMETHING. This was
+       `player.rank===4&&!career.mgrGone` — delegation's old office-only predicate, written out
+       again. When delegActive() learned the store's AM also delegates, this did not, so a store
+       Assistant Manager handed out work all day and got no scoreboard at 5pm. Ask the predicate. */
+    ...(delegActive()?[
       stat('DELEGATED CLEAN',`${deleg.done} / ${DELEG_TARGET}`),
       stat('Demerits (2-day)',`${delegWindow()} / ${DELEG_RESET}${delegWindow()>=DELEG_RESET?'  — STREAK RESET':''}`),
     ]:[]),
@@ -7684,6 +7688,10 @@ const DALE_OUT_TARGET=64, DALE_OUT_DAYS=2;
    the merit line "the numbers went UP". Revenue PERSISTS and is capped small (Kyle's call). */
 const CLIENT_HEALTH=3, REVENUE_CAP=12;             // +3 per client, banked, capped
 function landClient(){
+  /* the same arc as scoreTheDay: requisitions and branch revenue are office fictions. The menu row
+     was already hidden in the store; the VERB was not, and the ORG panel printed its own prompt
+     for it. Guarded at the root so there is one place to be right. */
+  if(currentLevel!=='office'){toast('There are no clients to land in a shop.');return false;}
   if(player.rank<5){toast('Only the manager runs headcount.');return false;}
   career.hireReqs=(career.hireReqs||0)+1;
   career.revenue=clamp((career.revenue||0)+CLIENT_HEALTH,0,REVENUE_CAP);
@@ -8305,6 +8313,13 @@ function delegAssignMenu(w){
 function scoreTheDay(){
   /* ASSISTANT MANAGER no longer scores on a branch-health hold — that verb is DELEGATION now
      (deleg / delegMeritMet, which sets career.mgrGone). Only MANAGER->CEO merit is scored here. */
+  /* ⚠️ LIVE, NOT LATENT. rank 5 is MANAGER in the office and OWNER in Save-Rite, so this scored
+     the office's MANAGER->CEO merit gate every day in a shop with no CEO to be promoted by —
+     measured writing career.goodDays on its own at a day boundary. endDay renders its return
+     value, so the store's day-end card also showed "BRANCH HEALTH (day avg) · need 80" and
+     "Good days 0/1". It never tipped only because store health sat at 74-79 against a target of
+     80, which is a margin, not a guard. */
+  if(currentLevel!=='office')return null;
   if(player.rank<5||career.ceoDone)return null;
   const h=healthToday();   // judge on the all-day AVERAGE, not the empty-floor 5pm instant — a burst does not count
   if(h>=MERIT_TARGET){
@@ -10380,9 +10395,59 @@ function renderPeople(){
   });
   el.innerHTML=cards.join('')||'<div class="psub">Nobody left standing.</div>';
 }
+/* ⚠️ THE ORG PANEL WAS OFFICE FURNITURE IN A SHOP. It printed leadership unconditionally, so
+   Save-Rite showed "Mr. Sterling — CEO / upstairs" (there is no Sterling), a MANAGER's chair
+   (there is no Dale), "HR: — / watching" (the store has zero HR), and filed all twelve store
+   staff under JUNIOR SALES. At OWNER it also printed the office CEO merit block, including the
+   "— land a client" prompt — which is how a fix aimed at the ACTIONS menu row missed: the panel
+   prints its own copy. Gating the ROW is not gating the CONTENT.
+
+   The office body below is MOVED, not rewritten, so the office panel cannot drift from this. */
 function renderOrg(){
   const el=document.getElementById('orgRows');if(!el)return;
   refreshRanks();
+  el.innerHTML=(currentLevel==='office'?orgRowsOffice():orgRowsStore()).join('');
+}
+/* THE STORE'S OWN CHART: who is over you, then the five departments and who is in them. Every
+   fact here is one the store already keeps — storeRole, storeDept, deptHealth — so nothing is
+   invented and nothing can go stale against a cast change. */
+function orgRowsStore(){
+  const rows=[];
+  const live=r=>NPCS.find(n=>n.storeRole===r&&n.alive&&!n.gone);
+  const top=RANKS.length-1;
+  const pct=n=>`<b>${Math.min(99,Math.round(n.career||0))}%</b>`;
+  const seat=(role,title,note)=>{
+    const yours=(RANKS[player.rank]===title);
+    if(yours){rows.push(`<div class="you"><span>YOU — ${title}</span><b>${note}</b></div>`);return;}
+    const n=live(role);
+    rows.push(n?`<div><span>${n.name} — ${title}</span>${pct(n)}</div>`
+               :`<div><span>${title} — VACANT</span><b>nobody in the chair</b></div>`);
+  };
+  rows.push('<div class="tier">Over you</div>');
+  seat('owner','OWNER',player.rank>=top?'the sign is yours':'the sign out front');
+  seat('store','STORE MANAGER','the whole floor');
+  seat('am','ASSISTANT MANAGER','five departments');
+  /* the departments, each with its manager first — and YOU in yours, while you are still in one */
+  STORE_DEPTS.forEach(d=>{
+    const crew=deptStaff(d.id).filter(n=>!n.gone&&n!==player);
+    const mine=(player.storeDept===d.id&&player.rank<3);
+    if(!crew.length&&!mine)return;
+    const h=deptHealth(d.id);
+    rows.push(`<div class="tier">${d.name} — ${crew.length+(mine?1:0)} on the books<span style="float:right;opacity:.7">health ${h}/100</span></div>`);
+    const line=[];
+    if(mine)line.push(`<div class="you"><span>YOU — ${RANKS[player.rank]}</span><b>${Math.round(player.prog)}% to next</b></div>`);
+    crew.sort((a,b)=>(a.storeRole==='manager'?-1:0)-(b.storeRole==='manager'?-1:0)||(b.career||0)-(a.career||0))
+        .forEach(n=>{
+      const tag=(n.rival?' ★':'')+((n.friend>=ALLY_THRESHOLD)?' +':'')+(n.profiled?' ['+PTYPE_LETTER[n.ptype]+']':'');
+      const role=(n.storeRole==='manager')?' — '+d.name+' MANAGER':'';
+      line.push(`<div${n.rival?' class="riv"':''}><span>${n.name.split(' ')[0]}${tag}${role}</span>${pct(n)}</div>`);
+    });
+    rows.push(line.join(''));
+  });
+  if(player.rank>=3)rows.push(`<div class="tier">You</div><div class="you"><span>YOU — ${RANKS[player.rank]}</span><b>${Math.round(player.prog)}% to next</b></div>`);
+  return rows;
+}
+function orgRowsOffice(){
   const mgrN=NPCS.find(n=>n.mgr);
   const rows=[];
   rows.push('<div class="tier">Leadership</div>');
@@ -10423,7 +10488,7 @@ function renderOrg(){
     rows.push(line.join(''));
   });
   if(yt<0)rows.push(`<div class="tier">You</div><div class="you"><span>YOU — ${RANKS[player.rank]}</span><b>${Math.round(player.prog)}% to next</b></div>`);
-  el.innerHTML=rows.join('');
+  return rows;
 }
 
 /* ── PATHS panel (HANDOFF-3 Part C(b)) ───────────────────────────────────────

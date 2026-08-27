@@ -9,6 +9,29 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-rank-index-leaks` (2026-08-27)
+
+### 1. The store has its own ORG chart now ⭐⭐
+**Panel → ORG, in Save-Rite.** It used to be the office's chart wearing a shop's clothes: it named
+**Mr. Sterling as CEO** (not in the building), showed **Dale's manager chair** (no Dale), printed
+**"HR: —"** (the store has no HR), filed all twelve staff under **JUNIOR SALES**, and at OWNER
+displayed the entire office CEO merit block — including the **"land a client"** prompt you spotted.
+
+It now shows: who is over you (Owner / Store Manager / Assistant Manager, marked **YOU** when it is
+you), then the five departments with each manager and their crew, department health, and you in
+your own department while you are still in one.
+
+**What to check:** climb a few rungs and open ORG at each. Does it read like a shop's org chart?
+Is department health useful there, or noise? The office chart is provably unchanged — I hashed it
+at all six ranks against `main` with a fixed seed and it is byte-identical.
+
+### 2. Your 5pm card at Assistant Manager
+A store AM delegates all day but got **no delegation scoreboard** at 5pm — the day-end card was
+keyed to a stale copy of a gate. DELEGATED CLEAN and Demerits now appear at both AM and Store
+Manager. Also: an Owner's card no longer shows the office's "BRANCH HEALTH · need 80" line.
+
+---
+
 ## From `grocery-customers`, `grocery-delegation`, `grocery-sightlines-prototype` (2026-08-27)
 
 ### ⭐⭐⭐ SIGHTLINES — the prototype, and the only thing here that is a real question
