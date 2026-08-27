@@ -503,6 +503,11 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
   'elevator','stairs','fire_alarm','wall_clock','first_aid','fire_extinguisher','kitchen_counter','carpet_blue','carpet_grey','tile_white','tile_lobby','wood','marble',
   /* kitchen counter run (Kyle's art, magenta bg): plain / sink / microwave / coffee */
   'counter_plain','counter_sink','counter_micro','counter_coffee',
+  /* GROCERY AISLE RUNS. Five variants of a COMPLETE run in one asset, drawn top-down: the
+     fixture's top surface down the centre with product banding facing out into both aisles.
+     Registering here is what actually loads a sprite - the `phone` note above is the scar from
+     swapping a PNG and never listing it. */
+  'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e',
   /* break-room + kitchen table set. Table and chairs are SEPARATE sprites (unlike conference_table,
      which has its chairs baked in) so every chair is an addressable seat an NPC can be sent to. */
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
@@ -615,6 +620,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h','couch',
   'counter_plain','counter_sink','counter_micro','counter_coffee',
+  'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e',
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
@@ -726,6 +732,14 @@ const ART_W={
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
+  /* ⚠️ THE ART'S ASPECT IS LOCKED, SO THIS NUMBER CHOOSES THE RUN'S LENGTH TOO. Every sprite
+     draws at h = naturalHeight * w / naturalWidth, so picking a width picks a height: the assets
+     are 496x1650 (aspect 0.3006), and 108 scaled px = 60 authored wide => 199 authored tall.
+     Six runs at native aspect CANNOT also be 245 tall - that needs 74 authored each, and
+     6*74 + 5*58 = 734 against the 652 the sales floor has between the GROCERY zone's west edge
+     and the 58 of clearance the back-of-house wall needs. So this is a packing limit, not a
+     compression one, and 60 is the widest that keeps SIX runs and 58-authored aisles. */
+  shelf_run_a:108, shelf_run_b:108, shelf_run_c:108, shelf_run_d:108, shelf_run_e:108,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
@@ -11864,17 +11878,42 @@ function loadLevel(id){
 
      No cross-aisle break: a run is 5 units / 245 authored, with open floor above (the service run)
      and below (the front end), so circulation never needs to cut through one. */
-  const SHELF_W=34, SHELF_H=49, RUN_GAP=92, RUN_TOP=250, RUN_N=5;
-  const runXs=[];                                  // the crew's aisles are derived from these
-  for(let rx=380; rx<=840; rx+=RUN_GAP){
+  /* ⚠️ ONE ASSET IS ONE WHOLE RUN NOW. It used to be five supply_shelf units butted end to end
+     plus one blocker; the units were always cosmetic - the nav grid only ever saw the blocker -
+     so collapsing them to a single sprite changes nothing structural.
+
+     THE FOOTPRINT HAD TO BE RECONCILED, and the honest reason is packing, not compression. The
+     art's aspect is 0.3006 and a sprite's height is DERIVED from its width, so a 245-tall run
+     means a 74-wide one. Six of those with 58-authored aisles needs 734; the floor has 652
+     between the GROCERY zone (x 320) and the 58 of clearance the BOH wall at 1030 requires. So
+     the run is 60 wide and 199 tall: SIX runs and 58 aisles are kept - the two things judged on
+     the TV - and the run gives up 46 of length, which reads as a wider south cross-aisle.
+     Five runs would fit at full native size; that is a run-count change and Kyle's call. */
+  const SHELF_W=60, RUN_GAP=118, RUN_X0=320, RUN_COUNT=6;
+  const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
+  const RUN_TOP_Y=223;                                     // drawn top, unchanged from the old art
+  const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
+  const RUN_MID_Y=RUN_TOP_Y+Math.round(RUN_H/2);           // halfway down a run, for the crew
+  const runXs=[];                                          // LEFT EDGES; the aisles derive from these
+  for(let i=0;i<RUN_COUNT;i++){
+    const rx=RUN_X0+i*RUN_GAP;
     runXs.push(rx);
-    for(let i=0;i<RUN_N;i++)
-      CONTAINERS.push({x:rx,y:RUN_TOP+i*SHELF_H,w:28,h:22,label:'Shelf',kind:'box'});
-    /* one solid rect for the whole run, derived from the same loop that placed the units so the
-       two can never drift. Inset 1 authored a side, for the reason the tabletops are inset. */
-    const cx=rx+14, top=RUN_TOP+22-SHELF_H;
-    levelBlockers.push({x:Math.round(cx-SHELF_W/2+1), y:top+1,
-                        w:SHELF_W-2,                  h:RUN_N*SHELF_H-2});
+    /* the sprite is centred on the run and stands with its BOTTOM at cy+h+U1(4) (sprAt), so the
+       box is placed BACKWARDS from where the art must land rather than guessed at. */
+    const cx=rx+SHELF_W/2, bottom=RUN_TOP_Y+RUN_H;
+    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
+                     label:'Shelf', kind:'box',
+                     /* DETERMINISTIC, not random: a run's variant is a property of the level, so
+                        the same aisle reads the same on every load and a layout can be judged
+                        twice. Six runs over five variants -> a,b,c,d,e,a, and the repeat sits at
+                        opposite ends of the floor, so no two ADJACENT runs ever match. */
+                     art:SHELF_ART[i%SHELF_ART.length]});
+    /* one solid rect for the whole run, derived from the same numbers that place the art so the
+       two can never drift. Inset 1 authored a side, for the reason the tabletops are inset.
+       Blocker-to-blocker across an aisle is 118-58 = 60 authored - IDENTICAL to the old 92-32,
+       so the nav grid sees exactly the aisle it saw before. */
+    levelBlockers.push({x:Math.round(cx-SHELF_W/2+1), y:RUN_TOP_Y+1,
+                        w:SHELF_W-2,                  h:RUN_H-2});
   }
   /* ---- PRODUCE. Chilled cases against the west wall, no aisles. fridge is 72 scaled = 40
      authored wide, 62 authored tall. ------------------------------------------------------- */
@@ -11924,7 +11963,11 @@ function loadLevel(id){
      Reported as a limitation, not worked around. */
   objects.push(
     {type:'printer',x:250,y:600,w:34,h:26,label:'Go-back cart',   art:'supply_shelf',  jammed:false},
-    {type:'printer',x:930,y:300,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
+    /* was (930,300) - inside the widened run 6. An endcap caps the end of a RUN, so it sits above
+       run 2's north end (x 556-616), NOT across an aisle mouth: the first move put it at x 628-662,
+       straight over the centre of aisle 2, and the aisle-mouth check caught it. Clear of the deli
+       counter blocker (ends y 125). Placeholder art, like every other prop in here. */
+    {type:'printer',x:569,y:190,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
     {type:'supply', x:BOH_X+60,y:120,w:34,h:26,label:'Baler'},
     /* along the break room's west wall. They were spread across the middle of the room, which
        left nowhere for the table to go once the crew actually needed somewhere to take a break. */
@@ -11932,9 +11975,15 @@ function loadLevel(id){
     {type:'coffee', x:1290,y:90, w:30,h:24,label:'Coffee machine'},
     {type:'phones', x:640,y:600,w:26,h:20,label:'Intercom'},
     {type:'board',  x:BOH_X+150,y:250,w:40,h:26,label:'Department board'});
-  /* the player's station: one desk, at the end of an aisle. Desks are the ownership spine, so this
-     is also what gives a grocery player somewhere to store contraband and be audited from. */
-  desks.push({x:895,y:250,w:40,h:60,owner:'you',tier:0,dept:'sales',reserved:false,
+  /* the player's station: one desk, at the HEAD of the last run. Desks are the ownership spine, so
+     this is also what gives a grocery player somewhere to store contraband and be audited from.
+
+     ⚠️ WAS (895,250), which read as "end of an aisle" only while the band stopped at x 870. The
+     wider runs put it INSIDE aisle 4, and t_grocery caught it as an aisle blocked end to end -- a
+     fixed coordinate that silently stopped meaning what its comment said. It now sits in the north
+     strip ABOVE run 5, so it is at the head of an aisle without standing in one, and it pinches no
+     aisle at all. Clear of the deli counter blocker (ends y 126) and of the run tops (y 224). */
+  desks.push({x:920,y:150,w:40,h:60,owner:'you',tier:0,dept:'sales',reserved:false,
               art:'cubicle_desk_left',seatSide:'left',seatDir:'right',rigged:null,planted:null});
   /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
   CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
@@ -11979,9 +12028,10 @@ function loadLevel(id){
     desks.push(d); return d;
   };
   {
-    /* aisle centres: the gap between consecutive shelf runs. A run is SHELF_W wide about rx+14. */
-    const aisle=i=>((runXs[i]+14)+(runXs[i+1]+14))/2;
-    const AISLE_Y=RUN_TOP+Math.round(RUN_N*SHELF_H/2)-SHELF_H;      // halfway down the run
+    /* aisle centres: the gap between consecutive runs. runXs holds LEFT EDGES and a run is
+       SHELF_W wide, so the clear floor between run i and i+1 spans rx+SHELF_W .. rx+RUN_GAP. */
+    const aisle=i=>(runXs[i]+SHELF_W+runXs[i+1])/2;
+    const AISLE_Y=RUN_MID_Y;                                        // halfway down the run
     /* checkstand lane: below the checkstands, above the store's south wall. */
     const LANE_Y=CHK_Y+34;
     const chkLane=i=>chkXs[i]+CTR*3/2;
@@ -12007,7 +12057,10 @@ function loadLevel(id){
       ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' , 'front',  'manager'],
       ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
       ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' , 'grocery','staff'  ],
-      ['Russ Pelletier',    960,           420,      'left' , 'grocery','manager'],
+      /* was (960,420), which the wider run band now covers: run 6 spans x 911-969, y 224-421,
+         and his 24-unit station straddled it. Moved into the south cross-aisle the shorter runs
+         opened up - still GROCERY (the zone runs to y 470), still at the foot of his own aisles. */
+      ['Russ Pelletier',    940,           445,      'left' , 'grocery','manager'],
       /* ---- THE THREE MISSING DEPARTMENT MANAGERS. Placeholder art, like the rest of the crew.
          Positions derive from the fixtures their departments are built around, so redrawing the
          floor moves them with it. */
@@ -12055,7 +12108,7 @@ function loadLevel(id){
     near('phones',  13, 34); near('printer',17, 40);
     errandPoints.push({x:Math.round(DOOR_X+DOOR_W/2),y:STORE_S-90,type:'chat'},   // the front end
                       {x:1374,y:130,type:'restroom'},                             // back of house
-                      {x:(runXs[2]+runXs[3])/2+14, y:RUN_TOP+Math.round(RUN_N*SHELF_H/2)-SHELF_H, type:'chat'});   // the middle aisle
+                      {x:(runXs[2]+SHELF_W+runXs[3])/2, y:RUN_MID_Y, type:'chat'});   // the middle aisle
   }
   MUSTER.x=Math.round(DOOR_X+DOOR_W/2); MUSTER.y=STORE_S-60;      // the front end, by the doors
   BREAK_SPOT.x=1370; BREAK_SPOT.y=120;                            // beside the break-room table
