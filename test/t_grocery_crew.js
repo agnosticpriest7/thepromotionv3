@@ -354,19 +354,24 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
 {
   const rw = mk(), rg = rw.g, save = rw.rawSave();
   rw.run(9000, { ignoreGameOver: true });
-  const before = rg.NPCS.map(n => n.name).sort().join('|');
-  const moods = {}; rg.NPCS.forEach(n => { moods[n.name] = Math.round(n.mood); });
+  /* STAFF ONLY. Ambient shoppers are in NPCS too now, and they are deliberately NOT saved — so a
+     roster comparison that counted them would report a clean round-trip as broken. This assertion
+     is about the CREW; who was browsing the aisles at the moment of the save is nobody's business. */
+  const before = rg.NPCS.filter(n => !n.customer).map(n => n.name).sort().join('|');
+  const moods = {}; rg.NPCS.filter(n => !n.customer).forEach(n => { moods[n.name] = Math.round(n.mood); });
   save.slot = 0; save.Store.save(0, save.buildSnapshot(false, null));
   const applied = save.applySnapshot(save.Store.load(0));
   ck('a grocery save round-trips the whole crew', applied === true &&
-     rg.NPCS.map(n => n.name).sort().join('|') === before,
-     'applied=' + applied + ' -> ' + rg.NPCS.length + ' NPCs');
+     rg.NPCS.filter(n => !n.customer).map(n => n.name).sort().join('|') === before,
+     'applied=' + applied + ' -> ' + rg.NPCS.filter(n => !n.customer).length + ' staff (' +
+     rg.NPCS.filter(n => n.customer).length + ' shoppers ignored)');
   ck('and they still own their stations after a load',
      CREW.every(nm => rg.desks.some(d => d.owner === nm && d.station)),
      rg.desks.filter(d => d.station).length + ' stations after load');
   ck('and their state came back with them, not defaults',
-     rg.NPCS.every(n => Math.round(n.mood) === moods[n.name]),
-     rg.NPCS.filter(n => Math.round(n.mood) === moods[n.name]).length + '/' + rg.NPCS.length + ' moods preserved');
+     rg.NPCS.filter(n => !n.customer).every(n => Math.round(n.mood) === moods[n.name]),
+     rg.NPCS.filter(n => !n.customer && Math.round(n.mood) === moods[n.name]).length + '/' +
+     rg.NPCS.filter(n => !n.customer).length + ' staff moods preserved');
 }
 
 /* ---- 8. THE OFFICE IS UNTOUCHED -------------------------------------------------------- */

@@ -157,6 +157,9 @@ function drawnSignText(w) {
   for (let i = 0; i < 25; i++) {
     const was = mTitle ? mTitle.textContent : null;
     S.checkWin();
+    /* the ending now waits behind the camera beat, so run it out — the point of this assertion is
+       how many times the run ENDS, not how quickly */
+    let f = 0; while (S.signBeatActive() && f < 900) { w.run(10, { ignoreGameOver: true }); f += 10; }
     if (mTitle && mTitle.textContent !== was) titleWrites++;
   }
   S.endGame = eg; S.saveFinished = sf;
@@ -179,11 +182,99 @@ function drawnSignText(w) {
   S.endGame = function () { if (!g.gameOver) ends++; return eg.apply(null, arguments); };
   g.player.rank = g.RANKS.length - 1;
   S.checkWin();
+  { let f = 0; while (S.signBeatActive() && f < 900) { w.run(10, { ignoreGameOver: true }); f += 10; } }
   const afterFirst = ends;
   for (let d = 0; d < 5; d++) { try { S.nextDay(); } catch (e) {} }
   S.endGame = eg;
   ck('and five more day rolls after the ending do not fire it again',
      afterFirst === 1 && ends === 1, 'ended ' + ends + ' time(s) across 5 day rolls');
+}
+
+/* ---- 5c. THE CAMERA GOES AND LOOKS AT THE SIGN, AND COMES BACK ------------------------
+   The payoff was a change to the world the player was not looking at: Merv is in the back office
+   and the fascia is at the front door. So the ending holds the camera on the sign first.
+
+   ⚠️ A CAMERA THAT MOVES AND DOES NOT COME BACK IS A SOFTLOCK — the picker taught us those
+   survive full green suites. So this asserts the return, not just the departure. */
+{
+  const w = mk('22'), S = w.sandbox, g = w.g;
+  w.run(9000, { ignoreGameOver: true });
+  /* where the camera sits while following the player, measured rather than assumed */
+  /* ⚠️ g.cam, NOT S.cam. `cam` is a module-scope binding and is invisible from the sandbox —
+     reading it there gives undefined, which either throws or silently compares nothing. Fourth
+     time this exact trap has cost a probe (menuOpen, tasks, errandPoints, now the camera), so it
+     goes through the harness accessor like the others. */
+  S.updateCamera();
+  const before = { x: g.cam.x, y: g.cam.y };
+  const R = S.storeSignRect();
+
+  g.player.rank = g.RANKS.length - 1;
+  S.checkWin();
+  ck('reaching the top starts the look at the sign rather than the modal',
+     S.signBeatActive() === true && g.gameOver === false,
+     'beat=' + S.signBeatActive() + ', gameOver=' + g.gameOver);
+
+  S.updateCamera();
+  const during = { x: g.cam.x, y: g.cam.y };
+  /* ⚠️ TWO WRONG VERSIONS BEFORE THIS ONE. The first hardcoded 860 as the view width; the real vw
+     is VW/ZOOM and is not the canvas width. The second derived vw FROM THE SIGN'S OWN POSITION,
+     which made "the sign is centred" true by construction — it reported "sign 0px from centre,
+     player 15px" and was comparing nothing.
+
+     So: no viewport arithmetic at all. During the beat the camera is pinned to the fascia, which
+     means MOVING THE PLAYER MUST NOT MOVE IT. After the beat it must. That is the actual claim,
+     and it needs no knowledge of how wide the view is. */
+  const farFromSign = { x: g.player.x, y: g.player.y };
+  g.player.x += 900; g.player.y -= 500;                 // walk away, hard
+  S.updateCamera();
+  const stillOnSign = { x: g.cam.x, y: g.cam.y };
+  ck('  ^ and the camera is pinned to the fascia, not the player',
+     stillOnSign.x === during.x && stillOnSign.y === during.y &&
+     (during.x !== before.x || during.y !== before.y),
+     'player moved +900,-500 and the camera moved +' + Math.round(stillOnSign.x - during.x) +
+     ',' + Math.round(stillOnSign.y - during.y) + ' (was ' + Math.round(before.x) + ' following them)');
+  g.player.x = farFromSign.x; g.player.y = farFromSign.y;
+
+  /* and the sign it is looking at says the player's name by now */
+  ck('  ^ and the name on it is already theirs', S.signName() === "KYLE'S", S.signName());
+
+  /* run it out: nothing has to be pressed */
+  let frames = 0;
+  while (S.signBeatActive() && frames < 900) { w.run(10, { ignoreGameOver: true }); frames += 10; }
+  ck('the beat ends on its own, without anything being pressed',
+     !S.signBeatActive() && frames > 60 && frames < 600,
+     Math.round(frames) + ' frames (~' + (frames / 60).toFixed(1) + 's)');
+  ck('  ^ and the ending follows it', g.gameOver === true, 'gameOver=' + g.gameOver);
+  /* PLAYER-LOCKED AGAIN, asserted by MOVING them rather than by recomputing the camera's own
+     arithmetic — which is what the first version did, with a guessed viewport width. If the camera
+     follows, the delta matches; if it is still parked on the sign, it does not move at all. */
+  S.updateCamera();
+  const parked = { x: g.cam.x, y: g.cam.y };
+  g.player.x += 400; g.player.y += 120;
+  S.updateCamera();
+  const moved = { x: g.cam.x, y: g.cam.y };
+  ck('  ^ and the camera has gone back to following the player',
+     Math.abs((moved.x - parked.x) - 400) < 2 && Math.abs((moved.y - parked.y) - 120) < 2,
+     'player moved +400,+120 and the camera moved +' + Math.round(moved.x - parked.x) +
+     ',+' + Math.round(moved.y - parked.y));
+  g.player.x -= 400; g.player.y -= 120;
+
+  /* EXACTLY ONCE: checking again must not replay it */
+  const again = [];
+  for (let i = 0; i < 20; i++) { S.checkWin(); again.push(S.signBeatActive()); }
+  ck('  ^ and it never plays a second time', again.every(x => x === false),
+     again.filter(Boolean).length + ' restarts over 20 checks');
+}
+
+/* ---- 5d. THE OFFICE HAS NO SUCH BEAT --------------------------------------------------- */
+{
+  const o = createWorld(), OS = o.sandbox, og = o.g;
+  o.run(9000, { ignoreGameOver: true });
+  og.player.rank = og.RANKS.length - 1;
+  OS.checkWin();
+  ck('the office ends immediately, with no camera flourish',
+     OS.signBeatActive() === false && og.gameOver === true,
+     'beat=' + OS.signBeatActive() + ', gameOver=' + og.gameOver);
 }
 
 /* ---- 6. THE WORLD KEEPS TICKING AFTERWARDS --------------------------------------------
@@ -194,6 +285,7 @@ function drawnSignText(w) {
   w.run(9000, { ignoreGameOver: true });
   g.player.rank = g.RANKS.length - 1;
   S.checkWin();
+  { let f = 0; while (S.signBeatActive() && f < 900) { w.run(10, { ignoreGameOver: true }); f += 10; } }
   ck('the run really is over before the soak starts', g.gameOver === true, 'gameOver=' + g.gameOver);
   let throws = 0, firstThrow = null;
   for (let f = 0; f < 60000; f += 500) {
@@ -215,6 +307,7 @@ function drawnSignText(w) {
   w.run(9000, { ignoreGameOver: true });
   g.player.rank = g.RANKS.length - 1;
   S.checkWin();
+  { let f = 0; while (S.signBeatActive() && f < 900) { w.run(10, { ignoreGameOver: true }); f += 10; } }
   let snap = null, threw = null;
   try { snap = w.rawSave().buildSnapshot(true, 'Won'); } catch (e) { threw = String(e).split('\n')[0]; }
   ck('a save can be taken while the ending is on screen', !threw && !!snap, threw || 'snapshot taken');
