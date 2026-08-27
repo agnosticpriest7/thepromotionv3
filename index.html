@@ -7899,9 +7899,16 @@ function ceoByMerit(){
 function checkWin(){
   if(career.meritReady&&!career.ceoDone){ceoByMerit();return;}
   /* the top rung is CEO in an office and OWNER in a shop — ask the ladder rather than the office */
-  if(player.rank>=RANKS.length-1)endGame(true,'PROMOTED TO '+RANKS[RANKS.length-1],
-    currentLevel==='office'?'You climbed every rung. The office is yours. You have become the walls.'
-                           :'You climbed every rung. They are taking MERV’S off the sign and putting yours up.');
+  if(player.rank>=RANKS.length-1){
+    /* SHORT ON PURPOSE. The sign is the payoff and it has already changed by the time this shows
+       — checkWin runs after the rank does, and drawStoreSign reads the rank. The player has just
+       spent six rungs taking things from people; narrating it back at them is weaker than letting
+       them look at the fascia. The office keeps its own line, unchanged. */
+    endGame(true, currentLevel==='office'?'PROMOTED TO '+RANKS[RANKS.length-1]:'THE STORE IS YOURS',
+      currentLevel==='office'
+        ?'You climbed every rung. The office is yours. You have become the walls.'
+        :'They changed the sign on a Tuesday. Nobody made a speech.');
+  }
 }
 
 /* end states */
@@ -9055,6 +9062,36 @@ function drawLighting(){
     ctx.fillRect(b.x,b.y,b.w,b.h);
   });
 }
+/* ---- WHOSE NAME IS ON THE BUILDING -------------------------------------------------------
+   THE WIN CONDITION, and the whole thesis in one string: the sign reads MERV'S for the entire
+   run, and when you take the store it reads yours. The change is to the WORLD, not a title card.
+
+   DERIVED, NEVER STORED. If the player is on the top rung the sign is theirs; otherwise it is the
+   owner's. There is nothing to desynchronise and nothing to add to the save — the count-based
+   lesson applied to a string.
+
+   AND THE NAME IS SHARED WITH THE CHARACTER. "MERV'S" used to be a literal here while Merv
+   Kastelic existed as an NPC, so renaming him would have left a ghost on his own shop. The sign
+   asks the roster who the owner is. `alive` is deliberately NOT filtered: the business stays his
+   until it is sold, even on a day he is not in. */
+function ownerRecord(){ return NPCS.find(n=>n.storeRole==='owner')||null; }
+/* A POSSESSIVE THAT DOES NOT PRODUCE "JAX'S'". None of the five playable names ends in S — The
+   Intern, Stacie, Kyle, Raelee, Jax — so all five take a plain 'S, and Jax correctly reads JAX'S
+   rather than JAX'. The S-ending branch is here for the day somebody adds a Chris. */
+function possessive(name){
+  const n=String(name||'').toUpperCase();
+  return n+(/S$/.test(n)?"'":"'S");
+}
+function playerSignName(){
+  const pc=(typeof PLAYABLE!=='undefined')?PLAYABLE.find(p=>p.idx===playerChar):null;
+  return possessive(pc?pc.name:'You');
+}
+function signName(){
+  if(currentLevel==='office')return null;
+  if(player.rank>=RANKS.length-1)return playerSignName();
+  const o=ownerRecord();
+  return possessive(o?o.name.split(' ')[0]:'Merv');
+}
 /* The store's fascia. Canvas text, like the office's PAPER SUPPLY CO. board it stands beside in
    spirit — no art, and it reads at TV distance because it is drawn at world scale. */
 function drawStoreSign(){
@@ -9063,10 +9100,13 @@ function drawStoreSign(){
   const U=(v)=>Math.round(v*S);
   const x=U(600), y=U(690), w=U(300), h=U(26);
   if(!isFinite(x)||!isFinite(y))return;
+  const txt=signName()||"MERV'S";
+  const yours=(player.rank>=RANKS.length-1);
   ctx.fillStyle='#241d16';ctx.fillRect(x,y,w,h);
   ctx.fillStyle='#2b2b2b';ctx.fillRect(x+U(3),y+U(3),w-U(6),h-U(6));
-  ctx.fillStyle='#e8c23a';ctx.font='bold '+U1(15)+'px monospace';ctx.textAlign='center';
-  ctx.fillText("MERV'S",x+w/2,y+h-U(8));ctx.textAlign='left';
+  /* the new sign is brighter than the old one, which is the only celebration it gets */
+  ctx.fillStyle=yours?'#ffe27a':'#e8c23a';ctx.font='bold '+U1(15)+'px monospace';ctx.textAlign='center';
+  ctx.fillText(txt,x+w/2,y+h-U(8));ctx.textAlign='left';
 }
 function drawDecor(){
   /* every prop in here is authored at an office coordinate, including the PAPER SUPPLY CO.
