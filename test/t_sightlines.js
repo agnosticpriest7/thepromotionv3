@@ -44,14 +44,33 @@ function put(ctx, px, py, wx, wy, faceAway) {
   return { seen: ctx.S.whoCanSee(ctx.g.player.x + 8, ctx.g.player.y + 8).length,
            susp: ctx.S.saboSuspicion(18) };
 }
+/* ⚠️ ASK THE FLOOR WHERE ITS AISLES ARE. This suite shipped with the aisle probes written as
+   literals -- (440,340) for "in an aisle", (532,340) for "one aisle over" -- and the grocery-shelf
+   branch redesigned the shelf band underneath them: 440 landed INSIDE a run, so "along an aisle you
+   can be seen" started reporting BLOCKED and the gate went red on a floor that was fine. That is
+   exactly the rot CLAUDE.md §14 exists to prevent, committed by the same hand that wrote the rule
+   down. The aisles are derived from the live run blockers now, so a future redesign moves the
+   probes with it instead of stranding them inside a shelf. */
+function aislesOf(w) {
+  const sc = w.g.layout.S, au = v => Math.round(v / sc);
+  const runs = w.g.layout.levelBlockers
+    .filter(b => au(b.h) > 150 && au(b.h) < 260 && au(b.w) < 100)
+    .sort((a, b) => a.x - b.x);
+  if (runs.length < 3) throw new Error('expected the grocery shelf band, found ' + runs.length + ' runs');
+  const mid = [];
+  for (let i = 0; i < runs.length - 1; i++) mid.push(Math.round((au(runs[i].x) + au(runs[i].w) + au(runs[i + 1].x)) / 2));
+  const top = au(runs[0].y), h = au(runs[0].h);
+  return { mid, top, bot: top + h, midY: top + Math.round(h / 2) };
+}
 
 /* ---- 1. THE GRID IS THE SIGHT MODEL ----------------------------------------------------- */
 {
   const w = mk(), S = w.sandbox;
   w.run(9000, { ignoreGameOver: true });
   const p = (x, y) => A(x, y);
-  const across = S.sightClear(...p(440, 340), ...p(532, 340));   // two aisles, a shelf run between
-  const along  = S.sightClear(...p(440, 300), ...p(440, 420));   // straight down one aisle
+  const AI = aislesOf(w);
+  const across = S.sightClear(...p(AI.mid[0], AI.midY), ...p(AI.mid[1], AI.midY));  // a run between
+  const along  = S.sightClear(...p(AI.mid[0], AI.top + 30), ...p(AI.mid[0], AI.bot - 30));  // one aisle
   const open   = S.sightClear(...p(750, 600), ...p(900, 600));   // the front end
   ck('a shelf run blocks sight, because the nav grid already says it is solid', across === false,
      'aisle 1 -> aisle 2: ' + (across ? 'VISIBLE' : 'BLOCKED'));
@@ -79,8 +98,9 @@ function put(ctx, px, py, wx, wy, faceAway) {
    Same watcher, aimed straight at the player in both cases. The ONLY difference is the shelf run. */
 {
   const ctx = stage(mk());
-  const exposed = put(ctx, 440, 340, 440, 250, false);   // watcher down the same aisle
-  const covered = put(ctx, 440, 340, 532, 340, false);   // watcher one aisle over, staring at you
+  const AI = aislesOf(ctx);
+  const exposed = put(ctx, AI.mid[0], AI.midY, AI.mid[0], AI.top + 20, false);   // same aisle
+  const covered = put(ctx, AI.mid[0], AI.midY, AI.mid[1], AI.midY,     false);   // one aisle over
   ck('a watcher down your own aisle sees you', exposed.seen === 1, JSON.stringify(exposed));
   ck('  ^ but the same watcher one aisle over does not, however hard they stare',
      covered.seen === 0, JSON.stringify(covered));
