@@ -9,6 +9,49 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-customers`, `grocery-delegation`, `grocery-sightlines-prototype` (2026-08-27)
+
+### ⭐⭐⭐ SIGHTLINES — the prototype, and the only thing here that is a real question
+**Panel → SETTINGS → `👁 Sightlines (store, prototype)`.** Off by default. Turn it on and off
+inside one run; that comparison is the entire experiment.
+
+What it does: a sabotage costs **more if a member of staff can see you** and **less if nobody can**.
+Base 18 becomes **29 seen / 7 unseen**. Shelf runs block sight, so **an aisle is cover and the front
+end is a stage** — that fell out of the nav grid for free, which is why this was cheap to try.
+
+Three questions, none of them testable:
+- **Does the floor become tense?** Does walking into the open feel different from working an aisle?
+- **Does sabotage stop being strictly better?** It is the fastest road to unseating a manager. If
+  being seen makes it expensive, the three roads become a real choice. If not, this idea has not
+  earned its place.
+- **Is it legible?** ⚠️ **This is the likeliest failure and I could not fix it.** The only feedback
+  is a log line — *"— Danika watching"* or *"— nobody saw"* — after the fact. If you cannot tell
+  why suspicion jumped, it is noise. That is the argument for a visible indicator, and the reason
+  to judge it before building one.
+
+**It is a prototype and it is meant to be thrown away.** "This needs a real vision system to be any
+good" is a perfectly good answer.
+
+### 1. The shop has customers ⭐
+Six shoppers at a time walk in, look at a few things and leave. `CUSTOMER_TARGET = 6` is the dial.
+They cannot be talked to, pranked, gossiped about or delegated to — they are scenery that moves.
+**Is six right?** A store too busy to walk is worse than an empty one.
+
+### 2. The ending goes and looks at the sign ⭐
+Reaching Owner now holds the camera on the fascia for 3.6 seconds before the modal, so you actually
+see `MERV'S` become your name. Previously it changed off-camera while you stood in the back office.
+
+### 3. Delegation is the store's now
+The tray at Assistant Manager and Store Manager hands out store work — pallets, date codes, the ad
+display, the front end. An AM delegates to Department Managers and floor staff; a Store Manager
+delegates to the AM and the Department Managers. **Does it feel like managing, or like admin?**
+
+### 4. Office changes you may notice
+The delegate menu numbers duplicate jobs `(1 of 2)` when two of a kind are on the tray — they used
+to be indistinguishable. Nothing else in the office moved.
+
+---
+
 ## From `grocery-upper-rungs`, `grocery-endgame`, `grocery-loose-ends` (2026-08-26)
 
 ### ⭐⭐⭐ THE LADDER NOW GOES ALL THE WAY, AND IT RESOLVES
