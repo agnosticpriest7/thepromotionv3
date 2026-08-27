@@ -134,6 +134,58 @@ ck('the same number of tasks is rolled in both levels',
    OS.taskLabels().length === GS.taskLabels().length,
    OS.taskLabels().length + ' vs ' + GS.taskLabels().length);
 
+/* ---- 4b. NO OFFICE SYSTEM SWITCHES ITSELF ON AT A STORE RANK --------------------------
+   ⚠️ A CLASS OF BUG WITH NO STRING TO GREP FOR. Office content gated on `player.rank >= N`, where
+   N names a different job in each level: rank 5 is MANAGER in the office and OWNER in Save-Rite,
+   rank 3 is SENIOR SALES there and ASSISTANT MANAGER here. renderPaths and "Land a client" were
+   found by opening panels; the Dale arc was found by enumerating every comparison. It had been
+   ANNOUNCING itself in the store — a log line and a toast at Department Manager telling the
+   player a second path was open, in a building with no Dale.
+
+   This walks every rung of BOTH ladders and asks each office system whether it thinks it is on.
+   The store's answer must be no, at every rung, for all of them — except delegation, which is
+   deliberately still office-shaped and is its own branch's question. */
+{
+  const SYSTEMS = ['dalePathAvailable', 'cosignActive', 'catfishAvailable', 'hrFrozen'];
+  const leaked = [];
+  for (let r = 0; r < GS.rankNames().length; r++) {
+    g.g.player.rank = r;
+    SYSTEMS.forEach(fn => {
+      let on = false;
+      try { on = !!GS[fn](); } catch (e) { on = 'threw'; }
+      if (on) leaked.push(GS.rankNames()[r] + ':' + fn);
+    });
+  }
+  g.g.player.rank = 0;
+  ck('no office system turns itself on at any rung of the store ladder', leaked.length === 0,
+     leaked.length ? leaked.join(', ') : SYSTEMS.length + ' systems x ' + GS.rankNames().length + ' rungs, all off');
+
+  /* and the same systems must still be ON where the office expects them, or the guard is a delete */
+  const missing = [];
+  o.g.player.rank = 5;                                     // office MANAGER
+  ['dalePathAvailable', 'catfishAvailable', 'hrFrozen'].forEach(fn => {
+    let on = false; try { on = !!OS[fn](); } catch (e) {}
+    if (!on) missing.push('MANAGER:' + fn);
+  });
+  o.g.player.rank = 3;                                     // office SENIOR SALES
+  { let on = false; try { on = !!OS.cosignActive(); } catch (e) {} if (!on) missing.push('SENIOR SALES:cosignActive'); }
+  o.g.player.rank = 0;
+  ck('  ^ and every one of them is still on where the OFFICE expects it', missing.length === 0,
+     missing.length ? 'switched off in the office too: ' + missing.join(', ') : 'Dale, catfish, HR freeze at MANAGER; countersign at SENIOR SALES');
+
+  /* the Dale announcement specifically: it reaches the player through the log, so drive it */
+  {
+    const seen = [];
+    const ll = GS.logLine;
+    GS.logLine = function (m) { if (/Dale/i.test(String(m))) seen.push(String(m)); return ll.apply(null, arguments); };
+    g.g.player.rank = 2;
+    for (let i = 0; i < 400; i++) { try { GS.tickDale(0.05); } catch (e) { break; } }
+    GS.logLine = ll; g.g.player.rank = 0;
+    ck('  ^ and the store is never told that Dale has noticed them', seen.length === 0,
+       seen.length ? seen[0].slice(0, 80) : '400 ticks at Department Manager, not a word');
+  }
+}
+
 /* ---- 5. the intro stays unreachable in grocery ------------------------------------------- */
 ck('grocery never enters the day-1 office tour', !g.g.intro, 'intro=' + (!!g.g.intro));
 

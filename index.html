@@ -3757,7 +3757,9 @@ function promoteRivalAway(n){
    chair auto-fills, and a vacated desk (from a fire, a demotion, or a promotion) is NOT auto-backfilled.
    Every headcount move is yours — you hire to fill an empty desk, or it stays empty (and drags branch
    health). It makes the manager seat an active job, not a spectator's. (Kyle's call — "freeze all".) */
-function hrFrozen(){return player.rank>=5;}
+/* an HR rule about an office HR department. Inert in the store either way — there is no hiring
+   there — but it answered true for a grocery OWNER, which is the same shape as the rest. */
+function hrFrozen(){return currentLevel==='office'&&player.rank>=5;}
 function rivalsClimb(){
   const ws=activeNPCs().filter(isWorker);
   ws.forEach(w=>w.career=(w.career||0)+rand(2,5)+(w.rival?2:0));
@@ -6690,7 +6692,9 @@ const catfish={
   emailsSent:0, needed:3,
   usedDesks:[], leaked:false, replied:false
 };
-function catfishAvailable(){return player.rank>=5;}   // MANAGER and up
+/* the office's endgame route against Sterling, who does not work here. Unreachable in practice
+   because the store ENDS at OWNER — but 'unreachable by luck' is what the ladder gate said too. */
+function catfishAvailable(){return currentLevel==='office'&&player.rank>=5;}   // MANAGER and up, office only
 function catfishStatus(){
   if(!catfish.active)return 'Get on a coworker\u2019s computer, write to Sterling as them, and set their mailbox to forward his replies to you.';
   if(catfish.emailsSent<catfish.needed)return `Sent ${catfish.emailsSent}/${catfish.needed} messages from other people\u2019s machines.`;
@@ -6845,7 +6849,20 @@ const DALE_ARC=[
    task:()=>`Do the last thing Dale asks (do not think about it)`, kind:'channel', secs:12,
    done:"You did it. You are not going to think about it again. Dale calls you his best friend now.", dirt:3},
 ];
-function dalePathAvailable(){return player.rank>=2;}   // SALES and up
+/* ⚠️ OFFICE CONTENT GATED ON A RANK INDEX — A CLASS, NOT THREE ACCIDENTS.
+   renderPaths and "Land a client" were the first two found, and the pattern is neither of
+   them specifically: it is office systems switched on by `player.rank >= N`, where N means a
+   different job in each level. Rank 5 is MANAGER in the office and OWNER in Save-Rite; rank 3
+   is SENIOR SALES there and ASSISTANT MANAGER here. There is no string to grep for — just a
+   number — so these were found by enumerating every comparison and asking what sits behind
+   it. The three below were live; the full sweep is in the commit message. */
+/* THE DALE ARC ANNOUNCED ITSELF IN A SHOP WITH NO DALE. tickDale runs every frame from the main
+   loop, and its first act is a one-off log and toast — "Dale has started looking at you like you
+   are someone he could talk to... a second path is open". offerDaleFavor() below it needs an
+   `n.mgr` NPC and correctly found none, so the arc never advanced; but the ANNOUNCEMENT does not
+   depend on him existing, and it fired at DEPARTMENT MANAGER in every store run. A path that is
+   announced and cannot be walked is worse than no path. */
+function dalePathAvailable(){return currentLevel==='office'&&player.rank>=2;}   // SALES and up, and only in the office
 function daleArcStep(){return DALE_ARC[dale.step]||null;}
 function daleStatus(){
   if(dale.done)return 'Dale has recommended you personally. Sterling is expecting you.';
@@ -7690,7 +7707,10 @@ let deleg={q:[],done:0,dem:[],seq:0,esc:0};   // q: live jobs; done: clean compl
 
    Deliberately NOT a second grind: no gate, no target, a hard daily cap, and a free expiry. */
 const COSIGN_PER_PHASE=1, COSIGN_PROG=2, COSIGN_DAILY_CAP=3;
-function cosignActive(){return player.rank===3;}
+/* SENIOR SALES' verb. Rank 3 is ASSISTANT MANAGER in the store, so the predicate answered true
+   there — no menu item was actually surfacing, because store NPCs never receive an `order`, but
+   that is the arithmetic of two unrelated systems missing each other rather than a guard. */
+function cosignActive(){return currentLevel==='office'&&player.rank===3;}
 /* Juniors = anyone sitting BELOW you, derived from desk tiers rather than a name list, so a
    re-tiered floor cannot rot it (CLAUDE.md §14). */
 function cosignJuniors(){
