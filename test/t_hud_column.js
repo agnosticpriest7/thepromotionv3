@@ -194,6 +194,47 @@ function sweep(level) {
 }
 
 
+/* ---- 7. NO GATE HINT OVERFLOWS THE RANK-NOTE SLOT --------------------------------------
+   ⚠️ ASSERTED SO A FUTURE LONG HINT FAILS AT THE GATE RATHER THAN ON A TV. The slot is about two
+   lines wide. Measured before this branch, the office's held-promotion notes ran 106, 130, 136,
+   212 and 274 characters — the CEO one was mostly invisible and had been since it was written,
+   wrapping off the top-left and clipping behind the rank title.
+
+   The fix was not to delete the text: `hint` still carries the full explanation to THE WAY UP and
+   to the promotion log, where there is room for it. `hintShort` is what the HUD gets. So this
+   asserts BOTH — that the note fits, and that the detail did not quietly disappear with it. */
+{
+  const LIMIT = 70;
+  const rows = [];
+  [null, 'grocery'].forEach(lv => {
+    const w = createWorld({ storage: Object.assign({ 'promo:newgame': '0', 'promo:char': '0' },
+                                                   lv ? { 'promo:level': lv } : {}) });
+    const S = w.sandbox, g = w.g;
+    w.run(9000, { ignoreGameOver: true });
+    if (lv) { g.player.prog = 100; try { S.tryPromote(); S.storeDeptMenu().items[3].act(); S.closeMenu(); } catch (e) {} }
+    for (let r = 0; r < g.RANKS.length - 1; r++) {
+      g.player.rank = r; g.player.prog = 100;
+      let gt = null; try { gt = S.gateFor(r + 1); } catch (e) { continue; }
+      if (!gt || gt.ok) continue;
+      try { S.updateHUD(); } catch (e) { continue; }
+      const note = S.document.getElementById('rankNote').textContent;
+      rows.push({ lv: lv || 'office', rank: g.RANKS[r + 1], len: note.length, note: note, full: gt.hint || '' });
+    }
+    g.player.rank = 0;
+  });
+  const over = rows.filter(x => x.len > LIMIT);
+  ck('no held-promotion note overflows the HUD slot, in either level', over.length === 0 && rows.length >= 6,
+     over.length ? over.map(x => x.lv + '/' + x.rank + ' ' + x.len + ' chars').join(', ')
+                 : rows.length + ' gated rungs, longest ' + Math.max.apply(null, rows.map(x => x.len)) + '/' + LIMIT);
+
+  /* THE NEGATIVE HALF: shortening must not have been a delete. Every gate that has a short form
+     must still carry a LONGER full one for the panel that has room. */
+  const gutted = rows.filter(x => x.full && x.full.length <= 12);
+  ck('  ^ and the full explanation still exists behind it', gutted.length === 0 && rows.some(x => x.full.length > 70),
+     gutted.length ? 'gutted: ' + gutted.map(x => x.rank).join(', ')
+                   : 'longest full hint ' + Math.max.apply(null, rows.map(x => x.full.length)) + ' chars, kept for THE WAY UP');
+}
+
 console.log(`\nhud column: ${pass} pass, ${fail} fail`);
 console.log(fail ? 'HUD COLUMN: RED ❌' : 'HUD COLUMN: GREEN ✅ (one owner, nothing overlaps)');
 process.exit(fail ? 1 : 0);

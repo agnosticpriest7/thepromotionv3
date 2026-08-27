@@ -7105,15 +7105,20 @@ function gateFor(nextIdx){
   }
   switch(RANKS[nextIdx]){
     case 'JUNIOR SALES': return {ok:true};
-    case 'SALES': refreshRanks(); return {ok:seatsFree[1]>=1||career.reserved[1]>0,hint:'all '+SEATS[1]+' sales chairs are taken — one has to open up, and you have to be the obvious pick when it does',consume:()=>{if(career.reserved[1]>0)career.reserved[1]--;}};
-    case 'SENIOR SALES': refreshRanks(); return {ok:seatsFree[2]>=1||career.reserved[2]>0,hint:'all '+SEATS[2]+' senior chairs are taken — one has to empty, and you have to be the obvious pick when it does',consume:()=>{if(career.reserved[2]>0)career.reserved[2]--;}};
-    case 'ASSISTANT MANAGER': return {ok:career.daleFavor>=2||dale.favor>=30,hint:"Dale has to like you — humour him, or start running his errands"};
-    case 'MANAGER': return {ok:career.mgrGone||dale.titled,
+    /* ⚠️ TWO HINTS, ON PURPOSE. `hint` is the full explanation and it goes where there is room:
+       THE WAY UP panel and the promotion log line. `hintShort` is what the HUD's rank-note slot
+       gets, because that slot is about two lines wide and these ran 106, 130, 136, 212 and 274
+       characters — the CEO one was mostly invisible and had been since it was written. Nothing is
+       lost; the detail simply stops being printed somewhere it cannot be read. */
+    case 'SALES': refreshRanks(); return {ok:seatsFree[1]>=1||career.reserved[1]>0,hint:'all '+SEATS[1]+' sales chairs are taken — one has to open up, and you have to be the obvious pick when it does',hintShort:'a sales chair has to open up',consume:()=>{if(career.reserved[1]>0)career.reserved[1]--;}};
+    case 'SENIOR SALES': refreshRanks(); return {ok:seatsFree[2]>=1||career.reserved[2]>0,hint:'all '+SEATS[2]+' senior chairs are taken — one has to empty, and you have to be the obvious pick when it does',hintShort:'a senior chair has to empty',consume:()=>{if(career.reserved[2]>0)career.reserved[2]--;}};
+    case 'ASSISTANT MANAGER': return {ok:career.daleFavor>=2||dale.favor>=30,hint:"Dale has to like you — humour him, or start running his errands",hintShort:'Dale has to like you'};
+    case 'MANAGER': return {ok:career.mgrGone||dale.titled,hintShort:"the manager's chair must be empty",
       hint:dale.active?"you are Dale's man now — finish his arc and he hands you the top job directly"
         :`the manager's chair must be empty. Dig HR dirt on Dale and report him to the CEO twice — OR delegate so well the office runs itself and head office kicks him upstairs (${deleg.done||0}/${DELEG_TARGET} clean)`};
     case 'CEO':
       if(career.meritReady)return {ok:true,hint:''};
-      return {ok:career.vpFavor>=1,hint:'THREE WAYS UP — (1) '+catfishStatus()+'  ...OR (2) '+daleStatus()+'  ...OR (3) run this branch WELL: health '+healthToday()+'/'+MERIT_TARGET+', '+(career.goodDays||0)+'/'+MERIT_DAYS+' good days'};
+      return {ok:career.vpFavor>=1,hintShort:'three ways up — see THE WAY UP',hint:'THREE WAYS UP — (1) '+catfishStatus()+'  ...OR (2) '+daleStatus()+'  ...OR (3) run this branch WELL: health '+healthToday()+'/'+MERIT_TARGET+', '+(career.goodDays||0)+'/'+MERIT_DAYS+' good days'};
     default: return {ok:true};
   }
 }
@@ -10199,7 +10204,7 @@ function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=n
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);
-}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
+}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+(g.hintShort||g.hint)+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
 /* ================= MISSIONS: favors, dirty jobs, betrayal, and office feuds ================= */
 /* friendship-only economy — never promotion points */
 const MISSION_KINDS=[
