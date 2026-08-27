@@ -2098,7 +2098,13 @@ function assembleAtElevator(){
      Day 1 staggers too: the clock now runs during the orientation tour, so the floor fills up
      around you as Dale walks you round instead of everyone being pre-placed at their desks. */
   const stagger=true;
+  /* ⚠️ SHOPPERS DO NOT CLOCK IN. This sweep runs at boot and at every day roll and parks the whole
+     cast off-map at (-400,-400) with gone=true until their arrival time. It swept customers too:
+     six of them ended up parked, permanently "leaving", never reaching the door and never being
+     removed — and because the spawner is capped, THE SHOP SILENTLY STOPPED FILLING after day 2.
+     Found by measuring arrivals over a long soak, not by watching it. */
   activeNPCs().forEach(n=>{
+    if(n.customer)return;
     if(n.boss)return;
     n.wentHome=false;n.gone=false;n.leaving=false;n.leaveAt=undefined;
     n.hrSettled=false;n.hrDeskT=rand(13,17);n.lastBeat=-1;n.dwell=0;
@@ -2339,7 +2345,13 @@ mgr.route=[{x:300,y:180},{x:470,y:150},{x:600,y:200},{x:880,y:200},{x:1050,y:330
 mgr.routeIdx=0; mgr.lap=0; mgr.maxLaps=Math.round(rand(2,3)); mgr.parked=false; mgr.chat=null; NPCS.push(mgr);
 
 function activeNPCs(){return NPCS.filter(n=>n.alive);}
-function isWorker(n){return n.alive&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptionist;}
+/* ⚠️ !n.customer IS THE LOAD-BEARING GUARD. Almost everything that asks "who works here" goes
+   through isWorker — prank targets, gossip, leverage, the {name} task filler, delegation, branch
+   health, feuds, promotion candidates. A shopper carries dept:'shopper' rather than 'sales', which
+   would otherwise have sailed through this predicate unchanged and made every customer prankable
+   the moment they walked in. One word here is worth a dozen guards downstream. */
+function isWorker(n){return n.alive&&!n.customer&&n.dept!=='hr'&&!n.boss&&!n.mgr&&!n.receptionist;}
+function isCustomer(n){return !!(n&&n.customer);}
 /* DESKBOUND: staff whose whole job is being AT their desk, so they must not be pulled off it by the
    ordinary worker routines. Ravinder gatekeeps the CEO's office — ravinderGuarding() only returns
    him while he is parked within 40u of his seat, so every errand and every break he took opened the
@@ -4985,6 +4997,123 @@ function upperRollDay(){
   }
 }
 
+/* ============================================================================
+   CUSTOMERS — ambient shoppers, and the first NPCs in this project with real CHURN.
+
+   Staff persist for the whole run. Customers arrive and leave every few seconds, which makes this
+   the first proper stress test of npcLeaving() and of the investment invariant: a dangling pointer
+   at a person who left forty seconds ago is the worst version of the bug that invariant exists
+   for. So NOTHING may ever point at a customer, and the guards are structural rather than
+   remembered:
+
+     1. isWorker() excludes them        → every staff query, prank, gossip, leverage, task filler
+     2. the interaction scan skips them → no menu at all, so no verb can name one
+     3. dept:'shopper', never 'hr'      → hrs() stays empty and triggerAudit stays asleep
+     4. no storeDept / storeRole        → deptManager, deptStaff, storeBoss, storeAM, storeOwner
+     5. not saved                       → nothing persists that could point at one across a load
+
+   They are ambient and nothing more: no station, no rank, no department, no personality, no
+   dialogue. They walk in, look at a few things, and leave.
+   ========================================================================== */
+const CUSTOMER_TARGET=6;          // ⭐ THE DIAL. How many shoppers on the floor at once.
+const CUSTOMER_STOPS=[2,4];       // how many places one of them looks at before leaving
+const CUSTOMER_DWELL=[1.6,5.0];   // seconds spent at each
+const CUSTOMER_GAP=[1.2,4.0];     // seconds between arrivals
+let custSeq=0, custSpawnCd=2.0;
+
+function customersOnFloor(){ let k=0; for(const n of NPCS)if(n.alive&&n.customer)k++; return k; }
+/* WHERE A SHOPPER MIGHT STOP. Taken from the live world so a redrawn floor moves them without
+   anyone remembering to — but filtered to the CUSTOMER-FACING ROOMS, which is derived from ROOMS
+   rather than from a list of fixture names. The first cut used every object on the level, which
+   sent shoppers to the baler, the staff water station and the break-room coffee machine: through
+   the back-of-house gap, into rooms customers have no business in, and straight into the traffic
+   jam that gap creates. */
+const CUSTOMER_ROOMS=/FRONT END|GROCERY|PRODUCE|DELI|BAKERY/;
+function customerFacing(x,y){
+  let r=null; try{ r=roomAt(x,y); }catch(e){ return false; }
+  return !!(r&&CUSTOMER_ROOMS.test(r.name));
+}
+function customerStops(){
+  const pts=[];
+  const add=(x,y)=>{ if(customerFacing(x,y))pts.push({x:x,y:y}); };
+  for(const o of objects)add(o.x+o.w/2,o.y+o.h/2);
+  for(const c of CONTAINERS)if(/Shelf|Produce|Checkstand|counter/i.test(c.label||''))add(c.x+c.w/2,c.y+c.h/2);
+  return pts;
+}
+function spawnCustomer(){
+  if(currentLevel==='office')return null;
+  const n=NPC('Shopper '+(++custSeq),'shopper',null);
+  /* everything that would make them a PERSON rather than a body is stripped here, on purpose */
+  n.customer=true; n.storeDept=null; n.storeRole=null; n.ptype=null; n.profiled=false;
+  n.mission=null; n.prankBuild=null; n.errand=null; n.order=null; n.rival=false;
+  n.arrived=true; n.gone=false; n.wentHome=false;
+  n.speed=rand(0.9,1.35)*S;
+  n.x=EXIT.x; n.y=EXIT.y; n.lastX=n.x; n.lastY=n.y;
+  const all=customerStops();
+  const want=Math.round(rand(CUSTOMER_STOPS[0],CUSTOMER_STOPS[1]));
+  n.stops=[]; for(let i=0;i<want&&all.length;i++)n.stops.push(pick(all));
+  n.stopIdx=0; n.dwell=0; n.leaving=false;
+  NPCS.push(n);
+  return n;
+}
+/* ⚠️ EVERY DEPARTURE GOES THROUGH npcLeaving(). Customers leave constantly, so this is the one
+   path that must never be shortcut — and then they are spliced out of NPCS rather than left as
+   dead entries, because five days of arrivals would otherwise grow the array without limit. */
+function removeCustomer(n){
+  if(!n||!n.customer)return false;
+  npcLeaving(n);
+  n.alive=false; n.onFloor=false;
+  const i=NPCS.indexOf(n); if(i>=0)NPCS.splice(i,1);
+  return true;
+}
+function updateCustomer(n,dt){
+  if(n.dwell>0){ n.dwell-=dt; n.goal=null; n.path=null; return; }
+  if(!n.leaving&&n.stopIdx>=n.stops.length){ n.leaving=true; n.goal=null; n.path=null; }
+  if(n.leaving){
+    if(!n.path||!n.path.length)pathTo(n,EXIT.x,EXIT.y);
+    followPath(n);
+    const d=cdist(n,EXIT);
+    if(d<Math.round(30*S)){ removeCustomer(n); return; }
+    /* AND A SHOPPER WHO CANNOT REACH THE DOOR STILL LEAVES. Without this a jam at the front end
+       parks somebody permanently in the leaving state, holding one of the spawner's slots — the
+       failure that emptied the shop after day 2, in its second form. They are ambient; nobody is
+       watching one closely enough to notice they were not shown walking out. */
+    if(n.lastD===undefined||d<n.lastD-1){ n.lastD=d; n.noProg=0; }
+    else { n.noProg=(n.noProg||0)+dt; }
+    if(n.noProg>12){ removeCustomer(n); }
+    return;
+  }
+  const stop=n.stops[n.stopIdx];
+  if(!n.path||!n.path.length)pathTo(n,stop.x,stop.y);
+  followPath(n);
+  const d=cdist(n,stop);
+  if(d<Math.round(34*S)){ n.stopIdx++; n.dwell=rand(CUSTOMER_DWELL[0],CUSTOMER_DWELL[1]); n.path=null; n.goal=null; n.noProg=0; return; }
+  /* ⚠️ PROGRESS, NOT MOTION. The first version gave up when `n.moving` went false — but separate()
+     nudges bodies apart every frame, so four shoppers converging on the same shelf shoved each
+     other in a circle with moving===true forever, the timer never fired, and they held the
+     spawner's slots until the shop stopped filling. Measured: four of them bunched inside 8px,
+     all "moving", none arriving. Distance to the target is the only honest signal. */
+  if(n.lastD===undefined||d<n.lastD-1){ n.lastD=d; n.noProg=0; }
+  else { n.noProg=(n.noProg||0)+dt; }
+  if(n.noProg>5){ n.noProg=0; n.lastD=undefined; n.stopIdx++; n.path=null; n.goal=null; }
+}
+function tickCustomers(dt){
+  if(currentLevel==='office'||intro||gameOver)return;
+  /* BELT AND BRACES FOR THE ABOVE. Anything that ever marks a shopper as gone or walks them
+     off-map takes them out of circulation permanently and eats one of the spawner's slots, which
+     is invisible until the shop is quietly empty. Reap them instead of trusting that no future
+     staff sweep will ever touch one. */
+  for(let i=NPCS.length-1;i>=0;i--){
+    const n=NPCS[i];
+    if(n.customer&&(n.gone||n.wentHome||n.x<0||n.y<0))removeCustomer(n);
+  }
+  custSpawnCd-=dt;
+  if(custSpawnCd<=0){
+    custSpawnCd=rand(CUSTOMER_GAP[0],CUSTOMER_GAP[1]);
+    if(customersOnFloor()<CUSTOMER_TARGET)spawnCustomer();
+  }
+}
+
 function storeDeptMenu(){
   return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
     items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
@@ -5199,7 +5328,11 @@ function nearestInteractable(){
   const take=(dist,limit,cand)=>{ if(dist<limit && dist<bd){ bd=dist; best=cand; } };
 
   // CEO reachable on his lap, or in his office once you get past Ravinder
-  for(const n of activeNPCs()) take(cdist(n,pc),REACH,{kind:'npc',ref:n});
+  /* ⚠️ SHOPPERS ARE SCENERY YOU CAN WALK AROUND. Skipping them here is the second structural
+     guard: with no interaction there is no menu, and with no menu there is no prank, no gossip,
+     no leverage, no favour and no task that could take one as a target. Cheaper and far harder to
+     get wrong than adding a !customer check to each of those verbs. */
+  for(const n of activeNPCs()) if(!n.customer) take(cdist(n,pc),REACH,{kind:'npc',ref:n});
   for(const o of objects)      take(cdist(o,pc),REACH,{kind:'obj',ref:o});
   for(const c of CONTAINERS)   take(cdist(c,pc),REACH,{kind:'container',ref:c});
 
@@ -11363,7 +11496,9 @@ function loop(now){
     }
     activeNPCs().forEach(n=>{
       const ox=n.x,oy=n.y;
-      updateNPC(n,dt);
+      /* a shopper is not staff and must not run the staff routine — no desk, no meeting, no
+         errand, no meltdown, no arrival stagger */
+      if(n.customer)updateCustomer(n,dt); else updateNPC(n,dt);
       const wdx=n.x-ox,wdy=n.y-oy,wsp=Math.hypot(wdx,wdy);   // the WALK, before any nudge
       separate(n);
       const tdx=n.x-ox,tdy=n.y-oy,sp=Math.hypot(tdx,tdy);     // what actually happened this frame
@@ -11389,6 +11524,7 @@ function loop(now){
     tickFx(dt);
     tickToilets(dt);
     tickDale(dt);
+    tickCustomers(dt);  // shoppers arrive and leave; the store is meant to look open
     tickSignBeat(dt);   // the ending's look at the fascia, and the modal that follows it
     tickLights(dt);
     tickMeltEvent(dt);
@@ -11966,7 +12102,10 @@ function buildSnapshot(over, outcome){ return {
     hasKeycard:!!player.hasKeycard,workPass:!!player.workPass,busyCount:player.busyCount||0,
     inv:player.inv.slice(),deskItems:player.deskItems.slice(),deskHidden:player.deskHidden.slice(),
     leverage:JSON.parse(JSON.stringify(player.leverage||[])) },
-  npcs:NPCS.map(npcSnap), desks:desks.map(deskSnap),
+  /* SHOPPERS ARE NOT SAVED. They are ambient and rebuilding them on load is simpler than
+     persisting them — and a saved customer is a saved POINTER-SHAPED THING that could come back
+     pointing at nothing. The shop refills itself within seconds of a load. */
+  npcs:NPCS.filter(n=>!n.customer).map(npcSnap), desks:desks.map(deskSnap),
   dale:JSON.parse(JSON.stringify(dale)), career:JSON.parse(JSON.stringify(career)),
   catfish:JSON.parse(JSON.stringify(catfish)),
   daleArcAnnounced, salesUnlocked,
