@@ -4456,6 +4456,10 @@ function deptStaff(id){
 function storeBoss(){
   return NPCS.find(n=>n.alive&&n.storeRole==='store')||null;
 }
+/* the sitting Assistant Manager, and the owner whose name is on the sign. `alive` only, for the
+   same reason as deptManager: that is EMPLOYMENT, and gone/wentHome is who turned up today. */
+function storeAM(){    return NPCS.find(n=>n.alive&&n.storeRole==='am')||null; }
+function storeOwner(){ return NPCS.find(n=>n.alive&&n.storeRole==='owner')||null; }
 /* SAVE-RITE'S PATHS PANEL. The same three roads the WAY UP checklist lists, with progress bars —
    and, above rung 3, an honest statement that the rest of the ladder is not gated yet rather than
    an invented route. */
@@ -4592,7 +4596,7 @@ function unseatRollDay(){
   const st=unseatState();
   if(st.done)return;
   if(!unseatTarget()){ st.merit=0; st.sabo=0; return; }     // post already empty: nothing to accrue
-  const h=deptHealth(player.storeDept), worked=(today&&today.tasks>0);
+  const h=deptHealthToday(player.storeDept), worked=(today&&today.tasks>0);
   if(h>=UNSEAT_MERIT_TARGET&&worked){
     st.merit=(st.merit||0)+1;
     if(st.merit<UNSEAT_MERIT_DAYS)
@@ -4755,6 +4759,119 @@ function storeSay(n,kind){
   n.bubble={t:2.6,text:pick(set)};
   return true;
 }
+/* ============================================================================
+   THE UPPER RUNGS — three gates, three different shapes on purpose.
+   Rung 3 is where the knives are; repeating "three roads" twice more would make the whole ladder
+   one idea. So: you OUT-MANAGE the others to make AM, you SETTLE a debt to take Lorne's job, and
+   Merv SELLS to you — a succession, not a fight.
+   ========================================================================== */
+const AM_LEAD_DAYS=3;        // days your department must beat all four others
+const AM_LEAD_MARGIN=4;      // by this much, so a one-point wobble is not a win
+const LORNE_REPAY=3;         // favours owed on top of anything the loyalty road already cost
+const MERV_TARGET=70;        // store-wide health Merv can see
+const MERV_DAYS=3;           // ...held this long before he will talk about selling
+
+function upperState(){ if(!career.upper)career.upper={lead:0,settled:null,mervDays:0,offered:false,accepted:false,refused:0}; return career.upper; }
+function otherDepts(){ return STORE_DEPTS.map(d=>d.id).filter(id=>id!==player.storeDept); }
+/* your department against the best of the rest — the number the AM job is decided on */
+function leadMargin(){
+  if(!player.storeDept)return -99;
+  /* the DAY's numbers on both sides — see sampleHealth. Comparing two zeroes at the moment the
+     lights go off would have made this gate unopenable. */
+  const mine=deptHealthToday(player.storeDept);
+  const best=Math.max.apply(null,otherDepts().map(deptHealthToday));
+  return mine-best;
+}
+/* WHAT YOU OWE LORNE. Derived, never stored: the loyalty road at rung 3 spent his goodwill to move
+   a Department Manager aside, so taking his job afterwards costs more than if you never asked. */
+function lorneDebt(){
+  return LORNE_REPAY + ((career.unseat&&career.unseat.done==='loyal')?UNSEAT_LOYAL_TARGET:0);
+}
+function lorneRepaid(){ return loyalCount()>=lorneDebt(); }
+function lorneLeverage(){ const b=storeBoss(); return !!(b&&dirtOn(b.name)); }
+function lorneSettled(){ return !!upperState().settled; }
+
+/* ---- SETTLING WITH LORNE. Two ways out of one debt, which is the rung's whole character: you owe
+   him, and you want what he has. Not "three roads" again. */
+function settleWithLorne(how){
+  const st=upperState();
+  if(st.settled)return false;                       // once, ever
+  const b=storeBoss();
+  if(!b)return false;
+  if(how==='repaid'){
+    if(!lorneRepaid())return false;
+    st.settled='repaid';
+    logLine(`${b.name.split(' ')[0]} put you up for his own job. He did it gladly, which is somehow worse — he thinks you are friends, and he is right, and you are taking it anyway.`,'a');
+    toast('Lorne recommended you. For his own job.');
+  }else{
+    if(!lorneLeverage())return false;
+    st.settled='betrayed';
+    addSuspicion(22,'You moved on the one man who helped you');
+    logLine(`You used it. ${b.name.split(' ')[0]} did not argue and did not ask who told. He just looked at you for a moment longer than was comfortable, and then went to clear his desk.`,'b');
+    toast('Lorne is out. That will be remembered.');
+  }
+  npcLeaving(b); b.alive=false; b.onFloor=false;
+  buildGrid();
+  SFX.promote();
+  return true;
+}
+
+/* ---- MERV SELLS. An OFFER, not a gate you push against — and refusable, because a succession you
+   can decline is a different thing from a promotion you earn. */
+function mervReady(){ const st=upperState(); return !st.accepted && !!storeOwner() && st.mervDays>=MERV_DAYS; }
+function mervOfferMenu(){
+  const m=storeOwner(), who=m?m.name.split(' ')[0]:'The owner';
+  return {title:`${who.toUpperCase()} WANTS TO TALK ABOUT SELLING`,
+    items:[
+      {label:'Take the store',risk:'his name comes off the sign',
+       act:()=>acceptMerv()},
+      {label:'Not yet',risk:'he will ask again — he is not in a hurry',
+       act:()=>{ upperState().refused=(upperState().refused||0)+1;
+         logLine(`${who} nods, unbothered. "No rush. I have been here forty years, another month will not kill me."`,'t');
+         toast('You told him not yet.'); }},
+    ]};
+}
+function acceptMerv(){
+  const st=upperState();
+  if(st.accepted)return false;
+  const m=storeOwner();
+  if(!m)return false;
+  st.accepted=true;
+  logLine(`${m.name.split(' ')[0]} shakes your hand and gives you the keys, and there is nothing dramatic about it at all. He is glad. He has wanted to stop for years and he wanted to leave it with someone who would look after it.`,'g');
+  toast('The store is yours.');
+  npcLeaving(m); m.alive=false; m.onFloor=false;
+  buildGrid();
+  SFX.promote();
+  return true;
+}
+
+/* ---- judged at the day boundary, like the merit road at rung 3 ---------------------------- */
+function upperRollDay(){
+  if(currentLevel==='office')return;
+  const st=upperState();
+  /* AM: your department has to beat the other four, and keep beating them */
+  if(player.rank===2&&player.storeDept){
+    if(leadMargin()>=AM_LEAD_MARGIN){
+      st.lead=(st.lead||0)+1;
+      if(st.lead<AM_LEAD_DAYS)
+        logLine(`${storeDeptName(player.storeDept)} finished the day ahead of every other department — ${st.lead}/${AM_LEAD_DAYS}.`,'g');
+      else if(st.lead===AM_LEAD_DAYS)
+        logLine('Three days running, yours is the department that works. That is the sort of thing head office notices without being told.','g');
+    }else if(st.lead>0){
+      st.lead=0;
+      logLine('Somebody else had the better day. The run is broken.','t');
+    }
+  }
+  /* OWNER: the store itself, sustained, at a level Merv can see */
+  if(player.rank===4){
+    const h=healthToday();          // the day's average, for the same reason
+    if(h>=MERV_TARGET){
+      st.mervDays=(st.mervDays||0)+1;
+      if(st.mervDays<MERV_DAYS)logLine(`The store closed well again — ${h}/${MERV_TARGET}, ${st.mervDays}/${MERV_DAYS} days.`,'g');
+    }else if(st.mervDays>0){ st.mervDays=0; logLine('A ragged day. Merv will have noticed that too.','t'); }
+  }
+}
+
 function storeDeptMenu(){
   return {title:'CHOOSE YOUR DEPARTMENT — this cannot be changed', noClose:true,
     items:STORE_DEPTS.map(d=>({label:d.name, risk:d.sub,
@@ -5076,6 +5193,18 @@ function buildOptions(t){
         /* THE LOYALTY ROAD, as a verb the player presses rather than a beat that must fire.
            Shown even when it is not ready, with the count on it, so the road is legible from the
            first favour instead of appearing out of nowhere at the threshold. */
+        /* HIS JOB IS THE NEXT RUNG, and you owe him for the last one. Two ways out of one debt —
+           which is the rung's character, not "three roads" a second time. */
+        ...((n.storeRole==='store'&&currentLevel!=='office'&&player.rank===3&&!lorneSettled())?[
+          {label:lorneRepaid()?'Ask him to put you up for his job…'
+                              :`Ask about the Store Manager job…  (${loyalCount()}/${lorneDebt()} favours owed)`,
+           disabled:!lorneRepaid(),
+           risk:lorneRepaid()?'he will say yes, and mean it':'you owe him more than that',
+           act:()=>settleWithLorne('repaid')},
+          {label:lorneLeverage()?`Use what you have on ${n.name.split(' ')[0]}…`:'Nothing on him — yet',
+           disabled:!lorneLeverage(), hot:true,
+           risk:lorneLeverage()?'faster, and it costs you':'you would need something on him first',
+           act:()=>settleWithLorne('betrayed')}]:[]),
         ...((n.storeRole==='store'&&currentLevel!=='office'&&player.storeDept&&!unseatDone()&&unseatTarget())?[{
           label:loyalReady()?`Ask him to move ${unseatTarget().name.split(' ')[0]} on…`
                             :`Ask about ${storeDeptName(player.storeDept)}…  (${loyalCount()}/${UNSEAT_LOYAL_TARGET} favours)`,
@@ -6412,6 +6541,7 @@ function nextDay(){
   cosignRollDay();  // orders are ephemeral: cleared with the day, and the daily cap resets
   delegRollDay();   // fresh delegation tray for the new day; clean-completion count and the rolling demerit window carry over
   unseatRollDay();  // the MERIT road is judged on the day that just ended, before today is reset
+  upperRollDay();   // ...and so are the three upper rungs, for the same reason
   /* Suspicion and stress don't carry over in full: a day's accumulation halves overnight (was a flat
      −10 on suspicion and no stress relief at all). NPCs decay separately below, per the isolation mechanic. */
   player.suspicion=clamp(player.suspicion*NIGHT_DECAY,0,100);
@@ -6872,10 +7002,18 @@ const career={daleFavor:0,vpFavor:0,daleStrikes:0,mgrGone:false,gateShown:{},res
      be unseated twice. Additive: a save without it is a save where no path has been started,
      which is true of every save written before this branch. No SAVE_VERSION bump (career is
      cloned whole, so it rides along). */
-  unseat:{merit:0,sabo:0,done:null}};
+  unseat:{merit:0,sabo:0,done:null},
+  /* ---- THE UPPER RUNGS. Counts and one enum, no pointers ------------------------------------
+     Same discipline as `unseat`: nothing here names a person. `lead` is days your department beat
+     the other four, `settled` records HOW Lorne's debt ended rather than who it was owed to, and
+     `mervDays` is store-wide health held. Who sits in each chair is asked of the world by
+     storeAM()/storeBoss()/storeOwner() every time, so a run survives any of them leaving by other
+     means. Additive: a save without it is a save where nobody has climbed this far, which is true
+     of every save ever written. No SAVE_VERSION bump. */
+  upper:{lead:0,settled:null,mervDays:0,offered:false,accepted:false,refused:0}};
 /* the day's ledger — reset every morning, read out every evening */
-let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0};
-function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0};}
+let today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:0,suspStart:0,healthSum:0,healthN:0,deptSum:{},deptN:0};
+function resetToday(){today={tasks:0,favors:0,pranks:0,meltdowns:0,fired:[],hired:[],caught:0,progStart:player.prog,suspStart:player.suspicion,healthSum:0,healthN:0,deptSum:{},deptN:0};}
 function gateFor(nextIdx){
   /* GATES ARE OFFICE POLITICS. Every case below names a person or a seat that exists in the
      office and nowhere else — and the switch keys on the rank STRING, so Save-Rite's rung 3 is
@@ -6898,6 +7036,16 @@ function gateFor(nextIdx){
          spelled out in THE WAY UP; this only has to point at it. */
       return {ok:false,hint:`${t.name.split(' ')[0]} has the chair — see THE WAY UP`};
     }
+    /* RUNG 4 — ASSISTANT MANAGER. Out-manage the other four, sustained. Garret is not destroyed,
+       he is passed over: rung 3 is where the knives are. Opens free if nobody holds the post. */
+    if(nextIdx===3&&storeAM()&&upperState().lead<AM_LEAD_DAYS)
+      return {ok:false,hint:`Beat the other four — ${upperState().lead}/${AM_LEAD_DAYS} days`};
+    /* RUNG 5 — STORE MANAGER. Lorne's job, and Lorne is the man who helped you up. */
+    if(nextIdx===4&&storeBoss()&&!lorneSettled())
+      return {ok:false,hint:`You owe ${storeBoss().name.split(' ')[0]} — settle it first`};
+    /* RUNG 6 — OWNER. Merv is not fought; he sells. */
+    if(nextIdx===5&&storeOwner()&&!upperState().accepted)
+      return {ok:false,hint:`${storeOwner().name.split(' ')[0]} has to want to sell — keep it at ${MERV_TARGET}`};
     return {ok:true};
   }
   switch(RANKS[nextIdx]){
@@ -6923,6 +7071,15 @@ function tryPromote(){
      promotion is blocked by its own gate until the choice is made, and picking calls tryPromote
      again so the rung lands immediately. career.gateShown is the existing once-per-gate latch, so
      the menu opens once rather than every time a task completes. */
+  /* MERV'S OFFER. He comes to you — the last rung is a succession, not something you push at.
+     Guarded on !menuOpen for the same reason the department picker is: updateRank calls this every
+     frame, and renderMenu resets the gamepad cursor, so re-rendering an open menu would make it
+     unnavigable on a stick. Refusable, and it comes back. */
+  if(!g.ok&&currentLevel!=='office'&&next===5&&mervReady()){
+    if(!menuOpen){ upperState().offered=true; renderMenu(mervOfferMenu()); }
+    player.prog=100;
+    return;
+  }
   if(!g.ok&&currentLevel!=='office'&&next===1&&!player.storeDept){
     /* ⚠️ NOT LATCHED WITH career.gateShown, WHICH IS WHAT THE OTHER GATES USE. updateRank() calls
        this EVERY FRAME, so the latch exists to stop the gate hint spamming the log — but latching
@@ -6951,6 +7108,20 @@ function tryPromote(){
      handed the player a desk that is not in the world AND blanked the station they actually
      stand at. claimAsstOffice and movePlayerDesk are tier-and-room shaped in the same way.
      A store has one player station and you keep it the whole climb. */
+  /* ---- THE STORE'S INCUMBENTS STEP ASIDE ---------------------------------------------------
+     Rung 4 is the one rung nobody is destroyed for. Garret is passed over and moves on — head
+     office finds him something — and he goes through npcLeaving() like everybody else, because
+     "he is still standing there with the AM's badge on" is exactly the dangling state the
+     investment invariant exists to prevent. Lorne and Merv leave through their own verbs. */
+  if(currentLevel!=='office'&&next===3){
+    const am=storeAM();
+    if(am){
+      npcLeaving(am); am.alive=false; am.onFloor=false;
+      logLine(`${am.name.split(' ')[0]} took it well, which was worse than if he had not. Head office found him something at another store by the end of the week.`,'t');
+      toast(am.name.split(' ')[0]+' moved on.');
+      buildGrid();
+    }
+  }
   if(currentLevel==='office'){
     if(next>=5)claimManagerOffice();      // MANAGER: the corner office
     else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
@@ -7328,6 +7499,13 @@ function branchHealth(){
    roster is about who works there. */
 function deptHealth(id){
   const ws=deptStaff(id).filter(n=>!n.gone&&!n.wentHome);
+  /* ⚠️ YOU COUNT IN YOUR OWN DEPARTMENT. Produce, Deli and Bakery are one person each, and that
+     person is the manager you unseat at rung 3 — so the moment you win the job your department
+     has NOBODY in it, deptHealth reads 0 forever, and "beat the other four" becomes unwinnable in
+     three of the five departments. It is also just true: a one-person department's health IS how
+     well the person running it is running it. healthCore only reads stress, strikes and feuds,
+     all of which the player has or safely lacks. */
+  if(currentLevel!=='office'&&id&&id===player.storeDept)ws.push(player);
   const core=healthCore(ws);
   return core===null?0:Math.round(clamp(core,0,100));
 }
@@ -7409,6 +7587,27 @@ function sampleHealth(){
   const h=branchHealth();
   today.healthSum=(today.healthSum||0)+h;
   today.healthN=(today.healthN||0)+1;
+  /* ⚠️ DEPARTMENTS NEEDED THE SAME TREATMENT AND NEVER GOT IT. The comment above describes this
+     exact bug being found and fixed for the STORE-WIDE number; deptHealth() was added later, is
+     judged at the same day boundary, and reads 0 for the same reason — measured at the moment
+     nextDay runs, every member of staff has gone home and every department is empty.
+
+     That is not a hypothetical: it means the rung-3 MERIT road (department health >= 72 on a day
+     you worked) could never fire in real play, and neither of the two upper gates added here
+     could either. It went unnoticed because the tests pose `gone=false` before rolling the day,
+     which is a floor no real evening ever has. Sampled across the day and averaged, exactly like
+     the line above it. */
+  if(currentLevel!=='office'&&typeof STORE_DEPTS!=='undefined'){
+    if(!today.deptSum)today.deptSum={};
+    STORE_DEPTS.forEach(d=>{ today.deptSum[d.id]=(today.deptSum[d.id]||0)+deptHealth(d.id); });
+    today.deptN=(today.deptN||0)+1;
+  }
+}
+/* a department judged on the DAY, not on the moment the lights go off */
+function deptHealthToday(id){
+  if(today&&today.deptN&&today.deptSum&&today.deptSum[id]!==undefined)
+    return Math.round(today.deptSum[id]/today.deptN);
+  return deptHealth(id);
 }
 function healthToday(){
   if(today&&today.healthN)return Math.round(today.healthSum/today.healthN);
@@ -11270,7 +11469,19 @@ function loadLevel(id){
       /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
          work you can do for him. He has no storeDept on purpose: he is above all five, and the
          loyalty path routes through him rather than through any one department. */
-      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ]];
+      ['Lorne Petrie',      BOH_X+95,      300,      'up'   , null,     'store'  ],
+      /* ---- THE TWO RUNGS THAT HAD NOBODY IN THEM. The ladder runs six deep and the crew only
+         reached the fifth: rung 4 (Assistant Manager) and rung 6 (Owner) were chairs the player
+         climbed into with no one to succeed. Same gap as the three missing Department Managers,
+         one storey up. Placeholder art, like everyone else.
+
+         ⚠️ NEITHER IS HR. storeRole/storeDept is a separate namespace from `dept`, which is what
+         hrs() and triggerAudit() read — that separation is what has kept the audit apparatus
+         dormant since the store was empty, and it is why adding two more people cannot wake it. */
+      ['Garret Voss',       BOH_X+70,      95,       'down' , null,     'am'     ],   // receiving, with a clipboard
+      /* MERV IS FINDABLE ON PURPOSE. His name is on the building and he is the last rung, so the
+         player should be able to walk up to the man they intend to succeed. */
+      ['Merv Kastelic',     1280,          300,      'up'   , null,     'owner'  ]];
     for(const [name,x,y,side,sdept,srole] of CREW){
       const d=stationDesk(x,y,name,side);
       /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
@@ -11593,6 +11804,15 @@ function applySnapshot(s){
   career.unseat=(s.career&&s.career.unseat)?{merit:s.career.unseat.merit|0,sabo:s.career.unseat.sabo|0,
                                              done:s.career.unseat.done||null}
                                           :{merit:0,sabo:0,done:null};
+  /* ⚠️ THE SAME FIX, WHICH THE UPPER RUNGS DID NOT GET WHEN THEY WERE ADDED. career is MERGED,
+     not replaced, so a key the save does not carry keeps whatever the CURRENT run had — load a
+     pre-branch save mid-run and you would keep three days of somebody else's climb. It was written
+     for `unseat` and then not applied to `upper`, which is exactly the kind of omission a mutant
+     finds and a reader does not. */
+  career.upper=(s.career&&s.career.upper)?{lead:s.career.upper.lead|0,settled:s.career.upper.settled||null,
+                                           mervDays:s.career.upper.mervDays|0,offered:!!s.career.upper.offered,
+                                           accepted:!!s.career.upper.accepted,refused:s.career.upper.refused|0}
+                                        :{lead:0,settled:null,mervDays:0,offered:false,accepted:false,refused:0};
   if(s.catfish)Object.assign(catfish,s.catfish);
   daleArcAnnounced=s.daleArcAnnounced; salesUnlocked=s.salesUnlocked;
   tasks=JSON.parse(JSON.stringify(s.tasks||[])); favors=JSON.parse(JSON.stringify(s.favors||[]));

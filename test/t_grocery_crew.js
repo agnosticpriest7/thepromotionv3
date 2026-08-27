@@ -24,7 +24,9 @@ const CREW = ['Priya Raval', 'Marguerite Dubois', 'Danika Osei', 'Curtis Lam', '
               /* the three departments that had no manager, plus the store's own — added because the
                  ladder offers five departments and three of them dead-ended at rung 3 with nobody
                  to succeed. */
-              'Gita Mahal', 'Bruno Sarr', 'Doreen Stapp', 'Lorne Petrie'];
+              'Gita Mahal', 'Bruno Sarr', 'Doreen Stapp', 'Lorne Petrie',
+              /* the two rungs above the departments that had nobody in them either */
+              'Garret Voss', 'Merv Kastelic'];
 /* every department the ladder offers must have somebody running it, or that route through the
    game has no rung 3. This is the spec, so it is named (§14). */
 const DEPTS = ['front', 'grocery', 'produce', 'deli', 'bakery'];
@@ -307,6 +309,15 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   ck('no two departments share a manager',
      new Set(DEPTS.map(d => DS.deptManager(d) && DS.deptManager(d).name)).size === DEPTS.length,
      DEPTS.map(d => DS.deptManager(d).name).join(' / '));
+  ck('every rung of the ladder above the departments has an occupant',
+     !!DS.storeBoss() && !!DS.storeAM() && !!DS.storeOwner(),
+     'AM=' + (DS.storeAM() || {}).name + ', Store=' + (DS.storeBoss() || {}).name +
+     ', Owner=' + (DS.storeOwner() || {}).name);
+  ck('  ^ and each of them is one person, not several',
+     dg.NPCS.filter(n => n.storeRole === 'am').length === 1 &&
+     dg.NPCS.filter(n => n.storeRole === 'store').length === 1 &&
+     dg.NPCS.filter(n => n.storeRole === 'owner').length === 1,
+     'am/store/owner counts: ' + ['am','store','owner'].map(r => dg.NPCS.filter(n => n.storeRole === r).length).join('/'));
   ck('the store has a Store Manager for the loyalty path to route through',
      !!DS.storeBoss() && DS.storeBoss().storeDept == null,
      DS.storeBoss() ? DS.storeBoss().name + ' (storeDept=' + DS.storeBoss().storeDept + ')' : 'nobody');
@@ -408,5 +419,5 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
 }
 
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
-console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (ten on the floor, nobody in a shelf)');
+console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);

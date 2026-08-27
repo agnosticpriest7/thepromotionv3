@@ -41,6 +41,60 @@ function clearRung3(S, g) {
   try { return S.askBossToMove() === true; } catch (e) { return false; }
 }
 
+/* CLEAR THE UPPER GATES THE WAY A PLAYER WOULD. grocery-upper-rungs put real gates on rungs 4, 5
+   and 6, so a climb that used to run straight up now stops at Department Manager — correctly.
+   These drive the three of them with the game's own functions: real day rolls for the performance
+   gates, the real settle verb for Lorne's debt, the real acceptance for Merv's offer. Nothing here
+   writes career.upper directly, which would be the uncraftable-recipes failure one storey up.
+
+   ⚠️ A POSED DAY MUST END LIKE A REAL ONE. Health is judged on the day's AVERAGE, because at the
+   instant nextDay runs everybody has gone home and every department reads 0. So the day is
+   sampled while the floor is staffed and then the floor goes home, exactly as an evening does. */
+function poseGoodDay(S, g, mine) {
+  const D = DEPTS;
+  D.forEach(d => S.deptStaff(d).forEach(n => {
+    n.gone = false; n.wentHome = false; n.feudWith = null;
+    const rough = (d !== mine);
+    n.stress = rough ? 75 : 0; n.strikes = rough ? 1 : 0;
+  }));
+  g.player.stress = 0;
+  g.today.deptSum = {}; g.today.deptN = 0; g.today.healthSum = 0; g.today.healthN = 0;
+  for (let i = 0; i < 20; i++) {
+    D.forEach(d => { g.today.deptSum[d] = (g.today.deptSum[d] || 0) + S.deptHealth(d); });
+    g.today.deptN++; g.today.healthSum += S.branchHealth(); g.today.healthN++;
+  }
+  g.today.tasks = 3;
+  g.NPCS.forEach(n => { n.gone = true; });
+  S.nextDay();
+}
+/* everybody calm, which is what a store-wide number needs */
+function poseCalmDay(S, g) {
+  DEPTS.forEach(d => S.deptStaff(d).forEach(n => { n.gone = false; n.wentHome = false; n.stress = 0; n.strikes = 0; n.feudWith = null; }));
+  g.player.stress = 0;
+  g.today.deptSum = {}; g.today.deptN = 0; g.today.healthSum = 0; g.today.healthN = 0;
+  for (let i = 0; i < 20; i++) {
+    DEPTS.forEach(d => { g.today.deptSum[d] = (g.today.deptSum[d] || 0) + S.deptHealth(d); });
+    g.today.deptN++; g.today.healthSum += S.branchHealth(); g.today.healthN++;
+  }
+  g.today.tasks = 3;
+  g.NPCS.forEach(n => { n.gone = true; });
+  S.nextDay();
+}
+function clearUpperGate(S, g, next, dept) {
+  if (next === 3) { for (let d = 0; d < 6 && !S.gateFor(3).ok; d++) poseGoodDay(S, g, dept); return S.gateFor(3).ok; }
+  if (next === 4) {
+    for (let i = 0; i < 40 && !S.lorneRepaid() && S.storeBoss(); i++) S.creditFavor(S.storeBoss());
+    S.settleWithLorne('repaid');
+    return S.gateFor(4).ok;
+  }
+  if (next === 5) {
+    for (let d = 0; d < 8 && !S.mervReady() && S.storeOwner(); d++) poseCalmDay(S, g);
+    S.acceptMerv();
+    return S.gateFor(5).ok;
+  }
+  return false;
+}
+
 /* pick a department through the REAL menu action, not by calling the setter */
 function chooseVia(S, deptId) {
   const menu = S.storeDeptMenu();
@@ -84,7 +138,7 @@ DEPTS.forEach(dept => {
   };
 
   const climb = [];
-  let held = 0, unseated = 0;
+  let held = 0, unseated = 0, cleared = 0;
   for (let step = 0; step < 40; step++) {
     const before = P.rank;
     P.prog = 100;
@@ -101,6 +155,8 @@ DEPTS.forEach(dept => {
       }
       /* the other legitimate block: somebody still runs the department you picked */
       if (S.unseatTarget() && clearRung3(S, g)) { unseated++; continue; }
+      /* and the three upper gates, each driven by its own real mechanism */
+      if (before + 1 >= 3 && clearUpperGate(S, g, before + 1, dept)) { cleared++; continue; }
       break;
     }
     climb.push(P.rank + ':' + g.RANKS[P.rank]);
@@ -132,6 +188,8 @@ DEPTS.forEach(dept => {
      prompts + ' prompt(s) at rank(s) [' + promptAtRank.join(',') + '], ' + held + ' held step(s)');
   ck(dept + ': the Department Manager rung really was gated on their chair',
      unseated === 1, unseated + ' unseating(s) needed to finish the climb');
+  ck(dept + ': and all three upper rungs were gated too',
+     cleared === 3, cleared + ' upper gate(s) had to be cleared to reach the top');
 });
 
 /* ---- 2b. BACKING OUT OF THE CHOICE CANNOT END THE RUN -----------------------------------
@@ -163,9 +221,13 @@ DEPTS.forEach(dept => {
 
   /* and the run is still climbable afterwards, which is the thing that actually matters */
   chooseVia(S, 'deli');
-  for (let i = 0; i < 12 && P.rank < RUNGS - 1; i++) {
+  for (let i = 0; i < 24 && P.rank < RUNGS - 1; i++) {
+    const at = P.rank;
     P.prog = 100; S.tryPromote();
-    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+    if (P.rank === at) {
+      if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+      else if (at + 1 >= 3) clearUpperGate(S, g, at + 1, 'deli');
+    }
   }
   ck('  ^ and the ladder still goes all the way up afterwards', P.rank === RUNGS - 1,
      'reached ' + g.RANKS[P.rank] + ' (rank ' + P.rank + ')');
@@ -276,9 +338,13 @@ DEPTS.forEach(dept => {
   const w = mk(), S = w.sandbox, g = w.g, P = g.player;
   w.run(9000, { ignoreGameOver: true });
   P.prog = 100; S.tryPromote(); chooseVia(S, 'front');
-  for (let i = 0; i < 12 && P.rank < RUNGS - 1; i++) {
+  for (let i = 0; i < 24 && P.rank < RUNGS - 1; i++) {
+    const at = P.rank;
     P.prog = 100; S.tryPromote();
-    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+    if (P.rank === at) {
+      if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+      else if (at + 1 >= 3) clearUpperGate(S, g, at + 1, 'front');
+    }
   }
   ck('the store player really is at the top rung before this is tested', P.rank === RUNGS - 1,
      'rank ' + P.rank + ' = ' + g.RANKS[P.rank]);
@@ -329,9 +395,13 @@ DEPTS.forEach(dept => {
   const w = mk(), S = w.sandbox, g = w.g, P = g.player;
   w.run(9000, { ignoreGameOver: true });
   P.prog = 100; S.tryPromote(); chooseVia(S, 'grocery');
-  for (let i = 0; i < 12 && P.rank < RUNGS - 2; i++) {
+  for (let i = 0; i < 24 && P.rank < RUNGS - 2; i++) {
+    const at = P.rank;
     P.prog = 100; S.tryPromote();
-    if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+    if (P.rank === at) {
+      if (S.unseatTarget() && P.rank === 1) clearRung3(S, g);
+      else if (at + 1 >= 3) clearUpperGate(S, g, at + 1, 'grocery');
+    }
   }
   const rankAt = P.rank, ladderAt = g.RANKS.join('|');
   let throws = 0, firstThrow = null;
