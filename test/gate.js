@@ -68,7 +68,8 @@ const TESTS = [
   't_grocery_endgame.js', // the sign reads MERV'S until it reads yours
   't_grocery_customers.js',// ambient shoppers: churn, and they are nobody
   't_grocery_deleg.js',   // the store's own delegation: who, and in what words
-  't_sightlines.js',      // PROTOTYPE: being seen costs more; off by default         // the loadLevel seam, proved with one empty room; office default unchanged
+  't_sightlines.js',      // PROTOTYPE: being seen costs more; off by default
+  't_rank_leaks.js',      // office content gated on a rank NUMBER, in a store that renames it         // the loadLevel seam, proved with one empty room; office default unchanged
   't_countersign.js',     // Senior Sales countersign: rank gate, tier-derived pool, the 2x2, no suspicion
   't_moonwalk.js',        // nobody travels backwards; seatless meeting attendees get their own spot
   't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square
