@@ -422,6 +422,7 @@
           <div class="volrow"><span>SFX volume</span><button class="volbtn" id="sVolDn">−</button><b id="sVolTxt">80%</b><button class="volbtn" id="sVolUp">+</button></div>
           <button class="setbtn" id="setPropMap">🔢 Prop map overlay: OFF</button>
           <button class="setbtn" id="setSeatTest">🪑 Seat anchor test: OFF</button>
+          <button class="setbtn" id="setSightlines">👁 Sightlines (store, prototype): OFF</button>
           <div class="phelp" style="margin-top:-4px">Numbers every prop (D=desks, C=shelves/cabinets, O=objects, T=tables) so you can call out which to swap. Also toggles with M / 0.</div>
           <button class="setbtn" id="restartBtn" style="background:#f7e7e4;border-color:#c0392b;color:#8f2a20;font-weight:700">⟲ RESTART GAME (day 1, from scratch)</button>
           <div class="phelp" id="restartHelp" style="margin-top:-4px">Wipes the current run. There is no save yet, so this is the same as a refresh.</div>
@@ -4712,7 +4713,9 @@ function resolveUnseat(path){
     logLine(`${b?b.name.split(' ')[0]:'The Store Manager'} moved ${who} to another store without much explanation. He did not need one — he has been letting you do his job for weeks, and this is what that was worth.`,'a');
     toast(`${who} transferred. You owe him.`);
   }else{
-    addSuspicion(18,`${dept} failed badly and you were close to it`);
+    /* THE ONE PLACE THE PROTOTYPE BITES. Same event, same base number; what changes is whether
+       anybody was looking when you did it. */
+    addSuspicion(saboSuspicion(18),`${dept} failed badly and you were close to it`+sightlineNote());
     logLine(`${dept} failed a check it should have passed, and it failed in ${who}'s name because it is ${who}'s department. They did not survive it. Somebody may wonder how it happened.`,'b');
     toast(`${who} is out — and suspicion is up.`);
   }
@@ -4942,7 +4945,7 @@ function settleWithLorne(how){
   }else{
     if(!lorneLeverage())return false;
     st.settled='betrayed';
-    addSuspicion(22,'You moved on the one man who helped you');
+    addSuspicion(saboSuspicion(22),'You moved on the one man who helped you'+sightlineNote());
     logLine(`You used it. ${b.name.split(' ')[0]} did not argue and did not ask who told. He just looked at you for a moment longer than was comfortable, and then went to clear his desk.`,'b');
     toast('Lorne is out. That will be remembered.');
   }
@@ -5123,6 +5126,80 @@ function tickCustomers(dt){
     custSpawnCd=rand(CUSTOMER_GAP[0],CUSTOMER_GAP[1]);
     if(customersOnFloor()<CUSTOMER_TARGET)spawnCustomer();
   }
+}
+
+/* ============================================================================
+   SIGHTLINES — A PROTOTYPE. Expected to be thrown away.
+
+   An office is cubicles, doors and corners; you can be unobserved. A shop floor is open by design
+   and everyone in it is facing outward looking for customers to help. So the store's suspicion
+   should come partly from BEING SEEN, not only from what you did.
+
+   ⚠️ THE FINDING THAT DECIDES WHETHER THIS IDEA IS CHEAP: LINE OF SIGHT REUSES THE NAV GRID.
+   Shelf runs are already levelBlockers baked into `grid`, so walking the grid between two points
+   gives sight-blocking for free — measured before any of this was written:
+       across a shelf run (aisle 1 -> aisle 2):  BLOCKED   <- aisles are cover
+       along the same aisle:                     VISIBLE
+       across the open front end:                VISIBLE   <- the front end is a stage
+   No vision cones, no new geometry, no second spatial structure. If it had needed one, the honest
+   answer would have been to stop and say so.
+
+   ⚠️ OFF BY DEFAULT, GROCERY ONLY. Suspicion is load-bearing in the office and the office is in
+   playtest. With the flag off, nothing about suspicion changes anywhere, which is asserted rather
+   than asserted-to-be-obvious. Kyle toggles it in the panel's SETTINGS tab, so the comparison can
+   be made on the TV in one run.
+   ========================================================================== */
+let sightlines=false;                 // the flag. SETTINGS -> "Sightlines (store, prototype)"
+/* A SETTER, because `sightlines` is a module-scope let: assigning it from outside the module does
+   not rebind it, so the button and any test have to go through a function. Fifth time that trap
+   has cost a measurement in this project (menuOpen, tasks, errandPoints, cam, now this). */
+function setSightlines(on){ sightlines=!!on; return sightlines; }
+function sightlinesOn(){ return sightlines; }
+const SIGHT_RANGE=Math.round(210*S);  // how far a member of staff notices anything. A dial.
+const SIGHT_ARC=1.15;                 // radians either side of their facing — crude on purpose
+const SIGHT_SEEN=1.6, SIGHT_UNSEEN=0.4;   // what being watched multiplies a sabotage by
+
+/* is the straight line between two points clear of anything the nav grid calls solid? */
+function sightClear(ax,ay,bx,by){
+  const d=Math.hypot(bx-ax,by-ay);
+  if(!isFinite(d))return false;
+  const steps=Math.ceil(d/(CELL*0.5));
+  for(let i=1;i<steps;i++){
+    const t=i/steps;
+    if(!walkableAt(ax+(bx-ax)*t, ay+(by-ay)*t))return false;
+  }
+  return true;
+}
+/* CRUDE ON PURPOSE: roughly near, roughly facing, nothing between. Enough to judge the idea.
+   Customers do not count — they are not looking for you, and this is a prototype. */
+function whoCanSee(x,y){
+  const seen=[];
+  if(currentLevel==='office')return seen;
+  for(const n of NPCS){
+    if(!n.alive||n.gone||n.wentHome||n.customer)continue;
+    const nx=n.x+n.w/2, ny=n.y+n.h/2;
+    const d=Math.hypot(x-nx,y-ny);
+    if(d>SIGHT_RANGE)continue;
+    /* facing: n.face is the angle they are drawn looking along */
+    const to=Math.atan2(y-ny,x-nx);
+    let dif=Math.abs(((to-(n.face||0))+Math.PI*3)%(Math.PI*2)-Math.PI);
+    if(dif>SIGHT_ARC)continue;
+    if(!sightClear(nx,ny,x,y))continue;
+    seen.push(n);
+  }
+  return seen;
+}
+function playerIsSeen(){ return whoCanSee(player.x+player.w/2,player.y+player.h/2).length>0; }
+/* what a sabotage costs, given who was watching. With the flag off this is the identity, which is
+   what keeps every existing suspicion number exactly where it was. */
+function saboSuspicion(base){
+  if(!sightlines||currentLevel==='office')return base;
+  return Math.round(base*(playerIsSeen()?SIGHT_SEEN:SIGHT_UNSEEN));
+}
+function sightlineNote(){
+  if(!sightlines||currentLevel==='office')return '';
+  const who=whoCanSee(player.x+player.w/2,player.y+player.h/2);
+  return who.length?(' — '+who[0].name.split(' ')[0]+(who.length>1?(' and '+(who.length-1)+' more'):'')+' watching'):' — nobody saw';
 }
 
 function storeDeptMenu(){
@@ -11941,6 +12018,11 @@ document.getElementById('menuBtn').onclick=()=>togglePanel();
 document.getElementById('muteBtn').onclick=()=>toggleMute();
 document.getElementById('musicBtn').onclick=()=>toggleMusic();
 document.getElementById('setMusic').onclick=()=>{toggleMusic();updateSettingsUI();};
+{const sl=document.getElementById('setSightlines');
+ if(sl)sl.onclick=()=>{ setSightlines(!sightlinesOn());
+   sl.textContent='👁 Sightlines (store, prototype): '+(sightlines?'ON':'OFF');
+   toast('Sightlines '+(sightlines?'ON — being seen costs more':'OFF'));
+   logLine(sightlines?'Sightlines on. Sabotage in the open costs more; an aisle is cover.':'Sightlines off. Suspicion is back to what it was.','t'); };}
 document.getElementById('setSound').onclick=()=>{toggleMute();updateSettingsUI();};
 function togglePropMap(){propMap=!propMap;const b=document.getElementById('setPropMap');if(b)b.textContent='🔢 Prop map overlay: '+(propMap?'ON':'OFF');}
 document.getElementById('setPropMap').onclick=()=>{togglePropMap();};
