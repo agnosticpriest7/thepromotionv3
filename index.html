@@ -3757,7 +3757,9 @@ function promoteRivalAway(n){
    chair auto-fills, and a vacated desk (from a fire, a demotion, or a promotion) is NOT auto-backfilled.
    Every headcount move is yours — you hire to fill an empty desk, or it stays empty (and drags branch
    health). It makes the manager seat an active job, not a spectator's. (Kyle's call — "freeze all".) */
-function hrFrozen(){return player.rank>=5;}
+/* an HR rule about an office HR department. Inert in the store either way — there is no hiring
+   there — but it answered true for a grocery OWNER, which is the same shape as the rest. */
+function hrFrozen(){return currentLevel==='office'&&player.rank>=5;}
 function rivalsClimb(){
   const ws=activeNPCs().filter(isWorker);
   ws.forEach(w=>w.career=(w.career||0)+rand(2,5)+(w.rival?2:0));
@@ -4472,9 +4474,44 @@ function renderStorePaths(el){
     return;
   }
   const dept=storeDeptName(player.storeDept), t=unseatTarget(), st=unseatState(), b=storeBoss();
+  /* ⚠️ THIS PANEL USED TO SAY "the rungs above this one are not gated yet" AT EVERY RUNG ABOVE
+     THE THIRD. That was true when it was written and stopped being true one branch later, when the
+     upper rungs got their gates — so the panel whose entire job is telling the player what to do
+     next was describing half the ladder as a formality. Found by opening it in a browser at rank
+     5, which is the only instrument that has ever caught a stale panel. */
+  if(!t||player.rank>=2){
+    const bar2=(lab,val,col)=>bar(lab,val,col);
+    const blocks=[];
+    if(!t&&player.rank<2)
+      blocks.push(`<div class="pblk"><h5>THE WAY UP — ${esc(dept)}</h5><div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} The chair is yours to take.</div></div>`);
+    if(player.rank===2){
+      const mine=deptHealthToday(player.storeDept), best=Math.max.apply(null,otherDepts().map(deptHealthToday));
+      blocks.push(`<div class="pblk"><h5>ASSISTANT MANAGER — out-manage the other four</h5>
+        <div class="psub">The job goes to whoever's department is working. Yours has to finish ahead of all four others, and keep doing it.</div>
+        ${bar2('Days ahead',Math.round(100*(st.lead||0)/AM_LEAD_DAYS),'#4a8c5a')}
+        <div class="psub">${st.lead||0}/${AM_LEAD_DAYS} days · today ${esc(dept)} ${mine} against the best of the rest at ${best}, need +${AM_LEAD_MARGIN}. ${storeAM()?esc(storeAM().name.split(' ')[0])+' is passed over, not pushed.':'Nobody holds the post.'}</div></div>`);
+    }
+    if(player.rank===3){
+      const who=b?esc(b.name.split(' ')[0]):'The Store Manager';
+      blocks.push(`<div class="pblk"><h5>STORE MANAGER — ${who} helped you up</h5>
+        <div class="psub">And now you want his job. Settle what you owe him first, one way or the other.</div>
+        ${bar2('Debt repaid',Math.round(100*Math.min(loyalCount(),lorneDebt())/Math.max(1,lorneDebt())),'#c9a41a')}
+        <div class="psub">${loyalCount()}/${lorneDebt()} favours${(career.unseat&&career.unseat.done==='loyal')?' — more, because you used him to take rung 3':''}. ${lorneLeverage()?'Or use what you have on him: faster, and it costs suspicion.':'Or find something on him.'}</div></div>`);
+    }
+    if(player.rank===4){
+      const m=storeOwner();
+      blocks.push(`<div class="pblk"><h5>OWNER — ${m?esc(m.name.split(' ')[0]):'the owner'} is not fought</h5>
+        <div class="psub">He sells. Run the whole store well enough for long enough and he will come and ask you himself.</div>
+        ${bar2('Good days',Math.round(100*Math.min(st.mervDays||0,MERV_DAYS)/MERV_DAYS),'#4a8c5a')}
+        <div class="psub">${healthToday()}/${MERV_TARGET} today · ${st.mervDays||0}/${MERV_DAYS} days${st.refused?' · you have told him not yet '+st.refused+'x':''}</div></div>`);
+    }
+    if(player.rank>=5)
+      blocks.push(`<div class="pblk"><h5>THE TOP OF THE LADDER</h5><div class="psub">The sign says your name. There is nothing above this.</div></div>`);
+    if(blocks.length){ el.innerHTML=blocks.join(''); return; }
+  }
   if(!t){
     el.innerHTML=`<div class="pblk"><h5>THE WAY UP — ${esc(dept)}</h5>
-      <div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} There is nothing left to take — the rungs above this one are not gated yet.</div></div>`;
+      <div class="psub">Nobody runs ${esc(dept)}. ${st.done?'That was your doing.':'The chair emptied on its own.'} The chair is yours to take.</div></div>`;
     return;
   }
   const who=esc(t.name.split(' ')[0]);
@@ -4524,6 +4561,45 @@ function storeLadderSteps(next,g){
     steps.push({done:false,text:'Fastest road, and the only one that raises suspicion.'});
     if(storeMasterBlocked())
       steps.push({done:false,text:'The MASTER tier needs an HR office to walk the paperwork over. This store has none — those three are shut.'});
+    return {title,steps,ok:g.ok};
+  }
+  /* ⚠️ THE UPPER RUNGS USED TO FALL THROUGH TO A ONE-LINE HINT. grocery-upper-rungs gave rungs
+     4, 5 and 6 real gates and neither of the store's two explanation panels learned about them —
+     found by opening them in a browser, which is the only instrument that has ever caught this
+     class. Each rung gets its own shape here because each gate has one. */
+  const st=unseatState();
+  if(next===3){
+    const mine=player.storeDept?deptHealthToday(player.storeDept):0;
+    const best=player.storeDept?Math.max.apply(null,otherDepts().map(deptHealthToday)):0;
+    steps.push({head:'OUT-MANAGE THE OTHER FOUR'});
+    steps.push({done:st.lead>=AM_LEAD_DAYS,
+      text:`Finish the day ahead of every other department — ${st.lead||0}/${AM_LEAD_DAYS} days running`});
+    steps.push({done:(mine-best)>=AM_LEAD_MARGIN,
+      text:`Today: ${storeDeptName(player.storeDept)} ${mine} against the best of the rest at ${best} (need +${AM_LEAD_MARGIN})`});
+    const am=storeAM();
+    if(am)steps.push({done:false,text:`${am.name.split(' ')[0]} is not in your way — he is simply passed over when yours is the department that works.`});
+    return {title,steps,ok:g.ok};
+  }
+  if(next===4){
+    const b=storeBoss();
+    if(!b)return {title,steps:[{done:true,text:'There is no Store Manager. The job is open.'}],ok:true};
+    const who=b.name.split(' ')[0];
+    steps.push({head:`${who.toUpperCase()} HELPED YOU UP. NOW YOU WANT HIS JOB.`});
+    steps.push({done:lorneRepaid(),
+      text:`Do his work until the debt is square — ${loyalCount()}/${lorneDebt()} favours${(career.unseat&&career.unseat.done==='loyal')?' (more, because you used him at rung 3)':''}`});
+    steps.push({done:lorneLeverage(),
+      text:`OR find something on him. Faster, and it costs you suspicion.`});
+    steps.push({done:lorneSettled(),text:'Either way, settle it to his face before you take the chair.'});
+    return {title,steps,ok:g.ok};
+  }
+  if(next===5){
+    const m=storeOwner();
+    if(!m)return {title,steps:[{done:true,text:'Nobody owns this place. Take it.'}],ok:true};
+    steps.push({head:`${m.name.split(' ')[0].toUpperCase()} IS NOT FOUGHT. HE SELLS.`});
+    steps.push({done:st.mervDays>=MERV_DAYS,
+      text:`Run the whole store well — ${healthToday()}/${MERV_TARGET} today, ${st.mervDays||0}/${MERV_DAYS} days running`});
+    steps.push({done:st.offered,text:'He will come to you when he is ready. You can tell him not yet.'});
+    if(st.refused)steps.push({done:false,text:`You have said not yet ${st.refused} time${st.refused>1?'s':''}. He is not in a hurry.`});
     return {title,steps,ok:g.ok};
   }
   steps.push({done:g.ok, text:g.ok?'Nothing stands between you and this one yet — just earn it.':g.hint});
@@ -4890,7 +4966,7 @@ const VOCAB={
            ownStation:'your desk',
            /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
               taken, Dale does not rate you — so BLOCKED is the honest word there. */
-           gateLead:'BLOCKED: ', prankLabels:null },
+           gateLead:'BLOCKED: ', prankLabels:null, boardName:null, boardIdle:null },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, deptTasks:GROCERY_DEPT_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
@@ -4917,7 +4993,9 @@ const VOCAB={
              memo:'Forge a sour note to head office in their name',
              gaslight:'The full count discrepancy (three plants)',
              image:'Humiliate them in front of the queue',
-             expose:'Expose them as the one leaking the rota' } },
+             expose:'Expose them as the one leaking the rota' },
+           boardName:'Department board',
+           boardIdle:'Read the weekly ad plan (look keen)' },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -4949,8 +5027,12 @@ function rollTasks(){
   const deskT=pool.filter(t=>t.via==='desk');
   const outT=pool.filter(t=>t.via!=='desk');
   addTask(pick(deskT));
-  /* phones tasks only make sense once the sales room is open */
-  const usable=outT.filter(t=>t.via!=='phones'||salesUnlocked);
+  /* PHONES TASKS ONLY MAKE SENSE ONCE THE SALES ROOM IS OPEN — in the OFFICE. unlockSales() is
+     office-only since the ladder branch, so salesUnlocked is permanently false in Save-Rite: this
+     filter quietly removed every phones task from the store's pool, five of them across ranks 1
+     to 5, and the Intercom stood on the shop floor as a fixture that could never be used. A
+     fixture that does nothing teaches the player that fixtures are scenery. */
+  const usable=outT.filter(t=>t.via!=='phones'||salesUnlocked||currentLevel!=='office');
   addTask(pick(usable.length?usable:outT));
   renderTasks();
 }
@@ -5400,17 +5482,49 @@ function buildOptions(t){
       {label:'Hide in a stall (lie low, stress −8)',risk:'safe',act:()=>startAct(5,'Hiding out',()=>{player.stress=clamp(player.stress-8,0,100);player.suspicion=clamp(player.suspicion-3,0,100);toast('Nobody looks for you in here. Stress −8');})}
     ]};}
     if(o.type==='phones'){
-      if(!salesUnlocked)return {title:'Sales phones',items:[{label:'Locked — make SALES rank first',disabled:true}]};
+      /* the SALES-ROOM lock is an office rule about an office room. A store intercom is on the
+         wall and anyone can pick it up. */
+      if(!salesUnlocked&&currentLevel==='office')return {title:'Sales phones',items:[{label:'Locked — make SALES rank first',disabled:true}]};
+      const store=(currentLevel!=='office');
       const pt=openTask('phones');
       const items=[];
       /* phones tasks (cold-call quota, client lunch, win-back) had NO completion path.
          This is where they get closed out. */
       if(pt)items.push({label:pt.label+' (task, 6s)',risk:'good',act:()=>startAct(6,'On the phone',()=>{player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();completeTask(pt);})});
-      items.push({label:'Cold-call sprint (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'Cold-calling',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Calls made. Promotion +4');tryPromote();})});
-      if(player.rank>=5)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
-      return {title:'Sales phones',items};
+      /* THE FREE VERB. Cold-calling is a sales-floor activity and a supermarket has no clients to
+         call — the store's equivalent is standing on the PA. Same shape, same cost, same reward:
+         a reskin, not a new mechanic. */
+      items.push(store
+        ?{label:'Page the floor (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'On the PA',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Paged. Promotion +4');tryPromote();})}
+        :{label:'Cold-call sprint (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'Cold-calling',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Calls made. Promotion +4');tryPromote();})});
+      /* LANDING A CLIENT IS OFFICE FICTION and it was leaking into the store on rank index alone:
+         a grocery OWNER (rank 5) was being offered "Land a client · branch health +8" on a
+         supermarket intercom. One of about a dozen blocks gated on the OFFICE's rank numbers. */
+      if(player.rank>=5&&!store)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
+      return {title:store?(o.label||'Intercom'):'Sales phones',items};
     }
-    if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';return {title:'Whiteboard',items:[inMtg?{label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})}:(openTask('board')?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:'Study the sales chart (look keen)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}})]};}
+    if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';
+      /* ⚠️ THE BOARD USED TO BE MEETING-ONLY DURING A MEETING. A board task rolled before the
+         huddle could not be completed until the huddle ended, because the menu offered only
+         "take meeting notes" — the fixture was silently unavailable at exactly the moment a
+         board is the obvious thing to use. Silent unavailability is the failure mode (the same
+         one the master prank tier was correctly blocked with a VISIBLE reason for).
+
+         Both are offered now. Notes still come first during a huddle, because that is what the
+         phase is for; the task sits under it rather than vanishing. */
+      const bt=openTask('board');
+      const items=[];
+      if(inMtg)items.push({label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})});
+      /* ⚠️ DURING A HUDDLE: NOTES, PLUS THE TASK IF THERE IS ONE — BUT NOT THE IDLE FILLER.
+         The first cut of this fix appended the whole task-or-study expression, which meant the
+         OFFICE gained "Study the sales chart" during meetings: a live behaviour change in a
+         level that is in playtest, for no benefit, and I had written "office unchanged" in the
+         commit before measuring it. Measured against main afterwards, it was not.
+         The bug worth fixing is the uncompletable TASK. Loitering at the board instead of
+         taking notes is not, so the office's meeting reads exactly as it did. */
+      if(inMtg){ if(bt)items.push({label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}); }
+      else items.push(bt?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:(vocab().boardIdle||'Study the sales chart (look keen)'),risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}});
+      return {title:vocab().boardName||'Whiteboard',items};}
     if(o.type==='alarm')return {title:'Fire alarm',items:[{label:alarmActive?'Already ringing':'Pull it (clears the whole floor!)',disabled:alarmActive,risk:seen?seenTag():'chaos',hot:seen,act:()=>pullAlarm()}]};
   }
   if(t.kind==='elevator'){
@@ -6652,7 +6766,9 @@ const catfish={
   emailsSent:0, needed:3,
   usedDesks:[], leaked:false, replied:false
 };
-function catfishAvailable(){return player.rank>=5;}   // MANAGER and up
+/* the office's endgame route against Sterling, who does not work here. Unreachable in practice
+   because the store ENDS at OWNER — but 'unreachable by luck' is what the ladder gate said too. */
+function catfishAvailable(){return currentLevel==='office'&&player.rank>=5;}   // MANAGER and up, office only
 function catfishStatus(){
   if(!catfish.active)return 'Get on a coworker\u2019s computer, write to Sterling as them, and set their mailbox to forward his replies to you.';
   if(catfish.emailsSent<catfish.needed)return `Sent ${catfish.emailsSent}/${catfish.needed} messages from other people\u2019s machines.`;
@@ -6807,7 +6923,20 @@ const DALE_ARC=[
    task:()=>`Do the last thing Dale asks (do not think about it)`, kind:'channel', secs:12,
    done:"You did it. You are not going to think about it again. Dale calls you his best friend now.", dirt:3},
 ];
-function dalePathAvailable(){return player.rank>=2;}   // SALES and up
+/* ⚠️ OFFICE CONTENT GATED ON A RANK INDEX — A CLASS, NOT THREE ACCIDENTS.
+   renderPaths and "Land a client" were the first two found, and the pattern is neither of
+   them specifically: it is office systems switched on by `player.rank >= N`, where N means a
+   different job in each level. Rank 5 is MANAGER in the office and OWNER in Save-Rite; rank 3
+   is SENIOR SALES there and ASSISTANT MANAGER here. There is no string to grep for — just a
+   number — so these were found by enumerating every comparison and asking what sits behind
+   it. The three below were live; the full sweep is in the commit message. */
+/* THE DALE ARC ANNOUNCED ITSELF IN A SHOP WITH NO DALE. tickDale runs every frame from the main
+   loop, and its first act is a one-off log and toast — "Dale has started looking at you like you
+   are someone he could talk to... a second path is open". offerDaleFavor() below it needs an
+   `n.mgr` NPC and correctly found none, so the arc never advanced; but the ANNOUNCEMENT does not
+   depend on him existing, and it fired at DEPARTMENT MANAGER in every store run. A path that is
+   announced and cannot be walked is worse than no path. */
+function dalePathAvailable(){return currentLevel==='office'&&player.rank>=2;}   // SALES and up, and only in the office
 function daleArcStep(){return DALE_ARC[dale.step]||null;}
 function daleStatus(){
   if(dale.done)return 'Dale has recommended you personally. Sterling is expecting you.';
@@ -7050,15 +7179,20 @@ function gateFor(nextIdx){
   }
   switch(RANKS[nextIdx]){
     case 'JUNIOR SALES': return {ok:true};
-    case 'SALES': refreshRanks(); return {ok:seatsFree[1]>=1||career.reserved[1]>0,hint:'all '+SEATS[1]+' sales chairs are taken — one has to open up, and you have to be the obvious pick when it does',consume:()=>{if(career.reserved[1]>0)career.reserved[1]--;}};
-    case 'SENIOR SALES': refreshRanks(); return {ok:seatsFree[2]>=1||career.reserved[2]>0,hint:'all '+SEATS[2]+' senior chairs are taken — one has to empty, and you have to be the obvious pick when it does',consume:()=>{if(career.reserved[2]>0)career.reserved[2]--;}};
-    case 'ASSISTANT MANAGER': return {ok:career.daleFavor>=2||dale.favor>=30,hint:"Dale has to like you — humour him, or start running his errands"};
-    case 'MANAGER': return {ok:career.mgrGone||dale.titled,
+    /* ⚠️ TWO HINTS, ON PURPOSE. `hint` is the full explanation and it goes where there is room:
+       THE WAY UP panel and the promotion log line. `hintShort` is what the HUD's rank-note slot
+       gets, because that slot is about two lines wide and these ran 106, 130, 136, 212 and 274
+       characters — the CEO one was mostly invisible and had been since it was written. Nothing is
+       lost; the detail simply stops being printed somewhere it cannot be read. */
+    case 'SALES': refreshRanks(); return {ok:seatsFree[1]>=1||career.reserved[1]>0,hint:'all '+SEATS[1]+' sales chairs are taken — one has to open up, and you have to be the obvious pick when it does',hintShort:'a sales chair has to open up',consume:()=>{if(career.reserved[1]>0)career.reserved[1]--;}};
+    case 'SENIOR SALES': refreshRanks(); return {ok:seatsFree[2]>=1||career.reserved[2]>0,hint:'all '+SEATS[2]+' senior chairs are taken — one has to empty, and you have to be the obvious pick when it does',hintShort:'a senior chair has to empty',consume:()=>{if(career.reserved[2]>0)career.reserved[2]--;}};
+    case 'ASSISTANT MANAGER': return {ok:career.daleFavor>=2||dale.favor>=30,hint:"Dale has to like you — humour him, or start running his errands",hintShort:'Dale has to like you'};
+    case 'MANAGER': return {ok:career.mgrGone||dale.titled,hintShort:"the manager's chair must be empty",
       hint:dale.active?"you are Dale's man now — finish his arc and he hands you the top job directly"
         :`the manager's chair must be empty. Dig HR dirt on Dale and report him to the CEO twice — OR delegate so well the office runs itself and head office kicks him upstairs (${deleg.done||0}/${DELEG_TARGET} clean)`};
     case 'CEO':
       if(career.meritReady)return {ok:true,hint:''};
-      return {ok:career.vpFavor>=1,hint:'THREE WAYS UP — (1) '+catfishStatus()+'  ...OR (2) '+daleStatus()+'  ...OR (3) run this branch WELL: health '+healthToday()+'/'+MERIT_TARGET+', '+(career.goodDays||0)+'/'+MERIT_DAYS+' good days'};
+      return {ok:career.vpFavor>=1,hintShort:'three ways up — see THE WAY UP',hint:'THREE WAYS UP — (1) '+catfishStatus()+'  ...OR (2) '+daleStatus()+'  ...OR (3) run this branch WELL: health '+healthToday()+'/'+MERIT_TARGET+', '+(career.goodDays||0)+'/'+MERIT_DAYS+' good days'};
     default: return {ok:true};
   }
 }
@@ -7652,7 +7786,10 @@ let deleg={q:[],done:0,dem:[],seq:0,esc:0};   // q: live jobs; done: clean compl
 
    Deliberately NOT a second grind: no gate, no target, a hard daily cap, and a free expiry. */
 const COSIGN_PER_PHASE=1, COSIGN_PROG=2, COSIGN_DAILY_CAP=3;
-function cosignActive(){return player.rank===3;}
+/* SENIOR SALES' verb. Rank 3 is ASSISTANT MANAGER in the store, so the predicate answered true
+   there — no menu item was actually surfacing, because store NPCs never receive an `order`, but
+   that is the arithmetic of two unrelated systems missing each other rather than a guard. */
+function cosignActive(){return currentLevel==='office'&&player.rank===3;}
 /* Juniors = anyone sitting BELOW you, derived from desk tiers rather than a name list, so a
    re-tiered floor cannot rot it (CLAUDE.md §14). */
 function cosignJuniors(){
@@ -10141,7 +10278,7 @@ function updateHUD(){const nowT=performance.now();if(nowT-lastTrk>500){lastTrk=n
   if(ob.textContent!==o.text){ob.textContent=o.text;fitObjective(ob);}
   oc.textContent=o.done?'✓':'○';
   const box=ob.closest?ob.closest('.tb-obj'):null;if(box)box.classList.toggle('done',o.done);
-}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+g.hint+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
+}}document.getElementById('rank').textContent=RANKS[player.rank];{const nx=player.rank<RANKS.length-1?RANKS[player.rank+1]:null;const g=nx?gateFor(player.rank+1):null;document.getElementById('rankNote').textContent=nx?(`Day ${day} — next: ${nx}${(player.prog>=100&&g&&!g.ok)?' ('+(vocab().gateLead||'')+(g.hintShort||g.hint)+')':''}`):(`Day ${day} — top of the ladder`);}document.getElementById('susBar').style.width=player.suspicion+'%';document.getElementById('susTxt').textContent=Math.round(player.suspicion)+'%';document.getElementById('susBar').style.background=player.suspicion>70?'#c0392b':player.suspicion>40?'#e07b1a':'#c98a1a';document.getElementById('progBar').style.width=player.prog+'%';document.getElementById('progTxt').textContent=Math.round(player.prog)+'%';document.getElementById('strBar').style.width=player.stress+'%';document.getElementById('strTxt').textContent=Math.round(player.stress)+'%';document.getElementById('strBar').style.background=player.stress>75?'#c0392b':player.stress>45?'#e07b1a':'#c98a1a';{const mm=document.getElementById('meritMeter');if(mm){if(player.rank>=5&&!career.ceoDone){const M=meritStatus();mm.style.display='';document.getElementById('meritTxt').textContent=M.h+'/'+M.target+' · '+M.streak+'/'+M.need+' days';const mb=document.getElementById('meritBar');mb.style.width=Math.min(100,Math.round(M.h/M.target*100))+'%';mb.style.background=(career.meritReady||M.streak>=M.need)?'#4a8c5a':(M.h>=M.target?'#7fae83':'#c9a41a');}else mm.style.display='none';}}}
 /* ================= MISSIONS: favors, dirty jobs, betrayal, and office feuds ================= */
 /* friendship-only economy — never promotion points */
 const MISSION_KINDS=[

@@ -9,6 +9,56 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-upper-rungs`, `grocery-endgame`, `grocery-loose-ends` (2026-08-26)
+
+### ⭐⭐⭐ THE LADDER NOW GOES ALL THE WAY, AND IT RESOLVES
+The store has six real rungs and an ending. This is the first time it can be played start to
+finish. Everything below is subordinate to: **does the whole climb hold together?**
+
+### 1. The back half has its own shape ⭐
+Rungs 4–6 used to just arrive. Now:
+
+| rung | how you get it | intended feel |
+|---|---|---|
+| **Assistant Manager** | your department beats the other four by 4, three days running | a performance comparison |
+| **Store Manager** | settle what you owe Lorne — repay in full, or use leverage | a debt |
+| **Owner** | keep the store at 70 for three days, then **Merv offers** | a succession you can decline |
+
+Deliberately not "three roads" three times. **Garret is passed over, not destroyed. Merv is never
+sabotaged** — he sells because he's glad to. Whether that last contrast reads as earned or hollow
+is the question the whole level has been building to.
+
+### 2. Taking Lorne's job ⭐ the beat I'd watch closest
+If you used the **loyalty road** at rung 3, he moved a Department Manager aside for you — and the
+debt to take *his* job is correspondingly larger (7 favours instead of 3). Repay it and he puts
+you up for his own job gladly, which is meant to be worse than betraying him. There's a leverage
+route too, costing 22 suspicion.
+
+### 3. The sign ⭐⭐
+`MERV'S` all game. At Owner it reads **your name** — `KYLE'S`, `STACIE'S`, `RAELEE'S`, `JAX'S`,
+`THE INTERN'S`. It's at the entrance, drawn at world scale.
+
+**One limitation worth your call:** Merv is in the back office, so at the moment you accept, the
+camera is nowhere near the fascia. The change is real and persistent, but you have to walk to the
+front to see it. A camera pan would land it properly — that's new mechanics, so I left it.
+
+The ending beat is deliberately tiny: *"They changed the sign on a Tuesday. Nobody made a speech."*
+Then the modal and back to the menu, matching what the office already does.
+
+### 4. Office changes you'll notice
+Two, both text-only, no behaviour moved:
+- **Gate hints are much shorter.** The CEO one was 274 characters in a two-line slot and mostly
+  invisible; it's 59 now. The full text still lives in THE WAY UP.
+- **The whiteboard during a meeting** now also offers an outstanding board task, if you have one.
+  Otherwise identical.
+
+### 5. Dale no longer introduces himself in a supermarket
+At Department Manager the store was logging *"Dale has started looking at you… a second path is
+open."* Dale doesn't work there. Fixed, along with the catfish, countersign and HR freeze all
+switching themselves on at store ranks.
+
+---
+
 ## From `grocery-flavour` (2026-08-26)
 
 ### 1. Does the store sound like a shop now? ⭐ the point of the branch

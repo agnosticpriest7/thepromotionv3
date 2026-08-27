@@ -384,6 +384,53 @@ function toStoreManager(dept) {
      'applied=' + a2 + ' -> ' + JSON.stringify(ctx2.g.career.upper));
 }
 
+/* ---- 7b. BOTH EXPLANATION PANELS KNOW ABOUT THESE GATES --------------------------------
+   ⚠️ FOUND BY OPENING THEM IN A BROWSER, NOT BY A TEST. When the upper gates were added, neither
+   of the store's two panels learned about them: the PATHS tab still said "the rungs above this
+   one are not gated yet" at every rung from the third up — true when it was written, false one
+   branch later — and THE WAY UP fell through to a one-line hint. The panel whose entire job is
+   telling the player what to do next was describing half the ladder as a formality.
+
+   A stale panel is invisible to every other kind of check: nothing throws, nothing overlaps, no
+   string collides. So this asserts that each upper rung's panels actually name that rung's gate. */
+{
+  const { S, g } = asDeptManager('deli');
+  const body = S.document.getElementById('pathsBody');
+  /* what each rung's panels must be talking about */
+  const WANT = {
+    2: /out-manage|ahead of|other four/i,      // -> ASSISTANT MANAGER
+    3: /owe|debt|favours/i,                    // -> STORE MANAGER
+    4: /sell|not fought|whole store/i,         // -> OWNER
+  };
+  const stalePaths = [], staleSteps = [], leaked = [];
+  Object.keys(WANT).forEach(r => {
+    g.player.rank = +r;
+    try { S.renderPaths(); } catch (e) {}
+    const html = body ? String(body.innerHTML) : '';
+    if (!WANT[r].test(html)) stalePaths.push(g.RANKS[+r] + '->' + g.RANKS[+r + 1]);
+    if (/not gated yet/i.test(html)) stalePaths.push(g.RANKS[+r] + ':still says "not gated yet"');
+    if (/Dale|Sterling|catfish|to CEO/i.test(html)) leaked.push(g.RANKS[+r] + ':office content');
+    let L = null; try { L = S.ladderSteps(); } catch (e) {}
+    const steps = JSON.stringify(L || {});
+    if (!WANT[r].test(steps)) staleSteps.push(g.RANKS[+r] + '->' + g.RANKS[+r + 1]);
+  });
+  g.player.rank = 2;
+  ck('the PATHS panel names the gate for every upper rung', stalePaths.length === 0,
+     stalePaths.length ? stalePaths.join(', ') : 'AM, Store Manager and Owner each described');
+  ck('  ^ and THE WAY UP checklist does too', staleSteps.length === 0,
+     staleSteps.length ? staleSteps.join(', ') : 'three rungs, three checklists');
+  ck('  ^ and neither of them mentions the office', leaked.length === 0,
+     leaked.length ? leaked.join(', ') : 'no Dale, no Sterling, no catfish, no CEO');
+
+  /* and at the very top it says so, rather than describing a rung that does not exist */
+  g.player.rank = RUNGS - 1;
+  try { S.renderPaths(); } catch (e) {}
+  const top = body ? String(body.innerHTML) : '';
+  ck('  ^ and the top of the ladder says it is the top', /top of the ladder|nothing above/i.test(top),
+     top.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').slice(0, 90));
+  g.player.rank = 2;
+}
+
 /* ---- 8. THE OFFICE IS UNTOUCHED --------------------------------------------------------- */
 {
   const o = createWorld(), OS = o.sandbox, og = o.g;
