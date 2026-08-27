@@ -4949,8 +4949,12 @@ function rollTasks(){
   const deskT=pool.filter(t=>t.via==='desk');
   const outT=pool.filter(t=>t.via!=='desk');
   addTask(pick(deskT));
-  /* phones tasks only make sense once the sales room is open */
-  const usable=outT.filter(t=>t.via!=='phones'||salesUnlocked);
+  /* PHONES TASKS ONLY MAKE SENSE ONCE THE SALES ROOM IS OPEN — in the OFFICE. unlockSales() is
+     office-only since the ladder branch, so salesUnlocked is permanently false in Save-Rite: this
+     filter quietly removed every phones task from the store's pool, five of them across ranks 1
+     to 5, and the Intercom stood on the shop floor as a fixture that could never be used. A
+     fixture that does nothing teaches the player that fixtures are scenery. */
+  const usable=outT.filter(t=>t.via!=='phones'||salesUnlocked||currentLevel!=='office');
   addTask(pick(usable.length?usable:outT));
   renderTasks();
 }
@@ -5400,15 +5404,26 @@ function buildOptions(t){
       {label:'Hide in a stall (lie low, stress −8)',risk:'safe',act:()=>startAct(5,'Hiding out',()=>{player.stress=clamp(player.stress-8,0,100);player.suspicion=clamp(player.suspicion-3,0,100);toast('Nobody looks for you in here. Stress −8');})}
     ]};}
     if(o.type==='phones'){
-      if(!salesUnlocked)return {title:'Sales phones',items:[{label:'Locked — make SALES rank first',disabled:true}]};
+      /* the SALES-ROOM lock is an office rule about an office room. A store intercom is on the
+         wall and anyone can pick it up. */
+      if(!salesUnlocked&&currentLevel==='office')return {title:'Sales phones',items:[{label:'Locked — make SALES rank first',disabled:true}]};
+      const store=(currentLevel!=='office');
       const pt=openTask('phones');
       const items=[];
       /* phones tasks (cold-call quota, client lunch, win-back) had NO completion path.
          This is where they get closed out. */
       if(pt)items.push({label:pt.label+' (task, 6s)',risk:'good',act:()=>startAct(6,'On the phone',()=>{player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();completeTask(pt);})});
-      items.push({label:'Cold-call sprint (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'Cold-calling',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Calls made. Promotion +4');tryPromote();})});
-      if(player.rank>=5)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
-      return {title:'Sales phones',items};
+      /* THE FREE VERB. Cold-calling is a sales-floor activity and a supermarket has no clients to
+         call — the store's equivalent is standing on the PA. Same shape, same cost, same reward:
+         a reskin, not a new mechanic. */
+      items.push(store
+        ?{label:'Page the floor (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'On the PA',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Paged. Promotion +4');tryPromote();})}
+        :{label:'Cold-call sprint (5s, promo +4, stress +4)',risk:'honest work',act:()=>startAct(5,'Cold-calling',()=>{player.prog=clamp(player.prog+4,0,100);player.stress=clamp(player.stress+4,0,100);checkPlayerMeltdown();toast('Calls made. Promotion +4');tryPromote();})});
+      /* LANDING A CLIENT IS OFFICE FICTION and it was leaking into the store on rank index alone:
+         a grocery OWNER (rank 5) was being offered "Land a client · branch health +8" on a
+         supermarket intercom. One of about a dozen blocks gated on the OFFICE's rank numbers. */
+      if(player.rank>=5&&!store)items.push({label:`Land a client  (opens a requisition · branch health +${CLIENT_HEALTH})`,risk:'revenue',act:()=>startAct(6,'Closing a sale',()=>landClient())});
+      return {title:store?(o.label||'Intercom'):'Sales phones',items};
     }
     if(o.type==='board'){const inMtg=currentPhase().name==='Meeting';return {title:'Whiteboard',items:[inMtg?{label:meetingCredited?'Notes already taken — slip out anytime':'Take meeting notes (~3s, then leave early)',disabled:meetingCredited,risk:'good',act:()=>startAct(3,'Taking notes',()=>{meetingCredited=true;phaseCred['Meeting']=true;player.prog=clamp(player.prog+7,0,100);player.suspicion=clamp(player.suspicion-4,0,100);logLine('Took diligent meeting notes. You are free to slip out early.','g');toast('Notes taken +7 — leave whenever');tryPromote();})}:(openTask('board')?{label:'Update the board (task)',risk:'good',act:()=>startAct(4,'Working the board',()=>completeTask(openTask('board')))}:{label:'Study the sales chart (look keen)',risk:'safe',act:()=>{player.suspicion=clamp(player.suspicion-2,0,100);toast('Suspicion −2');}})]};}
     if(o.type==='alarm')return {title:'Fire alarm',items:[{label:alarmActive?'Already ringing':'Pull it (clears the whole floor!)',disabled:alarmActive,risk:seen?seenTag():'chaos',hot:seen,act:()=>pullAlarm()}]};
