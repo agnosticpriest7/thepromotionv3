@@ -66,7 +66,8 @@ const TESTS = [
   't_grocery_flavour.js', // per-department task words + what the crew say; words only, no mechanics
   't_grocery_upper.js',   // rungs 4-6: out-manage, settle the debt, Merv sells
   't_grocery_endgame.js', // the sign reads MERV'S until it reads yours
-  't_grocery_customers.js',// ambient shoppers: churn, and they are nobody         // the loadLevel seam, proved with one empty room; office default unchanged
+  't_grocery_customers.js',// ambient shoppers: churn, and they are nobody
+  't_grocery_deleg.js',   // the store's own delegation: who, and in what words         // the loadLevel seam, proved with one empty room; office default unchanged
   't_countersign.js',     // Senior Sales countersign: rank gate, tier-derived pool, the 2x2, no suspicion
   't_moonwalk.js',        // nobody travels backwards; seatless meeting attendees get their own spot
   't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square
