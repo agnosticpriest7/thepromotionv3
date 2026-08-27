@@ -4432,6 +4432,17 @@ const GROCERY_DEPT_TASKS={
     {via:'supply', label:'Set the morning proof'},
   ],
 };
+/* THE SAME FIVE KINDS, IN STORE WORDS. Drawn from the department vocabulary grocery-flavour
+   already established — pallets, date codes, the ad display, the front end, department counts —
+   rather than inventing a second set of fictions. The KINDS are unchanged, so personality
+   matching, the demerit ladder and every existing outcome work exactly as before: this is
+   vocabulary, not mechanics. */
+const GROCERY_DELEG_FLAVOUR={
+  grind:'work the pallet down in the back aisle',
+  credit:'front the weekly ad display — their name on it',
+  solo:'a quiet date-code sweep, nobody watching',
+  visible:'cover the front end through the rush',
+  social:'chase all five departments for their counts'};
 /* the rungs where you work a department floor: BAGGER, <DEPT> CLERK, <DEPT> MANAGER */
 const DEPT_TASK_RANKS=[0,1,2];
 /* ⚠️ PLACEHOLDER LADDER, KNOWN TO BE WRONG. These are labels mapped 1:1 onto the office's seven
@@ -5132,7 +5143,8 @@ const VOCAB={
            ownStation:'your desk',
            /* the lead-in on a held promotion. The office's gates really are refusals — a chair is
               taken, Dale does not rate you — so BLOCKED is the honest word there. */
-           gateLead:'BLOCKED: ', prankLabels:null, boardName:null, boardIdle:null },
+           gateLead:'BLOCKED: ', prankLabels:null, boardName:null, boardIdle:null,
+           delegFlavour:null, delegNoun:null },
   grocery:{ranks:GROCERY_RANKS,  tasks:GROCERY_TASKS, deptTasks:GROCERY_DEPT_TASKS, detentions:GROCERY_DETENTIONS,
            clockIn:'Clock in at the front door', clockOut:'Head for the door — shift over',
            clockedIn:'Clocked in at the door, right on time.', standup:'the morning huddle',
@@ -5161,7 +5173,8 @@ const VOCAB={
              image:'Humiliate them in front of the queue',
              expose:'Expose them as the one leaking the rota' },
            boardName:'Department board',
-           boardIdle:'Read the weekly ad plan (look keen)' },
+           boardIdle:'Read the weekly ad plan (look keen)',
+           delegFlavour:GROCERY_DELEG_FLAVOUR, delegNoun:'the floor' },
 };
 /* office entries are null where the office keeps its original array, so those arrays are never
    copied and the office's strings cannot drift from what they are today. */
@@ -5463,7 +5476,7 @@ function buildOptions(t){
           disabled:!loyalReady(),
           risk:loyalReady()?'he owes you, and he will remember that he did':'do his work for him first',
           act:()=>askBossToMove()}]:[]),
-        ...((delegActive()&&!delegWorkerBusy(n.name)&&delegOpen().length)?[{label:`Delegate a job to ${n.name.split(' ')[0]}…  (${delegOpen().length} on the tray)`,risk:'management',act:()=>renderMenu(delegAssignMenu(n))}]:[]),
+        ...((delegActive()&&delegCanAssign(n)&&!delegWorkerBusy(n.name)&&delegOpen().length)?[{label:`Delegate a job to ${n.name.split(' ')[0]}…  (${delegOpen().length} on the tray)`,risk:'management',act:()=>renderMenu(delegAssignMenu(n))}]:[]),
         ...((delegActive()&&delegWorkerBusy(n.name))?[{label:`${n.name.split(' ')[0]} is on a job for you`,disabled:true}]:[]),
         ...(player.rank>=5?[{label:`Send ${n.name.split(' ')[0]} home early (stress −45)`,risk:'costs you their afternoon',
           act:()=>startAct(2.5,'Signing them out',()=>{
@@ -7933,6 +7946,7 @@ const DELEG_RESET=3.0;              // demerits in the rolling 2-day window that
 const DELEG_KINDS=['grind','credit','solo','visible','social'];
 const DELEG_FLAVOUR={grind:'reconcile the order backlog',credit:'a client-facing win — named on the report',
   solo:'a quiet desk audit, no exposure',visible:'front-desk cover, present at the meeting',social:'chase four people for signatures'};
+function delegFlavour(kind){ const L=vocab().delegFlavour; return (L&&L[kind])||DELEG_FLAVOUR[kind]; }
 const DELEG_PHASE_TASKS={510:2,645:2,765:2,855:3};   // Regular Work phase.start (min) -> jobs arriving; ~9/day
 const DELEG_NOTE=1.0, DELEG_WRITEUP=2.0;   // rolling-window demerit levels: note -> write-up -> reset (DELEG_RESET 3.0)
 let deleg={q:[],done:0,dem:[],seq:0,esc:0};   // q: live jobs; done: clean completions; dem: rolling demerit window; seq: id counter; esc: how far this stretch has escalated
@@ -8023,7 +8037,32 @@ function cosignDo(n,approve){
     }
   }
 }
-function delegActive(){return player.rank===4&&!career.mgrGone;}   // Assistant Manager only, until the chair opens
+/* ⚠️ RANK 4 MEANS TWO DIFFERENT JOBS. In the office it is ASSISTANT MANAGER; in Save-Rite it is
+   STORE MANAGER, and ASSISTANT MANAGER is rank 3. So the tray appeared for the store's Store
+   Manager and not for its AM — the third instance of office content gated on a rank index, and
+   the one this branch exists to settle. Both store rungs get it, because an AM who inherits five
+   departments and cannot tell anyone to do anything is not a manager. */
+function delegActive(){
+  if(currentLevel!=='office')return player.rank===3||player.rank===4;   // AM and Store Manager
+  return player.rank===4&&!career.mgrGone;                              // office: AM only, until the chair opens
+}
+/* WHO IS BELOW YOU. The office hands work to any worker; a store has a structure, so an AM hands
+   down to Department Managers and floor staff, and a Store Manager hands down to the AM and the
+   Department Managers. Never upward, never sideways to the owner, and NEVER a customer — though
+   that last one is already impossible twice over (isWorker excludes them and they have no
+   storeRole), which is what a structural guard is supposed to feel like. */
+function delegCanAssign(n){
+  if(!n||!n.alive||n.customer||n===player)return false;
+  if(currentLevel==='office')return isWorker(n);
+  /* AN ALLOW-LIST, WHICH IS THE WHOLE GUARD. There used to be an explicit `storeRole==='owner'`
+     refusal above these two lines; it was dead code, and provably so — the only way to test it was
+     to give Merv a role the list DOES admit, which removes the very thing being tested. Anything
+     not named here is refused, including the owner, anyone with no role at all (a shopper), and
+     any role a later branch invents. An allow-list cannot be leaked through by addition. */
+  if(player.rank===3)return n.storeRole==='manager'||n.storeRole==='staff';
+  if(player.rank===4)return n.storeRole==='manager'||n.storeRole==='am';
+  return false;
+}
 function delegReset(){deleg={q:[],done:0,dem:[],seq:0,esc:0};}
 function delegPruneDem(){deleg.dem=deleg.dem.filter(e=>e.d>=day-1);}          // rolling 2 days: today + yesterday
 function delegDemerit(v,reason){deleg.dem.push({d:day,v:v});delegPruneDem();} // boss-channel penalty + escalation land in B3
@@ -8093,7 +8132,7 @@ function delegAssign(t,w){
   }
   t.to=w.name;t.state='assigned';
   w.bubble={t:2,text:pick(['On it.','Sure.','Leave it with me.'])};
-  logLine(`You handed ${w.name.split(' ')[0]} a job — ${DELEG_FLAVOUR[t.kind]}.`,'a');
+  logLine(`You handed ${w.name.split(' ')[0]} a job — ${delegFlavour(t.kind)}.`,'a');
   renderDeleg();renderTasks();
   return true;
 }
@@ -8166,12 +8205,20 @@ function renderDeleg(){
    Delegation is legitimate work, so it carries no "seen" risk. */
 function delegAssignMenu(w){
   const wt=w.profiled?PTYPE_NAME[w.ptype]:'unread — profile them';   // the WORKER's own personality (the letter over their head)
-  const items=delegOpen().map(t=>{
+  const open=delegOpen();
+  const items=open.map(t=>{
     const suit=PTYPE_NAME[DELEG_MATCH[t.kind]];   // the personality this job KIND is built for (fixed rule)
     const fit=w.profiled?(delegMatch(t,w)?'good fit':'wrong fit'):'unread — profile them';
     // Lead each row with THIS worker's fit (varies per person) so it never reads as "everyone is a
     // <job's type>"; the named personality is clearly the JOB's requirement, not the worker's.
-    return {label:`${t.kind.toUpperCase()} — ${DELEG_FLAVOUR[t.kind]}`,risk:`${fit} · this job suits a ${suit}`,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
+    /* ⚠️ THE DUPLICATE ROW. DELEG_KINDS is picked at random per job, so two GRINDs on the tray at
+       once produced two byte-identical rows with no way to tell them apart — reproduced by putting
+       two of a kind on the tray deliberately. It is not a store bug; it is this menu, in both
+       levels. Numbered ONLY when there is more than one of that kind, so a tray of distinct jobs
+       reads exactly as it does today and the office's common case does not move. */
+    const sameKind=open.filter(x=>x.kind===t.kind);
+    const tag=(sameKind.length>1)?`  (${sameKind.indexOf(t)+1} of ${sameKind.length})`:'';
+    return {label:`${t.kind.toUpperCase()} — ${delegFlavour(t.kind)}${tag}`,risk:`${fit} · this job suits a ${suit}`,hot:w.profiled&&delegMatch(t,w),act:()=>delegAssign(t,w)};
   });
   if(!items.length)items.push({label:'Nothing on the tray to hand out right now.',disabled:true});
   items.push({label:'← Back',act:()=>{}});
@@ -11017,7 +11064,7 @@ function renderTasks(){
     if(dq.length){
       rows.push('<div class="tier">DELEGATE — hand out before the block ends</div>');
       dq.forEach(t=>{
-        rows.push(`<div class="chip favor"><span class="mk">▸</span>${DELEG_FLAVOUR[t.kind]}</div>`);
+        rows.push(`<div class="chip favor"><span class="mk">▸</span>${delegFlavour(t.kind)}</div>`);
       });
     }
   }
