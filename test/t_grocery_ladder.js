@@ -268,9 +268,19 @@ DEPTS.forEach(dept => {
 {
   const fs = require('fs'), path = require('path');
   const src = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  const writes = src.match(/player\.storeDept\s*=/g) || [];
+  /* ⚠️ `=` IS NOT AN ASSIGNMENT UNLESS THE NEXT CHARACTER ISN'T ONE. The first version of this
+     matched /player\.storeDept\s*=/ and counted `player.storeDept===d.id` as a WRITE, so the day
+     the store org panel asked which department is yours, this went RED naming a regression that
+     did not exist. The invariant was never broken — setStoreDept is still the only writer. A
+     source scan has to exclude comparisons, or it reports reads as writes. */
+  const writes = src.match(/player\.storeDept\s*=(?!=)/g) || [];
   ck('exactly one line in the whole build assigns player.storeDept', writes.length === 1,
      writes.length + ' assignment site(s)');
+  /* and prove the scan can still SEE the writer it is counting, so a typo in the pattern that
+     matches nothing cannot pass as "exactly one" — it would read zero, not one. */
+  ck('  ^ and the scan actually finds the setter it is counting',
+     /player\.storeDept\s*=(?!=)/.test(src) && /function setStoreDept/.test(src),
+     'setStoreDept present and matched');
   const inSetter = /function setStoreDept\(id\)\{[\s\S]{0,400}?player\.storeDept=id;/.test(src);
   ck('  ^ and it is inside setStoreDept, behind the guard', inSetter,
      inSetter ? 'guarded' : 'the assignment is not in setStoreDept');
