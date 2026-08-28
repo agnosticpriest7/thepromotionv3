@@ -25,7 +25,12 @@ const mk = lv => createWorld({ seed: 20260827, storage: { 'promo:level': lv, 'pr
 
 /* SPEC, fixed at authoring time so a mutant cannot redefine the floor to satisfy it. */
 const RUNS = 6, VARIANTS = 5, AISLES = RUNS - 1;
-const AISLE_CLEAR = 60;            // authored, blocker-to-blocker — the pre-existing number
+/* ⚠️ 65, NOT 60, AND THE RUNS ARE WHY. grocery-prop-scale sized every store prop from its real
+   size at one scale, and a gondola run is 1.3 m -- 55 authored, where it had been 60 because it
+   was sized to the space rather than to the fixture. The pitch did not move, so the runs stay
+   where they were judged and the aisles got the 5 back. Wider is safe; the number is asserted so
+   that a future change has to mean it. */
+const AISLE_CLEAR = 65;            // authored, blocker-to-blocker
 const ART = ['shelf_run_a', 'shelf_run_b', 'shelf_run_c', 'shelf_run_d', 'shelf_run_e'];
 
 const runsOf = w => w.g.layout.containers.filter(c => c.label === 'Shelf');
@@ -244,14 +249,15 @@ const runBlockers = (w) => {
   ck('  ^ and the tightest point still has clear grid in it',
      open.cells >= 1, open.cells + ' clear cell(s) at ' + open.where);
 
-  /* ⚠️ THE NEGATIVE CASE, POSED LIVE — and sized by MEASUREMENT, not by assumption. The brief
-     expected +20 authored to close an aisle; it does not. Measured on this floor: 60 clear walks,
-     and so does 38; the aisle closes between 38 and 36. So the aisles carry ~22 authored of slack
-     (about a third) beyond what they need, and the pose has to be +48 to actually bite. A test
-     that "fails" at a width the floor survives would be a false alarm waiting to happen. */
+  /* ⚠️ THE NEGATIVE CASE, POSED LIVE — and RE-MEASURED after the rescale rather than carried over.
+     It used to widen by 48, which bit when aisles were 60 clear. They are 65 now, so +48 leaves 41
+     and the aisle still walks: the old mutation would have passed while proving nothing. Measured
+     again on this floor: 65 walks, 39 walks, 37 is CLOSED. The grid's own threshold has not moved
+     (it is a property of CELL and the 2px blocker inflation, not of the props) — the slack around
+     it grew from 22 to 27. So the pose is +56. */
   const victim = rects[1];                                   // an INNER run, so both its aisles narrow
   const keep = { x: victim.x, w: victim.w };
-  victim.x -= Math.round(24 * sc); victim.w += Math.round(48 * sc);
+  victim.x -= Math.round(28 * sc); victim.w += Math.round(56 * sc);
   S.buildGrid();
   const shutCells = narrowest();
   const shutWalk = [];

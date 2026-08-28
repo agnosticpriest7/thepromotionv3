@@ -186,6 +186,114 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      stillPlaceholder.length ? stillPlaceholder.map(c => c.label).join(', ') : 'all replaced');
 }
 
+/* ---- 5b. ONE SCALE, AND THIS IS THE ASSERTION THAT WOULD HAVE CAUGHT IT ------------------
+   ⚠️ CHECKING EACH PROP AGAINST A HARDCODED NUMBER CANNOT TELL A CONSISTENT SCALE FROM A
+   COINCIDENTAL ONE. Every prop used to be sized to the space it was given, so each one was
+   defensible alone and the SET was incoherent: measured, they ranged 25.9 to 120 authored units
+   per metre, a 4.6x spread. That is why the checkstands read as huge and the baler as tiny -- the
+   checkstand was only 8% oversized, the baler 63% under. Neither is visible without the other.
+
+   So: each prop declares its real-world size, the test derives the scale that size implies, and
+   they all have to AGREE. One assertion, whole class. */
+{
+  const w = mk('grocery'), L = w.g.layout, sc = L.S;
+  /* real-world size, in metres, of the dimension each ART_W actually sets (the sprite's width).
+     ⚠️ deli/bakery are 4.27 m because the ASSET IS A MULTI-SECTION RUN, not a 1.5 m section: its
+     aspect is 3.28, so at 1.5 m wide it would be 0.46 m deep, which is not a deli counter. At the
+     1.3 m depth a real one has, it is 4.27 m wide. Sizing it as a "unit" would have shrunk a
+     correct fixture to a third of its size. */
+  const REAL_M = { shelf_run_a: 1.3, shelf_run_b: 1.3, shelf_run_c: 1.3, shelf_run_d: 1.3,
+                   shelf_run_e: 1.3, endcap: 1.3, checkstand: 1.1, checkstand_r: 1.1,
+                   deli_case: 4.27, bakery_case: 4.27, dairy_case: 2.5,
+                   produce_fruit_a: 1.8, produce_fruit_b: 1.8, produce_veg: 1.8, produce_mixed: 1.8,
+                   baler: 1.5, pallet: 1.2, goback_cart: 1.0 };
+  const ppm = w.sandbox.pxPerMetre();
+  ck('the store declares one scale, derived from the character sprite',
+     ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');
+
+  const implied = Object.entries(REAL_M).map(([n, m]) => ({ n, s: ((L.ART_W[n] || 0) / sc) / m }));
+  const off = implied.filter(o => Math.abs(o.s - ppm) / ppm > 0.05);
+  ck('every prop of known real size implies the SAME scale, within 5%',
+     off.length === 0,
+     off.length ? off.map(o => o.n + ' implies ' + o.s.toFixed(1) + '/m vs ' + ppm.toFixed(1)).join('; ')
+                : implied.length + ' props, ' +
+                  Math.min(...implied.map(o => o.s)).toFixed(1) + '-' +
+                  Math.max(...implied.map(o => o.s)).toFixed(1) + '/m');
+
+  /* the sanity check Kyle gave: a checkout lane reads noticeably LONGER than a baler is wide */
+  const laneLen = ((L.ART_W.checkstand / sc) * 1039 / 447);
+  const balerW = L.ART_W.baler / sc;
+  ck('  ^ so a checkout lane is about 1.6x the width of a baler, as it should be',
+     laneLen / balerW > 1.4 && laneLen / balerW < 1.9,
+     'lane ' + laneLen.toFixed(0) + ' long vs baler ' + balerW.toFixed(0) + ' wide = ' +
+     (laneLen / balerW).toFixed(2) + 'x  (was 2.99x)');
+}
+
+/* ---- 5c. NO OFFICE FURNITURE IN A STORE ROOM ---------------------------------------------
+   ⚠️ ENUMERATE BY TYPE, NOT BY POSITION. Positions rot -- t_sightlines lost (440,340) to exactly
+   that. The office's loose furniture used to be drawn unconditionally, so ALL ELEVEN pieces
+   rendered in Save-Rite: the CEO's desk inside the bakery case run, the reception couch on the
+   Bakery floor, and nine more across DELI, PRODUCE, GROCERY, FRONT END and the ENTRANCE. */
+{
+  const fs = require('fs'), path = require('path');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const table = src.split('const LEVEL_FURNITURE=')[1];
+  ck('loose furniture is chosen by level, not drawn always', !!table,
+     table ? 'LEVEL_FURNITURE table present' : 'NO per-level table — furniture is unconditional again');
+
+  if (table) {
+    /* split on the LEVEL KEYS rather than on an exact call form: the first version keyed on
+       `office(){`, which stopped matching the moment the table grew a second draw position and
+       became `office:{ furniture(){ ... }`. A source scan should key on the thing that identifies
+       the region, not on the shape it happened to have. */
+    const officeEntry  = (table.split('office:')[1] || '').split('grocery:')[0];
+    const groceryEntry = (table.split('grocery:')[1] || '').split('function levelFurniturePart')[0];
+    ck('  ^ and the store draws none of it',
+       !/sprAt\(|drawCeoDesk\(|drawReceptionDesk\(/.test(groceryEntry),
+       /sprAt\(|drawCeoDesk\(|drawReceptionDesk\(/.test(groceryEntry)
+         ? 'the store entry draws furniture' : 'store entry is empty, as intended');
+    const kept = ['drawCeoDesk', "'couch'", "'filing_cabinet'", "'plant'", 'drawReceptionDesk']
+      .filter(k => officeEntry.indexOf(k) >= 0);
+    ck('  ^ while the office keeps its own, reception counter included',
+       kept.length === 5, kept.join(', '));
+  }
+}
+
+/* ---- 5d. WHAT ACTUALLY DRAWS, NOT WHAT THE SOURCE SAYS -----------------------------------
+   ⚠️ SECTION 5c INSPECTS THE TABLE; IT DOES NOT WATCH THE FLOOR. A mutant that left the table
+   perfectly intact and simply called LEVEL_FURNITURE.office.furniture() directly -- restoring the
+   original bug in full -- SURVIVED the whole suite, because the grocery entry was still empty and
+   the office entry still had its five markers. Structure, not behaviour: the same gap that let a
+   hardcoded light order survive t_lights.
+
+   So render each level and watch what is drawn. sprAt/sprW are function declarations, which land
+   on the sandbox global, and internal calls resolve through it -- so replacing them intercepts
+   every sprite the frame actually paints. */
+{
+  const OFFICE_ONLY = ['ceo_desk', 'couch', 'plant', 'reception_desk2'];
+  const drawnIn = (lv) => {
+    const w = mk(lv), S = w.sandbox, seen = {};
+    const rA = S.sprAt, rW = S.sprW;
+    S.sprAt = function (n) { seen[n] = (seen[n] || 0) + 1; return rA.apply(this, arguments); };
+    S.sprW  = function (n) { seen[n] = (seen[n] || 0) + 1; return rW.apply(this, arguments); };
+    try { S.render(); } finally { S.sprAt = rA; S.sprW = rW; }
+    return seen;
+  };
+  const gro = drawnIn('grocery'), off = drawnIn('office');
+
+  const bled = OFFICE_ONLY.filter(n => gro[n]);
+  ck('rendering the STORE draws no office-only furniture at all',
+     bled.length === 0,
+     bled.length ? 'BLED: ' + bled.map(n => n + ' x' + gro[n]).join(', ')
+                 : 'none of ' + OFFICE_ONLY.join('/') + ' drawn (' + Object.keys(gro).length + ' sprites in the frame)');
+
+  /* the paired direction — an empty frame would satisfy the check above */
+  const kept = OFFICE_ONLY.filter(n => off[n]);
+  ck('  ^ while rendering the OFFICE still draws all of it',
+     kept.length === OFFICE_ONLY.length,
+     kept.map(n => n + ' x' + off[n]).join(', '));
+}
+
 /* ---- 6. THE OFFICE IS UNTOUCHED ---------------------------------------------------------- */
 {
   const w = mk('office'), L = w.g.layout;
