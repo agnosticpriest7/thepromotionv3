@@ -9,6 +9,40 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-prop-compression` (2026-08-30)
+
+### 1. ⭐⭐⭐ The four props you judged, at the factors you approved
+Baler **unchanged** (the anchor), checkstand **x0.63**, pallet **x0.75**, go-back cart **x0.85**.
+
+Measured against a person's drawn height: the checkstand went **2.41x -> 1.52x**, the pallet
+**1.13x -> 0.85x**, the cart **1.17x -> 1.00x** (exactly one person-height). The baler stays 1.57x.
+
+### 2. ⚠️ THE FRONT END NOW READS SPARSE — this is the thing to look at
+The lanes are correctly scaled against people now, but they kept the positions they had when they
+were 45 authored wide. At 27 wide the walkways went **175 -> 193** authored and only about **12% of
+the frontage is checkout**. It looks under-furnished.
+
+That is a *positioning* consequence, not a scale error — the fix is moving the lanes closer
+together, which is a layout change I did not make. **Tell me if it bothers you and it is a small
+branch.**
+
+### 3. ⚠️ THE STORE IS DELIBERATELY MIXED-SCALE NOW — and this is the judgement call
+Four props are compressed; the shelf runs, deli/bakery cases, dairy case and produce tables are
+still at true plan scale. **Stand at about (500, 500)** — the cross-aisle between the shelf block
+and the checkouts. The block ends at y469 and the lanes start at y520, so a **compressed lane and an
+uncompressed shelf run are in the same frame**.
+
+If that reads fine, the rest stays as it is. If it reads wrong, the next branch compresses
+everything and repacks the floor.
+
+My read, for what it is worth: they do not clash, because the eye compares each to the *people*
+rather than to each other — and the lane now passes that test. But that is exactly the call I
+cannot make for you.
+
+**Aisles are untouched** — still 65 authored clear, every aisle walks, door to sales floor walks.
+
+---
+
 ## From `grocery-prop-scale` (2026-08-29)
 
 ### 1. ⭐⭐ The props are all at one scale now

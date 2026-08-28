@@ -119,9 +119,16 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
         said the opposite of what it had checked. */
      lanes.map(l => l.art === 'checkstand_r' ? 'till-LEFT' : 'till-RIGHT').join(', '));
 
-  /* lane blockers must run NORTH-SOUTH now, not east-west */
-  const lb = L.levelBlockers.map(b => ({ x: A(b.x), y: A(b.y), w: A(b.w), h: A(b.h) }))
-    .filter(b => b.y >= 500 && b.y < 660 && b.h > 80).sort((p, q) => p.x - q.x);
+  /* ⚠️ FIND THE LANES BY IDENTITY, NOT BY SIZE. This filtered on `h > 80`, which described the
+     lane before it was compressed — at 65 long it matched nothing and the orientation assertion
+     failed on a floor that was fine. The lanes are whichever blockers hold the checkstand
+     sprites, which stays true whatever size they are. */
+  const liveLanes = lanes.map(c => {
+    const cx = A(c.x) + A(c.w) / 2, cy = A(c.y) + A(c.h) / 2;
+    return L.levelBlockers.find(z => cx >= A(z.x) && cx <= A(z.x) + A(z.w) &&
+                                     cy >= A(z.y) - 4 && cy <= A(z.y) + A(z.h) + 4);
+  }).filter(Boolean).sort((p, q) => p.x - q.x);
+  const lb = liveLanes.map(z => ({ x: A(z.x), y: A(z.y), w: A(z.w), h: A(z.h) }));
   ck('  ^ and each lane is a north-south blocker, not an east-west bar',
      lb.length === LANES && lb.every(b => b.h > b.w),
      lb.map(b => b.w + 'x' + b.h).join(' '));
@@ -151,7 +158,9 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      it is the check being pointed at the wrong throat: the store has exactly ONE way in, the
      120-wide door in the south wall, so the thing to seal is the door, not the gap. A lane that
      grows over it and down to the wall MUST cut the store off. */
-  const victim = L.levelBlockers.find(b => A(b.h) > 80 && A(b.y) >= 500 && A(b.x) > 900 && A(b.x) < 1100);
+  /* the same rot as the filter above: this used `A(b.h) > 80`, which stopped matching a lane once
+     the lanes were compressed to 65 long. Take one of the lanes we already identified. */
+  const victim = liveLanes[2] || liveLanes[0];
   const keep = { x: victim.x, y: victim.y, w: victim.w, h: victim.h };
   victim.x = Math.round(680 * sc); victim.w = Math.round(140 * sc);      // over the door (690..810)
   victim.h = Math.round((655 - A(victim.y)) * sc);                       // and down to the south wall
@@ -211,22 +220,78 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
   ck('the store declares one scale, derived from the character sprite',
      ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');
 
-  const implied = Object.entries(REAL_M).map(([n, m]) => ({ n, s: ((L.ART_W[n] || 0) / sc) / m }));
-  const off = implied.filter(o => Math.abs(o.s - ppm) / ppm > 0.05);
-  ck('every prop of known real size implies the SAME scale, within 5%',
+  /* ⚠️ THE ASSERTION IS NOW implied == plan * declared-compression, NOT implied == plan.
+     Four props are DELIBERATELY squashed against true scale, because the correction applies to
+     floor extent and not to vertical extent: a sprite drawn as a 3/4 elevation already carries
+     the foreshortening. Checking against plan scale alone would fail on all four, and the usual
+     answer to that is to delete the assertion — so the compression is DATA the test reads
+     (propSquash) rather than an exception the test is taught to ignore. Accidental drift still
+     goes red, which is the whole point. */
+  const squashOf = n => w.sandbox.propSquash(n);
+  const implied = Object.entries(REAL_M).map(([n, m]) => {
+    const s = ((L.ART_W[n] || 0) / sc) / m;
+    return { n, s, want: ppm * squashOf(n), f: squashOf(n) };
+  });
+  const off = implied.filter(o => Math.abs(o.s - o.want) / o.want > 0.05);
+  ck('every prop implies its plan scale times its DECLARED compression, within 5%',
      off.length === 0,
-     off.length ? off.map(o => o.n + ' implies ' + o.s.toFixed(1) + '/m vs ' + ppm.toFixed(1)).join('; ')
-                : implied.length + ' props, ' +
-                  Math.min(...implied.map(o => o.s)).toFixed(1) + '-' +
-                  Math.max(...implied.map(o => o.s)).toFixed(1) + '/m');
+     off.length ? off.map(o => o.n + ' implies ' + o.s.toFixed(1) + '/m, declared x' + o.f.toFixed(2) +
+                              ' wants ' + o.want.toFixed(1)).join('; ')
+                : implied.length + ' props; ' + implied.filter(o => o.f !== 1).length + ' deliberately compressed (' +
+                  implied.filter(o => o.f !== 1).map(o => o.n.replace('_r', '') + ' x' + o.f).join(', ') + ')');
 
-  /* the sanity check Kyle gave: a checkout lane reads noticeably LONGER than a baler is wide */
-  const laneLen = ((L.ART_W.checkstand / sc) * 1039 / 447);
-  const balerW = L.ART_W.baler / sc;
-  ck('  ^ so a checkout lane is about 1.6x the width of a baler, as it should be',
-     laneLen / balerW > 1.4 && laneLen / balerW < 1.9,
-     'lane ' + laneLen.toFixed(0) + ' long vs baler ' + balerW.toFixed(0) + ' wide = ' +
-     (laneLen / balerW).toFixed(2) + 'x  (was 2.99x)');
+  /* ⚠️ AND THE FOUR APPROVED SIZES THEMSELVES, PINNED AS OUTCOMES. The assertion above compares a
+     prop against its OWN declared factor, so it is silent when both move together: changing
+     PROP_SQUASH.pallet from 0.75 to 0.50 also changes the footprint, implied still equals
+     plan x declared, and two mutants survived on exactly that. These four numbers are Kyle's, from
+     the TV, and they are spec in the §14 sense — the tray holds 3, the baler is the anchor at 1.00.
+     Asserted as the RESULTING authored size rather than as the table entry, so it is the drawn
+     outcome being checked and not the declaration that produced it. */
+  const APPROVED = { baler: 63.3, checkstand: 29.4, pallet: 37.8, goback_cart: 36.1 };
+  const wrongSize = Object.entries(APPROVED)
+    .map(([n, want]) => ({ n, got: (L.ART_W[n] || 0) / sc, want }))
+    .filter(o => Math.abs(o.got - o.want) > 1);
+  ck('the four approved footprints are what Kyle signed off, to the unit',
+     wrongSize.length === 0,
+     wrongSize.length ? wrongSize.map(o => o.n + ' is ' + o.got.toFixed(1) + ', approved ' + o.want).join('; ')
+                      : Object.entries(APPROVED).map(([n, v]) => n.replace('goback_', '') + ' ' + v).join(', '));
+
+  /* ⚠️ NEGATIVE CASE, POSED LIVE. A test that only checks the four known props cannot catch the
+     fifth one somebody compresses by accident — so squash an UNDECLARED prop and require the
+     check to notice. ART_W is a live object, so this is a real pose, not a re-derivation. */
+  const keep = L.ART_W.dairy_case;
+  L.ART_W.dairy_case = Math.round(keep * 0.7);
+  const nowOff = Object.entries(REAL_M).map(([n, m]) => {
+    const s2 = ((L.ART_W[n] || 0) / sc) / m; return { n, s2, want: ppm * squashOf(n) };
+  }).filter(o => Math.abs(o.s2 - o.want) / o.want > 0.05);
+  L.ART_W.dairy_case = keep;
+  ck('  ^ and an UNDECLARED squash is caught', nowOff.length === 1 && nowOff[0].n === 'dairy_case',
+     nowOff.length ? nowOff.map(o => o.n + ' -> ' + o.s2.toFixed(1) + '/m vs ' + o.want.toFixed(1)).join('; ')
+                   : 'NOT caught — the check does not bite');
+
+  /* ⚠️ THIS CHECK HAD TO CHANGE SHAPE, AND THE REASON IS THE POINT OF THE BRANCH. It used to read
+     "a lane is ~1.6x a baler's width", which was the true-scale relationship and was right while
+     both sat at plan scale. The lane is now deliberately compressed 0.63 and the baler is the
+     anchor at 1.00, so the DRAWN ratio must fall to 1.71 x 0.63 = 1.08 -- asserting 1.4-1.9 would
+     now fail on a floor that is exactly as intended.
+     So divide the compression back out and check the UNDERLYING size: a lane is still a 2.4 m
+     lane and a baler still a 1.5 m baler, and their true ratio is still ~1.6. What changed is only
+     how much floor the lane is allowed to spend. */
+  const laneLenDrawn = ((L.ART_W.checkstand / sc) * 1039 / 447);
+  const balerWDrawn  = L.ART_W.baler / sc;
+  const laneLenTrue  = laneLenDrawn / squashOf('checkstand');
+  const balerWTrue   = balerWDrawn / squashOf('baler');
+  ck('  ^ and with compression divided out a lane is still ~1.6x a baler, as it should be',
+     laneLenTrue / balerWTrue > 1.4 && laneLenTrue / balerWTrue < 1.9,
+     'true ' + (laneLenTrue / balerWTrue).toFixed(2) + 'x  (drawn ' +
+     (laneLenDrawn / balerWDrawn).toFixed(2) + 'x, by design — lane x' +
+     squashOf('checkstand').toFixed(2) + ' vs baler x' + squashOf('baler').toFixed(2) + ')');
+
+  /* and the real sizes survive the round trip, which is what "compression is data" has to mean */
+  const laneM = laneLenTrue / ppm, balerM = balerWTrue / ppm;
+  ck('  ^ so the lane is still a 2.4 m lane and the baler a 1.5 m baler underneath',
+     laneM > 2.3 && laneM < 2.7 && balerM > 1.4 && balerM < 1.6,
+     'lane ' + laneM.toFixed(2) + ' m, baler ' + balerM.toFixed(2) + ' m');
 }
 
 /* ---- 5c. NO OFFICE FURNITURE IN A STORE ROOM ---------------------------------------------

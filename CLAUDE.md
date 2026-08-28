@@ -173,6 +173,24 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   lies about the sprite, and `ART_W` lies about the units.
 - **`W`/`H` are already scaled** — divide `S` back out for authored bounds (see `promotion-world-width`). `placement.js` used to hardcode `1500/760` and needed a hand-edit at every resize; it derives now.
 
+- ⚠️ **THERE ARE TWO SCALES, AND PROP ART IS JUDGED AGAINST THE WRONG ONE BY DEFAULT.** The floor,
+  footprints and prop widths are true **plan scale, 42.2 authored/m**. But a character is *drawn*
+  **45.0 authored tall** for a 1.7 m person — **26.5 authored/m**, a ratio of **0.63**. So a prop
+  sized at true metres is **1.59× too big** the instant a player compares it to a person, which is
+  exactly how it was reported: "consistent with each other, still wrong."
+  **Judge prop art against the character's DRAWN HEIGHT, not against its footprint.** The
+  correction applies to *floor extent only* — a sprite drawn as a ¾ elevation already carries the
+  foreshortening in its own art, which is why the baler needs none and a checkout lane needs all
+  of it. Deliberate compression lives in `PROP_SQUASH` as data, and `t_props` asserts
+  `implied_scale == pxPerMetre() * propSquash(art)` so accidental drift still goes red.
+
+- ⚠️ **SOURCE PIXELS ARE NOT DRAWN PIXELS** — the same family as the `ART_W` trap above, and it
+  produced a confident, entirely wrong hypothesis. A walk strip is 552×295 (four 138×295 frames)
+  and *draws* at 45.0 authored, because `drawChar` scales it to 38 scaled px wide. Reading the
+  source height as if it were the drawn height gave "the character is ~2× too tall"; the measured
+  answer was 0.63×, i.e. the opposite direction. **Never reason from a PNG's dimensions — compute
+  what the draw call actually produces.**
+
 - ⚠️ **AN UNEXPLORED PATH IS NOT A HOLLOW ASSERTION — IT IS A MISSING ONE.** The department picker
   shipped with a **softlock**: it sat behind the once-per-gate latch, so pressing B or tapping its
   ✕ meant it never came back — promotion pinned at 100%, a Bagger for the rest of the run. A
@@ -187,6 +205,20 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   with nothing saying so.** The same collision then turned up a second time in `ladderSteps`, the
   one panel whose job is telling the player what to do next. When you add a level, **grep for
   gates that key on display text** and assume there is another one.
+
+- ⚠️ **TESTING WHAT THE SOURCE SAYS IT WILL DO IS NOT TESTING WHAT IT DOES.** Distinct from the
+  rot and absorption above: those are assertions that go stale or get redefined, this is an
+  assertion that **never executes the behaviour at all**. Three in three branches, and the tell was
+  identical every time — **the mutant left the STRUCTURE intact**:
+  - the furniture table was perfect while the dispatcher was bypassed, so office decor drew in the
+    store again and a source scan of the table saw nothing wrong;
+  - `lightSequence()` returned the right order while `tickLights` ignored it and used a literal;
+  - `delegActive()` was right while `endDay` restated its old predicate in a second copy.
+  Each survived a suite that read the declaration and never ran the frame. **The fix is always the
+  same: run it and watch.** Render the level and intercept the draw calls; step the clock and
+  record the order the banks actually light; read the 5pm card instead of the predicate behind it.
+  If a mutant can be killed by an assertion that only reads a table, that assertion is not testing
+  anything.
 
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
 
