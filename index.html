@@ -9377,6 +9377,21 @@ const LIGHT_BANKS=[
   {x:1228,y:372, w:272, h:376, on:false, t:0, flick:0},   // SE-far: senior sales + east sales floor (widened to 1500)
 ];
 let lightsUp=false, lightSeq=-1, lightSeqT=0, deadBank=1, lightsDoneToday=false;   // deadBank = the panel that never got fixed
+let lightOrder=[];      // the flick order for whatever banks THIS level authored (see lightSequence)
+/* ⚠️ DERIVED, NOT LISTED. The stagger used to be the literal [0,4,1,5,2,6,3,7,8,9], written for
+   the office's ten banks and indexed blind. A level with a different number of them ran off the
+   end -- grocery had NONE, so it dereferenced undefined EVERY FRAME from 8:15, and because
+   advanceClock() runs after tickLights() in the same block the throw froze the clock. Guarding the
+   deref stopped the crash; it did not stop the assumption.
+
+   The list was only ever a spatial sort: WEST TO EAST, north before south -- exactly what the
+   comment beside it always claimed. Saying that once works for any level and any bank count, and
+   it reproduces the office's ten-bank sequence EXACTLY, which t_lights asserts index for index
+   against the old literal rather than trusting this paragraph. */
+function lightSequence(){
+  return LIGHT_BANKS.map((b,i)=>i).sort((p,q)=>
+    LIGHT_BANKS[p].x-LIGHT_BANKS[q].x || LIGHT_BANKS[p].y-LIGHT_BANKS[q].y);
+}
 /* window bands: the ONLY way to tell what time it is */
 /* WINDOWS are authored like every other box and scaled ONCE by scaleWorld (WINDOWS.forEach(scaleBox)).
    W and H are ALREADY scaled (round(1500*S) x round(760*S)), so using them here fed scaled numbers
@@ -9422,25 +9437,22 @@ function tickLights(dt){
   }
   /* the flick-on: 8:15, bank by bank, west to east */
   if(!lightsUp&&lightSeq<0&&clock>=LIGHTS_ON_MIN&&clock<LIGHTS_OFF_MIN&&!lightsDoneToday){
-    lightSeq=0;lightSeqT=0;lightsUp=true;
+    lightSeq=0;lightSeqT=0;lightsUp=true;lightOrder=lightSequence();
     logLine('8:15. Somebody flips the breakers. The fluorescents stutter, hum, and hold.','t');
   }
   /* the shutdown: 4:45 */
   if(lightsUp&&lightSeq<0&&clock>=LIGHTS_OFF_MIN){
-    lightSeq=0;lightSeqT=0;lightsUp=false;lightsDoneToday=true;
+    lightSeq=0;lightSeqT=0;lightsUp=false;lightsDoneToday=true;lightOrder=lightSequence();
     logLine('4:45. The lights start going out behind you.','t');
   }
   /* run whichever sequence is active */
   if(lightSeq>=0){
     lightSeqT-=dt;
     if(lightSeqT<=0){
-      const order=lightsUp?[0,4,1,5,2,6,3,7,8,9]:[0,4,1,5,2,6,3,7,8,9];
-      if(lightSeq<order.length){
-        /* `order` is a fixed index list into LIGHT_BANKS, written for the office's ten banks. A
-           level with no authored lighting has none, so this dereferenced undefined EVERY FRAME
-           from 8:15 — and because advanceClock() runs after tickLights() in the same block, the
-           throw froze the clock. That is why no grocery day had ever rolled. */
-        const b=LIGHT_BANKS[order[lightSeq]];
+      if(lightSeq<lightOrder.length){
+        /* an empty level still ends the sequence on the first step rather than running off the
+           end: lightOrder is [] there, so this branch is skipped and lightSeq goes back to -1. */
+        const b=LIGHT_BANKS[lightOrder[lightSeq]];
         if(b) b.on=lightsUp;
         /* no flicker on switch-on */
         SFX.select();
@@ -11870,6 +11882,20 @@ function loadLevel(id){
              {name:'STORE MANAGER',x:BOH_X+T, y:190, w:150, h:150,     c:'#3b6ea5'},
              {name:'OWNER',        x:1210,    y:190, w:140, h:150,     c:'#c0392b'},
              {name:'STAFF WC',     x:1370,    y:190, w:AW-1370-T, h:150, c:'#7c7768'});
+  /* ---- LIGHTS. The store has been dark since it existed: the darkness layer is painted over the
+     whole world and then ERASED where a bank is, so a level with no banks is not "unlit", it is
+     blacked out. Eight banks on a 4x2 grid, tiling the world edge to edge so nothing is left in
+     the dark, with the column boundaries put on the store's own landmarks: the produce/grocery
+     line at 320, mid-block at 690, and the back-of-house wall at 1030.
+
+     Sales floor, front end and back of house are all covered. Timing is NOT re-declared here --
+     LIGHTS_ON_MIN / LIGHTS_OFF_MIN are shared, so the store comes up at 8:15 and goes out at 4:45
+     with the office BECAUSE it is the same code, not because two schedules were kept in step. */
+  {
+    const LB_X=[12,320,690,1030], LB_W=[308,370,340,AW-1030], LB_Y=[12,400], LB_H=[388,AH-12-400];
+    for(let c=0;c<LB_X.length;c++)for(let r=0;r<LB_Y.length;r++)
+      LIGHT_BANKS.push({x:LB_X[c],y:LB_Y[r],w:LB_W[c],h:LB_H[r],on:false,t:0,flick:0});
+  }
   /* ---- GROCERY: CONTINUOUS SHELF RUNS ---------------------------------------------------
      ⚠️ ART_W IS IN SCALED PIXELS, NOT AUTHORED UNITS. `U1(v)` is the identity at S=1.8, so
      ART_W.supply_shelf = 61 is the sprite's drawn width in SCALED px — 34 AUTHORED. Its drawn
