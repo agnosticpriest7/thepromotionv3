@@ -629,6 +629,10 @@ const EPILOGUE = `
   /* the loaded sprite table. ART is a module-scope const, so a test asking "did this art actually
      load?" cannot reach it from the sandbox — and "it is in ART_FILES" is not the same claim. */
   def(G,'ART',      function(){ return (typeof ART!=='undefined')?ART:null; });
+  /* the level's light banks. A module-scope const, so a test asking "is the store lit?" cannot
+     reach it from the sandbox — and the whole point of this system is that a level with none is
+     blacked out rather than merely unlit. */
+  def(G,'LIGHT_BANKS', function(){ return (typeof LIGHT_BANKS!=='undefined')?LIGHT_BANKS:null; });
   def(G,'gameOver', function(){ return (typeof gameOver!=='undefined')?gameOver:null; });
   def(G,'renderErrs', function(){ return (typeof renderErrs!=='undefined')?renderErrs:null; });   // render() swallows draw throws into this counter — read it to actually enforce "0 renderErrs"
   // the in-game menu's open flag: a module-scope let, invisible from the sandbox, so a test that
