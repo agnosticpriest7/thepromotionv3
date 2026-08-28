@@ -508,6 +508,9 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
      Registering here is what actually loads a sprite - the `phone` note above is the scar from
      swapping a PNG and never listing it. */
   'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e',
+  /* THE STORE'S OWN FIXTURES. Deli and bakery cases are normalised to the same source height, so
+     giving them the same SCALE (not the same width) is what makes them one continuous run. */
+  'deli_case','bakery_case','dairy_case','produce_fruit_a','produce_fruit_b','produce_veg','produce_mixed','pallet','baler','checkstand','checkstand_r','goback_cart',
   /* the south cap on a run. SOUTH ONLY (Kyle's call): the product band is along its bottom edge,
      so it faces the front-of-store cross-aisle. North ends get no cap and it is never flipped --
      a flipped top-down sprite lights from the wrong side. */
@@ -625,6 +628,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'stall_v','stall_h','couch',
   'counter_plain','counter_sink','counter_micro','counter_coffee',
   'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e','endcap',
+  'deli_case','bakery_case','dairy_case','produce_fruit_a','produce_fruit_b','produce_veg','produce_mixed','pallet','baler','checkstand','checkstand_r','goback_cart',
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
@@ -749,6 +753,19 @@ const ART_W={
      than by a number someone has to keep in step. The supplied composite proves the intent: a
      496x2036 run-with-cap whose bottom 386 rows are byte-identical to endcap.png. */
   endcap:108,
+  /* ⚠️ DELI AND BAKERY SHARE A SCALE, NOT A WIDTH. Their sources are 2044x623 and 2079x623 -- the
+     same height, 1.7% different widths -- so an identical ART_W leaves their drawn heights 1
+     authored apart, under the level format's 1-unit quantisation floor and never adjacent anyway
+     (the two runs have a visible break between them). 324 scaled = 180 authored, which divides
+     BOTH runs exactly: bakery 360 = 2 cases, deli 540 = 3. */
+  deli_case:324, bakery_case:324,
+  dairy_case:200,
+  produce_fruit_a:110, produce_fruit_b:110, produce_veg:110, produce_mixed:110,
+  pallet:70, baler:70,
+  /* a checkout lane is drawn running NORTH-SOUTH, which is why the lanes were re-laid to match --
+     see the checkout block. 90 scaled = 50 authored wide, 116 authored long. */
+  checkstand:90, checkstand_r:90,
+  goback_cart:54,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
@@ -11974,27 +11991,46 @@ function loadLevel(id){
      counter and wall for staff to stand in once there are any — three nav cells, the same floor
      the aisles get. */
   const CTR=50, CTR_TOP=76, CTR_Y=CTR_TOP+CTR-22;     // sprite bottom lands at CTR_Y+22
-  const counterRun=(x0,x1,label)=>{
-    for(let cx=x0+CTR/2; cx<x1; cx+=CTR)
-      CONTAINERS.push({x:Math.round(cx-14),y:CTR_Y,w:28,h:22,label:label,kind:'cabinet',art:'counter_plain'});
-    levelBlockers.push({x:x0+1, y:CTR_TOP+1, w:(x1-x0)-2, h:CTR-2});
+  /* ⚠️ REAL CASES NOW, not counter_plain repeated. CASE_W divides both runs exactly (360 = 2,
+     540 = 3), and the drawn depth is DERIVED from the art rather than from CTR, so the blocker and
+     the sprite cannot disagree about how deep a deli counter is. */
+  const CASE_W=180, CASE_D=Math.round(CASE_W*623/2044);   // 55 authored, from the source aspect
+  const counterRun=(x0,x1,label,art)=>{
+    const n=Math.round((x1-x0)/CASE_W);
+    for(let i=0;i<n;i++)
+      CONTAINERS.push({x:Math.round(x0+i*CASE_W+CASE_W/2-14), y:CTR_TOP+CASE_D-22-Math.round(4/S),
+                       w:28,h:22,label:label,kind:'cabinet',art:art});
+    levelBlockers.push({x:x0+1, y:CTR_TOP+1, w:(x1-x0)-2, h:CASE_D-2});
   };
-  counterRun(40,400,'Bakery counter');                // north-west
-  counterRun(470,1010,'Deli counter');                // north / north-east, after the break
+  counterRun(40,400,'Bakery counter','bakery_case');    // north-west, 2 cases
+  counterRun(470,1010,'Deli counter','deli_case');      // north / north-east, 3 cases
   /* ---- CHECKSTANDS. Same defect as the counters and the same fix: they were tables, so each wore
      eight office chairs. The brief named Deli and Bakery, but leaving the checkouts as boardrooms
      would have looked identical to the thing being fixed. Sat well clear of the shelf block: a
      counter draws 28 authored ABOVE the row it sits on, and at the first attempt that reached up
      into GROCERY and quietly capped the two western aisles. */
-  const CHK_Y=560;
+  /* ⚠️ THE LANES WERE RE-LAID TO MATCH THE ART, AND THAT IS A LAYOUT CHANGE. They used to be
+     east-west bars -- three counter_plain units side by side, 148 wide x 48 deep. The checkstand
+     art is drawn running NORTH-SOUTH (447x1039, the belt leading away from you), and rotating a
+     top-down sprite lights it from the wrong side, so the choice was re-draw the art or re-lay the
+     floor. Kyle sent both mirrors and asked for the checkstands, so: four lanes perpendicular to
+     the south wall, in the two clusters the old ones occupied, with the TILLS FACING EACH OTHER
+     across each cluster's gap -- checkstand (till right) west, checkstand_r (till left) east.
+
+     The gaps between lanes ARE the walkways, which is how a real front end works. Measured: 170
+     authored between the lanes of a cluster, 590 through the middle -- and the entrance door
+     (x 690-810) opens into that middle gap, so you walk in and straight up the store. 50 authored
+     of cross-aisle is left north of the lanes, between them and the shelf block. */
+  const CHK_Y=520, CHK_W=50, CHK_D=Math.round(CHK_W*1039/447);   // 116 authored long, from the art
   const chkXs=[];
-  const checkout=(x0)=>{
+  const checkout=(x0,art)=>{
     chkXs.push(x0);
-    for(let i=0;i<3;i++)
-      CONTAINERS.push({x:x0+i*CTR,y:CHK_Y,w:28,h:22,label:'Checkstand',kind:'cabinet',art:'counter_plain'});
-    levelBlockers.push({x:x0-11, y:CHK_Y+22-CTR+1, w:CTR*3-2, h:CTR-2});
+    CONTAINERS.push({x:Math.round(x0+CHK_W/2-14), y:CHK_Y+CHK_D-22-Math.round(4/S),
+                     w:28,h:22,label:'Checkstand',kind:'cabinet',art:art});
+    levelBlockers.push({x:x0+1, y:CHK_Y+1, w:CHK_W-2, h:CHK_D-2});
   };
-  checkout(140); checkout(360); checkout(1000); checkout(1220);
+  checkout(173,'checkstand'); checkout(393,'checkstand_r');      // west cluster, tills facing
+  checkout(1033,'checkstand'); checkout(1253,'checkstand_r');    // east cluster, tills facing
   /* ---- FIXTURES: what the tasks complete against -------------------------------------------
      A bagger's day was named in store words but none of it was completable, because Save-Rite had
      no objects at all — loadLevel clears `objects`, and every task's `via` resolves against one.
@@ -12006,13 +12042,13 @@ function loadLevel(id){
      than a new zone-trigger system: the two aisle tasks (facing, date codes) resolve there.
      Reported as a limitation, not worked around. */
   objects.push(
-    {type:'printer',x:250,y:600,w:34,h:26,label:'Go-back cart',   art:'supply_shelf',  jammed:false},
+    {type:'printer',x:250,y:600,w:34,h:26,label:'Go-back cart',   art:'goback_cart',   jammed:false},
     /* was (930,300) - inside the widened run 6. An endcap caps the end of a RUN, so it sits above
        run 2's north end (x 556-616), NOT across an aisle mouth: the first move put it at x 628-662,
        straight over the centre of aisle 2, and the aisle-mouth check caught it. Clear of the deli
        counter blocker (ends y 125). Placeholder art, like every other prop in here. */
     {type:'printer',x:569,y:190,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
-    {type:'supply', x:BOH_X+60,y:120,w:34,h:26,label:'Baler'},
+    {type:'supply', x:BOH_X+60,y:120,w:34,h:26,label:'Baler', art:'baler'},
     /* along the break room's west wall. They were spread across the middle of the room, which
        left nowhere for the table to go once the crew actually needed somewhere to take a break. */
     {type:'water',  x:1290,y:40, w:30,h:24,label:'Water station'},
@@ -12029,9 +12065,35 @@ function loadLevel(id){
      aisle at all. Clear of the deli counter blocker (ends y 126) and of the run tops (y 224). */
   desks.push({x:920,y:150,w:40,h:60,owner:'you',tier:0,dept:'sales',reserved:false,
               art:'cubicle_desk_left',seatSide:'left',seatDir:'right',rigged:null,planted:null});
-  /* ---- BACK OF HOUSE fittings, from existing art only. ----------------------------------- */
-  CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
-                  {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box'},
+  /* ---- PRODUCE: four open displays and the store's one refrigerated case ------------------
+     DETERMINISTIC VARIANTS, like the shelf runs: a tray's face is a property of the level, not the
+     session, so a layout can be judged twice. Laid out 2x2 with no two neighbours alike -- the
+     grid is checked for adjacency in BOTH directions, since a row-only rule would let the two
+     columns match. */
+  {
+    const TRAY=['produce_fruit_a','produce_veg','produce_mixed','produce_fruit_b'];
+    const TX=[100,200], TY=[310,395];
+    let k=0;
+    for(let r=0;r<TY.length;r++)for(let c=0;c<TX.length;c++){
+      const art=TRAY[k++];
+      CONTAINERS.push({x:TX[c]+16,y:TY[r]+18,w:28,h:22,label:'Produce display',kind:'box',art:art});
+      levelBlockers.push({x:TX[c]+1,y:TY[r]+1,w:59,h:44});
+    }
+  }
+  /* THE DAIRY CASE -- the store's first refrigerated fixture. Set dressing: a blocker with no
+     trigger and no task, as briefed. North of the produce trays, clear of the wet wall (x 38-68)
+     and of the bakery counter above it (ends y 131). */
+  CONTAINERS.push({x:152,y:247,w:28,h:22,label:'Dairy case',kind:'cabinet',art:'dairy_case'});
+  levelBlockers.push({x:111,y:215,w:109,h:55});
+  /* ---- BACK OF HOUSE fittings. The pallets get real art; the rest already reuse the office's,
+     which is what the store has done since it was built -- lockers are kind:'locker' (office
+     lockers), the department board is type:'board' (office whiteboard), the intercom is
+     type:'phones' (the office sales phone) and the break table is the office table. The one gap
+     was the manager's and owner's offices, which had a filing cabinet and no desk. ------------ */
+  CONTAINERS.push({x:BOH_X+40, y:60,  w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
+                  {x:BOH_X+130,y:60,  w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
+                  {x:BOH_X+55, y:300, w:30,h:24,label:'Store manager desk',kind:'cabinet',art:'manager_desk'},
+                  {x:1245,     y:300, w:30,h:24,label:'Owner desk',        kind:'cabinet',art:'manager_desk'},
                   {x:1290,     y:135, w:30,h:24,label:'Staff lockers',    kind:'locker'},
                   {x:BOH_X+40, y:250, w:30,h:24,label:'Manager cabinet',  kind:'cabinet'},
                   {x:1230,     y:250, w:30,h:24,label:'Owner cabinet',    kind:'cabinet'});
@@ -12077,8 +12139,16 @@ function loadLevel(id){
     const aisle=i=>(runXs[i]+SHELF_W+runXs[i+1])/2;
     const AISLE_Y=RUN_MID_Y;                                        // halfway down the run
     /* checkstand lane: below the checkstands, above the store's south wall. */
-    const LANE_Y=CHK_Y+34;
-    const chkLane=i=>chkXs[i]+CTR*3/2;
+    /* ⚠️ THE FRONT-END CREW ARE DERIVED FROM THE CHECKOUTS, so re-laying the lanes north-south
+       moved them into solid boxes: LANE_Y was CHK_Y+34 and the cashier x was chkXs[i]+CTR*3/2,
+       both of which described an east-west bar of three counter tiles. That shape no longer
+       exists. Re-derived from the lane the cashier actually works: halfway down it, standing on
+       the TILL side -- which is now a property of which mirror the lane uses, not a magic offset.
+       Even lanes are `checkstand` (till right) so their cashier stands to the EAST; odd lanes are
+       `checkstand_r` (till left) so theirs stands to the WEST. That is what puts a facing pair in
+       each cluster's gap. */
+    const LANE_Y=CHK_Y+Math.round(CHK_D/2);
+    const tillX=i=>(i%2===0)?(chkXs[i]+CHK_W+12):(chkXs[i]-12);
     /* ---- WHO WORKS WHERE. The crew had no department field at all until now: Danika was the
        "Front End Manager" in the commit message and in nothing else, and the game could not
        answer "who runs Produce?" for any of the five. The ladder promised a choice of five
@@ -12094,11 +12164,13 @@ function loadLevel(id){
        department) rather than stored as a pointer in the save — the catfish lesson, applied
        before there is anything to fix. */
     const CREW=[
-      /* chkLane(1), not chkLane(0)+60: that put her box straight through the go-back cart's
-         blocker, which the crew test caught as "Priya Raval stands inside a blocker". */
-      ['Priya Raval',       chkLane(1)-60, LANE_Y,   'right', 'front',  'staff'  ],
-      ['Marguerite Dubois', chkLane(3)-60, LANE_Y,   'left' , 'front',  'staff'  ],
-      ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' , 'front',  'manager'],
+      /* one to a cluster, each at their own till, facing the lane they are working. */
+      ['Priya Raval',       tillX(0),      LANE_Y,   'left' , 'front',  'staff'  ],
+      ['Marguerite Dubois', tillX(2),      LANE_Y,   'left' , 'front',  'staff'  ],
+      /* the front-end manager stands in the cross-aisle NORTH of the lanes, in FRONT END. At
+         CHK_Y-60 she was at y 460 once the lanes moved -- inside a shelf run AND inside the
+         GROCERY zone, which the crew test caught as "front:GROCERY". */
+      ['Danika Osei',       (AW/2)-190,    CHK_Y-25, 'down' , 'front',  'manager'],
       ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
       ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' , 'grocery','staff'  ],
       /* ⚠️ MOVED TWICE, AND THE SECOND TIME IS THE LESSON. He was authored at (960,420); the wider

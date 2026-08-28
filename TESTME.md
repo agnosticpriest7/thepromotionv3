@@ -9,6 +9,39 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-props-and-lights` (2026-08-28)
+
+### 1. ⭐⭐⭐ THE STORE HAS LIGHTS. Everything you approved was judged in the dark.
+They come up at **8:15** and go out at **4:45**, same as the office, because it is the same code.
+Measured lift: mean screen luminance **64.5 → 106, about 1.64x**.
+
+**This is a re-judgement of every asset so far.** The shelf runs, the endcap, the checkstand, the
+floor colours and the aisle spacing were all approved on an unlit floor. If anything now looks
+washed out or flat, that is the lighting revealing it — **tell me and I will not tune the art to
+hide it**.
+
+Day 1 is lit from 8:00 on purpose (the orientation tour); the breaker sequence starts day 2.
+
+### 2. ⚠️ THE CHECKOUTS MOVED, AND THAT IS A LAYOUT CHANGE YOU SHOULD LOOK AT
+The lanes used to be **east-west bars**. The checkstand art is drawn **north-south**, and rotating
+a top-down sprite lights it from the wrong side — so with both mirrors supplied, the lanes were
+re-laid perpendicular to the south wall: four lanes, **tills facing each other** in each pair.
+
+The gaps between lanes are the walkways now, which is how a real front end works. 172 authored
+between the lanes of a pair, 592 through the middle, and the entrance door opens into that middle
+gap so you walk in and straight up the store. **Does the front end read better or worse?** This is
+the one thing here that changes how the store plays, not just how it looks.
+
+### 3. The store is furnished
+Deli and bakery cases (butted into one continuous run), a **dairy case** (new fixture, set dressing
+only), four **produce trays** with no two neighbours alike, **pallets** in receiving, the **baler**,
+and the **go-back cart** at the front end. The manager's and owner's offices finally have desks.
+
+Lockers, the department board, the intercom and the break table were already reusing office art —
+that is by design and unchanged.
+
+---
+
 ## From `grocery-shelf-endcaps` (2026-08-28)
 
 ### 1. The aisle runs have south endcaps ⭐⭐

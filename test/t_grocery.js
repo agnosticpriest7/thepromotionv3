@@ -233,8 +233,28 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
   /* ---- SERVICE COUNTERS: staff space behind them, and nobody sits at them ------------------- */
   {
     const counters = (FL.containers || []).filter(c => /counter/i.test(c.label || ''));
-    ck('the service run is a counter, not a scatter of tables', counters.length >= 8,
-       counters.length + ' counter units');
+    /* ⚠️ COUNT WAS A PROXY, AND THE PROXY BROKE WHEN THE FIXTURE GOT BIGGER. This asked for
+       >= 8 units back when a run was built from 50-wide counter_plain tiles; real deli and bakery
+       cases are 180 authored each, so the same continuous run is now 5 pieces and the count said
+       "scatter" about a counter that is more continuous than before. Assert what the comment
+       above actually claims instead: the pieces BUTT into one run, uniform pitch, no gaps. */
+    const runOf = re => counters.filter(c => re.test(c.label)).sort((a, b) => a.x - b.x);
+    const gapsIn = (arr) => {
+      const g = [];
+      /* NOT `S` -- in this file S is the SANDBOX, not the scale. Using it produced a pitch of
+         NaN, which is a broken probe reporting a failure rather than a real one. */
+      const sc = FL.S || 1.8;
+      for (let i = 1; i < arr.length; i++) g.push(Math.round((arr[i].x - arr[i - 1].x) / sc));
+      return g;
+    };
+    const bake = runOf(/bakery/i), deli = runOf(/deli/i);
+    const bg = gapsIn(bake), dg = gapsIn(deli);
+    const uniform = g => g.length > 0 && g.every(v => Math.abs(v - g[0]) <= 1);
+    ck('the service run is a continuous counter, not a scatter of tables',
+       bake.length >= 2 && deli.length >= 2 && uniform(bg) && uniform(dg) &&
+       Math.abs(bg[0] - dg[0]) <= 1,
+       'bakery ' + bake.length + ' pieces at pitch ' + bg.join('/') +
+       ', deli ' + deli.length + ' at pitch ' + dg.join('/') + ' authored');
     /* the strip between the counter and the north wall has to be walkable, because staff will
        stand in it the moment there are any */
     const bad = [];
