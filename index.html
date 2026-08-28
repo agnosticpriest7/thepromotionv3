@@ -753,7 +753,34 @@ const PERSON_PX=38, SHOULDER_M=0.5;
    matters because ART_W is built at line ~762 and `const S` is not initialised until ~1415: a
    version of this that touched S threw "Cannot access 'S' before initialization" at boot. U1 gets
    away with reading S only because it is an arrow function nobody calls until later. */
-const M=(m)=>Math.round(m*PERSON_PX/SHOULDER_M);  // real metres -> ART_W, in SCALED px
+/* ⚠️ TWO SCALES EXIST IN THIS GAME, AND PROPS ARE JUDGED AGAINST THE WRONG ONE BY DEFAULT.
+   Measured: the floor, footprints and prop widths are true PLAN scale at 42.2 authored/m -- but a
+   character is DRAWN 45.0 authored tall for a 1.7 m person, which is 26.5 authored/m. Ratio 0.63.
+   So a prop sized at true metres is 1.59x too big the instant the eye compares it to a person,
+   which is exactly what the TV pass reported: consistent with each other, still wrong.
+
+   THE CORRECTION APPLIES TO FLOOR EXTENT, NOT VERTICAL EXTENT, which is why it is per-prop and not
+   a global constant. A sprite drawn as a 3/4 elevation already carries the foreshortening in its
+   own art: the baler's height is 2 m of machine plus 1.2 m of depth in a compressed projection, so
+   it needs none and is the ANCHOR. The checkstand's length is 2.4 m of pure floor, so it needs all
+   of it -- and Kyle's eye put it at 0.60 against a measured 0.63, which is the corroboration.
+
+   RECORDED AS DATA, NOT AS EXCEPTIONS. t_props asserts implied_scale == 42.2 * compression, so
+   deliberate squash still has to be declared and accidental drift still goes red. An assertion
+   that gets deleted the first time a real exception turns up was never load-bearing. */
+const PROP_SQUASH={
+  baler:1.00,          // ANCHOR. Approved on the TV; a 3/4 elevation carries its own foreshortening
+  checkstand:0.63, checkstand_r:0.63,   // 2.4 m of pure floor -> the full correction
+  pallet:0.75,         // a stack has some height to it, so it needs less than the floor figure
+  goback_cart:0.85,    // small and half-elevation; barely needs any
+};
+/* the optional art name applies that prop's compression. Omit it and you get true plan scale,
+   which is what every fixture the floor was packed around still uses. */
+const M=(m,a)=>Math.round(m*PERSON_PX/SHOULDER_M*((a&&PROP_SQUASH[a])||1));  // metres -> ART_W, SCALED px
+/* a FUNCTION DECLARATION so the scale test can read the declared factor -- module-scope consts are
+   invisible from the sandbox. The assertion is implied_scale == pxPerMetre() * propSquash(art),
+   which is what makes deliberate compression DATA and accidental drift a failure. */
+function propSquash(a){ return PROP_SQUASH[a]||1; }
 /* a FUNCTION DECLARATION, not a const arrow: module-scope consts are invisible from the test
    sandbox, and the scale-consistency test has to be able to ask what the scale is. */
 function pxPerMetre(){ return (PERSON_PX/S)/SHOULDER_M; }   // 42.2 AUTHORED units per metre
@@ -795,12 +822,12 @@ const ART_W={
   produce_fruit_a:M(1.8), produce_fruit_b:M(1.8), produce_veg:M(1.8), produce_mixed:M(1.8),
   /* THE TWO KYLE CALLED OUT. A pallet is 1.2 m and a baler 1.5 m; they were 0.92 m and 0.92 m,
      which is why the baler read as a toy next to a checkout lane. */
-  pallet:M(1.2), baler:M(1.5),
+  pallet:M(1.2,'pallet'), baler:M(1.5,'baler'),
   /* a checkout lane is 1.1 m across and 2.4 m long. The art's aspect is 0.43 against a real lane's
      0.458, so it is drawn very nearly true -- the lane was only 8% oversized. It read as "huge"
      because the baler beside it was 63% undersized. */
-  checkstand:M(1.1), checkstand_r:M(1.1),
-  goback_cart:M(1.0),
+  checkstand:M(1.1,'checkstand'), checkstand_r:M(1.1,'checkstand_r'),
+  goback_cart:M(1.0,'goback_cart'),
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
