@@ -32,7 +32,7 @@ const runsOf = w => w.g.layout.containers.filter(c => c.label === 'Shelf');
 const runBlockers = (w) => {
   const S = w.g.layout.S, A = v => Math.round(v / S);
   return w.g.layout.levelBlockers.map(b => ({ x: A(b.x), y: A(b.y), w: A(b.w), h: A(b.h) }))
-    .filter(b => b.h > 150 && b.h < 260 && b.w < 100).sort((p, q) => p.x - q.x);
+    .filter(b => b.h > 150 && b.h < 300 && b.w < 100).sort((p, q) => p.x - q.x);
 };
 
 /* ---- 1. THE ART LOADS ------------------------------------------------------------------ */
@@ -76,6 +76,86 @@ const runBlockers = (w) => {
      new Set(seq).size + ' of ' + VARIANTS + ' distinct');
 }
 
+/* ---- 2b. THE SOUTH CAPS ------------------------------------------------------------------
+   One cap per run, on the same centre line, butted against the run's south face. SOUTH ONLY:
+   the product band is along the cap's bottom edge, so a north cap would light from the wrong
+   side — which is why the asset is never flipped rather than merely "not flipped yet". */
+{
+  const w = mk('grocery'), g = w.g, L = g.layout, sc = L.S, A = v => Math.round(v / sc);
+  const runs = L.containers.filter(c => c.label === 'Shelf').sort((a, b) => a.x - b.x);
+  const caps = L.containers.filter(c => c.label === 'Endcap run').sort((a, b) => a.x - b.x);
+
+  ck('every run has exactly one south cap', caps.length === RUNS && runs.length === RUNS,
+     runs.length + ' runs, ' + caps.length + ' caps');
+  ck('  ^ and every cap uses the endcap sprite',
+     caps.length > 0 && caps.every(c => c.art === 'endcap'),
+     [...new Set(caps.map(c => c.art))].join(', '));
+  ck('  ^ which is loaded, at its real 496x386', !!(g.ART && g.ART['endcap']) &&
+     g.ART['endcap'].naturalWidth === 496 && g.ART['endcap'].naturalHeight === 386,
+     g.ART && g.ART['endcap'] ? (g.ART['endcap'].naturalWidth + 'x' + g.ART['endcap'].naturalHeight) : 'MISSING');
+
+  /* drawn footprints, the way sprAt actually lays them out: centred on x, bottom on y+h+U1(4).
+     ⚠️ measured off the REAL png aspect — the harness reads it from the file header now. */
+  const drawn = (art) => { const im = g.ART[art], wS = L.ART_W[art];
+    return { wA: wS / sc, hA: Math.round(im.naturalHeight * wS / im.naturalWidth) / sc }; };
+  const R = drawn('shelf_run_a'), C = drawn('endcap');
+  ck('a cap is exactly as wide as a run, so they cannot be out of step',
+     Math.abs(R.wA - C.wA) < 0.01, R.wA.toFixed(1) + ' vs ' + C.wA.toFixed(1) + ' authored');
+
+  const joins = [], offsets = [];
+  for (let i = 0; i < runs.length; i++) {
+    const r = runs[i], c = caps[i];
+    const rBot = A(r.y) + A(r.h) + Math.round(4 / sc);
+    const cBot = A(c.y) + A(c.h) + Math.round(4 / sc), cTop = cBot - C.hA;
+    joins.push(cTop - rBot);
+    offsets.push((A(c.x) + A(c.w) / 2) - (A(r.x) + A(r.w) / 2));
+  }
+  /* 1 authored is the flush tolerance because CONTAINERS are authored integers — the quantisation
+     floor is 1 unit (1.8 scaled px), so anything under it is as flush as this level format can
+     express. Measured: 0.33 authored, well inside one screen pixel. */
+  ck('every cap butts its run — no gap and no overlap',
+     joins.every(j => Math.abs(j) <= 1), 'joins ' + joins.map(j => j.toFixed(2)).join(', ') + ' authored');
+  ck('  ^ and sits on the run\'s own centre line',
+     offsets.every(o => o === 0), 'x offsets ' + offsets.join(', '));
+
+  /* SOUTH ONLY — the cap must be BELOW its run, never above it, and there must be no second cap. */
+  const northCaps = [];
+  for (let i = 0; i < runs.length; i++) {
+    const rTop = A(runs[i].y) + A(runs[i].h) + Math.round(4 / sc) - R.hA;
+    const cBot = A(caps[i].y) + A(caps[i].h) + Math.round(4 / sc);
+    if (cBot <= rTop) northCaps.push(i);
+  }
+  ck('no cap is on a north end', northCaps.length === 0,
+     northCaps.length ? 'runs ' + northCaps.join(',') : 'all six caps are south');
+
+  /* keyed, or every cap draws on an opaque magenta slab */
+  const fs = require('fs'), path = require('path');
+  const mag = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8')
+    .split('const MAGENTA_BG')[1].split(']);')[0];
+  /* the detail has to describe what was MEASURED, not what was hoped for: the first version
+     printed "'endcap' present" on the failing run too, which is a failure message that says the
+     opposite of the failure. */
+  ck('  ^ and the cap is in MAGENTA_BG too', /'endcap'/.test(mag),
+     /'endcap'/.test(mag) ? "'endcap' listed" : "NOT listed - caps would draw on magenta slabs");
+
+  /* ⚠️ A DRAWN CAP THAT IS NOT SOLID IS A HOLE YOU CAN WALK THROUGH. Everything above measures
+     where the cap is DRAWN; none of it would notice the blocker still stopping at the run's south
+     face, which would let the player walk straight through six endcaps. So the blocker is required
+     to reach the cap's drawn bottom. */
+  const bl = runBlockers(w);
+  const capBottoms = caps.map(c => A(c.y) + A(c.h) + Math.round(4 / sc));
+  const shortfalls = bl.map((b, i) => capBottoms[i] - (b.y + b.h)).filter(d => d > 2);
+  ck('the blocker covers the cap, so a cap cannot be walked through',
+     bl.length === RUNS && shortfalls.length === 0,
+     'blocker bottoms ' + bl.map(b => b.y + b.h).join(',') + '  vs cap bottoms ' + capBottoms.join(','));
+
+  /* the block ends inside GROCERY, not on top of the front end */
+  const gz = L.ROOMS.find(r => r.name === 'GROCERY');
+  const bot = Math.max(...bl.map(b => b.y + b.h));
+  ck('run+cap stops inside the GROCERY zone', bot <= A(gz.y) + A(gz.h),
+     'block ends y ' + bot + ', zone ends ' + (A(gz.y) + A(gz.h)));
+}
+
 /* ---- 3. THE ASSIGNMENT IS A PROPERTY OF THE LEVEL, NOT OF THE SESSION -------------------- */
 {
   /* different seeds, so anything random would diverge */
@@ -109,7 +189,7 @@ const runBlockers = (w) => {
      widened run fall out of its own filter, so the aisles were recomputed AROUND the mutation and
      the floor looked fine — the t_grocery shelf-column lesson, hit again here. */
   const rects = g.layout.levelBlockers
-    .filter(b => Math.round(b.h / sc) > 150 && Math.round(b.h / sc) < 260 && Math.round(b.w / sc) < 100)
+    .filter(b => Math.round(b.h / sc) > 150 && Math.round(b.h / sc) < 300 && Math.round(b.w / sc) < 100)
     .sort((p, q) => p.x - q.x);
   const au = v => Math.round(v / sc);
   /* ⚠️ A PATH THAT LEAVES THE AISLE HAS NOT WALKED THE AISLE. Counting clear cells at each height

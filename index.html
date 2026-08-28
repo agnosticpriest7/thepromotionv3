@@ -508,6 +508,10 @@ const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','c
      Registering here is what actually loads a sprite - the `phone` note above is the scar from
      swapping a PNG and never listing it. */
   'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e',
+  /* the south cap on a run. SOUTH ONLY (Kyle's call): the product band is along its bottom edge,
+     so it faces the front-of-store cross-aisle. North ends get no cap and it is never flipped --
+     a flipped top-down sprite lights from the wrong side. */
+  'endcap',
   /* break-room + kitchen table set. Table and chairs are SEPARATE sprites (unlike conference_table,
      which has its chairs baked in) so every chair is an addressable seat an NPC can be sent to. */
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
@@ -620,7 +624,7 @@ const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h','couch',
   'counter_plain','counter_sink','counter_micro','counter_coffee',
-  'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e',
+  'shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e','endcap',
   'crew_table','crew_chair_top','crew_chair_bottom','crew_chair_left','crew_chair_right',
   'meet_table','meet_chair_top','meet_chair_bottom','meet_chair_left','meet_chair_right',
   'lobby_couch','lobby_table','lobby_chair_l','lobby_chair_r',
@@ -740,6 +744,11 @@ const ART_W={
      and the 58 of clearance the back-of-house wall needs. So this is a packing limit, not a
      compression one, and 60 is the widest that keeps SIX runs and 58-authored aisles. */
   shelf_run_a:108, shelf_run_b:108, shelf_run_c:108, shelf_run_d:108, shelf_run_e:108,
+  /* THE CAP IS THE RUN'S WIDTH, EXACTLY. Both assets are 496 wide and a sprite's height derives
+     from its width, so giving them the same ART_W makes cap and run flush by construction rather
+     than by a number someone has to keep in step. The supplied composite proves the intent: a
+     496x2036 run-with-cap whose bottom 386 rows are byte-identical to endcap.png. */
+  endcap:108,
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
@@ -11893,6 +11902,11 @@ function loadLevel(id){
   const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
   const RUN_TOP_Y=223;                                     // drawn top, unchanged from the old art
   const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
+  /* the cap is 386 of the run's own 1650, so it is derived from the same scale the run is drawn at
+     and the two cannot drift apart. 47 authored. Run 199 + cap 47 = 246, which lands the block's
+     south face at y 469 against a GROCERY zone that ends at 470 -- so the caps give back almost
+     exactly the run length the aisle-packing limit took away (245 before the art changed). */
+  const CAP_H=Math.round(RUN_H*386/1650);
   const RUN_MID_Y=RUN_TOP_Y+Math.round(RUN_H/2);           // halfway down a run, for the crew
   const runXs=[];                                          // LEFT EDGES; the aisles derive from these
   for(let i=0;i<RUN_COUNT;i++){
@@ -11908,12 +11922,16 @@ function loadLevel(id){
                         twice. Six runs over five variants -> a,b,c,d,e,a, and the repeat sits at
                         opposite ends of the floor, so no two ADJACENT runs ever match. */
                      art:SHELF_ART[i%SHELF_ART.length]});
-    /* one solid rect for the whole run, derived from the same numbers that place the art so the
-       two can never drift. Inset 1 authored a side, for the reason the tabletops are inset.
-       Blocker-to-blocker across an aisle is 118-58 = 60 authored - IDENTICAL to the old 92-32,
-       so the nav grid sees exactly the aisle it saw before. */
+    /* THE SOUTH CAP. Its own sprite on the same centre line, standing where the run stops, so the
+       drawn footprints butt with no gap and no overlap. */
+    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom+CAP_H-22-4/S), w:28, h:22,
+                     label:'Endcap run', kind:'box', art:'endcap'});
+    /* ONE solid rect for run AND cap, derived from the same numbers that place both, so the three
+       can never drift. Inset 1 authored a side, for the reason the tabletops are inset.
+       Blocker-to-blocker ACROSS an aisle is 118-58 = 60 authored - IDENTICAL to the old 92-32, so
+       the nav grid sees exactly the aisle it saw before; the caps only extend the block SOUTH. */
     levelBlockers.push({x:Math.round(cx-SHELF_W/2+1), y:RUN_TOP_Y+1,
-                        w:SHELF_W-2,                  h:RUN_H-2});
+                        w:SHELF_W-2,                  h:RUN_H+CAP_H-2});
   }
   /* ---- PRODUCE. Chilled cases against the west wall, no aisles. fridge is 72 scaled = 40
      authored wide, 62 authored tall. ------------------------------------------------------- */
@@ -12057,10 +12075,12 @@ function loadLevel(id){
       ['Danika Osei',       (AW/2)-190,    CHK_Y-60, 'down' , 'front',  'manager'],
       ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
       ['Bekah Thorne',      aisle(3),      AISLE_Y,  'down' , 'grocery','staff'  ],
-      /* was (960,420), which the wider run band now covers: run 6 spans x 911-969, y 224-421,
-         and his 24-unit station straddled it. Moved into the south cross-aisle the shorter runs
-         opened up - still GROCERY (the zone runs to y 470), still at the foot of his own aisles. */
-      ['Russ Pelletier',    940,           445,      'left' , 'grocery','manager'],
+      /* ⚠️ MOVED TWICE, AND THE SECOND TIME IS THE LESSON. He was authored at (960,420); the wider
+         run band covered it, so he went to (940,445) in the south cross-aisle - and then the south
+         caps took that cross-aisle back and swallowed him again. Two fixed coordinates, two
+         breakages, from one block of geometry moving. He is DERIVED now, like Curtis and Bekah:
+         the last aisle, halfway down, wherever that ends up being. */
+      ['Russ Pelletier',    aisle(4),      AISLE_Y,  'down' , 'grocery','manager'],
       /* ---- THE THREE MISSING DEPARTMENT MANAGERS. Placeholder art, like the rest of the crew.
          Positions derive from the fixtures their departments are built around, so redrawing the
          floor moves them with it. */
