@@ -9,6 +9,41 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-prop-scale` (2026-08-29)
+
+### 1. ⭐⭐ The props are all at one scale now
+You were right that they were wrong against **each other**, not against the floor. Measured, they
+ran from **25.9 to 120 authored units per metre — a 4.6x spread**. Everything is now sized from its
+real-world size at one scale (**42.2 units per metre**, taken from the character sprite: a person
+is 0.5 m across the shoulders). Spread is now **0.7%**.
+
+**The baler grew 1.63x**, pallets 1.30x, the go-back cart 1.41x, produce tables 1.25x. The
+checkstands only came down 7% — they were nearly right; they *read* as huge because the baler beside
+them was 63% undersized. A checkout lane is now **1.71x** the width of a baler, where it was 2.99x.
+
+**Side effect worth a look:** the shelf runs went 60 → 55 authored (a gondola is 1.3 m), and since
+the pitch didn't move, **the aisles got wider — 60 → 65**. The runs are where you left them.
+
+**One thing I did not change, deliberately.** The brief listed the deli/bakery case as "1.5 m per
+unit". At 1.5 m wide that asset would be 0.46 m deep, which is not a deli counter — it's drawn as a
+**multi-section run**, 4.27 m wide and 1.3 m deep, and it was already correct. Sizing it as briefed
+would have shrunk a right fixture to a third.
+
+### 2. The Bakery is clean — and it was worse than you saw
+The couch and the desk were **office decor drawn with no level gate at all**. The desk was the
+**CEO's executive desk**; the couch was the **reception waiting couch**. Not the manager/owner desks
+from last branch — those are correctly in the back office.
+
+**All eleven pieces were bleeding, not two.** The other nine are in DELI, PRODUCE, GROCERY, the
+FRONT END and the ENTRANCE — rooms you hadn't walked into. **And a sweep found a twelfth nobody had
+reported:** the office's reception counter has been standing in the store's FRONT END among the
+checkouts.
+
+All of it now draws per-level. **Worth walking the whole store once** to confirm nothing else looks
+imported.
+
+---
+
 ## From `grocery-props-and-lights` (2026-08-28)
 
 ### 1. ⭐⭐⭐ THE STORE HAS LIGHTS. Everything you approved was judged in the dark.
