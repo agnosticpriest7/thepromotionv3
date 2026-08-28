@@ -735,37 +735,72 @@ function sprW(n,cx,yBottom,tw){
 const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby:'tile_lobby',wood:'wood',marble:'marble'};
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
+/* ⚠️ ONE SCALE FOR THE STORE, DERIVED ONCE, BECAUSE THE PROPS WERE SCALED INDEPENDENTLY.
+   Every grocery prop had been sized to fit the space it was given rather than to its real size, so
+   nothing tied them to each other: measured, they ranged from 25.9 to 120 authored units per metre,
+   a 4.6x spread. That is why the checkstands read as huge and the baler as tiny on the TV -- not
+   because either was wrong against the floor, but because they were wrong against EACH OTHER.
+
+   THE REFERENCE IS THE PERSON. drawChar draws a character 38 scaled px wide (U1(38)) and a person
+   is about 0.5 m across the shoulders, which gives 42.2 authored units per metre. It is the right
+   reference because it is what every prop is judged against on screen, and it agrees with the
+   office's own furniture to 1.6% (cubicle_desk, 60 authored for a 1.4 m desk -> 42.9/m).
+
+   M(metres) is therefore the ONLY way a store prop should get its ART_W. */
+const PERSON_PX=38, SHOULDER_M=0.5;
+/* ⚠️ S CANCELS, WHICH IS WHY THIS CAN LIVE UP HERE. ART_W is in SCALED px, so the conversion is
+   m * ((PERSON_PX/S)/SHOULDER_M) * S -- the scale divides out and never has to be read. That
+   matters because ART_W is built at line ~762 and `const S` is not initialised until ~1415: a
+   version of this that touched S threw "Cannot access 'S' before initialization" at boot. U1 gets
+   away with reading S only because it is an arrow function nobody calls until later. */
+const M=(m)=>Math.round(m*PERSON_PX/SHOULDER_M);  // real metres -> ART_W, in SCALED px
+/* a FUNCTION DECLARATION, not a const arrow: module-scope consts are invisible from the test
+   sandbox, and the scale-consistency test has to be able to ask what the scale is. */
+function pxPerMetre(){ return (PERSON_PX/S)/SHOULDER_M; }   // 42.2 AUTHORED units per metre
+/* Source pixel sizes, so a LEVEL can work out a sprite's drawn height while it authors the floor.
+   The images load asynchronously and are not available at build time -- which is why the shelf run
+   already hardcoded 1650/496 rather than reading ART. This is that same fact, said once. */
+const ART_SRC={shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
+  shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
+  deli_case:[2044,623],bakery_case:[2079,623],dairy_case:[1469,748],
+  produce_fruit_a:[1242,907],produce_fruit_b:[1163,892],produce_veg:[1232,928],produce_mixed:[1053,907],
+  pallet:[1096,1104],baler:[1037,1157],checkstand:[447,1039],checkstand_r:[447,1039],goback_cart:[900,1125]};
+const ART_H_OF=(a)=>{const d=ART_SRC[a];return d?d[1]/d[0]:1;};
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
-  /* ⚠️ THE ART'S ASPECT IS LOCKED, SO THIS NUMBER CHOOSES THE RUN'S LENGTH TOO. Every sprite
-     draws at h = naturalHeight * w / naturalWidth, so picking a width picks a height: the assets
-     are 496x1650 (aspect 0.3006), and 108 scaled px = 60 authored wide => 199 authored tall.
-     Six runs at native aspect CANNOT also be 245 tall - that needs 74 authored each, and
-     6*74 + 5*58 = 734 against the 652 the sales floor has between the GROCERY zone's west edge
-     and the 58 of clearance the back-of-house wall needs. So this is a packing limit, not a
-     compression one, and 60 is the widest that keeps SIX runs and 58-authored aisles. */
-  shelf_run_a:108, shelf_run_b:108, shelf_run_c:108, shelf_run_d:108, shelf_run_e:108,
-  /* THE CAP IS THE RUN'S WIDTH, EXACTLY. Both assets are 496 wide and a sprite's height derives
-     from its width, so giving them the same ART_W makes cap and run flush by construction rather
-     than by a number someone has to keep in step. The supplied composite proves the intent: a
-     496x2036 run-with-cap whose bottom 386 rows are byte-identical to endcap.png. */
-  endcap:108,
-  /* ⚠️ DELI AND BAKERY SHARE A SCALE, NOT A WIDTH. Their sources are 2044x623 and 2079x623 -- the
-     same height, 1.7% different widths -- so an identical ART_W leaves their drawn heights 1
-     authored apart, under the level format's 1-unit quantisation floor and never adjacent anyway
-     (the two runs have a visible break between them). 324 scaled = 180 authored, which divides
-     BOTH runs exactly: bakery 360 = 2 cases, deli 540 = 3. */
-  deli_case:324, bakery_case:324,
-  dairy_case:200,
-  produce_fruit_a:110, produce_fruit_b:110, produce_veg:110, produce_mixed:110,
-  pallet:70, baler:70,
-  /* a checkout lane is drawn running NORTH-SOUTH, which is why the lanes were re-laid to match --
-     see the checkout block. 90 scaled = 50 authored wide, 116 authored long. */
-  checkstand:90, checkstand_r:90,
-  goback_cart:54,
+  /* ⚠️ THE ART'S ASPECT IS LOCKED, SO WIDTH CHOOSES LENGTH TOO. Every sprite draws at
+     h = naturalHeight * w / naturalWidth. A gondola run is 1.3 m across (both faces plus the
+     spine), which at one scale is 55 authored -- it was 60, sized to the space rather than to the
+     fixture. The runs get 5 narrower and the aisles get 5 wider for it. */
+  shelf_run_a:M(1.3), shelf_run_b:M(1.3), shelf_run_c:M(1.3), shelf_run_d:M(1.3), shelf_run_e:M(1.3),
+  /* THE CAP IS THE RUN'S WIDTH, EXACTLY -- same metres in, so flush by construction rather than by
+     a number someone has to keep in step. The supplied composite proves the intent: a 496x2036
+     run-with-cap whose bottom 386 rows are byte-identical to endcap.png. */
+  endcap:M(1.3),
+  /* ⚠️ THESE TWO ASSETS ARE NOT 1.5 m UNITS, AND SIZING THEM AS IF THEY WERE WOULD HAVE BEEN THE
+     ONE REAL MISTAKE IN THIS PASS. Their aspect is 3.28: at 1.5 m wide a case would be 0.46 m
+     DEEP, which is not a deli counter. At the 1.3 m depth a real one has, the asset is 4.27 m
+     wide -- it depicts a multi-section RUN, not a section. Sized by DEPTH it comes out at exactly
+     the 180 authored it already had, so these do not move; they were never the outlier, the
+     per-unit figure was. Deli and bakery share a SCALE, not a width (sources 2044x623 and
+     2079x623), which leaves their depths 1 authored apart, under the format's quantisation floor.
+     180 also divides both runs exactly: bakery 360 = 2, deli 540 = 3. */
+  deli_case:M(4.27), bakery_case:M(4.27),
+  dairy_case:M(2.5),                                    // 2.5 m of chilled wall
+  /* a produce table is 1.8 m -- these were 1.45 m, sized to the gap between the wet wall and the
+     aisle band rather than to a table. */
+  produce_fruit_a:M(1.8), produce_fruit_b:M(1.8), produce_veg:M(1.8), produce_mixed:M(1.8),
+  /* THE TWO KYLE CALLED OUT. A pallet is 1.2 m and a baler 1.5 m; they were 0.92 m and 0.92 m,
+     which is why the baler read as a toy next to a checkout lane. */
+  pallet:M(1.2), baler:M(1.5),
+  /* a checkout lane is 1.1 m across and 2.4 m long. The art's aspect is 0.43 against a real lane's
+     0.458, so it is drawn very nearly true -- the lane was only 8% oversized. It read as "huge"
+     because the baler beside it was 63% undersized. */
+  checkstand:M(1.1), checkstand_r:M(1.1),
+  goback_cart:M(1.0),
   mirror:26, elevator:200, stairs:96, fire_alarm:22, phone:40,   // phone art is now a handset ON A CABINET (478x553, was a bare 186x182 handset) — 26 drew the whole cabinet the size of the old phone
   wall_clock:28, first_aid:26, fire_extinguisher:20, kitchen_counter:56,
   /* Derived, not eyeballed. NOTE ART_W is in WORLD px, not authored units (U1 is identity here), so
@@ -9668,25 +9703,25 @@ function drawContainers(){
     if(c.loot&&c.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(c.x+c.w-6,c.y-6,5,5);}
     /* no name labels on containers (chests / shelves / lockers / fridge / vending) — the sprites read on their own */
   }
-  /* CEO's executive office (top-left glass office): desk + furnishings */
-  drawCeoDesk();   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged). Re-drawn over the seated CEO in drawNPC.
-  sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
-  sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
-  sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
-  sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
-  /* manager's office furnishings (Dale's office, top-centre) */
-  /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
-     is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
-     Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
-  sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
-  /* potted plants — CEO office, reception, meeting room, break room, sales corner */
-  /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
-     two table sets shifted into. Sprite is 18.9 x 28.9 authored anchored bottom-centre at y+7.8, so
-     it lands at x390..409 y285..314 — tucked into the room's interior corner (x385..635, y285..495)
-     and clear of the whiteboard below it (x386..432, y402..436). */
-  [[60,150],[222,452],[400,306],[1070,470],[1380,720]].forEach(p=>{
-    sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
-  });
+ /* CEO's executive office (top-left glass office): desk + furnishings */
+ drawCeoDesk();   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged). Re-drawn over the seated CEO in drawNPC.
+ sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
+ sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
+ sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
+ sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
+ /* manager's office furnishings (Dale's office, top-centre) */
+ /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
+    is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
+    Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
+ sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
+ /* potted plants — CEO office, reception, meeting room, break room, sales corner */
+ /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
+    two table sets shifted into. Sprite is 18.9 x 28.9 authored anchored bottom-centre at y+7.8, so
+    it lands at x390..409 y285..314 — tucked into the room's interior corner (x385..635, y285..495)
+    and clear of the whiteboard below it (x386..432, y402..436). */
+ [[60,150],[222,452],[400,306],[1070,470],[1380,720]].forEach(p=>{
+   sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
+ });
 }
 
 function render(){
@@ -11941,7 +11976,9 @@ function loadLevel(id){
      the run is 60 wide and 199 tall: SIX runs and 58 aisles are kept - the two things judged on
      the TV - and the run gives up 46 of length, which reads as a wider south cross-aisle.
      Five runs would fit at full native size; that is a run-count change and Kyle's call. */
-  const SHELF_W=60, RUN_GAP=118, RUN_X0=320, RUN_COUNT=6;
+  /* DERIVED FROM THE ART, not restated: the run's authored width IS its sprite's. The pitch is
+     unchanged, so the runs stay where Kyle judged them and the aisles simply get wider. */
+  const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=320, RUN_COUNT=6;
   const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
   const RUN_TOP_Y=223;                                     // drawn top, unchanged from the old art
   const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
@@ -11994,7 +12031,7 @@ function loadLevel(id){
   /* ⚠️ REAL CASES NOW, not counter_plain repeated. CASE_W divides both runs exactly (360 = 2,
      540 = 3), and the drawn depth is DERIVED from the art rather than from CTR, so the blocker and
      the sprite cannot disagree about how deep a deli counter is. */
-  const CASE_W=180, CASE_D=Math.round(CASE_W*623/2044);   // 55 authored, from the source aspect
+  const CASE_W=Math.round(ART_W.deli_case/S), CASE_D=Math.round(CASE_W*623/2044);   // 180 x 55 authored
   const counterRun=(x0,x1,label,art)=>{
     const n=Math.round((x1-x0)/CASE_W);
     for(let i=0;i<n;i++)
@@ -12021,7 +12058,7 @@ function loadLevel(id){
      authored between the lanes of a cluster, 590 through the middle -- and the entrance door
      (x 690-810) opens into that middle gap, so you walk in and straight up the store. 50 authored
      of cross-aisle is left north of the lanes, between them and the shelf block. */
-  const CHK_Y=520, CHK_W=50, CHK_D=Math.round(CHK_W*1039/447);   // 116 authored long, from the art
+  const CHK_Y=520, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);   // 47 x 108
   const chkXs=[];
   const checkout=(x0,art)=>{
     chkXs.push(x0);
@@ -12072,19 +12109,29 @@ function loadLevel(id){
      columns match. */
   {
     const TRAY=['produce_fruit_a','produce_veg','produce_mixed','produce_fruit_b'];
-    const TX=[100,200], TY=[310,395];
+    /* the tables grew 1.45 m -> 1.8 m, so the rows were re-spaced to keep floor between them.
+       Widths and depths come from the art at the one scale, so the blocker cannot drift from the
+       sprite the way a literal 59x44 did. */
+    const TW=Math.round(ART_W.produce_fruit_a/S);
+    const TX=[96,196], TY=[300,400];
     let k=0;
     for(let r=0;r<TY.length;r++)for(let c=0;c<TX.length;c++){
       const art=TRAY[k++];
-      CONTAINERS.push({x:TX[c]+16,y:TY[r]+18,w:28,h:22,label:'Produce display',kind:'box',art:art});
-      levelBlockers.push({x:TX[c]+1,y:TY[r]+1,w:59,h:44});
+      const th=Math.round(TW*ART_H_OF(art));
+      CONTAINERS.push({x:TX[c]+Math.round(TW/2)-14,y:TY[r]+th-22-Math.round(4/S),w:28,h:22,
+                       label:'Produce display',kind:'box',art:art});
+      levelBlockers.push({x:TX[c]+1,y:TY[r]+1,w:TW-2,h:th-2});
     }
   }
   /* THE DAIRY CASE -- the store's first refrigerated fixture. Set dressing: a blocker with no
      trigger and no task, as briefed. North of the produce trays, clear of the wet wall (x 38-68)
      and of the bakery counter above it (ends y 131). */
-  CONTAINERS.push({x:152,y:247,w:28,h:22,label:'Dairy case',kind:'cabinet',art:'dairy_case'});
-  levelBlockers.push({x:111,y:215,w:109,h:55});
+  {
+    const DW=Math.round(ART_W.dairy_case/S), DH=Math.round(DW*ART_H_OF('dairy_case'));
+    CONTAINERS.push({x:110+Math.round(DW/2)-14,y:215+DH-22-Math.round(4/S),w:28,h:22,
+                     label:'Dairy case',kind:'cabinet',art:'dairy_case'});
+    levelBlockers.push({x:111,y:216,w:DW-2,h:DH-2});
+  }
   /* ---- BACK OF HOUSE fittings. The pallets get real art; the rest already reuse the office's,
      which is what the store has done since it was built -- lockers are kind:'locker' (office
      lockers), the department board is type:'board' (office whiteboard), the intercom is

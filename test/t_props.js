@@ -186,6 +186,49 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      stillPlaceholder.length ? stillPlaceholder.map(c => c.label).join(', ') : 'all replaced');
 }
 
+/* ---- 5b. ONE SCALE, AND THIS IS THE ASSERTION THAT WOULD HAVE CAUGHT IT ------------------
+   ⚠️ CHECKING EACH PROP AGAINST A HARDCODED NUMBER CANNOT TELL A CONSISTENT SCALE FROM A
+   COINCIDENTAL ONE. Every prop used to be sized to the space it was given, so each one was
+   defensible alone and the SET was incoherent: measured, they ranged 25.9 to 120 authored units
+   per metre, a 4.6x spread. That is why the checkstands read as huge and the baler as tiny -- the
+   checkstand was only 8% oversized, the baler 63% under. Neither is visible without the other.
+
+   So: each prop declares its real-world size, the test derives the scale that size implies, and
+   they all have to AGREE. One assertion, whole class. */
+{
+  const w = mk('grocery'), L = w.g.layout, sc = L.S;
+  /* real-world size, in metres, of the dimension each ART_W actually sets (the sprite's width).
+     ⚠️ deli/bakery are 4.27 m because the ASSET IS A MULTI-SECTION RUN, not a 1.5 m section: its
+     aspect is 3.28, so at 1.5 m wide it would be 0.46 m deep, which is not a deli counter. At the
+     1.3 m depth a real one has, it is 4.27 m wide. Sizing it as a "unit" would have shrunk a
+     correct fixture to a third of its size. */
+  const REAL_M = { shelf_run_a: 1.3, shelf_run_b: 1.3, shelf_run_c: 1.3, shelf_run_d: 1.3,
+                   shelf_run_e: 1.3, endcap: 1.3, checkstand: 1.1, checkstand_r: 1.1,
+                   deli_case: 4.27, bakery_case: 4.27, dairy_case: 2.5,
+                   produce_fruit_a: 1.8, produce_fruit_b: 1.8, produce_veg: 1.8, produce_mixed: 1.8,
+                   baler: 1.5, pallet: 1.2, goback_cart: 1.0 };
+  const ppm = w.sandbox.pxPerMetre();
+  ck('the store declares one scale, derived from the character sprite',
+     ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');
+
+  const implied = Object.entries(REAL_M).map(([n, m]) => ({ n, s: ((L.ART_W[n] || 0) / sc) / m }));
+  const off = implied.filter(o => Math.abs(o.s - ppm) / ppm > 0.05);
+  ck('every prop of known real size implies the SAME scale, within 5%',
+     off.length === 0,
+     off.length ? off.map(o => o.n + ' implies ' + o.s.toFixed(1) + '/m vs ' + ppm.toFixed(1)).join('; ')
+                : implied.length + ' props, ' +
+                  Math.min(...implied.map(o => o.s)).toFixed(1) + '-' +
+                  Math.max(...implied.map(o => o.s)).toFixed(1) + '/m');
+
+  /* the sanity check Kyle gave: a checkout lane reads noticeably LONGER than a baler is wide */
+  const laneLen = ((L.ART_W.checkstand / sc) * 1039 / 447);
+  const balerW = L.ART_W.baler / sc;
+  ck('  ^ so a checkout lane is about 1.6x the width of a baler, as it should be',
+     laneLen / balerW > 1.4 && laneLen / balerW < 1.9,
+     'lane ' + laneLen.toFixed(0) + ' long vs baler ' + balerW.toFixed(0) + ' wide = ' +
+     (laneLen / balerW).toFixed(2) + 'x  (was 2.99x)');
+}
+
 /* ---- 6. THE OFFICE IS UNTOUCHED ---------------------------------------------------------- */
 {
   const w = mk('office'), L = w.g.layout;
