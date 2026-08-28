@@ -9078,12 +9078,11 @@ function drawLabels(){
   ctx.textAlign='left';
   /* Inline decor RE-PLACED for the new floor. Kitchen counter is now a real container
      (drawn by drawContainers), so it's not duplicated here. */
-  // reception desk (SW reception) — new chair-less counter (Peggy sits behind it); fall back to a painted block
-  if(ok('reception_desk2')){
-    drawReceptionDesk();
-  } else {
-    ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
-  }
+  /* ⚠️ THE FIFTH INSTANCE, found by sweeping rather than by eye. The reception counter draws at
+     authored (110,566), which in Save-Rite is the middle of the FRONT END, and drawLabels has no
+     level gate — so the office's front desk has been standing among the checkouts. Same treatment
+     as the furniture: the position stays, the level chooses the content. */
+  drawLevelReception();
   // reception waiting room — real couch + chairs are drawn in drawDecor now
   // kitchen vending (the painted maroon unit at 1362,60) removed — that half is the JANITORIAL room now
   ctx.textAlign='left';
@@ -9703,26 +9702,64 @@ function drawContainers(){
     if(c.loot&&c.loot.length){ctx.fillStyle='#e8c23a';ctx.fillRect(c.x+c.w-6,c.y-6,5,5);}
     /* no name labels on containers (chests / shelves / lockers / fridge / vending) — the sprites read on their own */
   }
- /* CEO's executive office (top-left glass office): desk + furnishings */
- drawCeoDesk();   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged). Re-drawn over the seated CEO in drawNPC.
- sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
- sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
- sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
- sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
- /* manager's office furnishings (Dale's office, top-centre) */
- /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
-    is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
-    Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
- sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
- /* potted plants — CEO office, reception, meeting room, break room, sales corner */
- /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
-    two table sets shifted into. Sprite is 18.9 x 28.9 authored anchored bottom-centre at y+7.8, so
-    it lands at x390..409 y285..314 — tucked into the room's interior corner (x385..635, y285..495)
-    and clear of the whiteboard below it (x386..432, y402..436). */
- [[60,150],[222,452],[400,306],[1070,470],[1380,720]].forEach(p=>{
-   sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
- });
+  /* ⚠️ LEVEL FURNITURE. FOURTH INSTANCE OF THE SAME CLASS, and the worst-placed one: everything
+     in this block is authored at OFFICE coordinates and used to be drawn unconditionally, so in
+     Save-Rite ALL ELEVEN pieces landed in store rooms -- the CEO's executive desk at (120,120)
+     inside the bakery case run, the reception couch at (92,176) on the Bakery floor, and nine more
+     across DELI, PRODUCE, GROCERY, FRONT END and the ENTRANCE. Kyle saw two; the other nine were
+     in rooms he had not walked into.
+
+     The POSITION of this call is load-bearing -- it draws after CONTAINERS and before the people,
+     so moving it would re-layer the office. The position stays and the CONTENT is chosen by level,
+     which is also why it is a table and not an `if(!office)return`: a level with furniture of its
+     own adds an entry rather than another exception. */
+  drawLevelFurniture();
 }
+/* Each level draws its OWN loose furniture. The office's list below is exactly what used to be
+   drawn unconditionally, in the same order, so its layering is unchanged. The store's entry is
+   empty ON PURPOSE and says so: every fixture in Save-Rite is a real CONTAINER with a blocker.
+   Verified rather than asserted -- t_props walks both levels and requires no office-only prop
+   type to render in a grocery room. */
+const LEVEL_FURNITURE={
+  office:{
+   furniture(){
+    /* CEO's executive office (top-left glass office): desk + furnishings */
+    drawCeoDesk();   // CEO's chair-less executive desk (same position + width as the old manager_desk; collision in buildBlockers unchanged). Re-drawn over the seated CEO in drawNPC.
+    sprAt('couch',Math.round(92*S),Math.round(176*S),'couch');            // waiting couch, south wall
+    sprAt('filing_cabinet',Math.round(230*S),Math.round(118*S),'filing_cabinet');
+    sprAt('plant',Math.round(34*S),Math.round(66*S),'plant');
+    sprAt('plant',Math.round(228*S),Math.round(64*S),'plant');
+    /* manager's office furnishings (Dale's office, top-centre) */
+    /* The manager office's loose office_chair is GONE. It stood at 930,120 and the desk's seat point
+       is 930,127 — the same spot — so once anyone sat there you saw two chairs stacked on each other.
+       Same reasoning as the HR desk's spare chair: a sitter brings their own via drawSeated. */
+    sprAt('filing_cabinet',Math.round(1010*S),Math.round(40*S),'filing_cabinet');
+    /* potted plants — CEO office, reception, meeting room, break room, sales corner */
+    /* The meeting-room plant moved 600,470 -> 400,306 (SE corner -> NW corner) to clear the space the
+       two table sets shifted into. Sprite is 18.9 x 28.9 authored anchored bottom-centre at y+7.8, so
+       it lands at x390..409 y285..314 — tucked into the room's interior corner (x385..635, y285..495)
+       and clear of the whiteboard below it (x386..432, y402..436). */
+    [[60,150],[222,452],[400,306],[1070,470],[1380,720]].forEach(p=>{
+      sprAt('plant',Math.round(p[0]*S),Math.round(p[1]*S)+U1(14),'plant');
+    });
+   },
+   /* the SW reception counter, drawn from drawLabels — a different layer, same rule */
+   reception(){
+     if(ok('reception_desk2')){ drawReceptionDesk(); }
+     else { const U=(v)=>Math.round(v*S);
+       ctx.fillStyle='#241d16';ctx.fillRect(U(46),U(524),U(132),U(42));ctx.fillStyle='#9c8f6f';ctx.fillRect(U(48),U(526),U(128),U(38));ctx.fillStyle='#20242a';ctx.fillRect(U(96),U(532),U(20),U(12));
+     }
+   },
+  },
+  grocery:{
+    /* the store's fixtures are all real CONTAINERS with blockers; it authors no loose furniture,
+       and it has no reception counter — Save-Rite's front desk is the checkouts. */
+    furniture(){}, reception(){},
+  },
+};
+function levelFurniturePart(part){ const L=LEVEL_FURNITURE[currentLevel]; if(L&&L[part])L[part](); }
+function drawLevelFurniture(){ levelFurniturePart('furniture'); }
+function drawLevelReception(){ levelFurniturePart('reception'); }
 
 function render(){
   try{ renderInner(); }

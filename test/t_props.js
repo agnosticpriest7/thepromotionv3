@@ -229,6 +229,71 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      (laneLen / balerW).toFixed(2) + 'x  (was 2.99x)');
 }
 
+/* ---- 5c. NO OFFICE FURNITURE IN A STORE ROOM ---------------------------------------------
+   ⚠️ ENUMERATE BY TYPE, NOT BY POSITION. Positions rot -- t_sightlines lost (440,340) to exactly
+   that. The office's loose furniture used to be drawn unconditionally, so ALL ELEVEN pieces
+   rendered in Save-Rite: the CEO's desk inside the bakery case run, the reception couch on the
+   Bakery floor, and nine more across DELI, PRODUCE, GROCERY, FRONT END and the ENTRANCE. */
+{
+  const fs = require('fs'), path = require('path');
+  const src = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const table = src.split('const LEVEL_FURNITURE=')[1];
+  ck('loose furniture is chosen by level, not drawn always', !!table,
+     table ? 'LEVEL_FURNITURE table present' : 'NO per-level table — furniture is unconditional again');
+
+  if (table) {
+    /* split on the LEVEL KEYS rather than on an exact call form: the first version keyed on
+       `office(){`, which stopped matching the moment the table grew a second draw position and
+       became `office:{ furniture(){ ... }`. A source scan should key on the thing that identifies
+       the region, not on the shape it happened to have. */
+    const officeEntry  = (table.split('office:')[1] || '').split('grocery:')[0];
+    const groceryEntry = (table.split('grocery:')[1] || '').split('function levelFurniturePart')[0];
+    ck('  ^ and the store draws none of it',
+       !/sprAt\(|drawCeoDesk\(|drawReceptionDesk\(/.test(groceryEntry),
+       /sprAt\(|drawCeoDesk\(|drawReceptionDesk\(/.test(groceryEntry)
+         ? 'the store entry draws furniture' : 'store entry is empty, as intended');
+    const kept = ['drawCeoDesk', "'couch'", "'filing_cabinet'", "'plant'", 'drawReceptionDesk']
+      .filter(k => officeEntry.indexOf(k) >= 0);
+    ck('  ^ while the office keeps its own, reception counter included',
+       kept.length === 5, kept.join(', '));
+  }
+}
+
+/* ---- 5d. WHAT ACTUALLY DRAWS, NOT WHAT THE SOURCE SAYS -----------------------------------
+   ⚠️ SECTION 5c INSPECTS THE TABLE; IT DOES NOT WATCH THE FLOOR. A mutant that left the table
+   perfectly intact and simply called LEVEL_FURNITURE.office.furniture() directly -- restoring the
+   original bug in full -- SURVIVED the whole suite, because the grocery entry was still empty and
+   the office entry still had its five markers. Structure, not behaviour: the same gap that let a
+   hardcoded light order survive t_lights.
+
+   So render each level and watch what is drawn. sprAt/sprW are function declarations, which land
+   on the sandbox global, and internal calls resolve through it -- so replacing them intercepts
+   every sprite the frame actually paints. */
+{
+  const OFFICE_ONLY = ['ceo_desk', 'couch', 'plant', 'reception_desk2'];
+  const drawnIn = (lv) => {
+    const w = mk(lv), S = w.sandbox, seen = {};
+    const rA = S.sprAt, rW = S.sprW;
+    S.sprAt = function (n) { seen[n] = (seen[n] || 0) + 1; return rA.apply(this, arguments); };
+    S.sprW  = function (n) { seen[n] = (seen[n] || 0) + 1; return rW.apply(this, arguments); };
+    try { S.render(); } finally { S.sprAt = rA; S.sprW = rW; }
+    return seen;
+  };
+  const gro = drawnIn('grocery'), off = drawnIn('office');
+
+  const bled = OFFICE_ONLY.filter(n => gro[n]);
+  ck('rendering the STORE draws no office-only furniture at all',
+     bled.length === 0,
+     bled.length ? 'BLED: ' + bled.map(n => n + ' x' + gro[n]).join(', ')
+                 : 'none of ' + OFFICE_ONLY.join('/') + ' drawn (' + Object.keys(gro).length + ' sprites in the frame)');
+
+  /* the paired direction — an empty frame would satisfy the check above */
+  const kept = OFFICE_ONLY.filter(n => off[n]);
+  ck('  ^ while rendering the OFFICE still draws all of it',
+     kept.length === OFFICE_ONLY.length,
+     kept.map(n => n + ' x' + off[n]).join(', '));
+}
+
 /* ---- 6. THE OFFICE IS UNTOUCHED ---------------------------------------------------------- */
 {
   const w = mk('office'), L = w.g.layout;
