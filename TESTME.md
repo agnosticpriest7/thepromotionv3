@@ -9,6 +9,32 @@ a reply, it's just a queue so nothing gets lost while you're away from the TV.
 
 ---
 
+## From `grocery-shelf-endcaps` (2026-08-28)
+
+### 1. The aisle runs have south endcaps ⭐⭐
+Every run now ends in a proper endcap facing the front-of-store cross-aisle. South ends only —
+the product band is along the cap's bottom edge, so a north cap would light from the wrong side.
+
+**This closes the open question from last time.** The runs had shrunk 245 → 199 authored and I
+flagged the leftover gap as "wider cross-aisle or a hole?". The caps take that space back: run 199
++ cap 47 = **246**, so the block is back to the length it was before the art changed, and the
+question is moot. Aisle width is still untouched at 60.
+
+### 2. ⚠️ The checkstands are NOT done — and I need a decision
+The new checkstand art is drawn **north-south** (447 × 1039, a lane running away from you). Your
+store's checkouts are laid out **east-west**: four lanes, each 148 × 48, horizontal bars of three
+counter units at y 560. Your brief said stop and report rather than rotate, so I stopped.
+
+Two ways out, both yours:
+- **Re-lay the checkouts north-south** — lanes perpendicular to the south wall, which is what the
+  art assumes and what most real shops look like. Changes the front end's layout.
+- **Re-draw the art east-west** — keeps the floor as you judged it.
+
+Also: **`checkstand_r.png` never arrived.** Only three images came through — the endcap, one
+checkstand, and a run-with-cap composite (496 × 2036) that isn't one of the eight listed files.
+
+---
+
 ## From `grocery-shelf-art` (2026-08-27)
 
 ### 1. The grocery aisles have real shelf art ⭐⭐⭐ — and this one is a look-at-it call
