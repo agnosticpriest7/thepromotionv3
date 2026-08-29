@@ -1,6 +1,37 @@
-/* GATE ROTATION — the pre-merge test suite. `node test/gate.js` runs each test as a child process
-   and reports pass/fail; a non-zero exit means do not merge. t_regress (the 150k soak) runs last. */
-const { execSync } = require('child_process');
+/* GATE ROTATION — the pre-merge test suite. `node test/gate.js` runs every test as its own child
+   process and reports pass/fail; a non-zero exit means do not merge.
+
+   ⚠️ RUNS IN PARALLEL, LONGEST FIRST. The rotation was ~64 minutes sequentially, which is the
+   largest single tax on this project — every branch pays it, and a gate nobody wants to sit
+   through is a gate that gets skipped. That is how t_printer stayed RED for weeks.
+
+   SAFE BECAUSE THE TESTS SHARE NOTHING, and that was AUDITED rather than assumed:
+     - no test writes ANY file (no writeFileSync / mkdirSync / unlinkSync anywhere under test/)
+     - no test binds a port or spawns a process (the only `exec(` in harness.js is a regex)
+     - index.html is opened READ-ONLY by the five tests that read it, and by the harness
+     - localStorage is a fresh in-memory Map per createWorld() call, not a shared stub
+     - no fixed temp paths; every test resolves from __dirname
+   A test that breaks any of those must not be added without being given a per-worker resource.
+
+   ⚠️ SCHEDULE LONGEST FIRST OR THE POOL BUYS LITTLE. t_lights and t_rank_leaks are ~17 minutes
+   between them; started last they become a tail everything else waits behind, and the run can
+   finish no sooner than the longest job plus whatever is queued behind it.
+
+   `GATE_SEQUENTIAL=1 node test/gate.js` keeps the old one-at-a-time order, permanently, so a
+   suspicious result can always be re-run in the order it used to run in.
+   `GATE_POOL=n` overrides the worker count.
+
+   ⚠️ A RED HERE IS NOT AUTOMATICALLY A REGRESSION, AND THAT PREDATES THIS FILE. 20+ tests call
+   createWorld() with NO seed, so each run builds a different cast, different desks and different
+   routes -- their input is randomised and their outcome is not deterministic. t_meltdown was
+   measured at a 6.7% failure rate over 30 trials run ONE AT A TIME WITH NO CONTENTION (both
+   failures the same NPC, swings=0: a forced meltdown that never started, which is a reproducible
+   condition rather than noise). Parallelising did not cause that and cannot: those tests have no
+   wall-clock dependency, every duration is frames*dt. What it does is roll the dice five times as
+   often, because the rotation now costs 12 minutes instead of 64. RE-RUN A LONE RED BEFORE
+   believing it, and seed the suite when somebody has a branch for it. */
+const { execFile } = require('child_process');
+const os = require('os');
 const fs = require('fs');
 const path = require('path');
 
@@ -99,30 +130,97 @@ if (unlisted.length || ghosts.length) {
 }
 Object.entries(SKIP).forEach(([f, why]) => console.log(`-- ${f.padEnd(22)} SKIPPED — ${why}`));
 
-const failed = [];
-const times = [];
-const t0 = Date.now();
-for (const t of TESTS) {
-  process.stdout.write(`-- ${t.padEnd(22)} `);
+/* Measured wall times, used ONLY to decide what starts first. A test missing from here is not an
+   error — it gets a middling estimate and is scheduled among the mid-length jobs. Being wrong here
+   costs a little scheduling efficiency and nothing else, which is why it is not asserted anywhere. */
+const KNOWN_SECS = {
+  't_lights.js': 521, 't_rank_leaks.js': 509, 't_meltdown.js': 310, 't_hud_column.js': 273,
+  't_delegate.js': 230, 't_grocery_unseat.js': 190, 't_hire.js': 187, 't_grocery_customers.js': 178,
+  't_regress.js': 160, 't_menu_load.js': 97, 't_grocery_upper.js': 92, 't_grocery_ladder.js': 90,
+  't_grocery_flavour.js': 89, 't_grocery_soak.js': 85, 't_ceo.js': 79, 't_sightlines.js': 67,
+  't_grocery_crew.js': 48, 't_grocery_endgame.js': 46, 't_arrivals.js': 45, 't_grocery_deleg.js': 37,
+  't_test_game.js': 28, 't_grocery.js': 23, 't_grocery_tasks.js': 20, 't_fiction.js': 16,
+  't_grace.js': 14, 't_fetch_mission.js': 11, 'placement.js': 8,
+};
+const DEFAULT_SECS = 30;
+const estOf = t => (t in KNOWN_SECS ? KNOWN_SECS[t] : DEFAULT_SECS);
+
+const SEQUENTIAL = !!process.env.GATE_SEQUENTIAL;
+const CORES = os.cpus().length;
+/* ⚠️ 8, NOT cores-2, AND THE REASON IS MEASURED. Wall time here is bounded by the LONGEST TEST,
+   not by packing: past ~8 workers there is no packing left to win (64 min of test time over 8 is
+   8.1 min, already under t_lights' 8.7), so every extra worker only makes t_lights slower by
+   contending with it. Measured on 16 cores, 60 tests:
+       pool 14 -> 13.0 min wall, 116.1 min of test time, t_lights 780s
+       pool  8 -> 12.6 min wall,  86.5 min of test time, t_lights 675s
+   Same wall time, a quarter less machine load, and the box stays usable while it runs. */
+const POOL = SEQUENTIAL ? 1
+  : Math.max(1, Math.min(parseInt(process.env.GATE_POOL, 10) || Math.max(2, Math.min(8, CORES - 2)), TESTS.length));
+
+/* the ONE line each test contributes, picked exactly as the sequential runner picked it */
+const summarise = out =>
+  (out.trim().split('\n').filter(l => /GREEN|RESULT:|PLACEMENT:|pass,|documented/.test(l)).pop() || 'ok').trim();
+
+const runOne = (t) => new Promise(resolve => {
   const started = Date.now();
-  try {
-    const out = execSync(`node "${path.join(__dirname, t)}"`, { encoding: 'utf8' });
-    const secs = (Date.now() - started) / 1000;
-    times.push([t, secs]);
-    const line = out.trim().split('\n').filter(l => /GREEN|RESULT:|PLACEMENT:|pass,|documented/.test(l)).pop() || 'ok';
-    console.log(`${String(secs.toFixed(0)).padStart(4)}s  ${line.trim()}`);
-  } catch (e) {
-    const secs = (Date.now() - started) / 1000;
-    times.push([t, secs]);
-    failed.push(t);
-    console.log(`${String(secs.toFixed(0)).padStart(4)}s  FAILED ❌`);
-    console.log(((e.stdout || '') + (e.stderr || '')).trim().split('\n').slice(-8).map(l => '   ' + l).join('\n'));
+  execFile('node', [path.join(__dirname, t)], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 },
+    (err, stdout, stderr) => {
+      resolve({
+        t, secs: (Date.now() - started) / 1000, ok: !err,
+        line: err ? 'FAILED ❌' : summarise(stdout || ''),
+        /* ⚠️ A POOL THAT LOSES A FAILURE IS WORSE THAN NO POOL — keep the child's own output so a
+           red test reports the same tail it reported when it ran alone. */
+        tail: err ? ((stdout || '') + (stderr || '')).trim().split('\n').slice(-8) : null,
+      });
+    });
+});
+
+async function main() {
+  const failed = [];
+  const times = [];
+  const t0 = Date.now();
+  console.log(SEQUENTIAL
+    ? '-- running SEQUENTIALLY (GATE_SEQUENTIAL=1)'
+    : `-- ${TESTS.length} tests, pool of ${POOL} on ${CORES} cores, longest first`);
+
+  /* longest first; ties keep the canonical order so the schedule is deterministic */
+  const queue = SEQUENTIAL ? TESTS.slice()
+    : TESTS.slice().sort((a, b) => estOf(b) - estOf(a) || TESTS.indexOf(a) - TESTS.indexOf(b));
+
+  const results = new Map();
+  let next = 0, done = 0;
+  await Promise.all(Array.from({ length: POOL }, async () => {
+    while (next < queue.length) {
+      const t = queue[next++];
+      const r = await runOne(t);
+      results.set(t, r);
+      done++;
+      process.stdout.write(`   [${String(done).padStart(2)}/${queue.length}] ${r.ok ? 'ok  ' : 'FAIL'} ${t}\n`);
+    }
+  }));
+
+  /* ⚠️ REPORT IN THE CANONICAL ORDER, NOT COMPLETION ORDER, so a parallel run's output can be
+     diffed test-for-test against a sequential one. */
+  console.log('');
+  for (const t of TESTS) {
+    const r = results.get(t);
+    times.push([t, r.secs]);
+    if (!r.ok) failed.push(t);
+    console.log(`-- ${t.padEnd(22)} ${String(r.secs.toFixed(0)).padStart(4)}s  ${r.line}`);
+    if (r.tail) console.log(r.tail.map(l => '   ' + l).join('\n'));
   }
+  report(times, failed, t0);
 }
 /* Report the slowest few. A gate nobody wants to sit through is a gate that gets skipped, and a
    skipped gate is how t_printer stayed RED — so keep the cost visible rather than letting it drift. */
-const slow = times.slice().sort((a, b) => b[1] - a[1]).slice(0, 5);
-console.log(`\ntotal ${((Date.now() - t0) / 1000 / 60).toFixed(1)} min over ${TESTS.length} tests`
-          + `  |  slowest: ${slow.map(([n, s]) => `${n.replace(/\.js$/, '')} ${s.toFixed(0)}s`).join(', ')}`);
-console.log(failed.length ? `\nGATE: RED ❌ — ${failed.join(', ')}` : `\nGATE: GREEN ✅ (all ${TESTS.length} passed)`);
-process.exit(failed.length ? 1 : 0);
+function report(times, failed, t0) {
+  const slow = times.slice().sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const wall = (Date.now() - t0) / 1000 / 60;
+  const cpu = times.reduce((acc, [, v]) => acc + v, 0) / 60;
+  console.log(`\ntotal ${wall.toFixed(1)} min wall over ${TESTS.length} tests`
+            + (SEQUENTIAL ? '' : `  (${cpu.toFixed(1)} min of test time across ${POOL} workers)`)
+            + `  |  slowest: ${slow.map(([n, sec]) => `${n.replace(/\.js$/, '')} ${sec.toFixed(0)}s`).join(', ')}`);
+  console.log(failed.length ? `\nGATE: RED ❌ — ${failed.join(', ')}` : `\nGATE: GREEN ✅ (all ${TESTS.length} passed)`);
+  process.exit(failed.length ? 1 : 0);
+}
+main();
