@@ -220,6 +220,25 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   If a mutant can be killed by an assertion that only reads a table, that assertion is not testing
   anything.
 
+- ⚠️ **A PROBE THAT RUNS BEFORE THE FIRST TICK MEASURES A WORLD THAT DOES NOT EXIST YET.**
+  `createWorld()` does not finish the world. `blockers` is `[]` at module scope and is filled from
+  `CONTAINERS` in the first `buildGrid`, and part of `walls` is appended there too — so at tick 0
+  `solid()` **cannot return true for any container.** Standing directly on the owner's desk reads
+  as open floor. `t_grocery_crew` had a "no station is inside a solid box" assertion for its whole
+  life that **could never have failed**, and three crew stations sat inside containers while it
+  stayed green. `placement.js` had it too, one layer deeper: booted with only `promo:level`, ten of
+  the store's thirty-six containers never entered `blockers` at all. **Tick once before measuring,
+  and boot with the full storage handoff** (`promo:newgame`/`promo:char`), not just the level key.
+- ⚠️ **AND ANCHOR ON THE HALF THAT ACTUALLY DIES.** The fix above is only half the lesson.
+  The first anti-vacuity anchor asked whether the middle of a **wall** reads solid — and it passed,
+  in the very world where ten containers were missing from collision, because walls and blockers
+  are filled from different places at different times. It proved the wrong subsystem was alive.
+  A check that guards `solid()` against containers must anchor on **containers**. State what would
+  make the assertion vacuous, then assert *that* cannot happen: `t_grocery_crew` and `placement.js`
+  now both fail with "N of M containers are not solid at their own centre" rather than passing
+  quietly. Verified by removing the tick and watching the anchor go red while the check it guards
+  still cheerfully reported "all 12 stations standable".
+
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
 
 ### 15. A harness world is NOT a populated floor — parked NPCs will fake your data
