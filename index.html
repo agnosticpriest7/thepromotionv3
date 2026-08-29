@@ -1554,6 +1554,13 @@ const walls=[
 const EXIT={x:60,y:720};           // the lift doors (SW elevator lobby)
 const ELEVATOR=EXIT;
 const MUSTER={x:150,y:720};       // where people gather: spawn, clock-out, fire drill
+/* WHERE THE DAILY HUDDLE HAPPENS. Null means "use the office meeting tables", which is what
+   meetingCentre() did unconditionally -- and in a shop with no meeting room that midpoint is open
+   floor in the GROCERY aisle, so eleven of eighteen crew walked onto the SALES floor for the
+   morning huddle every day. It never threw and never froze, which is why nothing caught it. This
+   is the tickLights / triggerAudit shape again: an office constant doing duty in a second level.
+   A level that has somewhere better to stand says so here; the office leaves it null. */
+let MEETING_SPOT=null;
 /* WHERE STAFF GO ON BREAK. This was a literal buried in npcTarget -- an office coordinate that was
    harmless only for as long as no non-office level had anyone to route. The moment Save-Rite got a
    crew it would have marched all six into the middle of the shop floor and called it a break. */
@@ -1678,6 +1685,7 @@ function meetingStand(n){
   return n.mtgStand;
 }
 function meetingCentre(){
+  if(MEETING_SPOT)return {x:MEETING_SPOT.x, y:MEETING_SPOT.y};
   return {x:Math.round((meetingTable.x+meetingTable.w/2 + meetingTable2.x+meetingTable2.w/2)/2),
           y:Math.round((meetingTable.y+meetingTable.h/2 + meetingTable2.y+meetingTable2.h/2)/2)};
 }
@@ -11957,7 +11965,7 @@ function scaleWorld(){
   breakChairs.filter(c=>c.couch).forEach(scaleBox);
   scaleBox(meetingTable); scaleBox(meetingTable2); scaleBox(breakTable); scaleBox(breakTable2); scaleBox(kitchenTable);
   scaleBox(EXIT);
-  scaleBox(MUSTER); scaleBox(BREAK_SPOT);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
+  scaleBox(MUSTER); scaleBox(BREAK_SPOT); if(MEETING_SPOT)scaleBox(MEETING_SPOT);   // SALES_DOOR is in walls[], MGR_DESK/DALE_DESK is in desks[] — both already scaled
   scaleBox(HR_OFFICE);
   ROOMS.forEach(scaleBox);
   levelBoxes.forEach(scaleBox);
@@ -12046,11 +12054,67 @@ function loadLevel(id){
        The opening is a 90-unit gap in the dividing wall — the nav grid inflates a blocker by 2px
        a side and cells are 20 authored, so a narrow gap is not reliably walkable. ------------- */
   const BOH_X=1030, BOH_Y=350, GAP_Y=170, GAP_H=90;
+  /* ---- THE SOUTHERN WING. The block runs on down the right-hand side to hold the three rooms a
+     shop needs and did not have. The southern limit is NOT a taste decision: the checkout run
+     sits at y=563 and two of its four lanes are at x=1034 and x=1254, directly below this wing.
+     Stopping the south wall at 490 leaves 57 authored units of walkway between it and the lane
+     tops -- about three body widths -- so the two eastern lanes keep their approach. Going even
+     forty units further south would have put a wall on top of a checkstand. ------------------ */
+  /* ⚠️ EVERY NUMBER BELOW IS SET BY THE NAV GRID, NOT BY TASTE. Cells are 20 authored and a
+     blocker is inflated 2 units a side, so a band narrower than ~44 contains no free cell row at
+     all and is sealed however open it looks to solid(). The first cut used a 34-deep room and a
+     16-thick partition: every probe said "walkable", and A* could not reach a single new room,
+     because the inflated walls closed the only cell row from both directions.
+       corridor 366..410  (44 -> one clear row)
+       partition 410..418 (8, not 16 -- the 8 units are what buys the room its second row)
+       rooms    418..462  (44 -> two clear rows)
+       south wall 462..478
+     The wing runs the whole way down to the store's own south wall. It could not before: two of
+     the four checkout lanes were parked at x=1033 and x=1253, directly under this block, and a
+     wall on top of a checkstand is not a trade anybody wants. Tightening the run to 548 authored
+     moved both of them west of 1030 and left the entire east side free, so the rooms take it. */
+  const BOH_S=STORE_S, RM_Y=418, PART=8;   // rooms run 418..655; the store's south wall closes them
+  const COR_Y=BOH_Y+T;                // corridor y 366..410
+  /* Every doorway here is 90 units, the same as the sales-floor opening and for the same reason:
+     the nav grid inflates a blocker 2px a side and quantises to 20-authored cells, so a narrow
+     gap is not reliably walkable. Three rooms, three 90-unit doors, all off the corridor. */
+  const COOL_X=BOH_X+T, COOL_W=134, AM_X=1196, AM_W=124, CASH_X=1336, CASH_W=AW-T-CASH_X;
+  const doorway=(x0,w)=>{const g=Math.round((w-90)/2);
+    return [{x:x0,y:RM_Y-PART,w:g,h:PART},{x:x0+g+90,y:RM_Y-PART,w:w-g-90,h:PART}];};
+  /* ⚠️ THE WING DOOR IS AT 1130 BECAUSE 1046 OPENED INTO A DEAD END. Put at the west end it lined
+     up behind the Manager cabinet (1070,250) and the Store manager desk (1085,300), which between
+     them close that column: the doorway led to a three-cell pocket with no route to the rest of
+     the back of house, and A* reached none of the new rooms. 1130 lands on the open strip that
+     actually runs north through the office to the swing doors. Found by dumping the grid, not by
+     reading the layout -- from solid()'s point of view the old door was wide open. */
+  const WING_DOOR_X=1130;
   walls.push({x:BOH_X,y:0,w:T,h:GAP_Y},                                 // divider, above the gap
              {x:BOH_X,y:GAP_Y+GAP_H,w:T,h:BOH_Y-(GAP_Y+GAP_H)+T},       // divider, below the gap
-             {x:BOH_X,y:BOH_Y,w:AW-BOH_X,h:T});                         // BOH south wall
+             /* the old BOH south wall, now with a 90-unit doorway through to the wing */
+             {x:BOH_X,y:BOH_Y,w:WING_DOOR_X-BOH_X,h:T},
+             {x:WING_DOOR_X+90,y:BOH_Y,w:AW-(WING_DOOR_X+90),h:T},
+             {x:BOH_X,y:COR_Y,w:T,h:BOH_S+T-COR_Y},                     // divider, down the wing
+             /* no south wall of its own -- the store's south wall (x 810..1500 at y 655) is
+                already there, and pushing a second rect over it would be two walls in one place */
+             /* the two partitions between the three rooms, corridor wall down to the south wall */
+             {x:COOL_X+COOL_W,y:RM_Y-PART,w:T,h:BOH_S-(RM_Y-PART)},
+             {x:AM_X+AM_W,y:RM_Y-PART,w:T,h:BOH_S-(RM_Y-PART)});
+  /* THE COOLER IS THE ONE ROOM THAT MUST BE GENUINELY ENCLOSED. Everywhere else in this block a
+     "room" is only a caption -- roomAt() reads a zone and nothing collides with it, which is why
+     you can walk from the Store Manager's office into the Owner's through what looks like a wall.
+     The cooler is the store's only place with no sightline, so it has to be real geometry: four
+     solid sides and exactly one way in. Its west side is the wing divider, its south the wing
+     wall, its east the partition above; only its north face is authored here. */
+  walls.push(...doorway(COOL_X,COOL_W), ...doorway(AM_X,AM_W), ...doorway(CASH_X,CASH_W));
   /* ---- ZONES. Captions only; roomAt() reads these, nothing collides with them. ------------ */
-  ROOMS.push({name:'FRONT END',    x:T,   y:470, w:AW-2*T, h:STORE_S-470, c:'#c9a41a'},
+  /* FRONT END now stops at the back-of-house divider and picks up again BELOW the new wing, so
+     the two never overlap and roomAt() has one answer per point. The lost strip is y 470..506
+     east of x=1030 -- 36 units off the top of the right-hand third, and none of it checkout. */
+  ROOMS.push({name:'FRONT END',    x:T,   y:470, w:BOH_X-T, h:STORE_S-470, c:'#c9a41a'},
+             {name:'BACK CORRIDOR',x:COOL_X, y:COR_Y, w:AW-BOH_X-2*T, h:(RM_Y-PART)-COR_Y, c:'#7c7768'},
+             {name:'WALK-IN COOLER',    x:COOL_X, y:RM_Y, w:COOL_W, h:BOH_S-RM_Y, c:'#5f8fa8'},
+             {name:'ASSISTANT MANAGER', x:AM_X,   y:RM_Y, w:AM_W,   h:BOH_S-RM_Y, c:'#3b6ea5'},
+             {name:'CASH OFFICE',       x:CASH_X, y:RM_Y, w:CASH_W, h:BOH_S-RM_Y, c:'#8a6a3a'},
              /* the bounded strip you arrive in, between the store's south wall and the world's */
              {name:'ENTRANCE',     x:T,   y:STORE_S+T, w:AW-2*T, h:AH-STORE_S-2*T, c:'#7c7768'},
              {name:'GROCERY',      x:320, y:210, w:690,    h:260,      c:'#4a8c5a'},
@@ -12182,10 +12246,13 @@ function loadLevel(id){
      the south wall, in the two clusters the old ones occupied, with the TILLS FACING EACH OTHER
      across each cluster's gap -- checkstand (till right) west, checkstand_r (till left) east.
 
-     The gaps between lanes ARE the walkways, which is how a real front end works. Measured: 170
-     authored between the lanes of a cluster, 590 through the middle -- and the entrance door
-     (x 690-810) opens into that middle gap, so you walk in and straight up the store. 50 authored
-     of cross-aisle is left north of the lanes, between them and the shelf block. */
+     The gaps between lanes ARE the walkways, which is how a real front end works -- but the first
+     lay-out spread four lanes over 1127 authored, from x=173 to x=1300, which is not a checkout
+     run, it is four tills in different postcodes. Pulled in to a 60-unit walkway between the lanes
+     of a cluster and 246 through the middle: the entrance door (x 690-810) still opens into that
+     middle gap, so you walk in and straight up the store, and the whole run now spans 548 instead
+     of 1127. Moving the eastern cluster off the back-of-house wall is also what frees the east
+     side of the front end for the wing above. */
   const CHK_Y=520, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);   // 47 x 108
   const chkXs=[];
   const checkout=(x0,art)=>{
@@ -12194,8 +12261,8 @@ function loadLevel(id){
                      w:28,h:22,label:'Checkstand',kind:'cabinet',art:art});
     levelBlockers.push({x:x0+1, y:CHK_Y+1, w:CHK_W-2, h:CHK_D-2});
   };
-  checkout(173,'checkstand'); checkout(393,'checkstand_r');      // west cluster, tills facing
-  checkout(1033,'checkstand'); checkout(1253,'checkstand_r');    // east cluster, tills facing
+  checkout(476,'checkstand'); checkout(583,'checkstand_r');      // west cluster, tills facing
+  checkout(870,'checkstand'); checkout(977,'checkstand_r');      // east cluster, tills facing
   /* ---- FIXTURES: what the tasks complete against -------------------------------------------
      A bagger's day was named in store words but none of it was completable, because Save-Rite had
      no objects at all — loadLevel clears `objects`, and every task's `via` resolves against one.
@@ -12270,6 +12337,31 @@ function loadLevel(id){
                   {x:BOH_X+55, y:300, w:30,h:24,label:'Store manager desk',kind:'cabinet',art:'manager_desk'},
                   {x:1245,     y:300, w:30,h:24,label:'Owner desk',        kind:'cabinet',art:'manager_desk'},
                   {x:1290,     y:135, w:30,h:24,label:'Staff lockers',    kind:'locker'},
+                  /* THE SHARED DEPARTMENT DESK. Two desks in a run in RECEIVING, where the
+                     department managers do their ordering -- deliberately NOT five private
+                     offices, because taking Gita out of Produce and Russ out of Grocery would
+                     remove the people the player works beside and gossips about, and would gut
+                     the sightline prototype, which needs staff visible and facing outward.
+                     No chairs: the store's crew STAND, and t_grocery_crew asserts it. */
+                  {x:1070, y:115, w:30,h:24,label:'Department desk', kind:'cabinet',art:'manager_desk'},
+                  {x:1115, y:115, w:30,h:24,label:'Department desk', kind:'cabinet',art:'manager_desk'},
+                  /* the wing. Garret finally has a door -- plainer than Lorne's office, no window,
+                     and its west partition is shared with the cooler's compressor. */
+                  /* ⚠️ BOTH OF THESE ARE PUSHED TO THE FAR SIDE OF THEIR ROOM ON PURPOSE. Put in
+                     the middle they sat directly behind their own doorway: a 44-deep room is two
+                     nav cells tall, so one 24-unit desk under the door closes the only route in.
+                     It cost the cash office its reachability outright, and left Garret standing in
+                     a three-cell pocket with the door row blocked above him. Neither showed up in
+                     solid() -- both rooms looked wide open -- and both were found by dumping the
+                     grid A* actually walks. Desks go where the doorway is not. */
+                  {x:1290, y:465, w:30,h:24,label:'Assistant manager desk',kind:'cabinet',art:'manager_desk'},
+                  {x:1445, y:465, w:30,h:24,label:'Cash office counter',   kind:'cabinet',art:'manager_desk'},
+                  /* NO RACKING IN THE COOLER. Two pallets in here read fine on the plan and sat
+                     directly across its only doorway -- the room measured "enclosed with one
+                     entrance" while being, in the grid, sealed. A 44-deep room whose door is 90
+                     of its 134 units wide has nowhere to put a 30-unit pallet that is not in the
+                     way, so it stays an empty cold room, which is also what the sightline work
+                     wants from it. */
                   {x:BOH_X+40, y:250, w:30,h:24,label:'Manager cabinet',  kind:'cabinet'},
                   {x:1230,     y:250, w:30,h:24,label:'Owner cabinet',    kind:'cabinet'});
   /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
@@ -12372,7 +12464,10 @@ function loadLevel(id){
          ⚠️ NEITHER IS HR. storeRole/storeDept is a separate namespace from `dept`, which is what
          hrs() and triggerAudit() read — that separation is what has kept the audit apparatus
          dormant since the store was empty, and it is why adding two more people cannot wake it. */
-      ['Garret Voss',       BOH_X+70,      103,      'down' , null,     'am'     ],   // receiving, with a clipboard
+      /* GARRET GETS THE OFFICE HE NEVER HAD. He stood at a receiving pallet because the assistant
+         manager was the one rung with no home. Station is BELOW his desk, not inside it -- the
+         three stations found sitting in furniture last branch were all authored the other way. */
+      ['Garret Voss',       1240,          470,      'up'   , null,     'am'     ],   // his own office, at last
       /* MERV IS FINDABLE ON PURPOSE. His name is on the building and he is the last rung, so the
          player should be able to walk up to the man they intend to succeed. */
       ['Merv Kastelic',     1280,          288,      'up'   , null,     'owner'  ]];
@@ -12405,6 +12500,14 @@ function loadLevel(id){
   }
   MUSTER.x=Math.round(DOOR_X+DOOR_W/2); MUSTER.y=STORE_S-60;      // the front end, by the doors
   BREAK_SPOT.x=1370; BREAK_SPOT.y=120;                            // beside the break-room table
+  /* ---- THE HUDDLE HAPPENS IN RECEIVING. It used to happen at meetingCentre(), the midpoint of
+     the two OFFICE meeting tables, which in this building is open floor in the GROCERY aisle --
+     eleven of eighteen crew walked out onto the sales floor for it every morning. Of the two
+     honest options, the back of house wins over the front end: a briefing on the checkstands at
+     09:00 would be held in front of customers, and the wing's corridor is only 44 units deep,
+     which the standing ring would spill straight out of. RECEIVING is the widest open floor
+     behind the swing doors and is where a real shop holds its morning huddle. ---------------- */
+  MEETING_SPOT={x:1215, y:125};
   /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
      in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.

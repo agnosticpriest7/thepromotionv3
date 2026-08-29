@@ -24,25 +24,60 @@ const TESTS = only.length ? only
   : fs.readdirSync(__dirname).filter(f => /^t_.*\.js$/.test(f) || f === 'placement.js')
       .filter(f => f !== 't_seeds.js');          // pinned seeds are fixed by definition
 
-const POOL = Math.max(2, Math.min(8, os.cpus().length - 2));
+/* SWEEP_POOL overrides. The default matches the gate's 8, but a fifty-seed pass over the whole
+   suite is ~72 CPU-hours and the cap is what decides whether that is six hours or a day. The
+   tests share nothing (audited in gate.js), so the only real limit is leaving the machine
+   usable -- this is somebody's desktop, not a build box. */
+const POOL = Math.max(2, parseInt(process.env.SWEEP_POOL, 10) || Math.min(8, os.cpus().length - 2));
 const seeds = Array.from({ length: N }, (_, i) => 1000 + i * 7919);
 
 const runOne = (test, seed) => new Promise(resolve => {
   execFile('node', [path.join(__dirname, test)],
     { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024, env: Object.assign({}, process.env, { PROMO_SEED: String(seed) }) },
     (err, stdout, stderr) => resolve({
-      test, seed, ok: !err,
+      test, seed, ok: !err, out: stdout || '',
       /* the child's own last meaningful line, so a failure can be read without re-running it */
       why: err ? ((stdout || '').trim().split('\n').filter(l => /FAIL|RED|Error|throw/i.test(l)).slice(-1)[0]
                  || (stderr || '').trim().split('\n').slice(-1)[0] || 'exit ' + (err.code)) : '',
     }));
 });
 
+/* ⚠️ PREFLIGHT: WHICH TESTS DOES PROMO_SEED ACTUALLY REACH?
+   A sweep that reports "every test passed at all 50 seeds" is worthless for a test the seed never
+   touched, and 24 of the 61 pin their own seed in the createWorld() call -- they were written that
+   way to be deterministic BEFORE the harness was seeded, and the pin now opts them out of fuzzing
+   permanently. Reporting 0% for those is the same vacuity that let a station sit inside a desk
+   through a green assertion for months: a number about a thing that was never exercised.
+   Detected by BEHAVIOUR, not by scanning source for `seed:` -- run each test at two different
+   seeds and see whether its output actually changes. A test that pins some worlds and not others
+   still counts as varied, which is correct: part of its space is being walked. */
+async function preflight(tests) {
+  const varied = [], fixed = [];
+  await Promise.all(Array.from({ length: POOL }, async () => {
+    let i;
+    while ((i = preflight._n++) < tests.length) {
+      const t = tests[i];
+      const [a, b] = await Promise.all([runOne(t, 111111), runOne(t, 999999)]);
+      (a.out === b.out ? fixed : varied).push(t);
+    }
+  }));
+  return { varied, fixed };
+}
+preflight._n = 0;
+
 (async () => {
   const jobs = [];
   for (const t of TESTS) for (const s of seeds) jobs.push({ t, s });
   console.log('varying-seed sweep: ' + TESTS.length + ' tests x ' + N + ' seeds = ' + jobs.length +
               ' runs, pool ' + POOL);
+  console.log('preflight: checking which tests PROMO_SEED actually reaches...');
+  const pf = await preflight(TESTS);
+  if (pf.fixed.length) {
+    console.log('  ⚠️ ' + pf.fixed.length + ' of ' + TESTS.length + ' tests produce IDENTICAL output at two ' +
+                'different seeds. The sweep cannot vary them; a 0% rate below says nothing about them:');
+    console.log('     ' + pf.fixed.sort().join(' '));
+  }
+  console.log('  genuinely swept: ' + pf.varied.length + ' of ' + TESTS.length);
   const fails = new Map();       // test -> [{seed, why}]
   let next = 0, done = 0;
   await Promise.all(Array.from({ length: POOL }, async () => {
@@ -61,7 +96,9 @@ const runOne = (test, seed) => new Promise(resolve => {
 
   console.log('\n================ PER-TEST FAILURE RATE ================');
   if (!fails.size) {
-    console.log('  every test passed at all ' + N + ' seeds.');
+    console.log('  every test passed at all ' + N + ' seeds' +
+      (pf.fixed.length ? ' -- but only ' + pf.varied.length + ' of ' + TESTS.length +
+                         ' were actually varied by the seed (see the preflight above).' : '.'));
   } else {
     /* ordered by how likely each is to be a real defect: a HIGHER rate is easier to diagnose,
        but a LOW steady rate is the shape t_meltdown had -- so report both and sort by count. */

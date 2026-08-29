@@ -122,7 +122,8 @@ const TESTS = [
   't_shelf_art.js',       // the grocery aisle runs: six runs, five faces, aisles still walk
   't_lights.js',          // the store comes up at 8:15; the flick order is derived, not listed
   't_props.js',           // the store's own fixtures, and the re-laid north-south checkouts
-  't_seeds.js',           // seeds that once caught a bug -- a regression test each         // the loadLevel seam, proved with one empty room; office default unchanged
+  't_seeds.js',           // seeds that once caught a bug -- a regression test each
+  't_boh.js',             // the back-of-house wing, the cooler's enclosure, and an indoor huddle         // the loadLevel seam, proved with one empty room; office default unchanged
   't_countersign.js',     // Senior Sales countersign: rank gate, tier-derived pool, the 2x2, no suspicion
   't_moonwalk.js',        // nobody travels backwards; seatless meeting attendees get their own spot
   't_errandspace.js',     // errand/desk-visit dispatch never sends two people to one square
