@@ -21,15 +21,33 @@
    suspicious result can always be re-run in the order it used to run in.
    `GATE_POOL=n` overrides the worker count.
 
-   ⚠️ A RED HERE IS NOT AUTOMATICALLY A REGRESSION, AND THAT PREDATES THIS FILE. 20+ tests call
-   createWorld() with NO seed, so each run builds a different cast, different desks and different
-   routes -- their input is randomised and their outcome is not deterministic. t_meltdown was
-   measured at a 6.7% failure rate over 30 trials run ONE AT A TIME WITH NO CONTENTION (both
-   failures the same NPC, swings=0: a forced meltdown that never started, which is a reproducible
-   condition rather than noise). Parallelising did not cause that and cannot: those tests have no
-   wall-clock dependency, every duration is frames*dt. What it does is roll the dice five times as
-   often, because the rotation now costs 12 minutes instead of 64. RE-RUN A LONE RED BEFORE
-   believing it, and seed the suite when somebody has a branch for it. */
+   ⚠️ A RED HERE IS A REGRESSION. TREAT IT AS ONE. This paragraph used to say the opposite, and
+   it was right at the time: 20+ tests called createWorld() with NO seed, so every run built a
+   different cast and different routes, and a lone red really could be the dice. That premise died
+   when the harness was seeded (test-seeding, 2026-08-29). The old text outlived it by one branch
+   and is the more dangerous half of the pair -- a standing excuse to disbelieve a red is exactly
+   how t_printer sat broken for weeks.
+
+   What was measured before rewriting this:
+     - two full gate runs at the same seed differed ONLY in timing and in the order tests
+       completed. Every pass/fail count identical, 61/61 green, across two different pool
+       interleavings.
+     - the whole suite across 6 varying seeds (366 runs): zero failures.
+     - t_meltdown, t_seeds and placement across 20 varying seeds (60 runs): zero failures.
+
+   So: a red reproduces. The seed is printed once per process ([seed NNNNN]) -- re-run that test
+   with PROMO_SEED set to it and you will get the same result. Do NOT re-run hoping for green.
+
+   What is NOT proved, so that nobody reads more into the above than it earned: 20 clean
+   t_meltdown runs do not by themselves establish the approach-point fix, since a 6.7% failure
+   rate survives 20 trials about a quarter of the time. The deterministic proof is
+   worstPrinterTrial inside t_meltdown, which sends a victim at the hardest printer on every run,
+   plus the pinned seed in t_seeds. Nor has parallel-vs-sequential been compared end to end; the
+   two runs above were both parallel, and GATE_SEQUENTIAL=1 remains the way to check.
+
+   Coverage is bought back on purpose, since seeding costs it: PROMO_SEED=vary re-enables the
+   fuzzing, and test/seedsweep.js walks many seeds and reports a per-test failure rate. Anything
+   it finds is DEFECT UNTIL DIAGNOSED -- the last flake it would have caught was a real game bug. */
 const { execFile } = require('child_process');
 const os = require('os');
 const fs = require('fs');
