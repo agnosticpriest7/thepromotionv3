@@ -417,3 +417,28 @@ managers now stand behind their desks, Garret in front of the pallet.
 as standing *at* their desks, not merged into them. Garret should be clear of the receiving pallet.
 It is a small nudge — if any of the three now looks oddly far from their desk, say so and I will
 tune the distance.
+
+### J. The back of house has rooms, and the front end has a checkout run
+The east side of the store now runs all the way down: a corridor off the existing block, then a
+walk-in cooler, an assistant manager's office and a cash office, each 237 deep. **Garret Voss has
+moved out of the receiving bay** and works in the assistant manager's office at (1240,470) —
+standing beside his desk, not in it.
+
+The four checkstands were spread over 1127 authored units, most of the width of the shop. They are
+now a 528-unit run in two clusters either side of the doors.
+
+**What to look at:** walk in and look at the front end first — it should read as one checkout run
+you can take in at a glance, with the doors opening into the gap in the middle. Then go through the
+swing doors and down the back. The cooler is the only genuinely walled room back there; you should
+have to use its door rather than walking through the wall like you can between the manager offices.
+
+**The thing I'd most like your eye on:** those three rooms are 237 deep and about 130 wide, so they
+are deeper than they are wide — the assistant manager's office in particular reads long. That is
+what three rooms across a 438-wide block produces. If it looks wrong on the TV, say so and it can
+become four rooms, or two rows.
+
+### K. The morning huddle happens in the back now
+It used to gather the crew around the office meeting room's coordinates, which in the store is the
+middle of the GROCERY aisle — eleven of eighteen staff walked onto the sales floor for it every
+morning. It now happens in RECEIVING. **Watch the 09:00 huddle** and check it looks like a shift
+briefing in the back rather than a scrum in aisle four. The office is untouched.
