@@ -136,6 +136,31 @@ function makeEl(tag) {
   return el;
 }
 
+/* ---------- the run's seed --------------------------------------------------
+   PROMO_SEED=<n>      run everything at that seed (reproduce a specific red)
+   PROMO_SEED=vary     a fresh random seed per process, printed -- the suite's accidental-fuzzer
+                       property kept DELIBERATELY rather than lost to determinism
+   unset               DEFAULT_SEED, so a red is reproducible by default
+
+   ⚠️ DETERMINISM IS NOT COVERAGE. A fixed seed means every run walks exactly one path through the
+   random space forever, and a bug reachable at some other seed becomes permanently invisible.
+   That is why `vary` exists, and why seeds that have ever caught a bug are pinned in t_seeds.js
+   and run every time: a seed that once found a bug is a regression test. */
+const DEFAULT_SEED = 20260830;
+function resolveProcessSeed() {
+  const e = process.env.PROMO_SEED;
+  if (e == null || e === '') return DEFAULT_SEED;
+  if (/^(vary|random)$/i.test(e)) return ((Date.now() ^ (process.pid << 16)) >>> 0) % 2147483647;
+  const n = parseInt(e, 10);
+  return Number.isFinite(n) ? n : DEFAULT_SEED;
+}
+const PROCESS_SEED = resolveProcessSeed();
+let _worldsMade = 0, _seedAnnounced = false;
+function nextDefaultSeed() {
+  if (!_seedAnnounced) { console.log('[seed ' + PROCESS_SEED + ']'); _seedAnnounced = true; }
+  return (PROCESS_SEED + (_worldsMade++) * 7919) | 0;
+}
+
 /* ---------- localStorage stub (real in-memory Map) ------------------------ */
 function makeLocalStorage() {
   const m = new Map();
@@ -378,10 +403,22 @@ function createWorld(opts) {
   sandbox.top = sandbox;
 
   vm.createContext(sandbox);
-  // Opt-in deterministic RNG (opts.seed): install a seeded Math.random INTO the context BEFORE
-  // the game boots, so both the initial floor (seedFriendships et al.) and all play are
-  // reproducible. Default (no seed) leaves the engine's native Math.random untouched.
-  if (opts.seed != null) {
+  /* Deterministic RNG: install a seeded Math.random INTO the context BEFORE the game boots, so the
+     initial floor (seedFriendships et al.) and all play are reproducible.
+
+     ⚠️ SEEDED BY DEFAULT NOW, AND THAT IS ONE CHANGE RATHER THAN THIRTY. 29 tests called
+     createWorld() with no seed, so each run built a different cast, desks and routes -- the suite
+     was an accidental fuzzer, and t_meltdown flaked at 6.7% while advertising a real game bug
+     (a meltdown approach point inside a wall) for an unknown length of time. Every one of the
+     game's 59 Math.random sites -- rand/randInt/pick/pickWeighted and the direct uses -- draws
+     from this single override, so defaulting HERE covers all of them by construction. Seeding 29
+     test files instead would have left the 30th unseeded the day somebody wrote it.
+
+     Worlds within one process get PROCESS_SEED + n*7919, so a test that builds several still gets
+     several different floors -- reproducibly. */
+  const seedForWorld = (opts.seed != null) ? opts.seed : nextDefaultSeed();
+  if (seedForWorld != null) {
+    opts = Object.assign({}, opts, { seed: seedForWorld });
     vm.runInContext(
       `(function(){var a=(${opts.seed})|0;Math.random=function(){a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};})();`,
       sandbox, { filename: 'harness-seed' });
