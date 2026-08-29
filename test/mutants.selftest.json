@@ -1,0 +1,33 @@
+{
+  "mutants": [
+    {
+      "name": "CASE 1/4 PASSED: a comment is edited, nothing behavioural changes",
+      "test": "t_printer.js",
+      "old": "function nearestPrinter(from){\n  const ps=objects.filter(o=>o.type==='printer');",
+      "new": "function nearestPrinter(from){\n  /* injected comment, no behaviour change */\n  const ps=objects.filter(o=>o.type==='printer');",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "CASE 2/4 FAILED CLEANLY: nearestPrinter returns the FURTHEST printer",
+      "test": "t_printer.js",
+      "old": "  if(!from)return ps[0];",
+      "new": "  if(!from)return ps[0];\n  { let worst=ps[0],wd=-1; for(const q of ps){const d=cdist(from,{x:q.x+q.w/2,y:q.y+q.h/2}); if(d>wd){wd=d;worst=q;}} return worst; }",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "CASE 3/4 THREW: a runtime error inside a function the test calls",
+      "test": "t_printer.js",
+      "old": "function nearestPrinter(from){\n  const ps=objects.filter(o=>o.type==='printer');",
+      "new": "function nearestPrinter(from){\n  throw new Error('injected: a deliberate runtime throw');\n  const ps=objects.filter(o=>o.type==='printer');",
+      "timeoutMs": 120000
+    },
+    {
+      "name": "CASE 4/4 HUNG: an infinite loop inside a function the test calls",
+      "test": "t_printer.js",
+      "old": "function nearestPrinter(from){\n  const ps=objects.filter(o=>o.type==='printer');",
+      "new": "function nearestPrinter(from){\n  while(true){}\n  const ps=objects.filter(o=>o.type==='printer');",
+      "timeoutMs": 20000
+    }
+  ],
+  "_": "Self-test for the mutation runner: four mutants against t_printer.js chosen so that each lands in a DIFFERENT outcome bucket -- survived / failed cleanly / threw / hung. The runner has twice reported one of these as another, so run this after touching it: node test/mutate.js test/mutants.selftest.json  -- and expect exactly one of each."
+}
