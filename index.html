@@ -2692,6 +2692,10 @@ function astar(sr,sc,tr,tc){
   }
   return null;
 }
+/* How far out from a printer a meltdown victim may stand. Must stay BELOW the 28-authored radius
+   the swing check uses (`atPrinter`), or the approach point could be somewhere they can stand but
+   never count as arrived -- which is the stall this whole fix exists to remove, wearing a hat. */
+const PRINTER_REACH=24;
 /* is this world point standable? */
 function walkableAt(x,y){const c=cellOf(x,y);return !grid[c.r][c.c];}
 /* snap a target onto open floor — never hand the follower a point inside furniture */
@@ -2701,6 +2705,49 @@ function snapTarget(tx,ty){
   if(!grid[c.r][c.c])return {x:tx,y:ty};
   const t=nearestWalkable(c.r,c.c);
   return {x:t.c*CELL+CELL/2,y:t.r*CELL+CELL/2};
+}
+/* ⚠️ WHERE A MELTDOWN VICTIM STANDS TO SWING. This used to be assumed rather than derived --
+   `{x: pr.x+pr.w/2, y: pr.y+pr.h+14*S}`, a fixed point 14 authored BELOW the printer -- and for a
+   printer standing against a wall that point is INSIDE the wall. The HR printer is exactly that:
+   its south approach lands in the wall at y 175..185, the nearest walkable floor is 34 authored
+   away, and swinging needs far closer. So the victim walked 500 units, stalled at 34, and stood
+   there for the full twenty seconds while the printer survived. It read as a 6.7% test flake for
+   an unknown length of time; meltdown() rolls printerMode at 7%, so it was reachable in play.
+
+   All four faces are tried, nearest first, and the first walkable one wins -- so the victim still
+   approaches from a sensible side rather than from whichever cell an array happened to list. This
+   is the CLASS fixed, not the instance: nudging the HR printer or that wall would leave the next
+   printer somebody places against a wall broken in the same way. */
+function printerApproach(pr){
+  if(!pr)return null;
+  const cx=pr.x+pr.w/2, cy=pr.y+pr.h/2;
+  /* ⚠️ SEARCH OUTWARD, DO NOT PROBE ONE GUESSED DISTANCE. A first cut tested each face at a
+     fixed 14 authored and called the HR printer unreachable -- its east face is blocked at 14 and
+     CLEAR AT 18, so a printer somebody can walk right up to would have lost the homage for the
+     sake of four units. Step out from each face until the floor opens, then take the nearest.
+     The cap is PRINTER_REACH, below the 28-authored radius the swing check uses, so anywhere this
+     returns is somewhere the victim can actually stand AND be counted as at the printer. */
+  /* ⚠️ START AT THE CANONICAL STAND-OFF, 14, NOT AT ZERO. A first cut stepped outward from the
+     printer's edge in 4s and so parked victims 4 authored away -- right on top of the sprite --
+     for every printer whose south face was already clear. Swings and damage were unchanged but
+     arrival shifted by a frame, which the against-main comparison caught. Beginning at 14 leaves
+     every printer that already worked EXACTLY as it was, and only the ones with no clear face at
+     14 search further out. */
+  const PAD=Math.round(14*S), step=Math.round(4*S), maxOut=Math.round(PRINTER_REACH*S);
+  const dirs=[
+    {side:'south', dx:0,  dy:1,  bx:cx,        by:pr.y+pr.h},
+    {side:'north', dx:0,  dy:-1, bx:cx,        by:pr.y},
+    {side:'west',  dx:-1, dy:0,  bx:pr.x,      by:cy},
+    {side:'east',  dx:1,  dy:0,  bx:pr.x+pr.w, by:cy},
+  ];
+  let best=null;
+  for(const d of dirs){
+    for(let out=PAD; out<=maxOut; out+=step){
+      const x=d.bx+d.dx*out, y=d.by+d.dy*out;
+      if(walkableAt(x,y)){ if(!best||out<best.out) best={x:x,y:y,side:d.side,out:out}; break; }
+    }
+  }
+  return best;                      // null = no face standable; the caller decides what that means
 }
 function pathTo(n,tx,ty){
   const goal=snapTarget(tx,ty);
@@ -3410,14 +3457,28 @@ function startMeltEvent(n,final){today.meltdowns++;
   }
   if(final)logLine(`This is ${n.name.split(' ')[0]}'s SECOND collapse. They are not coming back from this one.`,'b');
   const printerMode=!!n.printerMode;
-  if(printerMode){
+  const prTarget=printerMode?nearestPrinter(n):null;
+  const prApproach=printerApproach(prTarget);
+  if(printerMode&&prTarget&&prApproach){
     /* THE OFFICE SPACE HOMAGE. The victim marches to the printer and executes it. Bat
        animation comes later — for now: walk there, the homage track plays, themed text. */
-    const pr=nearestPrinter(n);
     meltEvent.printerMode=true;
     meltEvent.swingCap=Math.round(rand(5,8));   // 5-8 deliberate swings, then done
-    if(pr){ n.errand=null; n.goal={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)}; n.printerGoal=pr; }
+    /* ⚠️ STORED, because the per-frame update needs the SAME point. That update recomputed the
+       hardcoded south spot every frame and re-issued the errand to it, so fixing only the initial
+       goal would have been overridden a frame later -- the bug had TWO call sites and one
+       assumption between them. */
+    n.errand=null; n.goal={x:prApproach.x, y:prApproach.y}; n.printerGoal=prTarget;
+    meltEvent.prSpot={x:prApproach.x, y:prApproach.y};
     playMeltdownSting(PRINTER_TRACK);
+  } else if(printerMode){
+    /* ⚠️ DEGENERATE: no printer, or none with a standable face. The old code walked them at it
+       anyway and they stalled silently for twenty seconds -- which is the bug this replaces, so it
+       must not be swapped for a different silent failure. They still melt down, visibly and with
+       the ordinary sting; only the homage is skipped, and the log says why. */
+    meltEvent.printerMode=false; n.printerMode=false;
+    logLine(`${n.name.split(' ')[0]} goes looking for something to break and cannot get at it.`,'b');
+    playMeltdownSting();
   } else {
     playMeltdownSting();
   }
@@ -3451,7 +3512,10 @@ function tickMeltEvent(dt){
        the printer damage, and the screen shake all land together. */
     const pr=n.printerGoal||nearestPrinter(n);
     if(pr){
-      const spot={x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)};
+      /* the approach point decided when the event started -- NOT the old hardcoded south spot,
+         which for a printer against a wall is inside the wall. Recomputed only if missing (a save
+         loaded mid-meltdown), never re-guessed. */
+      const spot=meltEvent.prSpot||printerApproach(pr)||{x:pr.x+pr.w/2, y:pr.y+pr.h+Math.round(14*S)};
       const atPrinter=cdist(n,spot)<Math.round(28*S);
       const cap=meltEvent.swingCap||6;
       if(!atPrinter){

@@ -133,7 +133,7 @@ function buildContext(opts) {
     wl.perimeter = h ? (wl.top <= 4 || wl.bottom >= WORLD_H - 4)
                      : (wl.left <= 4 || wl.right >= WORLD_W - 4);
   }
-  return { S, A, walls, rooms, props, spriteFootprint };
+  return { S, A, walls, rooms, props, spriteFootprint, world: w };
 }
 
 /* ---------- geometry helpers ---------------------------------------------- */
@@ -239,6 +239,38 @@ function lint(ctx) {
   const { props, walls, rooms } = ctx;
   const doors = findDoors(walls);
   const fails = [], warns = [];
+  /* ---- 0) EVERY PRINTER MUST HAVE SOMEWHERE TO STAND -----------------------------------------
+     A meltdown victim walks to a printer and swings at it. The approach point used to be ASSUMED
+     -- a fixed 14 authored BELOW the printer -- and for a printer standing against a wall that is
+     inside the wall: the victim walked over, stalled, and stood there for the full twenty seconds
+     while the printer survived. THREE of the five printer-type props across the two levels were
+     like that, and it surfaced only as a 6.7% flake in t_meltdown.
+     Asks the GAME's own printerApproach(), not a reimplementation, so the linter cannot drift from
+     the thing it guards. It lives here because a printer nobody can stand next to is a placement
+     error, and it fails at AUTHORING TIME with the two numbers that made the diagnosis obvious:
+     which printer, and how far the nearest floor really is.
+     NOTE: this must sit AFTER `fails` is declared -- the first version sat above it and would have
+     thrown a TDZ ReferenceError instead of reporting, on the one run where it mattered. */
+  if (ctx.world) {
+    const SB = ctx.world.sandbox, LZ = ctx.world.g.layout, sc = LZ.S, au = v => Math.round(v / sc);
+    for (const pr of (LZ.objects || []).filter(o => o.type === 'printer')) {
+      const ap = SB.printerApproach(pr);
+      if (ap && SB.walkableAt(ap.x, ap.y)) continue;
+      /* measured from the printer's EDGE. A first version measured from its CENTRE and reported
+         "nearest floor 4u away" for a printer whose nearest floor is 16u from its edge -- the
+         sample point was still inside the printer's own footprint. The number in a failure
+         message has to be the number that makes the diagnosis obvious, or it misleads. */
+      let best = null;
+      for (let r = 2; r <= 80 && best === null; r += 2)
+        for (const [dx, dy] of [[0,1],[0,-1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]]) {
+          const ex = dx > 0 ? pr.x + pr.w : (dx < 0 ? pr.x : pr.x + pr.w / 2);
+          const ey = dy > 0 ? pr.y + pr.h : (dy < 0 ? pr.y : pr.y + pr.h / 2);
+          if (SB.walkableAt(ex + dx * r * sc, ey + dy * r * sc)) { best = r; break; }
+        }
+      fails.push(`FAIL printer-unreachable ${pr.label || pr.type} @(${au(pr.x)},${au(pr.y)})  ` +
+                 `no standable face; nearest floor ${best === null ? '>80' : best}u away`);
+    }
+  }
   const seenPair = new Set();
 
   for (const p of props) {
