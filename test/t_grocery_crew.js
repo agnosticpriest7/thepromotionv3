@@ -36,6 +36,13 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
 /* ---- 1. the crew exists, and each of them owns a station -------------------------------- */
 const w = mk();
 const S = w.sandbox, g = w.g;
+/* ⚠️ TICK BEFORE MEASURING. This file asserted "no station is inside a solid box" for its whole
+   life and never once could have failed: `blockers` is empty until the first update (index.html
+   has `let blockers=[]` at module scope, filled from CONTAINERS in the first buildGrid), so at
+   tick 0 solid() cannot return true for ANY container. Standing directly on the owner's desk read
+   as open floor. Three stations were sitting inside containers the entire time and this was green
+   through all of it. The assertion was not weak -- it was measuring a world that did not exist. */
+w.run(1);
 
 ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name === nm)) && g.NPCS.length === CREW.length,
    g.NPCS.length + ' NPCs: ' + g.NPCS.map(n => n.name).join(', '));
@@ -76,8 +83,24 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
      so a grid cell can read "blocked" while nothing is actually in the way — the coffee machine's
      blocker bleeds into the neighbouring cell in the break room. solid() is the contract the game
      itself enforces in moveEntity, so it is the one that decides whether a spot is standable. */
+  /* ⚠️ AND PROVE THE PREDICATE IS ALIVE BEFORE TRUSTING THE PASS. A green from a dead solid()
+     is worse than no check at all, and that is exactly what this file shipped. Anchor on the half
+     that actually drops out: containers. A wall-based anchor is not enough -- walls and blockers
+     are filled from different places, so a wall check passes in a world where the furniture is
+     missing from collision entirely. */
+  const cons = g.layout.containers || [];
+  const deadCons = cons.filter(c => !S.solid({ x: c.x + c.w / 2 - 2, y: c.y + c.h / 2 - 2, w: 4, h: 4 }));
+  ck('solid() actually sees the furniture, so the next check can fail', deadCons.length === 0,
+     deadCons.length ? deadCons.length + ' of ' + cons.length + ' containers are not solid at their own centre'
+                     : cons.length + ' containers, every one solid at its centre');
+
+  /* the contract is that a PERSON can stand there, so measure a person: the player's box, taken
+     from the live world. The station's own 24x24 footprint is bigger than a 16x16 body, so testing
+     the footprint over-reports -- two stations clip furniture that a body still fits beside. */
+  const P = g.player;
   const bad = g.desks.filter(d => d.station).filter(d => {
-    try { return S.solid({ x: d.x, y: d.y, w: d.w, h: d.h }); } catch (e) { return true; }
+    try { return S.solid({ x: d.x + d.w / 2 - P.w / 2, y: d.y + d.h / 2 - P.h / 2, w: P.w, h: P.h }); }
+    catch (e) { return true; }
   });
   ck('every station is open floor, not a solid box', bad.length === 0,
      bad.length ? bad.map(d => d.owner).join(', ') + ' stand inside a blocker'

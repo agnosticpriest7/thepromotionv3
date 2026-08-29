@@ -405,3 +405,15 @@ into the world's north-west corner and the other half stood in the middle of ais
 ### H. Old saves refuse to load
 `SAVE_VERSION` went 4 → 5. Not optional — a pre-crew grocery save would have loaded and silently
 deleted all six staff. Expect your old slots to be gone.
+
+### I. Three crew stand beside their desk, not inside it
+Lorne Petrie (Store Manager), Garret Voss (Receiving) and Merv Kastelic (Owner) had their standing
+spots authored on top of the furniture they belong to — the two desks and a receiving pallet, all
+three of which I added in `grocery-props-and-lights`. Merv genuinely could not stand at his own
+station; the other two were clipped but usable. Each has moved 8–12 authored units: the two
+managers now stand behind their desks, Garret in front of the pallet.
+
+**What to look at:** back of house. Merv in the OWNER room and Lorne in STORE MANAGER should read
+as standing *at* their desks, not merged into them. Garret should be clear of the receiving pallet.
+It is a small nudge — if any of the three now looks oddly far from their desk, say so and I will
+tune the distance.

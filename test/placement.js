@@ -59,6 +59,15 @@ const DESK_LET = 'D';
    is decided before scaleWorld() runs, so it cannot be chosen after createWorld() returns. */
 function buildContext(opts) {
   const w = createWorld(opts && opts.storage ? { storage: opts.storage } : undefined);
+  /* ⚠️ TICK ONCE BEFORE MEASURING ANYTHING. Half the collision world is built on the first
+     update, not at createWorld(): `blockers` is empty until then (index.html: `let blockers=[]`
+     at module scope, filled from CONTAINERS in the first buildGrid), and part of `walls` is
+     appended there too. Measured over 576 sample points on the grocery floor, 345 read walkable
+     at tick 0 and only 323 at tick 1 -- so an untricked lint is asking about a floor 22 points
+     more open than the one the player walks. This linter ran untricked from the day it was
+     written; every wall-gap number it printed was measured against a partial wall set, and the
+     printer-reachability check above could not have seen a printer blocked by a container. */
+  w.run(1);
   const L = w.g.layout;
   const S = L.S || 1.8;
   const U1 = v => Math.round(v * S / 1.8);          // game's U1(), replicated
@@ -271,6 +280,88 @@ function lint(ctx) {
                  `no standable face; nearest floor ${best === null ? '>80' : best}u away`);
     }
   }
+  /* ---- 0b) EVERY DECLARED DESTINATION MUST BE SOMEWHERE A BODY CAN ACTUALLY GO --------------
+     A level declares places it will send people: EXIT, MUSTER, HR_OFFICE, a station per member of
+     staff, and errand points. Nothing checked that any of them was standable, and two were not.
+
+     ⚠️ THE PREDICATE DEPENDS ON WHAT THE DESTINATION IS FOR, and using the wrong one
+     manufactures bugs -- this sweep reported false positives twice before it was right.
+       a STANDING spot (station, muster, exit) -> solid(), because that is the contract moveEntity
+         enforces on a body. walkableAt() reads the NAV GRID, which inflates every blocker 2px a
+         side and quantises to 20-authored cells, so it calls spots blocked that nothing is in.
+       a PATH target (errand point) -> walkableAt() AFTER snapTarget(), because snapTarget is the
+         game's own correction: a grid-blocked errand point the game will move is not a defect.
+     And the body is the PLAYER's box, not the station's box: a station is 24x24 authored and a
+     body is 16x16, so testing the station's own footprint over-reports. Both numbers are taken
+     from the live world rather than written down here.
+
+     ⚠️ THE ANCHOR: THIS LINT PROVES ITS OWN PREDICATE IS ALIVE BEFORE IT TRUSTS A PASS.
+     That is not defensive decoration -- it is the exact failure this branch found. t_grocery_crew
+     has had a "no station is inside a solid box" assertion for its whole life and it passed
+     through three stations sitting inside containers, because it ran at tick 0 where `blockers`
+     is empty and solid() cannot return true for ANY container. A green from a dead predicate is
+     worse than no check. So: the middle of a wall must read solid, or this reports that instead. */
+  if (ctx.world) {
+    const SB = ctx.world.sandbox, G = ctx.world.g, LZ = G.layout, sc = LZ.S, au = v => Math.round(v / sc);
+    const P = G.player, BW = P.w, BH = P.h;
+    const bodyAt = (x, y) => { try { return SB.solid({ x: x - BW / 2, y: y - BH / 2, w: BW, h: BH }); } catch (e) { return true; } };
+
+    /* ⚠️ ANCHOR ON THE HALF THAT ACTUALLY DIES. The first version of this check asked whether the
+       middle of a WALL reads solid -- and it passed, in a world where ten containers were missing
+       from collision, because walls and blockers are filled from different places at different
+       times. It proved the wrong subsystem was alive and would have shipped a lint that quietly
+       ignored a third of the store's furniture. Containers are what drop out, so containers are
+       what get checked: every one of them must read solid at its own centre. */
+    const cons = LZ.containers || [];
+    const deadCons = cons.filter(c => !SB.solid({ x: c.x + c.w / 2 - 2, y: c.y + c.h / 2 - 2, w: 4, h: 4 }));
+    if (deadCons.length) {
+      fails.push('FAIL destination-lint-dead  ' + deadCons.length + ' of ' + cons.length +
+                 ' containers do not read solid at their own centre (' +
+                 deadCons.slice(0, 3).map(c => c.label || c.kind).join(', ') +
+                 (deadCons.length > 3 ? ', ...' : '') + '). The collision world is not fully built, ' +
+                 'so nothing below this can fail. Everything here is measuring a floor the player never walks.');
+    } else {
+      const near = (x, y) => { for (let r = 4; r <= 80; r += 4)
+          for (const [dx, dy] of [[0,1],[0,-1],[1,0],[-1,0]]) if (!bodyAt(x + dx*r*sc, y + dy*r*sc)) return r;
+        return null; };
+      const stand = (label, pt, live) => {
+        if (!pt || pt.x == null || !bodyAt(pt.x, pt.y)) return;
+        const n = near(pt.x, pt.y), where = SB.roomAt && SB.roomAt(pt.x, pt.y);
+        const msg = `${label} @(${au(pt.x)},${au(pt.y)})${where && where.name ? ' [' + where.name + ']' : ''}  ` +
+                    `a body cannot stand here; nearest clear floor ${n === null ? '>80' : n}u away`;
+        (live ? fails : warns).push((live ? 'FAIL ' : 'WARN ') + 'destination ' + msg +
+                                    (live ? '' : '  (declared but this level never routes anyone here)'));
+      };
+      stand('EXIT', LZ.EXIT, true);
+      stand('MUSTER', LZ.MUSTER, true);
+      /* HR_OFFICE is only a destination where the level actually staffs HR. Asked of the game
+         (hrs()), not assumed per level, so a store that grows an HR desk starts failing properly. */
+      /* hrs() returns the ARRAY of HR staff, not a count. `hrs() > 0` is false for BOTH an empty
+         array and a populated one, so the first draft of this line quietly downgraded HR_OFFICE to
+         a warning in the office too -- where it is a live destination and a real failure. */
+      let hrLive = true; try { hrLive = (SB.hrs() || []).length > 0; } catch (e) {}
+      stand('HR_OFFICE', LZ.HR_OFFICE, hrLive);
+
+      for (const d of (G.desks || []).filter(x => x.station)) {
+        const cx = d.x + d.w / 2, cy = d.y + d.h / 2;
+        if (bodyAt(cx, cy)) {
+          fails.push(`FAIL station-unstandable ${d.owner || '?'} @(${au(cx)},${au(cy)})  ` +
+                     `a body cannot stand at their own station; nearest clear floor ${near(cx,cy) === null ? '>80' : near(cx,cy)}u away`);
+        } else if (SB.solid({ x: d.x, y: d.y, w: d.w, h: d.h })) {
+          /* the body fits but the station's footprint clips furniture: the spot works and the
+             floor plan reads wrong. WARN, because it is a drawing problem, not a movement one. */
+          warns.push(`WARN station-clipped ${d.owner || '?'} @(${au(cx)},${au(cy)})  ` +
+                     `station box overlaps furniture, though a body still fits at the centre`);
+        }
+      }
+
+      for (const ep of (LZ.errandPoints || [])) {
+        const t = SB.snapTarget(ep.x + (ep.w || 0) / 2, ep.y + (ep.h || 0) / 2);
+        if (!SB.walkableAt(t.x, t.y))
+          fails.push(`FAIL errand-unreachable @(${au(ep.x)},${au(ep.y)})  still blocked after the game's own snapTarget()`);
+      }
+    }
+  }
   const seenPair = new Set();
 
   for (const p of props) {
@@ -364,8 +455,13 @@ if (require.main === module) {
      between long blockers, which is the worst case for the nav grid's 2px-a-side blocker
      inflation -- so it is exactly the world that most needs linting. 0 FAIL required on each. */
   const worlds = [
-    { name: 'OFFICE  (Paper Supply Co.)', opts: {} },
-    { name: 'GROCERY (Save-Rite)', opts: { storage: { 'promo:level': 'grocery' } } },
+    /* the FULL boot handoff, not just the level key. With only 'promo:level' the world comes up
+       half-built: TEN of the store's thirty-six containers -- both receiving pallets, the manager
+       and owner desks and cabinets, the staff lockers, three produce cases -- never enter
+       `blockers`, so solid() walks straight through them and this linter saw open floor where the
+       game has furniture. Same partial-world trap as the missing tick above, one layer further in. */
+    { name: 'OFFICE  (Paper Supply Co.)', opts: { storage: { 'promo:level': 'office', 'promo:newgame': '0', 'promo:char': '0' } } },
+    { name: 'GROCERY (Save-Rite)', opts: { storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } } },
   ];
   let bad = 0;
   worlds.forEach((wd, i) => {
