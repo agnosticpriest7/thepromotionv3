@@ -629,6 +629,12 @@ const EPILOGUE = `
   /* the loaded sprite table. ART is a module-scope const, so a test asking "did this art actually
      load?" cannot reach it from the sandbox — and "it is in ART_FILES" is not the same claim. */
   def(G,'ART',      function(){ return (typeof ART!=='undefined')?ART:null; });
+  /* the in-flight meltdown. A module-scope let, so a probe reading sandbox.meltEvent gets
+     undefined and cheerfully reports "no meltdown running" — exactly the wrong answer when you
+     are investigating a meltdown that fails to complete.
+     NOTE: this whole block is inside the EPILOGUE TEMPLATE LITERAL, so a backtick in a comment
+     here CLOSES THE STRING and the file stops parsing. Never use them in this block. */
+  def(G,'meltEvent', function(){ return (typeof meltEvent!=='undefined')?meltEvent:null; });
   /* the level's light banks. A module-scope const, so a test asking "is the store lit?" cannot
      reach it from the sandbox — and the whole point of this system is that a level with none is
      blacked out rather than merely unlit. */
