@@ -514,3 +514,33 @@ settle, or conversely never leave, the dwell is one number and easy to tune.
 **The one I'd watch for:** a manager standing somewhere daft — inside a counter, in a doorway, or
 in the middle of an aisle mouth. Their route points come off the room shapes, so a badly-shaped
 room would show up as somebody loitering in a silly place rather than as an error.
+
+### O. The pass over N: does each department actually feel worked?
+N put people on the right jobs. Watching a full day back showed the jobs still didn't *look* like
+work, so this is the follow-up. Measured on day 1 across a working day, before → after:
+
+| what a player sees | before | after |
+|---|---|---|
+| bakery manager on the **staff** side of her own counter | 25% | 96% |
+| deli manager on the staff side of his | 63% | 89% |
+| cashiers within reach of a till | 59% | 69% |
+| grocery clerks at a shelf run | 57% | 79% |
+| two crew standing inside each other | 10% | 3% |
+| time in the **back corridor** during work hours | 10–29% | 3–9% |
+
+**What to look at:**
+
+- **Stand in front of the deli and the bakery counters.** Bruno and Doreen should be *behind* the
+  case, serving across it. Doreen was on the customer side three quarters of the day before this —
+  if she is ever in front of her own counter now, I want to know.
+- **Watch the aisles.** Staff should be working the shelves — facing, rotating, price checks — not
+  only walking through. Bubbles say what they're doing.
+- **Watch the swing doors for a minute.** Before this, five of the nine reasons to walk anywhere
+  were behind them, so the shop floor drained on a rota. Traffic through them should now look
+  occasional rather than constant.
+- **Look for two people standing on the same spot.** Much rarer now, but the fix is a nudge, not a
+  wall — they can still brush past each other.
+
+**The one I'd watch for:** somebody doing shelf work at a fixture that has no art for it yet — the
+frozen section especially, since that's still waiting on your assets. A clerk facing an invisible
+shelf will look like they're working on nothing.

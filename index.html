@@ -2951,8 +2951,23 @@ function buildBeat(n){
   for(const nm of want){
     for(const z of ROOMS.filter(r=>r.name===nm)){
       const ix = Math.min(Math.round(40*S), z.w/3), iy = Math.min(Math.round(40*S), z.h/3);
-      pts.push({x:z.x+ix, y:z.y+z.h/2}, {x:z.x+z.w-ix, y:z.y+z.h/2});
-      if(z.h > Math.round(200*S)) pts.push({x:z.x+z.w/2, y:z.y+iy}, {x:z.x+z.w/2, y:z.y+z.h-iy});
+      /* ⚠️ A COUNTER HAS A STAFF SIDE, AND IT IS THE ONE THE CUSTOMER IS NOT ON. Beating the whole
+         zone put the bakery manager on the customer side of her own counter 75% of the day and the
+         deli manager on the wrong side of his 37% -- both serving from in front of the case, which
+         is the one thing a counter department must not look like. Where a zone contains a counter,
+         the beat is the band BEHIND it. Found by shape (a wide, shallow blocker inside the zone),
+         not by name, so a department that gains a counter later gets this for free. */
+      const ctr = levelBlockers.filter(b =>
+        b.x >= z.x - 8 && b.x + b.w <= z.x + z.w + 8 && b.y > z.y && b.y + b.h < z.y + z.h &&
+        b.w > Math.round(100*S) && b.h < Math.round(70*S))
+        .sort((a,b) => a.y - b.y)[0];
+      const yTop = z.y + Math.min(iy, Math.round(16*S));
+      const yBot = ctr ? ctr.y - Math.round(10*S) : z.y + z.h - iy;
+      if (yBot <= yTop + Math.round(4*S)) { pts.push({x:z.x+z.w/2, y:z.y+z.h/2}); continue; }
+      const mid = (yTop + yBot) / 2;
+      pts.push({x:z.x+ix, y:mid}, {x:z.x+z.w-ix, y:mid});
+      if (!ctr && z.h > Math.round(200*S)) pts.push({x:z.x+z.w/2, y:yTop}, {x:z.x+z.w/2, y:yBot});
+      if (ctr) pts.push({x:z.x+z.w/2, y:mid});
     }
   }
   return pts.length ? pts : null;
@@ -2989,9 +3004,27 @@ function npcTarget(n){
     if(!n.beat) n.beat = buildBeat(n);
     if(n.beat && n.beat.length){
       if(n.beatUntil === undefined || clock >= n.beatUntil || n.beatIdx === undefined){
-        let k = n.beatIdx;
-        for(let tries = 0; tries < 6 && k === n.beatIdx; tries++) k = Math.floor(rand(0, n.beat.length));
-        n.beatIdx = Math.min(k, n.beat.length - 1);
+        /* ⚠️ PICK THE POST NOBODY ELSE IS ON. Choosing at random sent two managers to the same
+           waypoint often enough to matter: crew stood within 8 authored of each other 10% of the
+           day, in unbroken stretches of several seconds. separate() cannot fix that -- it holds
+           people apart, and two people walking at one spot just settle where the push balances
+           the walk. The fix is upstream: score a post by how far it is from everybody else, the
+           way the office's own patrol already does. */
+        let best = n.beatIdx, bestScore = -1;
+        for(let k = 0; k < n.beat.length; k++){
+          if(k === n.beatIdx) continue;
+          const c = n.beat[k];
+          let near = 1e9;
+          for(const o of NPCS){
+            if(o === n || o.customer || !o.alive || o.gone || o.wentHome) continue;
+            near = Math.min(near, cdist(o, c));
+          }
+          const spread = Math.min(Math.round(320*S), near);
+          const trip   = Math.min(Math.round(260*S), cdist(n, c));
+          const score  = spread * 1.4 + trip * 0.5 + rand(0, Math.round(60*S));
+          if(score > bestScore){ bestScore = score; best = k; }
+        }
+        n.beatIdx = Math.max(0, Math.min(best, n.beat.length - 1));
         n.beatUntil = clock + rand(4, 11);        // a few minutes at each post
       }
       const b = n.beat[n.beatIdx];
@@ -3283,7 +3316,18 @@ function startErrand(n){
      and pick([]) is undefined, so this line threw on the first errand any grocery worker started —
      a hundred times a day once there was a crew to start them. The empty room could not expose it
      because an empty room has nobody to send on an errand. Fall through to a desk visit instead. */
-  if(errandPoints.length&&Math.random()<0.55){const p=pick(errandPoints);n.errand=Object.assign(errandSpot(n,p),{dwell:rand(2.5,5),ptype:p.type,arrived:false});}
+  /* ⚠️ A CLERK'S ERRANDS BELONG IN THEIR OWN DEPARTMENT. Picking uniformly gave every worker the
+     same day -- the produce manager walked to the bakery as often as to her own trays, and the
+     departments read as interchangeable rather than as somebody's patch. Where a point carries a
+     dept, most picks are drawn from the worker's own; the rest still range, so the floor mixes and
+     nobody is on rails. Untagged points (the break room, the washroom) stay available to all. */
+  if(errandPoints.length&&Math.random()<0.55){
+    let pool=errandPoints;
+    if(n.storeDept&&Math.random()<0.7){
+      const mine=errandPoints.filter(e=>e.dept===n.storeDept);
+      if(mine.length)pool=mine;
+    }
+    const p=pick(pool);n.errand=Object.assign(errandSpot(n,p),{dwell:rand(2.5,5),ptype:p.type,arrived:false});}
   else{
     const others=desks.filter(d=>d.owner&&d.owner!=='you');if(!others.length)return;
     const d=pick(others);
@@ -3320,7 +3364,14 @@ function startErrand(n){
   }
 }
 function onErrandArrive(n,er){
-  const flavor={supply:'Supplies...',water:'Water break',coffee:'Coffee time',printer:objByType('printer').jammed?'Ugh, jammed!':'Just scanning',chat:pick(CHATTER)};
+  const flavor={supply:'Supplies...',water:'Water break',coffee:'Coffee time',printer:objByType('printer').jammed?'Ugh, jammed!':'Just scanning',chat:pick(CHATTER),
+  /* ⚠️ AN ERRAND IS THE ONLY REASON ANYBODY LEAVES THEIR POST, so on a shop floor every errand
+     read as skiving off to the back. The office's kinds are all breaks and machines -- water,
+     coffee, restroom, supply -- and five of the store's nine points were behind the swing doors,
+     so the sales floor emptied on a rota all day. 'stock' is the same machinery pointed at the
+     fixtures instead: facing a run, rotating a case, checking a tray. It is what the job looks
+     like. */
+  stock:pick(['Facing the shelf','Rotating stock','Price check','Filling a hole','Building the display'])};
   if(!n.bubble&&flavor[er.ptype])n.bubble={t:2,text:flavor[er.ptype]};
   if(er.ptype==='printer'&&objByType('printer').jammed){n.mood=clamp(n.mood-8,-100,100);n.stress=clamp(n.stress+16,0,100);logLine(`${n.name} hit the jammed printer. Fuming.`,'w');}
   else if(er.ptype==='chat')n.mood=clamp(n.mood+6,-100,100);
@@ -12690,10 +12741,40 @@ function loadLevel(id){
   {
     const near=(t,dx,dy)=>{const o=objects.find(x=>x.type===t); if(o)errandPoints.push({x:o.x+dx,y:o.y+dy,type:t});};
     near('water',   15, 40); near('coffee', 15, 40); near('supply', 17, 40);
-    near('phones',  13, 34); near('printer',17, 40);
-    errandPoints.push({x:Math.round(DOOR_X+DOOR_W/2),y:STORE_S-90,type:'chat'},   // the front end
+    near('phones',  13, 34);
+    /* the go-back cart is pinned ABOVE itself, not below: 40 under it is the vestibule side of
+       the front end, and the snap carried the errand out of the room entirely. */
+    near('printer',17, -30);
+    errandPoints.push({x:Math.round(DOOR_X+DOOR_W/2),y:STORE_S-90,type:'chat',dept:'front'},
                       {x:1374,y:130,type:'restroom'},                             // back of house
                       {x:(runXs[2]+SHELF_W+runXs[3])/2, y:RUN_MID_Y, type:'chat'});   // the middle aisle
+    /* ⚠️ WORK ON THE SALES FLOOR, DERIVED FROM THE FIXTURES THAT WERE JUST PLACED. Without these
+       the only reason to be in an aisle was to walk through it, and a store whose staff are all
+       either on a station or in the corridor looks like a store nobody works in. Both faces of
+       every run, both rows of trays, and the staff side of each service case. Move a fixture and
+       its work moves with it -- there is not a coordinate in here. */
+    const job=(x,y,dept)=>errandPoints.push({x:Math.round(x),y:Math.round(y),type:'stock',dept:dept});
+    runXs.forEach((rx,i)=>{
+      if(i>0)             job(rx-RUN_GAP/2+SHELF_W/2, RUN_MID_Y-40, 'grocery');   // the west face
+      if(i<runXs.length-1)job(rx+SHELF_W+RUN_GAP/2,   RUN_MID_Y+40, 'grocery');   // and the east
+    });
+    /* the trays and the cases are ASKED FOR, not written down -- CTR_TOP is the dairy row and the
+       tray table is block-scoped, so reaching for either here would have hardcoded the wrong
+       number twice. Everything below comes off the fixtures loadLevel has already placed. */
+    const inZone=nm=>{const z=ROOMS.find(r=>r.name===nm); return !z?[]:
+      levelBlockers.filter(b=>b.x>=z.x-8&&b.x+b.w<=z.x+z.w+8&&b.y>=z.y-8&&b.y+b.h<=z.y+z.h+8);};
+    /* BESIDE each tray, not below it. Below the bottom row is the zone's south edge, which is not
+       walkable, and errandSpot's snap then carried the produce manager 40 units into the customer
+       WASHROOM -- a legal point, a walkable point, and completely the wrong place to be seen
+       working. Offset toward the middle of the department instead, which is the aisle. */
+    {const z=ROOMS.find(r=>r.name==='PRODUCE'), zc=z?z.x+z.w/2:0;
+     inZone('PRODUCE').forEach(t=>{const tc=t.x+t.w/2;
+       job(tc + (tc<zc ? t.w/2+22 : -(t.w/2+22)), t.y+t.h/2, 'produce');});}
+    const behind=(nm,dept)=>{const c=inZone(nm).filter(b=>b.w>100&&b.h<70).sort((a,b)=>a.y-b.y)[0];
+      if(c)job(c.x+c.w*0.3,c.y-22,dept),job(c.x+c.w*0.7,c.y-22,dept);};
+    behind('DELI','deli'); behind('BAKERY','bakery');                             // the staff side
+    const dz=ROOMS.find(r=>r.name==='DAIRY');
+    if(dz)job(dz.x+dz.w*0.3,dz.y+dz.h*0.6,'grocery'),job(dz.x+dz.w*0.7,dz.y+dz.h*0.6,'grocery');
   }
   MUSTER.x=Math.round(DOOR_X+DOOR_W/2); MUSTER.y=STORE_S-60;      // the front end, by the doors
   BREAK_SPOT.x=1370; BREAK_SPOT.y=120;                            // beside the break-room table

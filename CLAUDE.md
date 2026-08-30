@@ -257,3 +257,26 @@ and the "fix" that improved it was shoving *those* apart.
   against it and go verify the world it is measuring. Prefer a contract assertion (§14) that fails
   loudly on a posed setup over a whole-sim statistic nobody can check.
 
+
+### 16. ⚠️ THE MUTANT RUNNER REWRITES `index.html` — A KILLED RUN LEAVES A MUTANT IN IT
+`test/mutate.js` proves a test bites by injecting a deliberate bug into `index.html`, running the
+test, and restoring the file. It restores on the way out — so **if it never gets to the way out,
+the injection stays on disk.**
+
+That is not hypothetical. On 2026-08-30 the runner was started in the foreground, hit a two-minute
+cap and was killed mid-run. `if(n.storeDept&&Math.random()<0.7)` was left as
+`if(n.storeDept&&false)`, the file was committed without re-reading it, and the next three
+measurements were all measuring a build nobody chose: the suite's own baseline went red, two of
+three verification runs were against the corrupt file, and two later mutants ran stacked on top of
+it. **`git status` was clean throughout, because the mutation was inside the commit.**
+
+- **Always run it with `run_in_background: true`.** A full spec is several test runs back to back
+  and will blow any foreground limit. Never kill it; wait for `=== SUMMARY ===`.
+- **Never run it while the gate is running**, and never edit `index.html` while either is running.
+- **Check the file before you commit after a mutant run** — `git diff` the anchors the spec names,
+  or grep for the `new` strings. A clean `git status` proves nothing here.
+- **The baseline line is load-bearing.** `exit=0 (green, as required...)` is the runner telling you
+  the file is pristine. If the baseline is RED, stop: nothing after it means anything, and the
+  cause is far more likely a dirty `index.html` than a flaky test.
+- **Anchors: use single-line ones.** `index.html` is CRLF and multi-line anchors have silently
+  matched zero times more than once. `NOT APPLIED` is a failed experiment, not a passing mutant.

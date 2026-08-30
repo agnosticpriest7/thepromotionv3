@@ -446,6 +446,224 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   }
 }
 
+/* ---- 6. does the floor LOOK worked? --------------------------------------------------------
+   ⚠️ EVERY ASSERTION ABOVE PASSED WHILE THE STORE LOOKED EMPTY. They prove a station exists, is
+   owned, is reachable and is not inside a shelf -- all true of a shop whose staff spend the day in
+   the back corridor, which is what was actually happening: five of the nine errand pins were behind
+   the swing doors, so the sales floor drained on a rota. The bakery manager was on the CUSTOMER
+   side of her own counter 75% of the time and every test here was green.
+
+   So this section samples a working day and asserts the things a player sees. Thresholds sit well
+   under what was measured (89% / 96% / 69% / 79%) -- they are there to catch a collapse, not to
+   pin a number that drifts with the seed. */
+{
+  const fw = mk(); const fg = fw.g, fsb = fw.sandbox;
+  const SC = fg.layout.S;      // the world scale. `S` in this file is the SANDBOX, not the scale.
+  fw.run(400);
+  const zone = nm => fg.layout.ROOMS.filter(r => r.name === nm);
+  /* the counter is found the way the GAME finds it -- a wide, shallow blocker inside the zone --
+     so this cannot disagree with buildBeat about which side is the staff side (§14). */
+  const counterOf = nm => {
+    for (const z of zone(nm)) {
+      const c = fg.layout.levelBlockers.filter(b => b.x >= z.x - 8 && b.x + b.w <= z.x + z.w + 8 &&
+        b.y > z.y && b.y + b.h < z.y + z.h && b.w > 100 * SC && b.h < 70 * SC).sort((a, b) => a.y - b.y)[0];
+      if (c) return c;
+    }
+    return null;
+  };
+  const deliCtr = counterOf('DELI'), bakeCtr = counterOf('BAKERY');
+  ck('the deli and the bakery each have a counter to stand behind', !!deliCtr && !!bakeCtr,
+     (deliCtr ? 'deli yes' : 'deli MISSING') + ', ' + (bakeCtr ? 'bakery yes' : 'bakery MISSING'));
+
+  const tills = fg.layout.levelBlockers.filter(b => b.h > 40 * SC && b.w < 60 * SC && b.y > 700 * SC);
+  const runs = fg.layout.levelBlockers.filter(b => b.h > 150 * SC && b.w < 80 * SC && b.y > 380 * SC && b.y < 720 * SC);
+
+  /* ONE pass, not two. The first draft sampled the posts in one loop and the room tallies in a
+     second, and the second ran off the end of the working day -- 108 samples, four clerks still on
+     the floor, and two thresholds that failed on noise rather than on anything real. Collect
+     everything from the same frames. */
+  const DEPT_ZONE = { grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END' };
+  /* ---- CONTRACTS FIRST. ⚠️ THE PERCENTAGES BELOW ARE NOT ENOUGH ON THEIR OWN. A mutation that
+     deleted every stock errand point on the sales floor SURVIVED the sampled-day assertions --
+     the store degrades gracefully, so the numbers sagged without crossing a threshold. A threshold
+     on a statistic can only catch a collapse; it cannot catch an erosion. These three assertions
+     are deterministic, derive from the live world, and each kills a mutant the sampling missed. */
+  {
+    /* (a) NO BEAT POST IS EVER IN FRONT OF A COUNTER. This is the actual contract behind the
+       "serves from behind the counter" percentage, and unlike the percentage it does not move
+       with the seed. */
+    let checked = 0, infront = 0;
+    for (const n of fg.NPCS) {
+      const ctr = n.storeDept === 'deli' ? deliCtr : n.storeDept === 'bakery' ? bakeCtr : null;
+      if (!ctr) continue;
+      let beat = null; try { beat = fsb.buildBeat(n); } catch (e) {}
+      if (!beat || !beat.length) continue;
+      checked += beat.length;
+      infront += beat.filter(b => b.y >= ctr.y).length;
+    }
+    ck('no post on a counter department beat is on the CUSTOMER side of the counter',
+       checked > 0 && infront === 0,
+       checked + ' posts checked, ' + infront + ' in front of the case');
+  }
+  {
+    /* (b) THE SALES FLOOR HAS WORK ON IT. Every department a clerk can belong to must own at
+       least one errand point, and that point must be inside the department. Without this, an
+       errand is only ever a trip to the back and the shop floor drains on a rota -- which is
+       what was happening, and what no percentage here noticed. */
+    const DEPTS_WITH_WORK = ['grocery', 'produce', 'deli', 'bakery', 'front'];
+    const ZONE = { grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END' };
+    const missing = DEPTS_WITH_WORK.filter(d => {
+      const pts = fg.layout.errandPoints.filter(e => e.dept === d);
+      if (!pts.length) return true;
+      return !pts.some(e => { const r = fsb.roomAt(e.x, e.y); return r && r.name === ZONE[d]; });
+    });
+    ck('every department has work to do inside its own four walls', missing.length === 0,
+       (DEPTS_WITH_WORK.length - missing.length) + '/' + DEPTS_WITH_WORK.length +
+       ' departments' + (missing.length ? ' — nothing to do in: ' + missing.join(', ') : ''));
+
+    /* (c) AND NO ERRAND PIN SNAPS OUT OF ITS OWN ROOM. Two did: the produce jobs sat on the
+       zone's south edge and errandSpot carried them 40 units into the customer WASHROOM -- a
+       walkable point, a legal point, and completely the wrong place to be seen working. */
+    const probe = fg.NPCS[0];
+    const strays = fg.layout.errandPoints.filter(e => {
+      const sp = fsb.errandSpot(probe, e);
+      const a = fsb.roomAt(e.x, e.y), b = fsb.roomAt(sp.x, sp.y);
+      return ((a && a.name) || 'NONE') !== ((b && b.name) || 'NONE');
+    });
+    ck('  ^ and no errand pin snaps into a different room than it was authored in',
+       strays.length === 0,
+       strays.length + ' of ' + fg.layout.errandPoints.length + ' pins stray' +
+       (strays.length ? ': ' + strays.map(e => e.type).join(', ') : ''));
+  }
+  {
+    /* (d) A CLERK'S ERRANDS ARE MOSTLY THEIR OWN DEPARTMENT'S. Statistical, but the margin is a
+       chasm rather than a threshold: produce owns 4 of the ~26 pins, so an unbiased pick lands
+       there about 15% of the time and a biased one about three quarters. Anything in between
+       means the bias is broken, and no seed wobble spans that gap. */
+    const n = fg.NPCS.find(x => x.storeDept === 'produce');
+    let own = 0, got = 0;
+    if (n) for (let i = 0; i < 400; i++) {
+      n.errand = null;
+      try { fsb.startErrand(n); } catch (e) { break; }
+      if (!n.errand) continue;                    // startErrand also visits desks
+      got++;
+      const r = fsb.roomAt(n.errand.x, n.errand.y);
+      if (r && r.name === 'PRODUCE') own++;
+    }
+    n && (n.errand = null);
+    /* 0.32, not 0.45: the measured value is 47%, not the 74% the 0.7 bias implies, because
+       errandSpot spreads arrivals around a ring and some land just outside the zone. Sit the bar
+       halfway between measured and unbiased -- it still cannot be reached with the bias off. */
+    ck('a clerk takes most errands in their own department', got > 100 && own / got >= 0.32,
+       got ? Math.round(100 * own / got) + '% of ' + got + ' errands were in PRODUCE (unbiased is ~15%)'
+           : 'no errands drawn');
+  }
+
+  {
+    /* (e) THE BEAT AVOIDS THE POST SOMEBODY IS ALREADY ON. ⚠️ Making the choice random again
+       SURVIVED every assertion here on the first pass -- it only nudges the overlap percentage,
+       which sits at 3% against a 12% bar. So ask the selector directly: park one person on a post
+       and see whether the manager still walks onto them.
+
+       Two traps avoided. The selector skips `k === n.beatIdx`, so seeding beatIdx with the very
+       post under test would make this vacuous -- it is seeded with a DIFFERENT one, leaving the
+       crowded post a legal candidate. And a single sweep proves little: with ~14 posts a random
+       pick lands on the crowded one about once, so a run of zero hits happens by chance a third
+       of the time. Sweeping repeatedly makes the random case certain to be caught. */
+    const bw = mk(); const bg = bw.g, bsb = bw.sandbox;
+    bw.run(400);
+    for (let guard = 0; guard < 400 && bsb.currentPhase().name !== 'Regular Work'; guard++) bw.run(40);
+    let m = null, beat = null;
+    for (const n of bg.NPCS) {
+      if (!n.storeRole || n.storeRole === 'staff') continue;
+      let b = null; try { b = bsb.buildBeat(n); } catch (e) {}
+      if (b && (!beat || b.length > beat.length)) { m = n; beat = b; }
+    }
+    let trials = 0, walkedOn = 0;
+    if (m && beat && beat.length >= 4) {
+      m.beat = beat;
+      const crowder = bg.NPCS.find(n => n !== m);
+      /* everybody else is marked gone, which is the same filter the selector itself uses --
+         so the only person it can see is the one deliberately standing in the way */
+      bg.NPCS.forEach(n => { if (n !== m && n !== crowder) n.gone = true; });
+      crowder.gone = false; crowder.wentHome = false;
+      for (let pass = 0; pass < 20; pass++) {
+        for (let k = 0; k < beat.length; k++) {
+          crowder.x = beat[k].x; crowder.y = beat[k].y;
+          m.beatIdx = (k + 1) % beat.length;    // NOT k — k must stay a legal candidate
+          m.beatUntil = -1;                     // expired, so the next call re-picks
+          try { bsb.npcTarget(m); } catch (e) { continue; }
+          trials++;
+          if (m.beatIdx === k) walkedOn++;
+        }
+      }
+    }
+    ck('the beat never sends a manager to the post somebody is already standing on',
+       trials > 100 && walkedOn === 0,
+       walkedOn + ' of ' + trials + ' picks landed on the occupied post' +
+       (beat ? ' (' + beat.length + '-post beat)' : ' — NO BEAT BUILT'));
+  }
+
+  const tally = {}, where = {};
+  const bump = (k, hit) => { tally[k] = tally[k] || [0, 0]; tally[k][1]++; if (hit) tally[k][0]++; };
+  let samples = 0, overlap = 0;
+  for (let i = 0; i < 700; i++) {
+    fw.run(40);
+    if (fsb.currentPhase().name !== 'Regular Work') continue;
+    const crew = fg.NPCS.filter(n => !n.customer && n.alive && !n.gone && !n.wentHome);
+    if (crew.length < 8) continue;              // §15: never measure a floor that is not populated
+    samples++;
+    let pair = false;
+    for (let a = 0; a < crew.length; a++) {
+      const n = crew[a];
+      for (let b = a + 1; b < crew.length; b++)
+        if (Math.hypot(n.x - crew[b].x, n.y - crew[b].y) < 8 * SC) pair = true;
+      if (n.storeDept === 'deli' && deliCtr) bump('deli', n.y < deliCtr.y);
+      if (n.storeDept === 'bakery' && bakeCtr) bump('bakery', n.y < bakeCtr.y);
+      if (n.storeDept === 'front' && n.storeRole === 'staff')
+        bump('till', tills.some(t => Math.hypot(n.x - (t.x + t.w / 2), n.y - (t.y + t.h / 2)) < 46 * SC));
+      if (n.storeDept === 'grocery' && n.storeRole === 'staff')
+        bump('aisle', runs.some(t => Math.abs(n.x - (t.x + t.w / 2)) < 70 * SC &&
+          n.y > t.y - 20 * SC && n.y < t.y + t.h + 20 * SC));
+      /* ANYONE WITH A DEPARTMENT, not just role 'staff'. Nine of the twelve belong to a zone --
+         four clerks and five department managers -- and the first draft filtered to 'staff', which
+         is four people. The three who legitimately have no home zone (store manager, AM, owner)
+         beat the WHOLE floor by design and are excluded by having no storeDept at all. */
+      if (DEPT_ZONE[n.storeDept]) {
+        const r = fsb.roomAt(n.x, n.y); const rn = (r && r.name) || 'NONE';
+        where[n.name] = where[n.name] || { dept: DEPT_ZONE[n.storeDept], seen: {} };
+        where[n.name].seen[rn] = (where[n.name].seen[rn] || 0) + 1;
+      }
+    }
+    if (pair) overlap++;
+  }
+  const pct = k => tally[k] ? Math.round(100 * tally[k][0] / tally[k][1]) : -1;
+  ck('  ^ the day was actually sampled', samples > 300, samples + ' samples in Regular Work');
+  ck('counter staff serve from BEHIND their counter, not in front of it',
+     pct('deli') >= 65 && pct('bakery') >= 65,
+     'deli ' + pct('deli') + '%, bakery ' + pct('bakery') + '% on the staff side');
+  ck('cashiers are at a till', pct('till') >= 45, pct('till') + '% of the working day');
+  ck('grocery clerks are at a shelf run', pct('aisle') >= 55, pct('aisle') + '% of the working day');
+  ck('crew are not standing inside each other', 100 * overlap / samples <= 12,
+     Math.round(100 * overlap / samples) + '% of samples had a pair closer than 8 authored');
+
+  /* the department each person spends the most time in must be their OWN. This is the assertion
+     that would have caught the drained floor: before the errand pins were re-cut, four of the
+     twelve had BOH CORRIDOR in their top three and the store manager had it FIRST. */
+  const names = Object.keys(where);
+  const home = names.filter(nm => {
+    const e = where[nm];
+    const top = Object.entries(e.seen).sort((a, b) => b[1] - a[1])[0];
+    return top && top[0] === e.dept;
+  });
+  ck('every clerk spends more of the day in their own department than anywhere else',
+     names.length >= 8 && home.length === names.length,
+     home.length + '/' + names.length + ' at home' +
+     (home.length === names.length ? '' : ' — adrift: ' +
+       names.filter(n => home.indexOf(n) < 0).map(n =>
+         n + ' in ' + Object.entries(where[n].seen).sort((a, b) => b[1] - a[1])[0][0]).join(', ')));
+}
+
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
