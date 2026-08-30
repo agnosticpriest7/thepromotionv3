@@ -446,6 +446,103 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   }
 }
 
+/* ---- 6. does the floor LOOK worked? --------------------------------------------------------
+   ⚠️ EVERY ASSERTION ABOVE PASSED WHILE THE STORE LOOKED EMPTY. They prove a station exists, is
+   owned, is reachable and is not inside a shelf -- all true of a shop whose staff spend the day in
+   the back corridor, which is what was actually happening: five of the nine errand pins were behind
+   the swing doors, so the sales floor drained on a rota. The bakery manager was on the CUSTOMER
+   side of her own counter 75% of the time and every test here was green.
+
+   So this section samples a working day and asserts the things a player sees. Thresholds sit well
+   under what was measured (89% / 96% / 69% / 79%) -- they are there to catch a collapse, not to
+   pin a number that drifts with the seed. */
+{
+  const fw = mk(); const fg = fw.g, fsb = fw.sandbox;
+  const SC = fg.layout.S;      // the world scale. `S` in this file is the SANDBOX, not the scale.
+  fw.run(400);
+  const zone = nm => fg.layout.ROOMS.filter(r => r.name === nm);
+  /* the counter is found the way the GAME finds it -- a wide, shallow blocker inside the zone --
+     so this cannot disagree with buildBeat about which side is the staff side (§14). */
+  const counterOf = nm => {
+    for (const z of zone(nm)) {
+      const c = fg.layout.levelBlockers.filter(b => b.x >= z.x - 8 && b.x + b.w <= z.x + z.w + 8 &&
+        b.y > z.y && b.y + b.h < z.y + z.h && b.w > 100 * SC && b.h < 70 * SC).sort((a, b) => a.y - b.y)[0];
+      if (c) return c;
+    }
+    return null;
+  };
+  const deliCtr = counterOf('DELI'), bakeCtr = counterOf('BAKERY');
+  ck('the deli and the bakery each have a counter to stand behind', !!deliCtr && !!bakeCtr,
+     (deliCtr ? 'deli yes' : 'deli MISSING') + ', ' + (bakeCtr ? 'bakery yes' : 'bakery MISSING'));
+
+  const tills = fg.layout.levelBlockers.filter(b => b.h > 40 * SC && b.w < 60 * SC && b.y > 700 * SC);
+  const runs = fg.layout.levelBlockers.filter(b => b.h > 150 * SC && b.w < 80 * SC && b.y > 380 * SC && b.y < 720 * SC);
+
+  /* ONE pass, not two. The first draft sampled the posts in one loop and the room tallies in a
+     second, and the second ran off the end of the working day -- 108 samples, four clerks still on
+     the floor, and two thresholds that failed on noise rather than on anything real. Collect
+     everything from the same frames. */
+  const DEPT_ZONE = { grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END' };
+  const tally = {}, where = {};
+  const bump = (k, hit) => { tally[k] = tally[k] || [0, 0]; tally[k][1]++; if (hit) tally[k][0]++; };
+  let samples = 0, overlap = 0;
+  for (let i = 0; i < 700; i++) {
+    fw.run(40);
+    if (fsb.currentPhase().name !== 'Regular Work') continue;
+    const crew = fg.NPCS.filter(n => !n.customer && n.alive && !n.gone && !n.wentHome);
+    if (crew.length < 8) continue;              // §15: never measure a floor that is not populated
+    samples++;
+    let pair = false;
+    for (let a = 0; a < crew.length; a++) {
+      const n = crew[a];
+      for (let b = a + 1; b < crew.length; b++)
+        if (Math.hypot(n.x - crew[b].x, n.y - crew[b].y) < 8 * SC) pair = true;
+      if (n.storeDept === 'deli' && deliCtr) bump('deli', n.y < deliCtr.y);
+      if (n.storeDept === 'bakery' && bakeCtr) bump('bakery', n.y < bakeCtr.y);
+      if (n.storeDept === 'front' && n.storeRole === 'staff')
+        bump('till', tills.some(t => Math.hypot(n.x - (t.x + t.w / 2), n.y - (t.y + t.h / 2)) < 46 * SC));
+      if (n.storeDept === 'grocery' && n.storeRole === 'staff')
+        bump('aisle', runs.some(t => Math.abs(n.x - (t.x + t.w / 2)) < 70 * SC &&
+          n.y > t.y - 20 * SC && n.y < t.y + t.h + 20 * SC));
+      /* ANYONE WITH A DEPARTMENT, not just role 'staff'. Nine of the twelve belong to a zone --
+         four clerks and five department managers -- and the first draft filtered to 'staff', which
+         is four people. The three who legitimately have no home zone (store manager, AM, owner)
+         beat the WHOLE floor by design and are excluded by having no storeDept at all. */
+      if (DEPT_ZONE[n.storeDept]) {
+        const r = fsb.roomAt(n.x, n.y); const rn = (r && r.name) || 'NONE';
+        where[n.name] = where[n.name] || { dept: DEPT_ZONE[n.storeDept], seen: {} };
+        where[n.name].seen[rn] = (where[n.name].seen[rn] || 0) + 1;
+      }
+    }
+    if (pair) overlap++;
+  }
+  const pct = k => tally[k] ? Math.round(100 * tally[k][0] / tally[k][1]) : -1;
+  ck('  ^ the day was actually sampled', samples > 300, samples + ' samples in Regular Work');
+  ck('counter staff serve from BEHIND their counter, not in front of it',
+     pct('deli') >= 65 && pct('bakery') >= 65,
+     'deli ' + pct('deli') + '%, bakery ' + pct('bakery') + '% on the staff side');
+  ck('cashiers are at a till', pct('till') >= 45, pct('till') + '% of the working day');
+  ck('grocery clerks are at a shelf run', pct('aisle') >= 55, pct('aisle') + '% of the working day');
+  ck('crew are not standing inside each other', 100 * overlap / samples <= 12,
+     Math.round(100 * overlap / samples) + '% of samples had a pair closer than 8 authored');
+
+  /* the department each person spends the most time in must be their OWN. This is the assertion
+     that would have caught the drained floor: before the errand pins were re-cut, four of the
+     twelve had BOH CORRIDOR in their top three and the store manager had it FIRST. */
+  const names = Object.keys(where);
+  const home = names.filter(nm => {
+    const e = where[nm];
+    const top = Object.entries(e.seen).sort((a, b) => b[1] - a[1])[0];
+    return top && top[0] === e.dept;
+  });
+  ck('every clerk spends more of the day in their own department than anywhere else',
+     names.length >= 8 && home.length === names.length,
+     home.length + '/' + names.length + ' at home' +
+     (home.length === names.length ? '' : ' — adrift: ' +
+       names.filter(n => home.indexOf(n) < 0).map(n =>
+         n + ' in ' + Object.entries(where[n].seen).sort((a, b) => b[1] - a[1])[0][0]).join(', ')));
+}
+
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
