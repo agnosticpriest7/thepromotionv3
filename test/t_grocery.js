@@ -231,7 +231,7 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
      green. A derived test can quietly redefine the world to include the mutation. The count is an
      authoring fact, so it is fixed here (§14) — add or remove a shelf column and this goes red
      whether or not the remaining aisles happen to be walkable. */
-  const AISLES = 4;   // five runs, and the westmost of them is FROZEN -- four aisles between them
+  const AISLES = 5;   // six runs, the westmost of them FROZEN -- five aisles between them
   ck('the shelf block still forms the authored number of aisles', mids.length === AISLES,
      mids.length + ' aisles, expected ' + AISLES + ' — at x=' + mids.join(','));
   ck('every grocery aisle is walkable end to end', blocked.length === 0,
