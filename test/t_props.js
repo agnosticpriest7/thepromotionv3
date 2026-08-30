@@ -21,7 +21,7 @@ const ck = (n, c, d) => { console.log('  ' + (c ? 'PASS' : 'FAIL') + '  ' + n + 
 const mk = lv => createWorld({ seed: 20260828, storage: { 'promo:level': lv, 'promo:newgame': '0', 'promo:char': '0' } });
 
 /* SPEC, fixed at authoring time (§14). */
-const TRAYS = 4, LANES = 4, CASE_PITCH = 180;
+const TRAYS = 4, LANES = 3, CASE_PITCH = 180;
 const NEW_ART = ['deli_case', 'bakery_case', 'dairy_case', 'produce_fruit_a', 'produce_fruit_b',
                  'produce_veg', 'produce_mixed', 'pallet', 'baler', 'checkstand', 'checkstand_r', 'goback_cart'];
 /* what the store reuses from the office rather than growing its own copy of */
@@ -115,10 +115,13 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
 {
   const w = mk('grocery'), g = w.g, S = w.sandbox, L = g.layout, sc = L.S, A = v => Math.round(v / sc);
   const lanes = L.containers.filter(c => c.label === 'Checkstand').sort((a, b) => a.x - b.x);
-  ck('four checkout lanes', lanes.length === LANES, lanes.length + ' lanes');
-  ck('  ^ with the tills facing each other in each cluster',
-     lanes.length === LANES && lanes[0].art === 'checkstand' && lanes[1].art === 'checkstand_r' &&
-     lanes[2].art === 'checkstand' && lanes[3].art === 'checkstand_r',
+  /* THREE LANES IN ONE RUN. They used to be four in two clusters flanking the doors; the doors
+     moved to the middle of the south wall and the run went west of them, which is the shape of a
+     front end you can see all of at once. The count is the spec and stays written down. */
+  ck('three checkout lanes', lanes.length === LANES, lanes.length + ' lanes');
+  ck('  ^ with the tills alternating along the run',
+     lanes.length === LANES && lanes.every((l, i) =>
+       l.art === (i % 2 === 0 ? 'checkstand' : 'checkstand_r')),
      /* the first version chained .replace('checkstand','till-right').replace('_r','') and so
         printed "till-right" for BOTH mirrors -- an assertion that passed while its own message
         said the opposite of what it had checked. */
