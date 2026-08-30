@@ -122,7 +122,9 @@ function completionRun(level, rolls) {
     for (let y = gz.y + CE / 2; y < gz.y + gz.h; y += CE) if (!S.walkableAt(mx, y)) return true;
     return false;
   });
-  ck('every aisle is still traversable with fixtures placed', mids.length === 5 && blocked.length === 0,
+  /* FOUR aisles since the re-plan: five runs, the westmost of them the frozen aisle. The count
+     is an authoring fact and stays written down, so adding or dropping a run goes red here. */
+  ck('every aisle is still traversable with fixtures placed', mids.length === 4 && blocked.length === 0,
      mids.length + ' aisles' + (blocked.length ? ' — BLOCKED: ' + blocked.join(',') : ''));
 }
 

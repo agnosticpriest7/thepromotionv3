@@ -24,7 +24,11 @@ const ck = (n, c, d) => { console.log('  ' + (c ? 'PASS' : 'FAIL') + '  ' + n + 
 const mk = lv => createWorld({ seed: 20260827, storage: { 'promo:level': lv, 'promo:newgame': '0', 'promo:char': '0' } });
 
 /* SPEC, fixed at authoring time so a mutant cannot redefine the floor to satisfy it. */
-const RUNS = 6, VARIANTS = 5, AISLES = RUNS - 1;
+/* FIVE RUNS SINCE THE RE-PLAN, and the westmost of them is the FROZEN aisle -- frozen is not a
+   department, just the run against the wall wanting its own case art. Five runs, five variants,
+   so each run now carries a distinct face instead of one repeating. The count is an authoring
+   fact and belongs written down (CLAUDE.md 14): add or drop a run and this goes red. */
+const RUNS = 5, VARIANTS = 5, AISLES = RUNS - 1;
 /* ⚠️ 65, NOT 60, AND THE RUNS ARE WHY. grocery-prop-scale sized every store prop from its real
    size at one scale, and a gondola run is 1.3 m -- 55 authored, where it had been 60 because it
    was sized to the space rather than to the fixture. The pitch did not move, so the runs stay
@@ -65,7 +69,7 @@ const runBlockers = (w) => {
 {
   const w = mk('grocery');
   const runs = runsOf(w).sort((a, b) => a.x - b.x);
-  ck('the aisle band is six runs of ONE sprite each', runs.length === RUNS,
+  ck('the aisle band is one sprite per run', runs.length === RUNS,
      runs.length + ' shelf sprites (was 30 = 6 runs x 5 stacked units)');
 
   const seq = runs.map(r => r.art);
@@ -252,12 +256,17 @@ const runBlockers = (w) => {
   /* ⚠️ THE NEGATIVE CASE, POSED LIVE — and RE-MEASURED after the rescale rather than carried over.
      It used to widen by 48, which bit when aisles were 60 clear. They are 65 now, so +48 leaves 41
      and the aisle still walks: the old mutation would have passed while proving nothing. Measured
-     again on this floor: 65 walks, 39 walks, 37 is CLOSED. The grid's own threshold has not moved
-     (it is a property of CELL and the 2px blocker inflation, not of the props) — the slack around
-     it grew from 22 to 27. So the pose is +56. */
+     again on this floor: 65 walks, 39 walks, 37 is CLOSED. So the pose was +56.
+
+     AND RE-MEASURED AGAIN AFTER THE RE-PLAN, because it stopped biting. The threshold is not a
+     width, it is an ALIGNMENT: a 20-wide cell has to fall entirely inside the gap. The runs used
+     to start at x=320 and now start at 24, so the same 37-unit gap lands differently against the
+     cell boundaries -- aisle 0 runs 77..142, and cell 80..100 stays clear until the run's edge
+     crosses 102, which takes 42 a side rather than 28. A negative case carried across a re-plan
+     is a negative case that has stopped proving anything. So the pose is +88. */
   const victim = rects[1];                                   // an INNER run, so both its aisles narrow
   const keep = { x: victim.x, w: victim.w };
-  victim.x -= Math.round(28 * sc); victim.w += Math.round(56 * sc);
+  victim.x -= Math.round(44 * sc); victim.w += Math.round(88 * sc);
   S.buildGrid();
   const shutCells = narrowest();
   const shutWalk = [];
@@ -303,5 +312,5 @@ const runBlockers = (w) => {
 }
 
 console.log('\nshelf art: ' + pass + ' pass, ' + fail + ' fail');
-console.log(fail ? 'SHELF ART: RED ❌' : 'SHELF ART: GREEN ✅ (six runs, five faces, every aisle still walks)');
+console.log(fail ? 'SHELF ART: RED ❌' : 'SHELF ART: GREEN ✅ (five runs, five faces, every aisle still walks)');
 process.exit(fail ? 1 : 0);

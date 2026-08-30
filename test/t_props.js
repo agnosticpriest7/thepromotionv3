@@ -82,8 +82,11 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
 {
   const w = mk('grocery'), g = w.g, L = g.layout, sc = L.S, A = v => Math.round(v / sc);
   const run = re => L.containers.filter(c => re.test(c.label || '')).sort((a, b) => a.x - b.x);
-  const bake = run(/bakery/i), deli = run(/deli/i);
-  ck('the bakery and deli runs are both built from cases', bake.length >= 2 && deli.length >= 2,
+  /* THE NORTH WALL IS DAIRY AND DELI. Bakery moved to its own block in the north-east when the
+     store was re-planned, so it is one case of its own rather than half of the north run. What is
+     being asserted is unchanged: a service counter is a RUN of cases, not a scatter of tables. */
+  const bake = run(/bakery/i), deli = run(/deli/i), dairy = run(/dairy/i);
+  ck('the service runs are built from cases', dairy.length >= 2 && deli.length >= 2 && bake.length >= 1,
      bake.length + ' bakery, ' + deli.length + ' deli');
 
   const pitches = arr => { const g2 = []; for (let i = 1; i < arr.length; i++) g2.push(A(arr[i].x) - A(arr[i - 1].x)); return g2; };
@@ -99,8 +102,10 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      'deli ' + drawn('deli_case').toFixed(1) + ' vs bakery ' + drawn('bakery_case').toFixed(1) + ' authored');
 
   /* the dairy case exists, is solid, and carries no trigger */
-  const dairy = L.containers.filter(c => /dairy/i.test(c.label || ''));
-  ck('the dairy case is on the floor', dairy.length === 1, dairy.length + ' found');
+  /* DAIRY IS A DEPARTMENT NOW, NOT A SINGLE PROP. It used to be one refrigerated box parked in
+     PRODUCE as set dressing, from when the store had no dairy at all. It is a run in the cooler's
+     south wall -- the cases are loaded from inside the cooler and served from the aisle. */
+  ck('the dairy run is on the floor', dairy.length >= 2, dairy.length + ' cases');
   const objs = L.objects.filter(o => /dairy/i.test(o.label || ''));
   ck('  ^ and it is set dressing — no trigger, no task', objs.length === 0,
      objs.length ? 'it grew a trigger' : 'no object entry, as briefed');
@@ -137,33 +142,49 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      The lanes are perpendicular to the wall now, so the walkways are the gaps between them. */
   const walk = (x, y) => S.walkableAt(Math.round(x * sc), Math.round(y * sc));
   const cellOf = (x, y) => S.cellOf(Math.round(x * sc), Math.round(y * sc));
+  /* ⚠️ EVERY POINT BELOW IS DERIVED. This block used to name (750,700) as "the vestibule",
+     (645,440) as "an aisle", y=495 as "the cross-aisle" and 690..810 as "the door" -- four literals
+     from a floor plan that no longer exists. When the store was re-planned they went on measuring
+     confidently and reported failures that were not real, which is precisely the rot §14 is about.
+     Ask the world where its door is. */
+  const ent = (L.ROOMS || []).find(r => r.name === 'ENTRANCE');
+  const doorX = A(L.EXIT.x);                                   // EXIT sits in the doorway
+  const storeS = A(ent.y) - 16;                                // the store's south wall
+  const gz = (L.ROOMS || []).find(r => r.name === 'GROCERY');
+  const shelfX = [...new Set((L.containers || []).filter(c => c.label === 'Shelf')
+                   .map(c => Math.round(A(c.x) + A(c.w) / 2)))].sort((a, b) => a - b);
+  const aisleX = Math.round((shelfX[1] + shelfX[2]) / 2);      // the middle of a real aisle
   const doorToFloor = () => {
-    const a = cellOf(750, 700);         // in the entrance vestibule, below the door
-    const b = cellOf(645, 440);         // in the middle of an aisle, up in GROCERY
+    const a = cellOf(doorX, A(ent.y) + Math.round(A(ent.h) / 2));
+    const b = cellOf(aisleX, A(gz.y) + Math.round(A(gz.h) / 2));
     const p = S.astar(a.r, a.c, b.r, b.c);
     return !!(p && p.length);
   };
   ck('you can still walk from the entrance to the sales floor',
-     doorToFloor(), doorToFloor() ? 'door -> aisle path found' : 'NO PATH — the lanes sealed the front end');
+     doorToFloor(), doorToFloor() ? 'door (' + doorX + ') -> aisle (' + aisleX + ') path found'
+                                  : 'NO PATH — the lanes sealed the front end');
 
-  /* and the cross-aisle north of the lanes is real floor, not a sliver */
+  /* the cross-aisle between the shelf block and the lanes is real floor, not a sliver -- and WHERE
+     it is comes off the fixtures either side of it, not out of the air. */
+  const shelfBottom = Math.max.apply(null, (L.levelBlockers || [])
+    .filter(b => A(b.y) >= A(gz.y) && A(b.h) > 100).map(b => A(b.y) + A(b.h)));
+  const laneTop = Math.min.apply(null, liveLanes.map(v => A(v.y)));
+  const crossY = Math.round((shelfBottom + laneTop) / 2);
   let open = 0;
-  for (let x = 200; x < 1300; x += 20) if (walk(x, 495)) open++;
+  for (let x = 200; x < A(L.W) - 200; x += 20) if (walk(x, crossY)) open++;
   ck('  ^ and the cross-aisle between the shelf block and the lanes is walkable',
-     open >= 40, open + ' walkable samples along y=495');
+     open >= 30, open + ' walkable samples along y=' + crossY +
+     ' (between the runs ending ' + shelfBottom + ' and the lanes starting ' + laneTop + ')');
 
-  /* ⚠️ NEGATIVE CASE, POSED LIVE — and SIZED BY MEASUREMENT. The first version swelled a lane
+  /* ⚠️ NEGATIVE CASE, POSED LIVE — and SIZED BY MEASUREMENT. An earlier version swelled a lane
      600 authored across the middle gap and the path survived, because the front end is wide and
-     the route simply went round the north cross-aisle. That is not the check failing to matter,
-     it is the check being pointed at the wrong throat: the store has exactly ONE way in, the
-     120-wide door in the south wall, so the thing to seal is the door, not the gap. A lane that
-     grows over it and down to the wall MUST cut the store off. */
-  /* the same rot as the filter above: this used `A(b.h) > 80`, which stopped matching a lane once
-     the lanes were compressed to 65 long. Take one of the lanes we already identified. */
+     the route simply went round. That was not the check failing to matter, it was the check
+     pointed at the wrong throat: the store has exactly ONE way in, so the thing to seal is the
+     door. A lane grown over it and down to the wall MUST cut the store off. */
   const victim = liveLanes[2] || liveLanes[0];
   const keep = { x: victim.x, y: victim.y, w: victim.w, h: victim.h };
-  victim.x = Math.round(680 * sc); victim.w = Math.round(140 * sc);      // over the door (690..810)
-  victim.h = Math.round((655 - A(victim.y)) * sc);                       // and down to the south wall
+  victim.x = Math.round((doorX - 70) * sc); victim.w = Math.round(140 * sc);
+  victim.h = Math.round((storeS - A(victim.y)) * sc);
   S.buildGrid();
   const sealed = !doorToFloor();
   victim.x = keep.x; victim.y = keep.y; victim.w = keep.w; victim.h = keep.h; S.buildGrid();
