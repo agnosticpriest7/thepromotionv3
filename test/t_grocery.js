@@ -55,8 +55,8 @@ const CELL = Math.round(20 * 1.8);
      hang off a corridor, and there is a dock and a yard outside the building. STAFF WC is gone as
      a room -- at 78 wide it cost RECEIVING the width it needed, and receiving kept sealing itself
      with its own furniture; the toilet folds into the break room, as it does in most shops. */
-  const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','DAIRY','RECEIVING',
-                'BREAK ROOM','STORE MANAGER','OWNER','ASSISTANT MANAGER','CASH OFFICE',
+  const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','DAIRY',
+                'BREAK ROOM','STAFF WC','STORE MANAGER','OWNER','ASSISTANT MANAGER','CASH OFFICE',
                 'BOH CORRIDOR','SHIPPING / RECEIVING','YARD'];
   const have = (L.ROOMS || []).map(r => r.name);
   const missing = want.filter(n => have.indexOf(n) < 0);
