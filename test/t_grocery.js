@@ -49,8 +49,15 @@ const CELL = Math.round(20 * 1.8);
    constants belong hard-coded — a test SHOULD fail when the store is re-planned). This replaced
    "1 room, 4 walls", which was the empty-room shape and went correctly red when a floor arrived. */
 {
-  const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','RECEIVING','BREAK ROOM',
-                'STORE MANAGER','OWNER','STAFF WC'];
+  /* RE-PLANNED. The store was laid out to a real supermarket plan: fresh departments around the
+     perimeter, dry aisles in the middle, checkouts across the front. DAIRY is a department now
+     (its cases sit in the cooler's south wall), CASH OFFICE moved beside the tills, the back rooms
+     hang off a corridor, and there is a dock and a yard outside the building. STAFF WC is gone as
+     a room -- at 78 wide it cost RECEIVING the width it needed, and receiving kept sealing itself
+     with its own furniture; the toilet folds into the break room, as it does in most shops. */
+  const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','DAIRY','RECEIVING',
+                'BREAK ROOM','STORE MANAGER','OWNER','ASSISTANT MANAGER','CASH OFFICE',
+                'BOH CORRIDOR','SHIPPING / RECEIVING','YARD'];
   const have = (L.ROOMS || []).map(r => r.name);
   const missing = want.filter(n => have.indexOf(n) < 0);
   ck('  ^ and with every named zone on the plan', missing.length === 0 && (L.walls || []).length >= 6,
@@ -224,7 +231,7 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
      green. A derived test can quietly redefine the world to include the mutation. The count is an
      authoring fact, so it is fixed here (§14) — add or remove a shelf column and this goes red
      whether or not the remaining aisles happen to be walkable. */
-  const AISLES = 5;
+  const AISLES = 4;   // five runs, and the westmost of them is FROZEN -- four aisles between them
   ck('the shelf block still forms the authored number of aisles', mids.length === AISLES,
      mids.length + ' aisles, expected ' + AISLES + ' — at x=' + mids.join(','));
   ck('every grocery aisle is walkable end to end', blocked.length === 0,
@@ -232,7 +239,12 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
 
   /* ---- SERVICE COUNTERS: staff space behind them, and nobody sits at them ------------------- */
   {
-    const counters = (FL.containers || []).filter(c => /counter/i.test(c.label || ''));
+    /* IDENTIFIED BY THE ART THEY ARE BUILT FROM, not by a word in the label. Matching /counter/i
+       missed the dairy run entirely -- it is labelled 'Dairy case', because in a real shop that is
+       what it is -- and a service run that the service-run test cannot see is worse than no test.
+       These three arts ARE the service cases; produce trays and the fridge use their own. */
+    const SERVICE_ART = ['deli_case', 'bakery_case', 'dairy_case'];
+    const counters = (FL.containers || []).filter(c => SERVICE_ART.indexOf(c.art) >= 0);
     /* ⚠️ COUNT WAS A PROXY, AND THE PROXY BROKE WHEN THE FIXTURE GOT BIGGER. This asked for
        >= 8 units back when a run was built from 50-wide counter_plain tiles; real deli and bakery
        cases are 180 authored each, so the same continuous run is now 5 pieces and the count said
@@ -247,14 +259,19 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
       for (let i = 1; i < arr.length; i++) g.push(Math.round((arr[i].x - arr[i - 1].x) / sc));
       return g;
     };
-    const bake = runOf(/bakery/i), deli = runOf(/deli/i);
-    const bg = gapsIn(bake), dg = gapsIn(deli);
+    /* THE NORTH WALL IS DAIRY AND DELI NOW, not bakery and deli. Bakery moved to its own block in
+       the north-east, so it is a run of its own and is not expected to share the north wall's
+       pitch. What must still hold is that a service counter is a CONTINUOUS run of cases rather
+       than a scatter of tables -- that was the original defect and it is level-independent. */
+    const dairy = runOf(/dairy/i), deli = runOf(/deli/i), bake = runOf(/bakery/i);
+    const ag = gapsIn(dairy), dg = gapsIn(deli);
     const uniform = g => g.length > 0 && g.every(v => Math.abs(v - g[0]) <= 1);
     ck('the service run is a continuous counter, not a scatter of tables',
-       bake.length >= 2 && deli.length >= 2 && uniform(bg) && uniform(dg) &&
-       Math.abs(bg[0] - dg[0]) <= 1,
-       'bakery ' + bake.length + ' pieces at pitch ' + bg.join('/') +
-       ', deli ' + deli.length + ' at pitch ' + dg.join('/') + ' authored');
+       dairy.length >= 2 && deli.length >= 2 && bake.length >= 1 &&
+       uniform(ag) && uniform(dg) && Math.abs(ag[0] - dg[0]) <= 1,
+       'dairy ' + dairy.length + ' pieces at pitch ' + ag.join('/') +
+       ', deli ' + deli.length + ' at pitch ' + dg.join('/') +
+       ', bakery ' + bake.length + ' in its own block');
     /* the strip between the counter and the north wall has to be walkable, because staff will
        stand in it the moment there are any */
     const bad = [];

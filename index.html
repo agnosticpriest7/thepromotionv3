@@ -12097,9 +12097,9 @@ function loadLevel(id){
      manager's and the owner's offices it came out at x 517..607 -- straight into the middle of the
      deli counter, and the whole back of house was unreachable on foot. The spur has to line up
      with the break between the dairy run and the deli run, so the doors open onto floor. */
-  const BOH_ROOMS=[['WALK-IN COOLER',16,360],['STORE MANAGER',482,125],
-                   ['OWNER',615,125],['ASSISTANT MANAGER',748,125],
-                   ['BREAK ROOM',881,105]];
+  const BOH_ROOMS=[['WALK-IN COOLER',16,360,'#5f8fa8'],['STORE MANAGER',482,125,'#3b6ea5'],
+                   ['OWNER',615,125,'#c0392b'],['ASSISTANT MANAGER',748,125,'#3b6ea5'],
+                   ['BREAK ROOM',881,105,'#4a8c5a']];
   /* ⚠️ NO SEPARATE STAFF WC. It was a 78-wide room whose only cost was RECEIVING's width, and
      receiving at 128 could not hold two pallets, two desks and a baler without its own furniture
      sealing it: the grid showed a solid block where the room was. The toilet lives off the break
@@ -12133,11 +12133,6 @@ function loadLevel(id){
      east of x=1030 -- 36 units off the top of the right-hand third, and none of it checkout. */
   ROOMS.push({name:'BOH CORRIDOR', x:T,   y:T,   w:ROW_E-T, h:COR_H,   c:'#7c7768'},
              {name:'BOH CORRIDOR', x:SPUR_X, y:ROW_Y, w:SPUR_W, h:ROW_H, c:'#7c7768'},
-             {name:'WALK-IN COOLER',    x:16,  y:ROW_Y, w:360, h:ROW_H,  c:'#5f8fa8'},
-             {name:'STORE MANAGER',     x:384, y:ROW_Y, w:125, h:ROW_H,  c:'#3b6ea5'},
-             {name:'OWNER',             x:615, y:ROW_Y, w:125, h:ROW_H,  c:'#c0392b'},
-             {name:'ASSISTANT MANAGER', x:748, y:ROW_Y, w:125, h:ROW_H,  c:'#3b6ea5'},
-             {name:'BREAK ROOM',        x:881, y:ROW_Y, w:105, h:ROW_H,  c:'#4a8c5a'},
              {name:'RECEIVING',         x:1002,y:T,     w:STORE_E-1002, h:BOH_S-T, c:'#7c7768'},
              /* the sales floor: fresh departments around the outside, dry aisles in the middle */
              {name:'DAIRY',    x:T,   y:186, w:414, h:74,  c:'#5f8fa8'},
@@ -12153,6 +12148,11 @@ function loadLevel(id){
              /* outdoors: the yard the truck backs into, and the dock building itself */
              {name:'SHIPPING / RECEIVING', x:STORE_E+T, y:T, w:AW-T-(STORE_E+T), h:300-T, c:'#7c7768'},
              {name:'YARD',     x:STORE_E+T, y:316, w:AW-T-(STORE_E+T), h:AH-T-316, c:'#6b6a63'});
+  /* ⚠️ THE ZONES COME OFF THE SAME TABLE AS THE WALLS. They were authored as literals beside a
+     BOH_ROOMS list that drives the partitions, and the moment the row was re-cut the two disagreed:
+     the walls moved and the captions did not, so the Store Manager's office was a zone with no
+     room in it and Lorne stood in roomAt() === NONE. One table, two consumers. */
+  for(const [nm,rx,rw,rc] of BOH_ROOMS) ROOMS.push({name:nm,x:rx,y:ROW_Y,w:rw,h:ROW_H,c:rc});
   walls.push({x:170,y:528,w:8,h:58});                     // cash office east wall, door at 586..655
   /* ---- LIGHTS. The store has been dark since it existed: the darkness layer is painted over the
      whole world and then ERASED where a bank is, so a level with no banks is not "unlit", it is
@@ -12164,7 +12164,15 @@ function loadLevel(id){
      LIGHTS_ON_MIN / LIGHTS_OFF_MIN are shared, so the store comes up at 8:15 and goes out at 4:45
      with the office BECAUSE it is the same code, not because two schedules were kept in step. */
   {
-    const LB_X=[12,320,690,1030], LB_W=[308,370,340,AW-1030], LB_Y=[12,400], LB_H=[388,AH-12-400];
+    /* ⚠️ RE-TILED TO THE NEW LANDMARKS. The old columns were pinned to the old shop -- the
+       produce/grocery line at 320, mid-block at 690 and the back-of-house wall at 1030 -- none of
+       which exist any more. The darkness layer is painted over the WHOLE world and erased where a
+       bank is, so a column that stops short does not dim the rest, it blacks it out. The store now
+       ends at 1208 with a yard beyond, and the yard gets its own bank: a loading dock nobody can
+       see is not atmosphere, it is a hole. Boundaries follow the plan -- the aisle block at 178,
+       the deli break at 438, the bakery/produce column at 908, and the building's east wall. */
+    const LB_X=[12,178,438,908,STORE_E+T], LB_W=[166,260,470,STORE_E+T-908,AW-T-(STORE_E+T)],
+          LB_Y=[12,268], LB_H=[256,AH-12-268];
     for(let c=0;c<LB_X.length;c++)for(let r=0;r<LB_Y.length;r++)
       LIGHT_BANKS.push({x:LB_X[c],y:LB_Y[r],w:LB_W[c],h:LB_H[r],on:false,t:0,flick:0});
   }
@@ -12731,7 +12739,7 @@ logLine('Intern at Paper Supply Co. Rise on tasks — or sabotage rivals into me
    ============================================================================ */
 
 /* ---------- Store: the only code that knows where saves live -------------- */
-const SAVE_VERSION = 5, SAVE_SLOTS = 3;   // v5: Save-Rite has a crew. Loading REPLACES NPCS wholesale
+const SAVE_VERSION = 6, SAVE_SLOTS = 3;   // v6: Save-Rite re-laid -- every department, desk and station moved
   // (NPCS.length=0 then push the restored list), so a grocery save written when the store was empty
   // would load into the crewed world and delete all six staff — an empty shop that boots clean and
   // is permanently unstaffed. Refusing the old save is the whole point of the version. v4: per-person favour track (career.favors + auditTipoff). v3: candidate hires ride on pendingHires (cand + deskIdx). v2: AM delegation (deleg). Older saves refuse to load, by design.
