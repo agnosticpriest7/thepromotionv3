@@ -117,12 +117,27 @@ function aislesOf(w) {
    x 700->1000 at y=620 is clear at 300 authored. */
 {
   const ctx = stage(mk());
-  const clearLong = ctx.S.sightClear(...A(700, 620), ...A(1000, 620));
+  /* ⚠️ THE CLEAR LINE IS DERIVED NOW. It used to be the literal x 700->1000 at y=620, measured
+     once on a floor that has since been re-planned -- and the moment the aisle block moved, the
+     line ran through a shelf run and the anchor said so: "BLOCKED, this test would prove nothing".
+     Which is the anchor doing its job, and also the reason not to write the line down. The
+     CROSS-AISLE is the store's one guaranteed long clear run: it spans the whole shelf block by
+     construction, because it is the gap between the service counters and the runs. */
+  const FL = ctx.g.layout, fsc = FL.S;
+  const AU = v => Math.round(v / fsc);
+  const gz = (FL.ROOMS || []).find(r => r.name === 'GROCERY');
+  const runTop = Math.min.apply(null, (FL.levelBlockers || [])
+    .filter(b => AU(b.h) > 100 && AU(b.y) >= AU(gz.y)).map(b => AU(b.y)));
+  const deli = (FL.ROOMS || []).find(r => r.name === 'DELI');
+  const crossY = Math.round((AU(deli.y) + AU(deli.h) + runTop) / 2);
+  const x0 = AU(gz.x) + 90, x1 = x0 + 300;
+  const clearLong = ctx.S.sightClear(...A(x0, crossY), ...A(x1, crossY));
   ck('the stretch this is measured along really is unobstructed', clearLong === true,
-     '700->1000 at y=620: ' + (clearLong ? 'clear' : 'BLOCKED — this test would prove nothing'));
+     x0 + '->' + x1 + ' at y=' + crossY + ' (the cross-aisle): ' +
+     (clearLong ? 'clear' : 'BLOCKED — this test would prove nothing'));
 
-  const near = put(ctx, 700, 620, 780, 620, false);      // 80 authored, inside the range
-  const far  = put(ctx, 700, 620, 1000, 620, false);     // 300 authored, outside it, same clear line
+  const near = put(ctx, x0, crossY, x0 + 80, crossY, false);   // 80 authored, inside the range
+  const far  = put(ctx, x0, crossY, x1, crossY, false);        // 300 authored, outside it, same line
   ck('  ^ a watcher close along it sees you', near.seen === 1, JSON.stringify(near));
   ck('  ^ and the same watcher further along the SAME clear line does not', far.seen === 0,
      'near ' + near.seen + ' at 80 authored, far ' + far.seen + ' at 300 (range is 210)');

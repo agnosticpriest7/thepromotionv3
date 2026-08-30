@@ -34,7 +34,11 @@ const R = n => (L.ROOMS || []).filter(r => r.name === n);
 }
 
 /* ---- 1. the rooms, and no zone claiming the same floor twice ---------------------------- */
-const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'BREAK ROOM', 'RECEIVING'];
+/* NO RECEIVING ROOM. The bump-out on the side of the building is the receiving room -- that is
+   what it was built for -- so an indoor one duplicated it and ate the width the other rooms
+   needed. The dock opens straight into the corridor at truck height now, and the space it freed
+   went to a proper break room and the staff WC that had been squeezed out. */
+const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'BREAK ROOM', 'STAFF WC'];
 {
   const missing = BOH.filter(n => R(n).length === 0);
   ck('the back of house has all its rooms', missing.length === 0,
@@ -74,17 +78,18 @@ const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'B
 
 /* ---- 3. RECEIVING TOUCHES THE OUTSIDE, so a truck can back up to it --------------------- */
 {
-  const rec = R('RECEIVING')[0], ship = R('SHIPPING / RECEIVING')[0], yard = R('YARD')[0];
+  const ship = R('SHIPPING / RECEIVING')[0], yard = R('YARD')[0];
+  const cor = R('BOH CORRIDOR').slice().sort((a, b) => a.y - b.y)[0];   // the run along the north
   ck('there is a shipping bay outside the building', !!ship && !!yard,
      ship ? 'SHIPPING / RECEIVING ' + A(ship.w) + 'x' + A(ship.h) + ' with a yard below it' : 'absent');
   const atEdge = ship && (ship.x + ship.w >= L.W - Math.round(20 * sc) || ship.y <= Math.round(20 * sc));
   ck('  ^ and it is against the outside of the world, where a truck can reach it', !!atEdge,
      ship ? 'east edge at ' + A(ship.x + ship.w) + ' of ' + A(L.W) : '');
   let open = 0;
-  for (let y = ship.y; y < ship.y + ship.h; y += Math.round(4 * sc))
-    if (!body(rec.x + rec.w + Math.round(8 * sc), y)) open += 4;
+  for (let y = cor.y; y < cor.y + cor.h; y += Math.round(4 * sc))
+    if (!body(cor.x + cor.w + Math.round(8 * sc), y)) open += 4;
   ck('  ^ and the dock is a hole in the wall, not a painted one', open >= 40,
-     open + ' authored of open dock between RECEIVING and the yard');
+     open + ' authored of open dock between the back corridor and the yard');
 }
 
 /* ---- 4. EVERY ROOM HAS ITS OWN DOOR ONTO A CORRIDOR ------------------------------------
