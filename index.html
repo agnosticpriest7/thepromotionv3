@@ -2227,7 +2227,11 @@ function assembleAtElevator(){
     } else {
       n.arriveAt=DAY_START;n.arrived=true;
       n.x=clamp(MUSTER.x+((i%5)-2)*gx,18,W-34);
-      n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,H-34);
+      /* ⚠️ levelH, NOT H. These clamps keep somebody inside the BUILDING, and the building is
+         not the world any more -- the world grew to 1040 for Save-Rite while the office is still
+         760. Clamped to H, an office row spilled past its own south wall at y=755 and stood
+         outside in the grass. */
+      n.y=clamp(MUSTER.y+Math.floor(i/5)*gy,18,levelH-34);
       unstickEnt(n);
     }
     i++;
@@ -2644,6 +2648,7 @@ const levelExterior={tile:'grass', fill:'#3f4a35', bushes:true};
    y=765 and always was the edge of the building. Draw the floor and the outdoors to H and the
    office gets 275 units of grey carpet stretching out below itself where the grass used to be.
    So the FLOOR and the OUTSIDE are drawn to levelH, and only the grid uses H. */
+const OFFICE_H=760;              // how tall the office BUILDING is, in authored units
 let levelH=H;
 function levelSpawnPoint(){return {x:levelSpawn.x,y:levelSpawn.y};}
 /* the level's tables, for tests: LEVEL_TABLES is a const and unreachable from the harness, and
@@ -2662,7 +2667,13 @@ function buildGrid(){
   grid=[];
   for(let r=0;r<ROWS;r++){grid[r]=[];for(let c=0;c<COLS;c++){
     const cell={x:c*CELL-2,y:r*CELL-2,w:CELL+4,h:CELL+4};
-    let b=0;
+    /* ⚠️ NOTHING BELOW THE BUILDING IS WALKABLE. The grid is sized to the WORLD, and the world is
+       taller than the office: 1040 against its 760. Those extra rows contain no walls, so they came
+       back walkable -- and snapTarget, which searches outward for somewhere to stand, pushed
+       targets down into them and sent office workers out through the south wall to stand in the
+       grass, where nothing could route them home. Four per soak, reported as "stuck", with nothing
+       visible on the floor to explain it. The grid stops at the building. */
+    let b = (r*CELL >= levelH) ? 1 : 0;
     if(walls.some(w=>aabb(cell,w)))b=1;
     /* !d.station: the nav grid tests `desks` DIRECTLY rather than through solid(), so making
        stations non-solid there was not enough — the grid still walled them off, and three of the
@@ -2972,7 +2983,7 @@ function updateNPC(n,dt){
     if(clock>=n.arriveAt){
       n.arrived=true;n.gone=false;
       n.x=clamp(ELEVATOR.x+((n.id%5)-2)*Math.round(11*S),18,W-34);
-      n.y=clamp(ELEVATOR.y+Math.round(16*S)+(n.id%3)*Math.round(5*S),18,H-34);   // stay clear of the new lobby south wall (y755)
+      n.y=clamp(ELEVATOR.y+Math.round(16*S)+(n.id%3)*Math.round(5*S),18,levelH-34); // inside the BUILDING, not the world
       n.lastX=n.x;n.lastY=n.y;n.goal=null;n.path=null;n.wp=0;n.stuckT=0;
       unstickEnt(n);
     } else return;
@@ -9575,7 +9586,11 @@ function lightSequence(){
 const AW=Math.round(W/S), AH=Math.round(H/S);
 const WINDOWS=[];
 for(let wx=40;wx<AW-90;wx+=170)WINDOWS.push({x:wx,y:-5,w:90,h:10,side:'n'});
-for(let wy=140;wy<AH-100;wy+=170)WINDOWS.push({x:AW-5,y:wy,w:10,h:96,side:'e'});
+/* ⚠️ THE OFFICE'S FACADE, NOT THE WORLD'S. These are built once at module load and AH is the
+   WORLD -- which grew to 1040 for Save-Rite. Run the east windows to AH and the bottom ones hang
+   below the office's own south wall at y=755, glazing thin air. t_windows caught it: "e pane
+   @1495,820 is not backed by wall". */
+for(let wy=140;wy<OFFICE_H-100;wy+=170)WINDOWS.push({x:AW-5,y:wy,w:10,h:96,side:'e'});
 /* sky colour through the glass, by clock */
 function skyColour(){
   const m=clock;
@@ -12026,7 +12041,7 @@ seedTiers();
    contents, so all ~300 references to desks/walls/objects keep working untouched. */
 function loadLevel(id){
   /* the office is 760 tall and always has been; Save-Rite uses the full world */
-  levelH = (id==='office') ? Math.round(760*S) : H;
+  levelH = (id==='office') ? Math.round(OFFICE_H*S) : H;
   if(id!=='grocery'){
     /* The office's five tables are module consts that scaleWorld() already scales by name, so they
        are only REGISTERED here for the draw list — never pushed to levelBoxes. Registering is not
