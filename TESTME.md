@@ -442,3 +442,33 @@ It used to gather the crew around the office meeting room's coordinates, which i
 middle of the GROCERY aisle — eleven of eighteen staff walked onto the sales floor for it every
 morning. It now happens in RECEIVING. **Watch the 09:00 huddle** and check it looks like a shift
 briefing in the back rather than a scrum in aisle four. The office is untouched.
+
+### L. Save-Rite is a supermarket now
+The whole store was re-laid to your plan. **Everything moved**, so treat this as a fresh look
+rather than a diff.
+
+- **You come in at the front-left.** Doors at x 220–340 in the south wall, through a glass
+  vestibule — the walls use the same translucent pane the CEO's office is built from.
+- **Perimeter departments.** Dairy and deli along the north wall, bakery north-east, produce
+  south-east. Frozen is the westmost aisle against the wall, not a department — it still has
+  shelf art, so it will not read as frozen until it gets its own cases.
+- **Five aisle runs, four aisles**, then a cross-aisle, then four checkouts across the front.
+- **Back rooms along the north**, off one corridor: walk-in cooler, store manager, owner,
+  assistant manager, break room, and receiving in the north-east corner.
+- **A dock and a yard outside the east wall**, where the semi backs in.
+
+**What to look at first:** stand at the doors and just walk the perimeter clockwise. It should
+read as a shop you have been in. Then go through the swing doors — they are the gap in the dairy
+wall, roughly x 384–474 — and check the back reads as a corridor with rooms off it rather than a
+maze.
+
+**The thing I most want your eye on:** the cooler is the west end of the back rooms *because* its
+south wall is the dairy wall — that is where the dairy cases sit, loaded from inside and served
+from the aisle. If that reads wrong on the TV, the whole back-room order changes.
+
+**Known and deliberate:** there is no separate staff WC any more — at 78 wide it was costing
+receiving the width it needed, and receiving kept sealing itself with its own furniture. The
+toilet folds into the break room. Say the word and I will find it space elsewhere.
+
+**Old saves will refuse to load.** `SAVE_VERSION` went 5 → 6. Not optional: a v5 save would drop
+you into a store whose departments, desks and stations have all moved.
