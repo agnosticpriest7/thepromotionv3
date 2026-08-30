@@ -472,3 +472,24 @@ toilet folds into the break room. Say the word and I will find it space elsewher
 
 **Old saves will refuse to load.** `SAVE_VERSION` went 5 → 6. Not optional: a v5 save would drop
 you into a store whose departments, desks and stations have all moved.
+
+### M. The store got bigger, and the back rooms got sensible
+Four changes off your walkthrough.
+
+- **The store is 265 taller.** It was cramped: the aisle block had the service counters hard
+  against its top and the tills hard against its bottom. There is a real cross-aisle above the
+  runs now and a deep front end below them.
+- **The entrance is a doorway, not a corridor.** The glass vestibule stopped running the whole
+  width of the building; it ends at x=430.
+- **No receiving room.** You were right that the bump-out is the receiving room — an indoor one
+  duplicated it and ate the width everything else needed. The dock opens straight into the back
+  corridor at truck height, and **the staff WC is back** as its own room.
+- **Produce shifted down** off the bakery's heels; the bakery counter squared up across its block.
+
+**What to look at:** walk the aisles first — that is the change you asked for, so it is the one
+that has to feel right. Then the back: corridor along the north, cooler at the west end on the
+dairy wall, offices, break room, WC, and the roller door at the east end where the truck backs in.
+
+**Watch for:** the office is unchanged, but the WORLD grew, and the office building did not. If
+you see grey carpet or empty floor stretching below the office instead of grass, or anybody
+standing outside its south wall, that is this change and I want to know.
