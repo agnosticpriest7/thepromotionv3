@@ -2935,6 +2935,28 @@ function hrMorning(n,dt){
   }
   setGoal(n,p.x,p.y);followPath(n);
 }
+/* ⚠️ THE BEAT IS DERIVED FROM THE ROOMS, NOT WRITTEN DOWN. A department manager gets points
+   spread across their own department; the three back-office rungs get the whole sales floor plus
+   their own office, so they are seen among the staff rather than sitting behind a door. Points are
+   inset from the walls and snapped when used, so a beat never asks anybody to stand in a fixture. */
+const BEAT_DEPT = {grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END'};
+const BEAT_FLOOR = ['GROCERY','FRONT END','PRODUCE','DELI','BAKERY','DAIRY'];
+const BEAT_OFFICE = {store:'STORE MANAGER', am:'ASSISTANT MANAGER', owner:'OWNER'};
+function buildBeat(n){
+  const want = [];
+  if(BEAT_OFFICE[n.storeRole]){ BEAT_FLOOR.forEach(z=>want.push(z)); want.push(BEAT_OFFICE[n.storeRole]); }
+  else if(n.storeDept && BEAT_DEPT[n.storeDept]) want.push(BEAT_DEPT[n.storeDept]);
+  else return null;
+  const pts = [];
+  for(const nm of want){
+    for(const z of ROOMS.filter(r=>r.name===nm)){
+      const ix = Math.min(Math.round(40*S), z.w/3), iy = Math.min(Math.round(40*S), z.h/3);
+      pts.push({x:z.x+ix, y:z.y+z.h/2}, {x:z.x+z.w-ix, y:z.y+z.h/2});
+      if(z.h > Math.round(200*S)) pts.push({x:z.x+z.w/2, y:z.y+iy}, {x:z.x+z.w/2, y:z.y+z.h-iy});
+    }
+  }
+  return pts.length ? pts : null;
+}
 function npcTarget(n){
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
@@ -2956,6 +2978,26 @@ function npcTarget(n){
   if(ph==='Meeting')return n.seat?{x:n.seat.x,y:n.seat.y}:meetingStand(n);
   if(ph==='Lunch / Break'||ph==='Morning Break'||ph==='Afternoon Break')return n.seat?{x:n.seat.x,y:n.seat.y}:{x:BREAK_SPOT.x,y:BREAK_SPOT.y};   // office: the break room (840,280,260,220); grocery re-authors it
   if(ph==='Clock-Out')return MUSTER;
+  /* ⚠️ A MANAGER WALKS THEIR PATCH. Everyone used to fall through to deskSeat(homeDesk), which
+     is right for a cashier -- a till is a place you stand -- and wrong for anybody whose job is
+     the floor. A department manager beats their own department; the store manager, the assistant
+     manager and the owner beat the whole sales floor and drop back to their office between laps.
+     Waypoints are DERIVED from the room zones at first use, so re-planning the shop re-plans the
+     beat; nothing here is a coordinate. Stepped off the clock rather than dt, because this
+     function is asked "where should you be" and is not handed a frame. */
+  if(n.storeRole && n.storeRole !== 'staff' && ph === 'Regular Work'){
+    if(!n.beat) n.beat = buildBeat(n);
+    if(n.beat && n.beat.length){
+      if(n.beatUntil === undefined || clock >= n.beatUntil || n.beatIdx === undefined){
+        let k = n.beatIdx;
+        for(let tries = 0; tries < 6 && k === n.beatIdx; tries++) k = Math.floor(rand(0, n.beat.length));
+        n.beatIdx = Math.min(k, n.beat.length - 1);
+        n.beatUntil = clock + rand(4, 11);        // a few minutes at each post
+      }
+      const b = n.beat[n.beatIdx];
+      if(b) return snapTarget(b.x, b.y);
+    }
+  }
   if(n.homeDesk)return deskSeat(n.homeDesk);
   return {x:Math.round(430*S),y:Math.round(250*S)};
 }
@@ -12197,8 +12239,14 @@ function loadLevel(id){
              /* produce shifted down off the bakery's heels, and given the depth to breathe */
              {name:'PRODUCE',  x:908, y:520, w:STORE_E-908, h:220, c:'#7fae83'},
              /* GROCERY starts at 342, not 380: the top 38 of it IS the cross-aisle */
-             {name:'GROCERY',  x:T,   y:400, w:884, h:260, c:'#4a8c5a'},
-             {name:'FRONT END',x:288, y:700, w:612, h:STORE_S-700, c:'#c9a41a'},
+             /* ⚠️ ONE RECT, REACHING DOWN OVER THE SOUTH CROSS-AISLE. Splitting it in two to cover
+                the north cross-aisle as well made GROCERY overlap DELI's block and, worse, moved
+                the aisle-walk probe's start line up under that block so two aisles read as blocked
+                when nothing was in them. The north band stays unzoned; it was never what put the
+                bakery manager in roomAt() === NONE -- giving her a beat was. */
+             {name:'GROCERY',  x:T,   y:400, w:884, h:300, c:'#4a8c5a'},
+             {name:'FRONT END',x:T,   y:700, w:900-T, h:60, c:'#c9a41a'},
+             {name:'FRONT END',x:288, y:760, w:612, h:STORE_S-760, c:'#c9a41a'},
              /* the cash office sits beside the tills, one door east into the front end */
              {name:'CASH OFFICE', x:T, y:760, w:264, h:STORE_S-760, c:'#8a6a3a'},
              /* ⚠️ THE DEAD CORNER IS A PUBLIC WASHROOM. 308 x 180 of floor east of the front end
