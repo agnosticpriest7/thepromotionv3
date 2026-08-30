@@ -86,7 +86,7 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      store was re-planned, so it is one case of its own rather than half of the north run. What is
      being asserted is unchanged: a service counter is a RUN of cases, not a scatter of tables. */
   const bake = run(/bakery/i), deli = run(/deli/i), dairy = run(/dairy/i);
-  ck('the service runs are built from cases', dairy.length >= 2 && deli.length >= 2 && bake.length >= 1,
+  ck('every department has its service case', dairy.length >= 1 && deli.length >= 1 && bake.length >= 1,
      bake.length + ' bakery, ' + deli.length + ' deli');
 
   const pitches = arr => { const g2 = []; for (let i = 1; i < arr.length; i++) g2.push(A(arr[i].x) - A(arr[i - 1].x)); return g2; };
@@ -105,7 +105,7 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
   /* DAIRY IS A DEPARTMENT NOW, NOT A SINGLE PROP. It used to be one refrigerated box parked in
      PRODUCE as set dressing, from when the store had no dairy at all. It is a run in the cooler's
      south wall -- the cases are loaded from inside the cooler and served from the aisle. */
-  ck('the dairy run is on the floor', dairy.length >= 2, dairy.length + ' cases');
+  ck('the dairy case is in the cooler wall', dairy.length >= 1, dairy.length + ' case(s)');
   const objs = L.objects.filter(o => /dairy/i.test(o.label || ''));
   ck('  ^ and it is set dressing — no trigger, no task', objs.length === 0,
      objs.length ? 'it grew a trigger' : 'no object entry, as briefed');

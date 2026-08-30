@@ -9767,7 +9767,9 @@ function signName(){
    reasoning as the sign's NAME being read from the roster rather than written twice. */
 function storeSignRect(){
   const U=(v)=>Math.round(v*S);
-  return {x:U(600), y:U(690), w:U(300), h:U(26)};
+  /* over the entrance, not adrift in the shop. It sat at (600,690), which the re-plan turned into
+     open sales floor -- a 300-wide MERV'S lying across the middle of the room. */
+  return {x:U(560), y:U(946), w:U(300), h:U(26)};
 }
 function drawStoreSign(){
   const R=storeSignRect(), x=R.x, y=R.y, w=R.w, h=R.h;
@@ -12199,6 +12201,11 @@ function loadLevel(id){
              {name:'FRONT END',x:288, y:700, w:612, h:STORE_S-700, c:'#c9a41a'},
              /* the cash office sits beside the tills, one door east into the front end */
              {name:'CASH OFFICE', x:T, y:760, w:264, h:STORE_S-760, c:'#8a6a3a'},
+             /* ⚠️ THE DEAD CORNER IS A PUBLIC WASHROOM. 308 x 180 of floor east of the front end
+                with nothing in it and no reason to walk there. A customer toilet is what a shop
+                that size has in that corner, it is reachable straight off the front end, and it
+                uses the office's own fittings rather than asking for new art. */
+             {name:'PUBLIC WC', x:908, y:748, w:STORE_E-908, h:STORE_S-748, c:'#6f7d86'},
              {name:'ENTRANCE', x:VEST_X+T, y:STORE_S+T, w:VEST_E-VEST_X-2*T, h:AH-T-(STORE_S+T), c:'#7c7768'},
              /* outdoors: the yard the truck backs into, and the dock building itself */
              {name:'SHIPPING / RECEIVING', x:STORE_E+T, y:T, w:AW-T-(STORE_E+T), h:300-T, c:'#7c7768'},
@@ -12209,7 +12216,11 @@ function loadLevel(id){
      room in it and Lorne stood in roomAt() === NONE. One table, two consumers. */
   for(const [nm,rx,rw,rc] of BOH_ROOMS) ROOMS.push({name:nm,x:rx,y:ROW_Y,w:rw,h:ROW_H,c:rc});
   walls.push({x:280,y:760,w:8,h:100},                     // cash office east wall, door at 860..920
-             {x:T,y:752,w:272,h:8});                       // and its north wall
+             {x:T,y:752,w:272,h:8},                        // and its north wall
+             /* the public washroom: north wall, and a west wall with a 60-unit door onto the
+                front end, which is the only side a customer can reach it from */
+             {x:908,y:740,w:STORE_E-908,h:8},
+             {x:900,y:748,w:8,h:52},{x:900,y:860,w:8,h:STORE_S-860});
   /* ---- LIGHTS. The store has been dark since it existed: the darkness layer is painted over the
      whole world and then ERASED where a bank is, so a level with no banks is not "unlit", it is
      blacked out. Eight banks on a 4x2 grid, tiling the world edge to edge so nothing is left in
@@ -12264,7 +12275,9 @@ function loadLevel(id){
      unchanged, so the runs stay where Kyle judged them and the aisles simply get wider. */
   /* ⚠️ FIVE RUNS, AND THE WESTMOST ONE IS FROZEN. Frozen is not a department -- no zone, no
      staff, no fiction -- it is the run against the wall, and it only wants its own case art. */
-  const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=24, RUN_COUNT=6;
+  /* the westmost run is gone -- frozen gets its own fixtures rather than a shelf run wearing
+     the wrong art, so the block starts at the second position and runs five deep */
+  const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=142, RUN_COUNT=5;
   const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
   const RUN_TOP_Y=420;                                     // below the CROSS-AISLE, above the tills
   const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
@@ -12331,9 +12344,13 @@ function loadLevel(id){
   /* DAIRY IS THE WALL THE COOLER BACKS ONTO. The cases sit in it, loaded from inside the cooler
      and served from the aisle, which is the whole reason the cooler is the west end of the back
      rooms and not somewhere more convenient. */
-  counterRun(24,300,'Dairy case','dairy_case');            // under the cooler, in the dairy wall
-  counterRun(440,800,'Deli counter','deli_case',340);      // its own block, staff space behind it
-  counterRun(900,1200,'Bakery counter','bakery_case',350); // its own block, out to the east wall
+  /* ⚠️ ONE CASE EACH, AND THE DRAWN WIDTH IS WHAT MATTERS. A case's box is 28 wide and its ART
+     is 180, so a two-case dairy run reached x=384 and stood across the first spur's mouth, and a
+     two-case bakery run reached 1260 and clipped straight through the east wall. Neither showed in
+     the box. One case each, sized on the art, clear of both spur mouths (313..403 and 677..767). */
+  counterRun(24,204,'Dairy case','dairy_case');            // under the cooler, in the dairy wall
+  counterRun(440,620,'Deli counter','deli_case',330);      // its own block, clear of spur 2
+  counterRun(908,1088,'Bakery counter','bakery_case',330); // its own block, inside the east wall
   /* ---- CHECKSTANDS. Same defect as the counters and the same fix: they were tables, so each wore
      eight office chairs. The brief named Deli and Bakery, but leaving the checkouts as boardrooms
      would have looked identical to the thing being fixed. Sat well clear of the shelf block: a
@@ -12354,7 +12371,7 @@ function loadLevel(id){
      middle gap, so you walk in and straight up the store, and the whole run now spans 548 instead
      of 1127. Moving the eastern cluster off the back-of-house wall is also what frees the east
      side of the front end for the wing above. */
-  const CHK_Y=720, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);   // 47 x 108
+  const CHK_Y=760, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);   // 47 x 108
   const chkXs=[];
   const checkout=(x0,art)=>{
     chkXs.push(x0);
@@ -12375,13 +12392,13 @@ function loadLevel(id){
      than a new zone-trigger system: the two aisle tasks (facing, date codes) resolve there.
      Reported as a limitation, not worked around. */
   objects.push(
-    {type:'printer',x:240,y:840,w:34,h:26,label:'Go-back cart',   art:'goback_cart',   jammed:false},
+    {type:'printer',x:340,y:860,w:34,h:26,label:'Go-back cart',   art:'goback_cart',   jammed:false},
     /* was (930,300) - inside the widened run 6. An endcap caps the end of a RUN, so it sits above
        run 2's north end (x 556-616), NOT across an aisle mouth: the first move put it at x 628-662,
        straight over the centre of aisle 2, and the aisle-mouth check caught it. Clear of the deli
        counter blocker (ends y 125). Placeholder art, like every other prop in here. */
     {type:'printer',x:860,y:560,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
-    {type:'supply', x:635,y:20,w:34,h:26,label:'Baler', art:'baler'},
+    {type:'supply', x:1390,y:150,w:34,h:26,label:'Baler', art:'baler'},
     /* along the break room's west wall. They were spread across the middle of the room, which
        left nowhere for the table to go once the crew actually needed somewhere to take a break. */
     /* against the CORRIDOR's north wall. A 105x76 break room holds a table and the lockers and
@@ -12395,7 +12412,13 @@ function loadLevel(id){
     {type:'water',  x:300,y:20, w:30,h:24,label:'Water station'},
     {type:'coffee', x:345,y:20, w:30,h:24,label:'Coffee machine'},
     {type:'phones', x:760,y:860,w:26,h:20,label:'Intercom'},
-    {type:'board',  x:580,y:20,w:40,h:26,label:'Department board'});
+    /* ⚠️ THE WASHROOMS USE THE OFFICE'S OWN FITTINGS -- toilet, urinal, sink and mirror have
+       been in the sprite table since the office had restrooms, so a washroom here is a placement
+       job rather than an art job. STAFF WC had a name and nothing in it. */
+    {type:'toilet', x:1130,y:120,w:26,h:30,label:'Toilet (Staff)',rigged:false},
+    {type:'toilet', x:960,y:790,w:26,h:30,label:'Toilet (M)',rigged:false},
+    {type:'toilet', x:1040,y:790,w:26,h:30,label:'Toilet (W)',rigged:false},
+    {type:'board',  x:1250,y:240,w:40,h:26,label:'Department board'});
   /* the player's station: one desk, at the HEAD of the last run. Desks are the ownership spine, so
      this is also what gives a grocery player somewhere to store contraband and be audited from.
 
@@ -12456,10 +12479,17 @@ function loadLevel(id){
                      lands in the back corridor, which is what a back corridor is for. They sit
                      west of the dock so the run from the roller door stays clear, and clear of
                      the spur (x 384..474) so nobody has to squeeze past a pallet to reach the shop. */
-                  {x:684, y:20,  w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
-                  {x:729, y:20,  w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
-                  {x:490, y:20,  w:30,h:24,label:'Department desk', kind:'cabinet',art:'manager_desk'},
-                  {x:535, y:20,  w:30,h:24,label:'Department desk', kind:'cabinet',art:'manager_desk'},
+                  /* ⚠️ IN THE SHIPPING BAY, WHICH IS WHAT IT IS FOR. Pallets, the baler and the
+                     department board were lining the back corridor because there used to be a
+                     receiving room and then there wasn't. A corridor with a pallet run down it is
+                     not a corridor. The two spare department desks are gone entirely -- the shared
+                     desk they were meant to be reads as clutter in a walkway. */
+                  /* ⚠️ DEEP IN THE BAY, NOT ACROSS THE ROLLER DOOR. At y=60 they stood in the
+                     only two cell rows the dock opens through and sealed the whole shipping bay
+                     and yard off -- the second time in this build that a room's own stock has shut
+                     its own door. Stock goes at the back of a bay; the door end stays clear. */
+                  {x:1250, y:150, w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
+                  {x:1320, y:150, w:30,h:24,label:'Receiving pallet', kind:'box', art:'pallet'},
                   /* the three offices. Desks go at the SOUTH of each room and cabinets at the
                      north-east, so neither sits in the cell row under its own doorway -- a desk
                      parked behind a door closed the cash office off entirely last time, and left
@@ -12480,6 +12510,8 @@ function loadLevel(id){
                   {x:800, y:196, w:30,h:24,label:'Assistant manager desk',kind:'cabinet',art:'manager_desk'},
                   /* the break room, and the cash office down beside the tills */
                   {x:925, y:196, w:30,h:24,label:'Staff lockers',    kind:'locker'},
+                  {x:1170, y:190, w:30,h:24,label:'Staff basin',   kind:'cabinet',art:'sink'},
+                  {x:1130, y:860, w:30,h:24,label:'Basin',         kind:'cabinet',art:'sink'},
                   {x:40,  y:800, w:30,h:24,label:'Cash office counter',kind:'cabinet',art:'manager_desk'});
   /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
      in the store, which is also a live check that the LEVEL_TABLES path still works with one. --- */

@@ -28,7 +28,7 @@ const mk = lv => createWorld({ seed: 20260827, storage: { 'promo:level': lv, 'pr
    department, just the run against the wall wanting its own case art. Five runs, five variants,
    so each run now carries a distinct face instead of one repeating. The count is an authoring
    fact and belongs written down (CLAUDE.md 14): add or drop a run and this goes red. */
-const RUNS = 6, VARIANTS = 5, AISLES = RUNS - 1;
+const RUNS = 5, VARIANTS = 5, AISLES = RUNS - 1;
 /* ⚠️ 65, NOT 60, AND THE RUNS ARE WHY. grocery-prop-scale sized every store prop from its real
    size at one scale, and a gondola run is 1.3 m -- 55 authored, where it had been 60 because it
    was sized to the space rather than to the fixture. The pitch did not move, so the runs stay
@@ -312,5 +312,5 @@ const runBlockers = (w) => {
 }
 
 console.log('\nshelf art: ' + pass + ' pass, ' + fail + ' fail');
-console.log(fail ? 'SHELF ART: RED ❌' : 'SHELF ART: GREEN ✅ (six runs, five faces, every aisle still walks)');
+console.log(fail ? 'SHELF ART: RED ❌' : 'SHELF ART: GREEN ✅ (five runs, five faces, every aisle still walks)');
 process.exit(fail ? 1 : 0);

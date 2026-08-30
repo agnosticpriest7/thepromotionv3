@@ -71,8 +71,8 @@ const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'B
 
   const cases = (L.containers || []).filter(c => /Dairy/i.test(c.label || ''));
   const under = cases.filter(c => c.x >= cool.x && c.x <= cool.x + cool.w);
-  ck('  ^ and the dairy cases are in that wall, under the cooler',
-     cases.length >= 2 && under.length === cases.length,
+  ck('  ^ and the dairy case is in that wall, under the cooler',
+     cases.length >= 1 && under.length === cases.length,
      cases.length + ' dairy case(s), ' + under.length + ' of them under the cooler');
 }
 

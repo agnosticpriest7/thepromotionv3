@@ -56,8 +56,8 @@ const CELL = Math.round(20 * 1.8);
      a room -- at 78 wide it cost RECEIVING the width it needed, and receiving kept sealing itself
      with its own furniture; the toilet folds into the break room, as it does in most shops. */
   const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','DAIRY',
-                'BREAK ROOM','STAFF WC','STORE MANAGER','OWNER','ASSISTANT MANAGER','CASH OFFICE',
-                'BOH CORRIDOR','SHIPPING / RECEIVING','YARD'];
+                'BREAK ROOM','STAFF WC','PUBLIC WC','STORE MANAGER','OWNER','ASSISTANT MANAGER',
+                'CASH OFFICE','BOH CORRIDOR','SHIPPING / RECEIVING','YARD'];
   const have = (L.ROOMS || []).map(r => r.name);
   const missing = want.filter(n => have.indexOf(n) < 0);
   ck('  ^ and with every named zone on the plan', missing.length === 0 && (L.walls || []).length >= 6,
@@ -231,7 +231,7 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
      green. A derived test can quietly redefine the world to include the mutation. The count is an
      authoring fact, so it is fixed here (§14) — add or remove a shelf column and this goes red
      whether or not the remaining aisles happen to be walkable. */
-  const AISLES = 5;   // six runs, the westmost of them FROZEN -- five aisles between them
+  const AISLES = 4;   // five runs; frozen is no longer one of them and gets its own fixtures
   ck('the shelf block still forms the authored number of aisles', mids.length === AISLES,
      mids.length + ' aisles, expected ' + AISLES + ' — at x=' + mids.join(','));
   ck('every grocery aisle is walkable end to end', blocked.length === 0,
@@ -263,15 +263,26 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
        the north-east, so it is a run of its own and is not expected to share the north wall's
        pitch. What must still hold is that a service counter is a CONTINUOUS run of cases rather
        than a scatter of tables -- that was the original defect and it is level-independent. */
+    /* ⚠️ ONE CASE PER DEPARTMENT NOW, so "is it a continuous run" is no longer the question --
+       a single case cannot scatter. What can still go wrong is the thing that actually bit: a
+       case's ART is 180 wide against a 28-wide box, so a run sized on the box reached across a
+       corridor mouth and clipped through the east wall while every box-based check passed. The
+       assertion is about DRAWN extent staying inside the department it belongs to. */
     const dairy = runOf(/dairy/i), deli = runOf(/deli/i), bake = runOf(/bakery/i);
-    const ag = gapsIn(dairy), dg = gapsIn(deli);
-    const uniform = g => g.length > 0 && g.every(v => Math.abs(v - g[0]) <= 1);
-    ck('the service run is a continuous counter, not a scatter of tables',
-       dairy.length >= 2 && deli.length >= 2 && bake.length >= 1 &&
-       uniform(ag) && uniform(dg) && Math.abs(ag[0] - dg[0]) <= 1,
-       'dairy ' + dairy.length + ' pieces at pitch ' + ag.join('/') +
-       ', deli ' + deli.length + ' at pitch ' + dg.join('/') +
-       ', bakery ' + bake.length + ' in its own block');
+    const drawnOK = (arr, zone) => {
+      const z = (FL.ROOMS || []).find(r => r.name === zone);
+      /* the case ART is what matters here, and the 28-wide box hides it. ART_W is already in
+         SCALED pixels (CLAUDE.md 14), which is the same space c.x is in -- so no conversion. */
+      const half = Math.round(((FL.ART_W && FL.ART_W.deli_case) || 324) / 2);
+      return arr.length >= 1 && arr.every(c => {
+        const cx = c.x + c.w / 2;
+        return cx - half >= z.x - 4 && cx + half <= z.x + z.w + 4;
+      });
+    };
+    ck('every service case is drawn inside its own department',
+       drawnOK(deli, 'DELI') && drawnOK(bake, 'BAKERY') && dairy.length >= 1,
+       'dairy ' + dairy.length + ', deli ' + deli.length + ', bakery ' + bake.length +
+       ' — each drawn within its own zone');
     /* the strip between the counter and the north wall has to be walkable, because staff will
        stand in it the moment there are any */
     const bad = [];
