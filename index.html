@@ -3323,7 +3323,7 @@ function startErrand(n){
      nobody is on rails. Untagged points (the break room, the washroom) stay available to all. */
   if(errandPoints.length&&Math.random()<0.55){
     let pool=errandPoints;
-    if(n.storeDept&&false){
+    if(n.storeDept&&Math.random()<0.7){
       const mine=errandPoints.filter(e=>e.dept===n.storeDept);
       if(mine.length)pool=mine;
     }

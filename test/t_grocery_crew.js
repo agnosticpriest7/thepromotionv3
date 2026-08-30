@@ -483,6 +483,127 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
      the floor, and two thresholds that failed on noise rather than on anything real. Collect
      everything from the same frames. */
   const DEPT_ZONE = { grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END' };
+  /* ---- CONTRACTS FIRST. ⚠️ THE PERCENTAGES BELOW ARE NOT ENOUGH ON THEIR OWN. A mutation that
+     deleted every stock errand point on the sales floor SURVIVED the sampled-day assertions --
+     the store degrades gracefully, so the numbers sagged without crossing a threshold. A threshold
+     on a statistic can only catch a collapse; it cannot catch an erosion. These three assertions
+     are deterministic, derive from the live world, and each kills a mutant the sampling missed. */
+  {
+    /* (a) NO BEAT POST IS EVER IN FRONT OF A COUNTER. This is the actual contract behind the
+       "serves from behind the counter" percentage, and unlike the percentage it does not move
+       with the seed. */
+    let checked = 0, infront = 0;
+    for (const n of fg.NPCS) {
+      const ctr = n.storeDept === 'deli' ? deliCtr : n.storeDept === 'bakery' ? bakeCtr : null;
+      if (!ctr) continue;
+      let beat = null; try { beat = fsb.buildBeat(n); } catch (e) {}
+      if (!beat || !beat.length) continue;
+      checked += beat.length;
+      infront += beat.filter(b => b.y >= ctr.y).length;
+    }
+    ck('no post on a counter department beat is on the CUSTOMER side of the counter',
+       checked > 0 && infront === 0,
+       checked + ' posts checked, ' + infront + ' in front of the case');
+  }
+  {
+    /* (b) THE SALES FLOOR HAS WORK ON IT. Every department a clerk can belong to must own at
+       least one errand point, and that point must be inside the department. Without this, an
+       errand is only ever a trip to the back and the shop floor drains on a rota -- which is
+       what was happening, and what no percentage here noticed. */
+    const DEPTS_WITH_WORK = ['grocery', 'produce', 'deli', 'bakery', 'front'];
+    const ZONE = { grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END' };
+    const missing = DEPTS_WITH_WORK.filter(d => {
+      const pts = fg.layout.errandPoints.filter(e => e.dept === d);
+      if (!pts.length) return true;
+      return !pts.some(e => { const r = fsb.roomAt(e.x, e.y); return r && r.name === ZONE[d]; });
+    });
+    ck('every department has work to do inside its own four walls', missing.length === 0,
+       (DEPTS_WITH_WORK.length - missing.length) + '/' + DEPTS_WITH_WORK.length +
+       ' departments' + (missing.length ? ' — nothing to do in: ' + missing.join(', ') : ''));
+
+    /* (c) AND NO ERRAND PIN SNAPS OUT OF ITS OWN ROOM. Two did: the produce jobs sat on the
+       zone's south edge and errandSpot carried them 40 units into the customer WASHROOM -- a
+       walkable point, a legal point, and completely the wrong place to be seen working. */
+    const probe = fg.NPCS[0];
+    const strays = fg.layout.errandPoints.filter(e => {
+      const sp = fsb.errandSpot(probe, e);
+      const a = fsb.roomAt(e.x, e.y), b = fsb.roomAt(sp.x, sp.y);
+      return ((a && a.name) || 'NONE') !== ((b && b.name) || 'NONE');
+    });
+    ck('  ^ and no errand pin snaps into a different room than it was authored in',
+       strays.length === 0,
+       strays.length + ' of ' + fg.layout.errandPoints.length + ' pins stray' +
+       (strays.length ? ': ' + strays.map(e => e.type).join(', ') : ''));
+  }
+  {
+    /* (d) A CLERK'S ERRANDS ARE MOSTLY THEIR OWN DEPARTMENT'S. Statistical, but the margin is a
+       chasm rather than a threshold: produce owns 4 of the ~26 pins, so an unbiased pick lands
+       there about 15% of the time and a biased one about three quarters. Anything in between
+       means the bias is broken, and no seed wobble spans that gap. */
+    const n = fg.NPCS.find(x => x.storeDept === 'produce');
+    let own = 0, got = 0;
+    if (n) for (let i = 0; i < 400; i++) {
+      n.errand = null;
+      try { fsb.startErrand(n); } catch (e) { break; }
+      if (!n.errand) continue;                    // startErrand also visits desks
+      got++;
+      const r = fsb.roomAt(n.errand.x, n.errand.y);
+      if (r && r.name === 'PRODUCE') own++;
+    }
+    n && (n.errand = null);
+    /* 0.32, not 0.45: the measured value is 47%, not the 74% the 0.7 bias implies, because
+       errandSpot spreads arrivals around a ring and some land just outside the zone. Sit the bar
+       halfway between measured and unbiased -- it still cannot be reached with the bias off. */
+    ck('a clerk takes most errands in their own department', got > 100 && own / got >= 0.32,
+       got ? Math.round(100 * own / got) + '% of ' + got + ' errands were in PRODUCE (unbiased is ~15%)'
+           : 'no errands drawn');
+  }
+
+  {
+    /* (e) THE BEAT AVOIDS THE POST SOMEBODY IS ALREADY ON. ⚠️ Making the choice random again
+       SURVIVED every assertion here on the first pass -- it only nudges the overlap percentage,
+       which sits at 3% against a 12% bar. So ask the selector directly: park one person on a post
+       and see whether the manager still walks onto them.
+
+       Two traps avoided. The selector skips `k === n.beatIdx`, so seeding beatIdx with the very
+       post under test would make this vacuous -- it is seeded with a DIFFERENT one, leaving the
+       crowded post a legal candidate. And a single sweep proves little: with ~14 posts a random
+       pick lands on the crowded one about once, so a run of zero hits happens by chance a third
+       of the time. Sweeping repeatedly makes the random case certain to be caught. */
+    const bw = mk(); const bg = bw.g, bsb = bw.sandbox;
+    bw.run(400);
+    for (let guard = 0; guard < 400 && bsb.currentPhase().name !== 'Regular Work'; guard++) bw.run(40);
+    let m = null, beat = null;
+    for (const n of bg.NPCS) {
+      if (!n.storeRole || n.storeRole === 'staff') continue;
+      let b = null; try { b = bsb.buildBeat(n); } catch (e) {}
+      if (b && (!beat || b.length > beat.length)) { m = n; beat = b; }
+    }
+    let trials = 0, walkedOn = 0;
+    if (m && beat && beat.length >= 4) {
+      m.beat = beat;
+      const crowder = bg.NPCS.find(n => n !== m);
+      /* everybody else is marked gone, which is the same filter the selector itself uses --
+         so the only person it can see is the one deliberately standing in the way */
+      bg.NPCS.forEach(n => { if (n !== m && n !== crowder) n.gone = true; });
+      crowder.gone = false; crowder.wentHome = false;
+      for (let pass = 0; pass < 20; pass++) {
+        for (let k = 0; k < beat.length; k++) {
+          crowder.x = beat[k].x; crowder.y = beat[k].y;
+          m.beatIdx = (k + 1) % beat.length;    // NOT k — k must stay a legal candidate
+          m.beatUntil = -1;                     // expired, so the next call re-picks
+          try { bsb.npcTarget(m); } catch (e) { continue; }
+          trials++;
+          if (m.beatIdx === k) walkedOn++;
+        }
+      }
+    }
+    ck('the beat never sends a manager to the post somebody is already standing on',
+       trials > 100 && walkedOn === 0,
+       walkedOn + ' of ' + trials + ' picks landed on the occupied post' +
+       (beat ? ' (' + beat.length + '-post beat)' : ' — NO BEAT BUILT'));
+  }
+
   const tally = {}, where = {};
   const bump = (k, hit) => { tally[k] = tally[k] || [0, 0]; tally[k][1]++; if (hit) tally[k][0]++; };
   let samples = 0, overlap = 0;
