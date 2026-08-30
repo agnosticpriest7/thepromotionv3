@@ -493,3 +493,24 @@ dairy wall, offices, break room, WC, and the roller door at the east end where t
 **Watch for:** the office is unchanged, but the WORLD grew, and the office building did not. If
 you see grey carpet or empty floor stretching below the office instead of grass, or anybody
 standing outside its south wall, that is this change and I want to know.
+
+### N. Everybody works their own job now
+Before this, everyone stood on their station all day. Measured on day 1: the store manager spent
+35% of it inside his own office, the owner 54%, and the bakery manager 44% of hers in no room at
+all. Now the distinction is the job:
+
+- **Cashiers stay at the tills** — Priya and Marguerite move less than anyone.
+- **Grocery clerks work the aisles** — Curtis and Bekah, 55–71% of the day in GROCERY.
+- **Department managers walk their own department** — Bruno the deli, Doreen the bakery, Gita
+  produce, Russ grocery. Roughly twice the movement of a clerk.
+- **Store manager, assistant manager and owner walk the whole sales floor**, dropping back to
+  their offices between laps rather than sitting behind a door.
+
+**What to look at:** stand still somewhere on the floor for a minute of game time and just watch.
+It should read as a shop with staff in it rather than a set of people standing on marks. In
+particular check that Lorne, Garret and Merv actually come past you — if they feel like they never
+settle, or conversely never leave, the dwell is one number and easy to tune.
+
+**The one I'd watch for:** a manager standing somewhere daft — inside a counter, in a doorway, or
+in the middle of an aisle mouth. Their route points come off the room shapes, so a badly-shaped
+room would show up as somebody loitering in a silly place rather than as an error.
