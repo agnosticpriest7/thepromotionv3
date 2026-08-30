@@ -604,6 +604,43 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
        (beat ? ' (' + beat.length + '-post beat)' : ' — NO BEAT BUILT'));
   }
 
+  {
+    /* (f) A STATION IS STOOD ON, NOT STOOD BESIDE. deskSeat seats someone 26 units clear of a
+       desk's EDGE, which is right for furniture and wrong for a floor marker that already means
+       "stand here" -- it displaced every store station by about 38 authored. It hid for so long
+       because the offset usually landed on open floor and merely looked approximate; but the
+       cashier's seat side points INTO her till, so she fell through to the next candidate and
+       worked the bagging end of her own lane by accident. */
+    let off = 0, unwalkable = 0, n = 0;
+    for (const d of fg.desks.filter(d => d.station)) {
+      const seat = fsb.deskSeat(d); n++;
+      if (Math.abs(seat.x - (d.x + d.w / 2)) > 1 || Math.abs(seat.y - (d.y + d.h / 2)) > 1) off++;
+      if (!fsb.walkableAt(seat.x, seat.y)) unwalkable++;
+    }
+    ck('every station is stood ON, and every one of them is standable',
+       n >= 10 && off === 0 && unwalkable === 0,
+       n + ' stations, ' + off + ' displaced from their own centre, ' + unwalkable + ' unstandable');
+  }
+  {
+    /* (g) THE CASH ROOM IS ON THE ROUNDS. Kyle asked for the manager and the owner to visit it.
+       Asserted on the beat rather than on a visit rate: it is 1 post among 20-odd, so the
+       percentage of the day spent in there is small and seed-dependent, while "is it on your
+       round at all" is exact. The assistant manager is deliberately excluded, and asserting that
+       is what stops the room quietly becoming everybody's. */
+    const beatRooms = n => {
+      let b = null; try { b = fsb.buildBeat(n); } catch (e) {}
+      if (!b) return [];
+      return b.map(p => { const r = fsb.roomAt(p.x, p.y); return (r && r.name) || 'NONE'; });
+    };
+    const byRole = r => fg.NPCS.find(x => x.storeRole === r);
+    const has = r => { const n = byRole(r); return n ? beatRooms(n).indexOf('CASH OFFICE') >= 0 : null; };
+    ck('the store manager and the owner both have the cash room on their round',
+       has('store') === true && has('owner') === true,
+       'store ' + has('store') + ', owner ' + has('owner'));
+    ck('  ^ and the assistant manager does not', has('am') === false,
+       'am ' + has('am'));
+  }
+
   const tally = {}, where = {};
   const bump = (k, hit) => { tally[k] = tally[k] || [0, 0]; tally[k][1]++; if (hit) tally[k][0]++; };
   let samples = 0, overlap = 0;
@@ -618,8 +655,16 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
       const n = crew[a];
       for (let b = a + 1; b < crew.length; b++)
         if (Math.hypot(n.x - crew[b].x, n.y - crew[b].y) < 8 * SC) pair = true;
-      if (n.storeDept === 'deli' && deliCtr) bump('deli', n.y < deliCtr.y);
-      if (n.storeDept === 'bakery' && bakeCtr) bump('bakery', n.y < bakeCtr.y);
+      /* ⚠️ ONLY JUDGE THE SIDE WHEN THEY ARE ACTUALLY AT THE COUNTER. The first version counted
+         every sample, so an errand two departments away scored as "in front of the case" and the
+         number moved whenever the errand rate did -- it fell 92% -> 64% on a change that moved the
+         counter 8 units and touched nothing else. Whether they leave the department at all is a
+         different question, and the "spends the day in their own department" assertion below
+         already asks it. This one asks only: when they ARE in the deli, are they behind the case? */
+      const inZoneOf = (nn, ctr) => { const r = fsb.roomAt(nn.x, nn.y);
+        return r && r.name === (nn.storeDept === 'deli' ? 'DELI' : 'BAKERY'); };
+      if (n.storeDept === 'deli' && deliCtr && inZoneOf(n, deliCtr)) bump('deli', n.y < deliCtr.y);
+      if (n.storeDept === 'bakery' && bakeCtr && inZoneOf(n, bakeCtr)) bump('bakery', n.y < bakeCtr.y);
       if (n.storeDept === 'front' && n.storeRole === 'staff')
         bump('till', tills.some(t => Math.hypot(n.x - (t.x + t.w / 2), n.y - (t.y + t.h / 2)) < 46 * SC));
       if (n.storeDept === 'grocery' && n.storeRole === 'staff')
@@ -640,7 +685,7 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   const pct = k => tally[k] ? Math.round(100 * tally[k][0] / tally[k][1]) : -1;
   ck('  ^ the day was actually sampled', samples > 300, samples + ' samples in Regular Work');
   ck('counter staff serve from BEHIND their counter, not in front of it',
-     pct('deli') >= 65 && pct('bakery') >= 65,
+     pct('deli') >= 80 && pct('bakery') >= 80,
      'deli ' + pct('deli') + '%, bakery ' + pct('bakery') + '% on the staff side');
   ck('cashiers are at a till', pct('till') >= 45, pct('till') + '% of the working day');
   ck('grocery clerks are at a shelf run', pct('aisle') >= 55, pct('aisle') + '% of the working day');

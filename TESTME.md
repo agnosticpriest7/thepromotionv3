@@ -544,3 +544,41 @@ work, so this is the follow-up. Measured on day 1 across a working day, before �
 **The one I'd watch for:** somebody doing shelf work at a fixture that has no art for it yet — the
 frozen section especially, since that's still waiting on your assets. A clerk facing an invisible
 shelf will look like they're working on nothing.
+
+### P. The posts you marked on the TV
+Your screenshots, turned into where people stand. All of it derives from the fixtures or the
+sprites, so re-laying the floor moves the crew with it.
+
+**A bug was underneath all of this and it's worth knowing about.** `deskSeat()` stands a person 26
+units clear of a desk's *edge* — correct for furniture you sit at, wrong for a station, which is a
+floor marker that already means "stand here". Every store station was displaced ~38 units from
+where it was authored. It hid because the offset usually landed on open floor and just looked
+approximate. But a cashier's seat side points *into* her own till, so that spot was rejected and
+she fell through to the next candidate — working the **bagging end of her own lane by accident**.
+So some of what you were looking at was never where I'd put it.
+
+**What to look at:**
+
+- **The lanes.** Cashiers stand beside the register (the screen/PIN pad end), not halfway down the
+  belt where they used to be. Three lanes and two front-end staff, so the bagging shelves and the
+  spare register are worked on rotation rather than owned — you should see people move between
+  them, not stand frozen.
+- **The deli counter.** Bruno was authored at x=620; his case ends at x=619. He was standing *past
+  the end of it*. He's now centred behind it. Doreen was worse — her spot was inside the bakery
+  case's collision, so the grid shoved her to the back wall.
+- **The counters moved up 8, and 8 was all there was.** I measured it in the browser rather than
+  guess: shifting them up 8 costs nothing because the loss falls inside the nav grid's own padding,
+  but at 12 the staff band behind them collapses to a single 18-unit row — walkable, but too thin
+  for two people to pass. If you want them tighter than this, I need to move the back-room wall
+  north first. Say so and I'll do it.
+- **The cash room.** Lorne and Merv now walk in; Garret does not. It's one post on a 23-post round,
+  so expect it a couple of times a day rather than constantly — if it reads as "never", the dwell
+  is one number.
+
+**Two things I want your call on:**
+
+1. **There is no dedicated bagger NPC** — the roster has two front-end staff and a front-end
+   manager. Right now they rotate through the bagging posts. If you want somebody permanently on
+   the bagging shelf, that's a new crew member, and I'd rather you pick the name.
+2. **The AM is deliberately excluded from the cash room.** You said manager and owner, so that's
+   what it is. One entry to add Garret if he should be in there too.
