@@ -2248,6 +2248,15 @@ function assembleAtElevator(){
    others) — boxing the NPC in. Pick the first walkable side instead. */
 function deskSeat(d){
   const m=Math.round(26*S), cx=d.x+d.w/2, cy=d.y+d.h/2;
+  /* ⚠️ A STATION IS THE SPOT ITSELF -- YOU DO NOT STAND BESIDE IT. The rest of this function
+     seats someone 26 units clear of a desk's EDGE, which is right for furniture you sit at and
+     wrong for a floor marker that already says "stand here": it threw every store station about
+     38 authored to one side. It was invisible because it usually landed on open floor and merely
+     looked approximate -- but the cashier's 'left' seat lands INSIDE the till, so she fell through
+     to the next candidate and stood at the bagging end of her own lane by accident. Every station
+     coordinate authored in this level was being quietly displaced. Stations are not solid and are
+     not drawn, so the centre is always the right answer and always standable. */
+  if(d.station) return {x:cx,y:cy};
   const SIDE={down:{x:cx,y:d.y+d.h+m},up:{x:cx,y:d.y-m},right:{x:d.x+d.w+m,y:cy},left:{x:d.x-m,y:cy}};
   let cand=[SIDE.down,SIDE.up,SIDE.right,SIDE.left];
   if(d.seatSide&&SIDE[d.seatSide]) cand=[SIDE[d.seatSide]].concat(cand);   // per-desk standing-side override
@@ -2942,9 +2951,15 @@ function hrMorning(n,dt){
 const BEAT_DEPT = {grocery:'GROCERY', produce:'PRODUCE', deli:'DELI', bakery:'BAKERY', front:'FRONT END'};
 const BEAT_FLOOR = ['GROCERY','FRONT END','PRODUCE','DELI','BAKERY','DAIRY'];
 const BEAT_OFFICE = {store:'STORE MANAGER', am:'ASSISTANT MANAGER', owner:'OWNER'};
+/* ⚠️ THE CASH ROOM IS SOMEBODY'S JOB. Kyle: "have the manager and owner visit the cash room."
+   It is the one room on the floor with a reason to be entered by exactly two people and nobody
+   else, and before this nothing ever went in -- the tills were counted by nobody. The assistant
+   manager is deliberately NOT on this list; it is one entry to add if he should be. */
+const BEAT_EXTRA = {store:['CASH OFFICE'], owner:['CASH OFFICE']};
 function buildBeat(n){
   const want = [];
-  if(BEAT_OFFICE[n.storeRole]){ BEAT_FLOOR.forEach(z=>want.push(z)); want.push(BEAT_OFFICE[n.storeRole]); }
+  if(BEAT_OFFICE[n.storeRole]){ BEAT_FLOOR.forEach(z=>want.push(z)); want.push(BEAT_OFFICE[n.storeRole]);
+    (BEAT_EXTRA[n.storeRole]||[]).forEach(z=>want.push(z)); }
   else if(n.storeDept && BEAT_DEPT[n.storeDept]) want.push(BEAT_DEPT[n.storeDept]);
   else return null;
   const pts = [];
@@ -12448,8 +12463,15 @@ function loadLevel(id){
      two-case bakery run reached 1260 and clipped straight through the east wall. Neither showed in
      the box. One case each, sized on the art, clear of both spur mouths (313..403 and 677..767). */
   counterRun(24,204,'Dairy case','dairy_case');            // under the cooler, in the dairy wall
-  counterRun(440,620,'Deli counter','deli_case',330);      // its own block, clear of spur 2
-  counterRun(908,1088,'Bakery counter','bakery_case',330); // its own block, inside the east wall
+  /* ⚠️ UP 8, AND 8 IS THE WHOLE BUDGET. Kyle asked for the counters closer to the back wall.
+     Measured in the browser by shifting the blockers and rebuilding the grid: at -8 the walkable
+     staff band behind them is UNCHANGED at 38 authored (y 280..318) because the loss falls inside
+     the grid's own inflation. At -12 and beyond it collapses to a single 18-unit row -- still
+     walkable, but too thin for two people to pass behind the counter. So the counters take the
+     free 8 and stop; more has to be bought from the back rooms first. */
+  const CTR_UP=8;
+  counterRun(440,620,'Deli counter','deli_case',330-CTR_UP);      // clear of spur 2
+  counterRun(908,1088,'Bakery counter','bakery_case',330-CTR_UP); // inside the east wall
   /* ---- CHECKSTANDS. Same defect as the counters and the same fix: they were tables, so each wore
      eight office chairs. The brief named Deli and Bakery, but leaving the checkouts as boardrooms
      would have looked identical to the thing being fixed. Sat well clear of the shelf block: a
@@ -12470,7 +12492,12 @@ function loadLevel(id){
      middle gap, so you walk in and straight up the store, and the whole run now spans 548 instead
      of 1127. Moving the eastern cluster off the back-of-house wall is also what frees the east
      side of the front end for the wing above. */
-  const CHK_Y=760, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);   // 47 x 108
+  const CHK_Y=760, CHK_W=Math.round(ART_W.checkstand/S), CHK_D=Math.round(CHK_W*1039/447);
+  /* WHERE A PERSON STANDS ON A LANE, as fractions of the checkstand sprite (447x1039): the
+     register cluster runs 130..610 down it and the bagging shelf 800..1000. Declared out here
+     with the lane geometry because both the crew's stations and the front end's work points are
+     built from them, in two different blocks. */
+  const REG_F=(130+610)/2/1039, BAG_F=(800+1000)/2/1039;
   const chkXs=[];
   const checkout=(x0,art)=>{
     chkXs.push(x0);
@@ -12652,6 +12679,13 @@ function loadLevel(id){
     /* aisle centres: the gap between consecutive runs. runXs holds LEFT EDGES and a run is
        SHELF_W wide, so the clear floor between run i and i+1 spans rx+SHELF_W .. rx+RUN_GAP. */
     const aisle=i=>(runXs[i]+SHELF_W+runXs[i+1])/2;
+    /* the service case a department owns, found BY SHAPE inside its own zone -- the same predicate
+       buildBeat and the crew test use, so all three agree about where a counter is. */
+    const caseOf=nm=>{const z=ROOMS.find(r=>r.name===nm); if(!z)return null;
+      return levelBlockers.filter(b=>b.x>=z.x-8&&b.x+b.w<=z.x+z.w+8&&b.y>z.y&&b.y+b.h<z.y+z.h&&
+                                     b.w>100&&b.h<70).sort((a,b)=>a.y-b.y)[0]||null;};
+    const caseMidX=nm=>{const c=caseOf(nm); return c?Math.round(c.x+c.w/2):0;};
+    const caseStaffY=nm=>{const c=caseOf(nm); return c?Math.round(c.y-14):0;};
     const AISLE_Y=RUN_MID_Y;                                        // halfway down the run
     /* checkstand lane: below the checkstands, above the store's south wall. */
     /* ⚠️ THE FRONT-END CREW ARE DERIVED FROM THE CHECKOUTS, so re-laying the lanes north-south
@@ -12662,7 +12696,15 @@ function loadLevel(id){
        Even lanes are `checkstand` (till right) so their cashier stands to the EAST; odd lanes are
        `checkstand_r` (till left) so theirs stands to the WEST. That is what puts a facing pair in
        each cluster's gap. */
-    const LANE_Y=CHK_Y+Math.round(CHK_D/2);
+    /* ⚠️ A LANE HAS TWO POSTS, AND MID-LANE IS NEITHER OF THEM. Everyone stood at CHK_D/2,
+       which is the middle of the BELT -- nobody works there. The checkstand sprite is 447x1039
+       with the register cluster (screen, PIN pad, scanner) at 130..610 down it and the bagging
+       shelf at 800..1000, so the two places a person actually stands are those two, expressed as
+       fractions of the art. Read off the SPRITE, not off the floor: move the lanes and both posts
+       follow, and re-drawing the art is the only thing that can invalidate them. */
+    const regY=CHK_Y+Math.round(CHK_D*REG_F);       // beside the till
+    /* which side staff stand is a property of the mirror, not an offset: `checkstand` puts the
+       register EAST, `checkstand_r` mirrors it WEST. Even lanes are the former, odd the latter. */
     const tillX=i=>(i%2===0)?(chkXs[i]+CHK_W+12):(chkXs[i]-12);
     /* ---- WHO WORKS WHERE. The crew had no department field at all until now: Danika was the
        "Front End Manager" in the commit message and in nothing else, and the game could not
@@ -12680,8 +12722,8 @@ function loadLevel(id){
        before there is anything to fix. */
     const CREW=[
       /* one to a cluster, each at their own till, facing the lane they are working. */
-      ['Priya Raval',       tillX(0),      LANE_Y,   'left' , 'front',  'staff'  ],
-      ['Marguerite Dubois', tillX(2),      LANE_Y,   'left' , 'front',  'staff'  ],
+      ['Priya Raval',       tillX(0),      regY,     'left' , 'front',  'staff'  ],
+      ['Marguerite Dubois', tillX(2),      regY,     'left' , 'front',  'staff'  ],
       /* the front-end manager stands in the cross-aisle NORTH of the lanes, in FRONT END. At
          CHK_Y-60 she was at y 460 once the lanes moved -- inside a shelf run AND inside the
          GROCERY zone, which the crew test caught as "front:GROCERY". */
@@ -12698,8 +12740,14 @@ function loadLevel(id){
          Positions derive from the fixtures their departments are built around, so redrawing the
          floor moves them with it. */
       ['Gita Mahal',        1035,          610,      'left' , 'produce','manager'],   // in the gap between the tray columns
-      ['Bruno Sarr',        620,           310,      'down' , 'deli',   'manager'],   // behind the deli counter
-      ['Doreen Stapp',      1010,          320,      'down' , 'bakery', 'manager'],   // behind the bakery counter
+      /* ⚠️ BOTH WERE WRONG, AND ONE WAS OFF THE END OF THE COUNTER. The deli case runs x 441..619
+         and Bruno was authored at 620 -- one unit past its east edge, standing BESIDE his counter
+         rather than behind it, which is what the screenshots showed. Doreen's y=320 sat inside the
+         case blocker's inflated cells, so the grid shoved her north to y=274 and she served from
+         the back wall. Derived now: the middle of the case her department owns, one body clear of
+         its top edge. */
+      ['Bruno Sarr',        caseMidX('DELI'),   caseStaffY('DELI'),   'down', 'deli',   'manager'],
+      ['Doreen Stapp',      caseMidX('BAKERY'), caseStaffY('BAKERY'), 'down', 'bakery', 'manager'],
       /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
          work you can do for him. He has no storeDept on purpose: he is above all five, and the
          loyalty path routes through him rather than through any one department. */
@@ -12745,6 +12793,18 @@ function loadLevel(id){
     /* the go-back cart is pinned ABOVE itself, not below: 40 under it is the vestibule side of
        the front end, and the snap carried the errand out of the room entirely. */
     near('printer',17, -30);
+    /* ⚠️ THE BAGGING END IS A POST WITH NOBODY LIVING ON IT. There are three lanes and two
+       front-end staff, so a cashier owns each of two registers and the bagging shelves would
+       never be stood at. They are work, not decoration: every lane's bagging position and every
+       unmanned register goes in as front-end work, so the staff rotate through them and the front
+       end reads as a front end instead of two people frozen at tills. Derived from the same lane
+       geometry the stations use -- chkXs and the sprite fractions -- so nothing here is a
+       coordinate. */
+    for(let i=0;i<chkXs.length;i++){
+      const sx=(i%2===0)?(chkXs[i]+CHK_W+12):(chkXs[i]-12);
+      errandPoints.push({x:Math.round(sx),y:Math.round(CHK_Y+CHK_D*BAG_F),type:'stock',dept:'front'});
+      errandPoints.push({x:Math.round(sx),y:Math.round(CHK_Y+CHK_D*REG_F),type:'stock',dept:'front'});
+    }
     errandPoints.push({x:Math.round(DOOR_X+DOOR_W/2),y:STORE_S-90,type:'chat',dept:'front'},
                       {x:1374,y:130,type:'restroom'},                             // back of house
                       {x:(runXs[2]+SHELF_W+runXs[3])/2, y:RUN_MID_Y, type:'chat'});   // the middle aisle
