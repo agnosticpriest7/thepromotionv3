@@ -314,6 +314,72 @@ DEPTS.forEach(dept => {
      offenders.length ? offenders.slice(0, 3).join(' | ') : 'ten characters, nothing promised');
 }
 
+/* ---- THE STORE MUST NOT SPEAK OFFICE ------------------------------------------------------
+   ⚠️ READ THE LOG, DO NOT READ THE TABLES. Every leak below was invisible to a source scan and
+   obvious the moment the store's own log was captured for five days: crew asked SUPERMARKET staff
+   to find a stapler or fetch letterhead from the printer, a favour promised "HR will do the rest"
+   in a building with no HR, "the office churns on without you" fired ten times, and the desk menu
+   offered "Search their drawers" at a spot on the shop floor. The tables all looked fine -- they
+   were the OFFICE's tables, being read by the store. So this intercepts logLine and runs a real
+   week, which is the only thing that would have caught any of it. */
+{
+  const OFFICE_WORDS = /office|cubicle|stapler|letterhead|drawer|monitor|desk|TPS/i;
+  const sweep = (world, frames) => {
+    const sb = world.sandbox, hits = [];
+    let total = 0;
+    const orig = sb.logLine;
+    let favours = 0;
+    sb.logLine = function (t) {
+      if (typeof t === 'string') { total++;
+        if (/after a favour|asked you for a favor/i.test(t)) favours++;
+        if (OFFICE_WORDS.test(t)) hits.push(t); }
+      return orig.apply(this, arguments);
+    };
+    world.run(frames);
+    sb.logLine = orig;
+    return { hits: hits, total: total, favours: favours };
+  };
+
+  const sw = mk();
+  const store = sweep(sw, 150000);
+  /* ⚠️ ANTI-VACUITY, ANCHORED ON THE HALF THAT ACTUALLY DIES. "No office words" is trivially
+     true of a log nobody wrote, so a bare line count is the weak version of this -- and the first
+     draft picked a threshold out of the air (200) that the real world misses at 118. FOUR of the
+     six leaks were favour asks, so what has to be alive is FAVOURS, not lines: if the store never
+     asks for anything, the stapler and letterhead checks below prove nothing whatsoever. Assert
+     the thing that would actually go quiet. */
+  ck('  ^ the store actually asked for favours, or the check below is vacuous',
+     store.favours >= 3 && store.total > 60,
+     store.favours + ' favour asks in ' + store.total + ' log lines over ~5 days');
+  ck('the store never speaks in office words', store.hits.length === 0,
+     store.hits.length ? store.hits.length + ' leak(s), first: "' + store.hits[0].slice(0, 80) + '"'
+                       : 'no desks, drawers, staplers or letterhead in ' + store.total + ' lines');
+
+  /* and the office KEEPS them -- the fix is a fork in the vocabulary, not a deletion. A test that
+     only checked the store would go green if someone simply removed the words everywhere. */
+  const ow = createWorld({});
+  ck('the office still has its own stationery to ask for',
+     JSON.stringify(ow.sandbox.fetchNeeds()) === JSON.stringify(['coffee', 'snack', 'stapler', 'letterhead']),
+     JSON.stringify(ow.sandbox.fetchNeeds()));
+  ck('  ^ and still calls itself an office', ow.sandbox.placeWord() === 'office' && sw.sandbox.placeWord() === 'store',
+     'office="' + ow.sandbox.placeWord() + '", store="' + sw.sandbox.placeWord() + '"');
+
+  /* a station is not furniture, and the frame-up has to have an audience */
+  {
+    const g = sw.g, sb = sw.sandbox;
+    const st = g.desks.find(d => d.station);
+    const od = ow.g.desks.find(d => d.owner && d.owner !== 'you' && !d.station);
+    const menu = sb.buildOptions({ kind: 'desk', ref: st });
+    const labels = menu.items.map(i => i.label).join(' | ');
+    ck('a station is called a station, and has no drawers',
+       /station/i.test(menu.title) && !/drawer/i.test(labels),
+       menu.title);
+    ck('evidence cannot be planted where nobody would ever find it',
+       sb.plantCanLand(st) === false && ow.sandbox.plantCanLand(od) === true,
+       'store=' + sb.plantCanLand(st) + ', office=' + ow.sandbox.plantCanLand(od));
+  }
+}
+
 console.log('flavour: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY FLAVOUR: RED ❌' : 'GROCERY FLAVOUR: GREEN ✅ (five departments, ten voices, no mechanics)');
 process.exit(fail ? 1 : 0);
