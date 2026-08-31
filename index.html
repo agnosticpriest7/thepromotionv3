@@ -4472,9 +4472,13 @@ function checkPlayerMeltdown(){
   SFX.meltdown();
   addShake(6,0.8);
   addPuff(player.x+player.w/2,player.y+4,'rgba(240,236,226,',14);
-  addSuspicion(20,'You lost it in the middle of the office');
+  addSuspicion(20,`You lost it in the middle of the ${placeWord()}`);
   player.prog=clamp(player.prog-8,0,100);
-  logLine('You slammed the desk and shouted at the monitor. The whole floor saw your meltdown. Promotion −8.','b');
+  /* ⚠️ NO DESK AND NO MONITOR ON A SHOP FLOOR. Keyed on whether this building HAS office desks
+     for its workers rather than on the level's name, so a third level gets the right one free. */
+  logLine(desks.some(d=>d.station)
+    ? 'You slammed the counter and shouted down the aisle. The whole store saw your meltdown. Promotion −8.'
+    : 'You slammed the desk and shouted at the monitor. The whole floor saw your meltdown. Promotion −8.','b');
   toast('MELTDOWN — everyone saw that.');
   activeNPCs().forEach(o=>{if(isWorker(o)&&cdist(o,center(player))<Math.round(120*S))o.bubble={t:2.2,text:pick(['Whoa.','You OK?','Yikes.'])};});
 }
@@ -6158,13 +6162,26 @@ function buildOptions(t){
         prankItems.push({label:'Abandon the prank',act:()=>{own.prankBuild=null;toast('Prank abandoned');}});
       }
     }
-    return {title:`${d.owner}'s desk${own&&own.profiled?' · '+PTYPE_NAME[own.ptype]:''}${present?" — they're here!":' (empty)'}`,items:[
-      {label:'Snoop the desk (personal dirt)',risk:rk,hot:present||seen,act:()=>snoopDesk(d,present)},
+    /* ⚠️ A STATION HAS NO DRAWERS, BECAUSE IT HAS NO FURNITURE. Standing in the middle of the
+       deli, the game offered "Bruno Sarr's desk (empty) — Search their drawers (2 things in
+       there)". There is no desk: a station is a spot on the shop floor. The MECHANICS are all
+       fine and stay exactly as they are -- people do keep things at their post -- it is the
+       office vocabulary that is wrong, so the words follow the desk record rather than being
+       written once for the building the office happens to be. */
+    const st=!!d.station, noun=st?'station':'desk', stash=st?'their things':'their drawers';
+    return {title:`${d.owner}'s ${noun}${own&&own.profiled?' · '+PTYPE_NAME[own.ptype]:''}${present?" — they're here!":' (empty)'}`,items:[
+      {label:`Snoop ${st?'their station':'the desk'} (personal dirt)`,risk:rk,hot:present||seen,act:()=>snoopDesk(d,present)},
       ...catfishItems(d,own,present),
-      ...((d.loot&&d.loot.length&&!present)?[{label:`Search their drawers (${d.loot.length} thing${d.loot.length>1?'s':''} in there)`,risk:rk,hot:seen,act:()=>startAct(3,'Going through their drawers',()=>openDeskLoot(d))}]:[]),
+      ...((d.loot&&d.loot.length&&!present)?[{label:`${st?'Go through':'Search'} ${stash} (${d.loot.length} thing${d.loot.length>1?'s':''} in there)`,risk:rk,hot:seen,act:()=>startAct(3,'Going through their drawers',()=>openDeskLoot(d))}]:[]),
       {label:'Swipe something they love',disabled:present,risk:rk,hot:present||seen,act:()=>startAct(3,'Pocketing it',()=>swipePrized(d,own,present))},
       {label:d.rigged?'Already rigged':'Rig their setup (prank)',disabled:!!d.rigged||present,risk:rk,hot:seen,act:()=>startAct(5,'Rigging their setup',()=>rigDesk(d))},
-      {label:!player.leverage.length?'Plant evidence (need dirt)':d.planted?'Evidence already planted':'Plant evidence to frame them',disabled:!player.leverage.length||!!d.planted||present,risk:rk,hot:present||seen,act:()=>pickPlantDoc(d)},
+      /* ⚠️ NOBODY CAN FIND IT IF NOBODY LOOKS. plantEvidence() SPLICES the document out of your
+         leverage and logs "now you just need HR to check it" -- but hrs() is empty in the store
+         and triggerAudit returns at its second line, so in Save-Rite this destroyed a piece of
+         dirt in exchange for nothing, for ever. A favour that ASKS for a plant still works
+         (plantEvidence credits that mission directly), so the option stays live for those; it is
+         only the free-form frame-up that is honest about having no audience. */
+      {label:!player.leverage.length?'Plant evidence (need dirt)':d.planted?'Evidence already planted':(plantCanLand(d)?'Plant evidence to frame them':'Plant evidence (nobody here would ever find it)'),disabled:!player.leverage.length||!plantCanLand(d)||!!d.planted||present,risk:rk,hot:present||seen,act:()=>pickPlantDoc(d)},
       ...prankItems,
     ]};
   }
@@ -7026,8 +7043,14 @@ function prankMiss(target,type,tier){
 }
 function rigDesk(d){d.rigged=d.owner;logLine(`Rigged ${d.owner}'s desk. A surprise waits for their return.`,'w');addSuspicion(hrSeesPlayer()?24:9,hrSeesPlayer()?'HR caught you at a desk':'Desk sabotage, unseen');witnessReact();}
 /* pick WHICH document to plant in this desk (was: silently pop the last item) */
+/* Can a planted document ever surface? Only if somebody audits desks (HR) or somebody asked for
+   this specific plant. Structural on purpose -- it asks the world, not the level's name. */
+function plantCanLand(d){
+  try{ if(hrs().length)return true; }catch(e){ return true; }
+  try{ return !!missions.find(x=>!x.done&&x.accepted&&x.kind==='plant'&&x.target===d.owner); }catch(e){ return false; }
+}
 function pickPlantDoc(d){
-  if(!hasLev()||d.planted)return;
+  if(!hasLev()||d.planted||!plantCanLand(d))return;
   pickDocument(player.leverage,{title:`Plant in ${d.owner}'s desk — which document?`,onPick:l=>startAct(5,'Planting evidence',()=>plantEvidence(d,l))});
 }
 function plantEvidence(d,item){{const m=missions.find(x=>!x.done&&x.accepted&&x.kind==='plant'&&x.target===d.owner);if(m)setTimeout(()=>creditMission(m,hrSeesPlayer()?0.35:0.05),400);}
@@ -11022,7 +11045,13 @@ const MISSION_KINDS=[
   {id:'plant',  dirty:true,  w:12},
   {id:'intel',  dirty:false, w:14},
 ];
+/* ⚠️ TWO OF THESE FOUR ARE STATIONERY, and this is the OTHER fetch path -- the favour-mission
+   one, separate from FAVOR_DEFS, which is why gating only that table left supermarket staff still
+   asking for staplers. The store keeps the two it plausibly owns. */
 const FETCH_NEEDS=['coffee','snack','stapler','letterhead'];
+const FETCH_OFFICE_ONLY=['stapler','letterhead'];
+function fetchNeeds(){ return placeWord()==='office' ? FETCH_NEEDS
+                                                    : FETCH_NEEDS.filter(x=>FETCH_OFFICE_ONLY.indexOf(x)<0); }
 let missions=[];      // player-facing
 let npcFeuds=[];      // autonomous NPC-on-NPC jobs
 function pickWeighted(list){const tot=list.reduce((s,i)=>s+i.w,0);let r=Math.random()*tot;for(const i of list){r-=i.w;if(r<=0)return i;}return list[0];}
@@ -11089,13 +11118,31 @@ function missionLabel(m){
   }
   return 'Favor';
 }
+/* ⚠️ WHAT TO CALL THE BUILDING. "The office churns on without you" fired ten times across five
+   days in Save-Rite, and "you lost it in the middle of the office" three more. Structural, not a
+   level name: a building whose workers stand at posts instead of sitting at desks is a shop floor.
+   A third level gets the right word without anyone remembering to add it. */
+function placeWord(){ try{ return desks.some(d=>d.station)?'store':'office'; }catch(e){ return 'office'; } }
+/* what to CALL the place someone keeps their things: furniture, or a spot on the floor */
+function deskNounFor(name){
+  try{ const d=desks.find(x=>x.owner===name); return (d&&d.station)?'station':'desk'; }catch(e){ return 'desk'; }
+}
 function missionAsk(m){
   const t=m.target?m.target.split(' ')[0]:'';
   switch(m.kind){
     case 'fetch': return pick([`Grab me ${ITEMS[m.need].label}? I'm dying.`,`Could you get me ${ITEMS[m.need].label}?`]);
-    case 'steal': return `${t} took my stapler last month. Take something off their desk. Even the score.`;
+    /* ⚠️ A STAPLER, IN A SUPERMARKET. Favour asks were written for the office and named office
+       props at store crew: "took my stapler... off their desk", in a building where nobody has a
+       desk. Keyed off the TARGET's own desk record -- station or furniture -- so it is right for
+       whoever is being asked about rather than right for whichever level someone remembered. */
+    case 'steal': return deskNounFor(m.target)==='station'
+      ? `${t} stiffed me on a shift swap. Take something off their station. Even the score.`
+      : `${t} took my stapler last month. Take something off their desk. Even the score.`;
     case 'rumor': return `Put it around that ${t} is job-hunting. Just... let it slip.`;
-    case 'plant': return `Slip something incriminating into ${t}'s desk. HR will do the rest.`;
+    /* and this one PROMISED HR would do the rest, in a building with no HR. */
+    case 'plant': return deskNounFor(m.target)==='station'
+      ? `Slip something incriminating in with ${t}'s things. Let it turn up on its own.`
+      : `Slip something incriminating into ${t}'s desk. HR will do the rest.`;
     case 'intel': return `Figure out what makes ${t} tick, would you? I want to know who I'm dealing with.`;
   }
   return 'Do me a favor?';
@@ -11187,8 +11234,9 @@ function offerMission(n){
      put another out there rather than handing the player an impossible job */
   let need=null;
   if(kind.id==='fetch'){
-    const gettable=FETCH_NEEDS.filter(itemObtainable);
-    need=gettable.length?pick(gettable):pick(FETCH_NEEDS);
+    const pool=fetchNeeds();
+    const gettable=pool.filter(itemObtainable);
+    need=gettable.length?pick(gettable):pick(pool);
     if(!itemObtainable(need))placeFetchItem(need);
   }
   const m={who:n.name,kind:kind.id,dirty:kind.dirty,target:targ?targ.name:null,need,done:false,accepted:false};
@@ -11368,7 +11416,7 @@ function tickFeudResolve(dt){
     targ.stress=clamp(targ.stress+18,0,100);
     targ.mood=clamp(targ.mood-15,-100,100);
     targ.bubble={t:2.6,text:'WHO did this?!'};
-    logLine(`${f.doer.split(' ')[0]} went through with it — ${f.target.split(' ')[0]} got hit. The office churns on without you.`,'w');
+    logLine(`${f.doer.split(' ')[0]} went through with it — ${f.target.split(' ')[0]} got hit. The ${placeWord()} churns on without you.`,'w');
     if(Math.random()<0.4){startFeud(targ,doer);logLine(`${f.target.split(' ')[0]} blames ${f.doer.split(' ')[0]}. A feud is born.`,'t');}
     if(targ.stress>=100&&targ.meltCd<=0)meltdown(targ);
   }
@@ -11399,13 +11447,19 @@ function feudItems(n){
 const FAVOR_DEFS=[
   {id:'coffee', need:'coffee',   ask:"Grab me a coffee? I'm dying.",        label:c=>`Bring ${c} a coffee`},
   {id:'snack',  need:'snack',    ask:"Any chance you've got a snack?",       label:c=>`Bring ${c} a snack`},
-  {id:'stapler',need:'stapler',  ask:"Someone took my stapler. Find me one?",label:c=>`Find ${c} a stapler`},
-  {id:'paper',  need:'letterhead',ask:"Can you grab letterhead from the printer?",label:c=>`Bring ${c} letterhead`},
+  /* ⚠️ STATIONERY IS AN OFFICE FAVOUR. Half of this table asked SUPERMARKET staff to hunt down
+     a stapler or letterhead from the printer. Marked rather than deleted: the office still wants
+     both, and they are the only two that name a prop the store does not have a reason to own.
+     The store is left with coffee and a snack, which it stocks. Store-native fetches -- a price
+     gun, a box cutter, a spare apron -- need new items and are a content job, not a wording one. */
+  {id:'stapler',need:'stapler',  office:true, ask:"Someone took my stapler. Find me one?",label:c=>`Find ${c} a stapler`},
+  {id:'paper',  need:'letterhead',office:true,ask:"Can you grab letterhead from the printer?",label:c=>`Bring ${c} letterhead`},
 ];
 let favors=[];
 function askFavor(n){
   if(favors.some(f=>f.who===n.name)){toast(`${n.name.split(' ')[0]} already asked you for something.`);return;}
-  const d=pick(FAVOR_DEFS);
+  const pool=FAVOR_DEFS.filter(x=>!x.office||placeWord()==='office');
+  const d=pick(pool.length?pool:FAVOR_DEFS);
   favors.push({who:n.name,def:d,done:false,fx:0});
   n.bubble={t:3.4,text:d.ask};
   logLine(`${n.name.split(' ')[0]} asked you for a favor: ${d.label(n.name.split(' ')[0]).toLowerCase()}. Bring it back to them.`,'w');
