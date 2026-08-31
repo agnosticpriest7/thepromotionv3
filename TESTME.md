@@ -582,3 +582,44 @@ So some of what you were looking at was never where I'd put it.
    the bagging shelf, that's a new crew member, and I'd rather you pick the name.
 2. **The AM is deliberately excluded from the cash room.** You said manager and owner, so that's
    what it is. One entry to add Garret if he should be in there too.
+
+### Q. The store stops speaking in office words
+I went looking for anything else worth fixing before you test, and found one family of bug. None of
+it was findable by reading the code — the tables all looked fine, because they were the *office's*
+tables being read by the store. I caught it by intercepting the store's own log for five in-game
+days and grepping what it actually said.
+
+| what you'd have seen | where |
+|---|---|
+| "Bruno Sarr's **desk** (empty) — Search their **drawers**" | standing in the middle of the deli |
+| "Gita took my **stapler** last month. Take something off their **desk**." | favour ask |
+| "Slip something incriminating into Bekah's desk. **HR will do the rest.**" | favour ask, in a building with no HR |
+| "Grab me a **stapler**? I'm dying." / "letterhead from the **printer**" | fetch favours, via two separate paths |
+| "The **office** churns on without you." | ~10 times in 5 days |
+| "You slammed the **desk** and shouted at the **monitor**." | your own meltdown |
+
+**The one that actually cost you something:** planting evidence *deleted a piece of leverage
+permanently and could never pay off*. It splices the document out of your dirt and tells you "now
+you just need HR to check it" — there is no HR in the store, so nothing could ever check it. That
+option now says so and is disabled. A favour that *asks* you to plant still works, because it
+credits on the act.
+
+All of it keys on **structure, not the level's name** — a building whose workers stand at posts
+instead of sitting at desks is a shop floor — so a third level gets the right words for free. The
+office keeps every one of its own words, and the test asserts that too, otherwise this could be
+"fixed" by deleting the vocabulary everywhere.
+
+**What to look at:** walk up to a crew member and press A. It should say *their station* and *go
+through their things*. Then read the ticker for a day and see if anything still sounds like an
+office — that sweep is now a test, but it only knows the words I thought of.
+
+**Two I did NOT fix, because they're your call:**
+
+1. **"Bag the orders at your lane" is completed at a cubicle desk 384 units from the nearest till**,
+   in the middle of GROCERY. Your desk in the store is an office cubicle standing in the open on
+   the sales floor — it's the anchor every `via:'desk'` task routes to. The honest fix is that your
+   work anchor follows your post as you rank up (bagger → a lane, clerk → an aisle), which is a
+   design change rather than a polish pass. I didn't want to guess it the day you test.
+2. **The store's containers stock office supplies** — 11 staplers, letterhead, sticky notes. Making
+   that store-native (a price gun, a box cutter, a spare apron) needs new items, and inventing item
+   ids right before a test seemed like the wrong trade.
