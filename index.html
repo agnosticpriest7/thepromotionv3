@@ -1389,7 +1389,7 @@ function peggySeatState(n){
    chair. Runs just before the NPC pass, so a person walking past their chair draws over it. */
 function drawDeskChairs(){
   for(const d of desks){
-    if(!d.owner||d.mgrOffice||d.station)continue;                                  // no owner, or Dale's desk (its sprite has its own chair)
+    if(!d.owner||d.mgrOffice||d.station||d.noChair)continue;                       // no owner, Dale's desk (its sprite has its own chair), or a locker
     const owner=(d.owner==='you')?player:activeNPCs().find(n=>n.name===d.owner);
     if(!owner||seatedDeskState(owner))continue;                         // gone / or currently sitting (composite draws the chair)
     if(!inView(d.x,d.y,d.w,d.h))continue;
@@ -1823,6 +1823,19 @@ const ITEMS={
   decaf:{label:'a decaf swap kit',part:true},
   stickynotes:{label:'a pad of sticky notes',part:true},
   supplies:{label:'assorted prank supplies (wildcard)',part:true,wild:true},
+  /* ⚠️ THE STORE'S OWN PARTS. Save-Rite was crafting its pranks out of company letterhead and
+     staplers, because the parts table was the office's. These are the seven a shop actually has
+     lying about, and they slot into the SAME recipe shapes -- see STORE_VOCAB below, where every
+     recipe has exactly the part-count its office counterpart had. `masterkey` is the store's
+     `keycard`: the one part you cannot find lying around and have to take out of the manager's
+     office, which is what keeps the Master tier expensive. */
+  pricegun:{label:'a price gun',part:true},
+  templog:{label:'a blank temperature log',part:true},
+  tape:{label:'a roll of packing tape',part:true},
+  boxcutter:{label:'a box cutter',part:true},
+  spraybottle:{label:'a spray bottle of sanitiser',part:true},
+  apron:{label:'a spare store apron',part:true},
+  masterkey:{label:"the manager's master key",part:true},
   kit_mislabel:{label:'a set of forged file labels (crafted)',part:true,kit:true},
   kit_gaslight_s:{label:'one small thing to move (crafted)',part:true,kit:true},
   kit_stain:{label:'a very full, very tippable coffee (crafted)',part:true,kit:true},
@@ -1850,6 +1863,19 @@ const ITEMS={
 const LOOT_COMMON=['coffee','snack','sandwich','rubberbands','charger','mug','stickynotes','stapler'];
 const LOOT_PARTS=['jello','stapler','letterhead','decaf','stickynotes','supplies'];
 const LOOT_RARE=['note'];   // the keycard is NOT in here — see plantKeycard()
+/* ⚠️ AND THE STORE STOCKS WHAT A STORE STOCKS. Same pool SHAPES and the same sizes, so the drop
+   rates and the economy are unchanged -- only what comes out of the boxes is different. This is
+   why a supermarket was full of staplers and letterhead: the pools were global constants. */
+const LOOT_COMMON_STORE=['coffee','snack','sandwich','rubberbands','charger','mug','pricegun','tape'];
+const LOOT_PARTS_STORE=['jello','tape','templog','spraybottle','pricegun','supplies'];
+const KIND_BIAS_STORE={desk:['pricegun','mug','charger','snack','note','rubberbands','tape','templog'],
+  locker:['apron','boxcutter','pricegun','snack','charger','tape'],
+  cabinet:['templog','tape','boxcutter','apron','spraybottle','pricegun'],
+  fridge:['jello','jello','coffee','snack','sandwich','spraybottle'],
+  shelf:['pricegun','tape','templog','spraybottle','apron','boxcutter']};
+function lootCommon(){ return placeWord()==='store'?LOOT_COMMON_STORE:LOOT_COMMON; }
+function lootParts(){  return placeWord()==='store'?LOOT_PARTS_STORE :LOOT_PARTS;  }
+function kindBias(){   return placeWord()==='store'?KIND_BIAS_STORE  :KIND_BIAS;   }
 const KIND_BIAS={desk:['stapler','mug','charger','snack','note','rubberbands','stickynotes','letterhead'],fridge:['jello','jello','decaf','coffee','snack','sandwich'],cabinet:['stapler','stickynotes','letterhead','mug','rubberbands'],locker:['supplies','charger','snack','note'],box:['supplies','letterhead','rubberbands','sandwich']};
 /* THE KEYCARD.
    It was in the common rare pool, which produced TWO A DAY across the floor — so the
@@ -1858,20 +1884,32 @@ const KIND_BIAS={desk:['stapler','mug','charger','snack','note','rubberbands','s
    locker, and on a third of days there isn't one at all. */
 function plantKeycard(){
   if(Math.random()<0.34)return;                        // some days, HR keeps it on them
-  const spots=CONTAINERS.filter(c=>c.kind==='cabinet'||c.kind==='locker');
+  /* ⚠️ THE SAME SCARCITY, THE STORE'S OWN KEY. At most one on the floor, and not every day --
+     that is what makes the Master tier cost something. In the store it is the manager's master
+     key rather than an HR keycard, and it is only ever in the back of house, so taking it means
+     going somewhere you have no reason to be. */
+  const store=placeWord()==='store';
+  const id=store?'masterkey':'keycard';
+  let spots=CONTAINERS.filter(c=>c.kind==='cabinet'||c.kind==='locker');
+  if(store){
+    const boh=spots.filter(c=>{ const r=roomAt(c.x+c.w/2,c.y+c.h/2);
+      return r && /STORE MANAGER|OWNER|ASSISTANT MANAGER|CASH OFFICE/.test(r.name); });
+    if(boh.length)spots=boh;
+  }
   if(!spots.length)return;
   const c=pick(spots);
   c.loot=c.loot||[];
-  if(!c.loot.includes('keycard'))c.loot.push('keycard');
+  if(!c.loot.includes(id))c.loot.push(id);
 }
 function rollLoot(kind){
   const n=2+((Math.random()<0.5)?1:0); const out=[];
   for(let i=0;i<n;i++){
     const r=Math.random();
     let id;
-    if(r<0.35&&KIND_BIAS[kind])id=pick(KIND_BIAS[kind]);
-    else if(r<0.78)id=pick(LOOT_COMMON);
-    else if(r<0.94)id=pick(LOOT_PARTS);
+    const KB=kindBias();
+    if(r<0.35&&KB[kind])id=pick(KB[kind]);
+    else if(r<0.78)id=pick(lootCommon());
+    else if(r<0.94)id=pick(lootParts());
     else id=pick(LOOT_RARE);
     if(!out.includes(id))out.push(id);
   }
@@ -1917,7 +1955,11 @@ function placeFetchItem(id){
 }
 function seedFetchNeeds(){
   let placed=0;
-  FETCH_NEEDS.forEach(id=>{ if(!itemOnFloor(id)&&placeFetchItem(id))placed++; });
+  /* ⚠️ SEED WHAT THIS BUILDING CAN ACTUALLY BE ASKED FOR. This guarantees every fetchable item
+     exists somewhere, and it was walking the raw table -- so it kept planting a stapler and a
+     ream of letterhead in the supermarket even after the loot pools stopped stocking them, which
+     is why gating the pools alone left both still turning up in ten worlds out of ten. */
+  fetchNeeds().forEach(id=>{ if(!itemOnFloor(id)&&placeFetchItem(id))placed++; });
   return placed;
 }
 
@@ -3173,7 +3215,16 @@ function updateNPC(n,dt){
     }
   }
   if(!n.errand && !tgt){
-    if(n.dept==='hr'){
+    /* ⚠️ AN AUDIT WALK IS NOT AN HR-ONLY BEHAVIOUR ANY MORE. It used to live entirely inside
+       the dept==='hr' branch, so a store manager could be handed audit/auditDesk and would simply
+       never walk anywhere -- the flag set, the tip queued, and nothing on screen. Hoisted so
+       whoever was tipped actually goes and looks; everything else about HR stays HR's. */
+    if(n.audit&&n.auditDesk&&n.dept!=='hr'){
+      const ap=auditPoint(n.auditDesk);
+      if(cdist(n,ap)<Math.round(30*S)){resolveAudit(n.auditDesk);n.audit=false;n.auditDesk=null;n.goal=null;n.dwell=0;}
+      else {setGoal(n,ap.x,ap.y);followPath(n);}
+    }
+    else if(n.dept==='hr'){
       if(n.audit){
         const ap=auditPoint(n.auditDesk);
         if(n.auditDesk&&cdist(n,ap)<Math.round(30*S)){resolveAudit(n.auditDesk);n.audit=false;n.auditDesk=null;n.goal=null;n.dwell=0;}
@@ -3502,7 +3553,9 @@ function tickDegrade(n,dt){
     if(n.mistakeCd<=0){
       n.mistakeCd=rand(30,55)-t*5;
       n.mistakes++;
-      logLine(`${n.name.split(' ')[0]} botched something — ${pick(['sent the wrong file','fumbled a client call','missed a deadline','printed 400 blank pages'])}. (${n.mistakes} on record)`,'w');
+      logLine(`${n.name.split(' ')[0]} botched something — ${pick(placeWord()==='store'
+        ? ['mis-scanned a whole order','dropped a case of eggs','left a pallet in the aisle','forgot to rotate the milk']
+        : ['sent the wrong file','fumbled a client call','missed a deadline','printed 400 blank pages'])}. (${n.mistakes} on record)`,'w');
       n.bubble={t:2.4,text:'No no no...'};
     }
   }
@@ -3753,7 +3806,7 @@ function tickMeltEvent(dt){
   // HR converges on them (and off you)
   if(!meltEvent.hrCalled&&meltEvent.t>4){
     meltEvent.hrCalled=true;
-    hrs().forEach(h=>{h.meltResponse=n;h.audit=false;h.auditDesk=null;});
+    auditors().forEach(h=>{h.meltResponse=n;h.audit=false;h.auditDesk=null;});
     logLine('HR is dealing with the meltdown. Nobody is watching the floor.','w');
   }
   if(meltEvent.t>=meltEvent.dur)endMeltEvent();
@@ -4131,6 +4184,12 @@ const PROMOTE_OUT=75;
    here (built at runtime, after scaleWorld). Every waypoint was verified walkable + reachable
    from the office (test connectivity check). */
 function startBossTour(){
+  /* ⚠️ THERE IS NO CEO IN THE SUPERMARKET. This fired four times over five days in Save-Rite:
+     it announced Mr. Sterling by name, added a bonus task to bring the Henderson file to a man
+     who is not on the floor -- so it could never be completed -- and set a route AUTHORED FOR THE
+     OFFICE (1400x760) running through a 1500x1040 store. The boss object exists; he is simply not
+     in NPCS here. Ask whether he is actually in the building rather than assuming he is. */
+  if(!boss||NPCS.indexOf(boss)<0)return;
   boss.lapping=true;boss.routeIdx=0;boss.goal=null;boss.path=null;boss.stuckT=0;
   boss.route=[[200,520],[180,640],[430,470],[560,470],[900,440],[1150,630],[1300,650],[1320,450],[1280,150],[950,200],[600,200],[300,250]]
     .map(p=>({x:Math.round(p[0]*S),y:Math.round(p[1]*S)}));
@@ -4388,6 +4447,23 @@ function inCone(w,pt,range=CONE_RANGE){
   return Math.abs(a)<CONE_HALF;
 }
 function hrs(){return NPCS.filter(n=>n.dept==='hr'&&n.alive);}
+/* ⚠️ WHOEVER POLICES THIS BUILDING. The Master tier works by planting paperwork and then making
+   sure somebody comes and finds it -- and in Save-Rite nobody ever did: hrs() is empty, so every
+   master plant went onto hrTipQueue and sat there for the rest of the run. Five pranks that cost
+   the rarest parts in the game and could not resolve, ever. The store's HR is its STORE MANAGER,
+   so a tip fetches him instead.
+   Deliberately NOT wired into the RANDOM audit (triggerAudit/scheduleAudit): that would add
+   unasked-for locker sweeps to the store. A master prank SUMMONS the manager; nothing else does. */
+/* ⚠️ WHAT TO CALL THEM ON THE PAGE. The Master tier is written entirely in HR's language --
+   "HR is on their way", "why is HR at my desk", "in their drawer" -- and in Save-Rite the person
+   who actually comes is the store manager, to a locker. */
+function auditorWord(){ return placeWord()==='store' ? 'the manager' : 'HR'; }
+function auditorWordCap(){ return placeWord()==='store' ? 'The manager' : 'HR'; }
+function stashWord(){ return placeWord()==='store' ? 'locker' : 'drawer'; }
+function auditors(){
+  const h=hrs(); if(h.length)return h;
+  return NPCS.filter(n=>n.storeRole==='store'&&n.alive&&!n.gone&&!n.wentHome);
+}
 function hrSeesPlayer(){if(meltEvent)return false;const pc=center(player);return hrs().some(h=>inCone(h,pc));}
 /* Regular coworkers can catch you in the act too — not just HR. A worker notices if they're
    close and facing you (a shorter cone than HR, since they aren't actively hunting). Your
@@ -5775,7 +5851,8 @@ function tryInteract(){
   if(t.kind==='chair'){ if(sitOnChair(t.ref.chair))SFX.open(); return; }
   openMenu(t);
   /* Your own desk seats you as you open it. Any other desk is somebody else's chair — no sitting. */
-  if(t.kind==='desk'&&t.ref.owner==='you')sitAtDesk(t.ref);
+  /* you do not sit at a locker -- opening it IS the interaction */
+  if(t.kind==='desk'&&t.ref.owner==='you'&&!t.ref.noChair)sitAtDesk(t.ref);
 }
 function openMenu(t){SFX.open();renderMenu(buildOptions(t));}
 let menuBtns=[],gpSel=0;
@@ -6632,6 +6709,93 @@ const MASTER_FIND={
   m_peacock:'an email to a client, from their account, calling them an idiot',
   m_socialite:'the client list, on a drive, in their drawer',
 };
+/* ⚠️ THE STORE'S OWN PRANKS. Fifteen slots, the same fifteen ids, because the id is what the
+   tier/personality matrix, the save file and every craft path are keyed on -- changing them would
+   mean a second copy of all of it, and a half-built prank in an old save would stop resolving.
+   What changes is everything the PLAYER sees: what the prank is, what it is called, what it takes
+   to build and what turns up when somebody opens the locker.
+
+   PART COUNTS ARE IDENTICAL TO THE OFFICE, slot for slot (1,0,1,1,0 / 2,1,2,2,1 / 3,2,3,3,2), so
+   the crafting economy is unchanged and only the fiction moves. Kyle: "keep the quantities similar
+   to the Office level."
+
+   Applied by applyPrankVocabulary() from loadLevel, which always writes a COMPLETE set -- the
+   office's own words are kept in OFFICE_VOCAB and written back when the office loads, so this can
+   never leave one level wearing the other's vocabulary. */
+const STORE_VOCAB={
+  mislabel:   {label:'Swap the shelf tags across their section', short:'shelf-tag swap',
+               parts:['pricegun'], hint:'a price gun', kit:'a sheet of forged shelf tags (crafted)'},
+  calendar:   {label:'Quietly wipe their shift off the board', short:'shift-board deletion',
+               parts:[], hint:'nothing — just the board'},
+  gaslight_s: {label:'Move one thing at their station', short:'small gaslight',
+               parts:['pricegun'], hint:'a price gun'},
+  stain:      {label:'Coffee-stain their apron', short:'coffee stain',
+               parts:['coffee'], hint:'a coffee (from a container)'},
+  well:       {label:'Poison the Well (a whisper down the aisles)', short:'poisoned-well whisper',
+               parts:[], hint:'intel on them'},
+  violation:  {label:'Forge a failed temperature log in their name', short:'forged temperature log',
+               parts:['templog','tape'], hint:'a blank temperature log + packing tape',
+               kit:'a forged temperature log (crafted)'},
+  memo:       {label:'Forge a complaint to the owner in their name', short:'forged complaint',
+               parts:['templog'], hint:'a blank temperature log',
+               kit:'a forged complaint, ready to hand in (crafted)'},
+  gaslight:   {label:'The full Gaslight (three plants on their section)', short:'full gaslight',
+               parts:['pricegun','boxcutter'], hint:'a price gun + a box cutter to hide'},
+  image:      {label:'Image Sabotage (humiliated in front of the customers)', short:'image sabotage',
+               parts:['spraybottle','apron'], hint:'a spray bottle + their apron'},
+  expose:     {label:'Expose them as the one who talks to head office', short:'public exposure',
+               parts:['note'], hint:'a juicy note about them',
+               kit:'proof of who talks to head office (crafted)'},
+  m_zealot:   {label:'Forge a health-inspection breach in their hand', short:'forged inspection breach',
+               parts:['templog','tape','note'], hint:'a blank log + packing tape + a note in their hand',
+               find:'an inspection breach signed in their own handwriting',
+               kit:'a forged inspection breach in their hand (crafted)'},
+  m_climber:  {label:'File a fraudulent damage-out claim as them', short:'fraudulent damage-out claim',
+               parts:['templog','masterkey'], hint:"a blank log + the manager's master key",
+               find:'a damage-out claim for stock that was never damaged',
+               kit:'a fraudulent damage-out claim in their name (crafted)'},
+  m_paranoid: {label:'Write a poison-pen note to the owner in their hand', short:'forged poison-pen note',
+               parts:['note','pricegun','boxcutter'], hint:'a note in their hand + a price gun + a box cutter',
+               find:'a poison-pen note about the owner, in their handwriting',
+               kit:'a poison-pen note in their handwriting (crafted)'},
+  m_peacock:  {label:'Send an abusive reply to a customer as them', short:'abusive customer reply',
+               parts:['templog','apron','masterkey'], hint:"a blank log + their apron + the manager's master key",
+               find:'a reply to a customer complaint, from their account, calling them an idiot',
+               kit:'an abusive customer reply from their account (crafted)'},
+  m_socialite:{label:'Leave proof they leaked the wage list', short:'planted proof of a leak',
+               parts:['note','masterkey'], hint:"a note in their hand + the manager's master key",
+               find:'the staff wage list, photographed, in their locker',
+               kit:'proof they leaked the wage list (crafted)'},
+};
+/* the office's authored words, captured ONCE before anything overwrites them */
+const OFFICE_VOCAB=(function(){
+  const o={};
+  for(const p of PRANKS) o[p.id]={label:p.label, short:PRANK_SHORT[p.id], parts:PARTS[p.id].slice(),
+    hint:RECIPE_HINT[p.id], find:MASTER_FIND[p.id],
+    kit:(ITEMS['kit_'+p.id]?ITEMS['kit_'+p.id].label:null)};
+  return o;
+})();
+/* PARTS is a const table and so is unreachable from outside the script; these two are how the
+   suite asks what a recipe costs without keeping a second copy of the table to go stale. */
+function prankPartList(id){ return (PARTS[id]||[]).slice(); }
+function prankPartCount(id){ return (PARTS[id]||[]).length; }
+function applyPrankVocabulary(levelId){
+  const V=(levelId==='office')?OFFICE_VOCAB:STORE_VOCAB;
+  for(const p of PRANKS){
+    const v=V[p.id]; if(!v)continue;
+    p.label=v.label;
+    PRANK_SHORT[p.id]=v.short;
+    PARTS[p.id]=v.parts.slice();
+    RECIPE_HINT[p.id]=v.hint;
+    if(v.find)MASTER_FIND[p.id]=v.find;
+    /* always write a label, never leave the other level's leftovers behind: a store entry with
+       no kit line of its own falls back to the office's, which is generic enough to survive
+       ("one small thing to move", "a full gaslighting kit"). */
+    const kit=ITEMS['kit_'+p.id];
+    const kl=v.kit||(OFFICE_VOCAB[p.id]&&OFFICE_VOCAB[p.id].kit);
+    if(kit&&kl)kit.label=kl;
+  }
+}
 function partGrab(id,seen){return[{label:invFull()?`Take ${ITEMS[id].label} (pockets full)`:`Take ${ITEMS[id].label}`,disabled:invFull(),risk:seen?seenTag():'sneaky',hot:seen,act:()=>{player.inv.push(id);renderLeverage();logLine(`Palmed ${ITEMS[id].label}. Contraband now.`,'t');addSuspicion(seen?12:3,seen?whoSaw()+' saw you take it':'Grabbed it, unseen');}}];}
 /* ===== CRAFTING =====
    Was a wall of text you had to read. Now it is a grid: what you can make, dimmed if you
@@ -6881,26 +7045,26 @@ function masterPlant(target,type){
   if(!desk){logLine('They have no desk to plant it in. Wasted.','w');return;}
   if(!fitsType(target.ptype,type)){
     /* the wrong document for the wrong person: HR simply does not buy it */
-    logLine(`HR looked at ${MASTER_FIND[type]} in ${target.name.split(' ')[0]}'s desk and did not believe a word of it. It is not the sort of thing they would ever do. The forgery is binned — and HR now knows somebody is planting things.`,'b');
-    addSuspicion(20,'HR knows somebody is forging documents');
+    logLine(`${auditorWordCap()} looked at ${MASTER_FIND[type]} in ${target.name.split(' ')[0]}'s ${deskNounFor(target.name)} and did not believe a word of it. It is not the sort of thing they would ever do. The forgery is binned — and HR now knows somebody is planting things.`,'b');
+    addSuspicion(20,`${auditorWordCap()} knows somebody is forging documents`);
     toast('Wrong document for that person. It did not stick.');
     return;
   }
   if(!masterVulnerable(target)){
-    logLine(`You planted ${MASTER_FIND[type]} on ${target.name.split(' ')[0]} — but they are spotless. HR will read it and assume a mistake, because people like that do not do things like that. Rattle them first, THEN frame them.`,'b');
+    logLine(`You planted ${MASTER_FIND[type]} on ${target.name.split(' ')[0]} — but they are spotless. ${auditorWordCap()} will read it and assume a mistake, because people like that do not do things like that. Rattle them first, THEN frame them.`,'b');
     addSuspicion(12,'A forgery against a model employee looks like a forgery');
     toast('Too clean for it to stick. Break them first.');
     return;
   }
   desk.planted={label:MASTER_FIND[type],master:true,type};
-  target.bubble={t:2.6,text:'...why is HR at my desk?'};
-  logLine(`You planted ${MASTER_FIND[type]} in ${target.name.split(' ')[0]}'s drawer, and made sure HR would hear about it. Now you walk away.`,'a');
-  toast('Planted. HR is on their way.');
+  target.bubble={t:2.6,text:`...why is ${auditorWord()} at my ${deskNounFor(target.name)}?`};
+  logLine(`You planted ${MASTER_FIND[type]} in ${target.name.split(' ')[0]}'s ${stashWord()}, and made sure ${auditorWord()} would hear about it. Now you walk away.`,'a');
+  toast(`Planted. ${auditorWordCap()} is on the way.`);
   tipHR(desk);
 }
 /* HR gets an anonymous tip and walks over. This is what turns sabotage into paperwork. */
 function tipHR(desk){
-  const hr=pick(hrs().filter(h=>!h.audit));
+  const hr=pick(auditors().filter(h=>!h.audit));
   if(!hr){hrTipQueue.push(desk);return;}
   hr.audit=true;hr.auditDesk=desk;hr.goal=null;hr.path=null;
   SFX.audit();
@@ -6908,7 +7072,7 @@ function tipHR(desk){
 let hrTipQueue=[];
 function tickHrTips(){
   if(!hrTipQueue.length)return;
-  const hr=hrs().find(h=>!h.audit);
+  const hr=auditors().find(h=>!h.audit);
   if(!hr)return;
   const desk=hrTipQueue.shift();
   if(desk&&desk.planted){hr.audit=true;hr.auditDesk=desk;hr.goal=null;hr.path=null;}
@@ -7262,7 +7426,7 @@ function nextDay(){
   });
   clearSeats();assembleAtElevator();rivalsClimb();resetLights();favors=[];missions=[];npcFeuds=[];clearUnfeudable();dale.todayCount=0;dale.cooldown=rand(20,50);for(const k in trkState)delete trkState[k];renderTracker();
   processHires();scheduleBoss();scheduleAudit();scheduleDrill();tasks=[];renderTasks();rollContainers();
-  hrs().forEach(h=>{h.audit=false;h.auditDesk=null;});
+  auditors().forEach(h=>{h.audit=false;h.auditDesk=null;});
   resetToday();
   logLine(`====== DAY ${day} ======  Everyone files in from the elevator.`,'t');paused=false;
   if(typeof autosave==='function')autosave();   // day boundary = world quiescent = safe save point
@@ -9109,7 +9273,14 @@ function fitDeskBoxes(){
   desks.forEach(d=>{
     if(d.station)return;            // no sprite, so nothing to fit the box to — leave the spot alone
     if(d.ax===undefined)return;
-    const art=d.mgrOffice?'manager_desk':'cubicle_desk';
+    /* ⚠️ FIT THE BOX TO THE SPRITE THIS DESK ACTUALLY DRAWS. It measured 'cubicle_desk' for
+       everything that was not Dale, so a desk carrying any other art got a cubicle-shaped
+       collision box under a different picture -- the drawn-extent-vs-box mismatch this project
+       has been bitten by three times. It went unnoticed while every desk in the building WAS a
+       cubicle; the store's locker bank is the first one that is not, and it was handed a box 23%
+       wider than the thing you can see. deskArt() is the same function drawDesks() calls, so the
+       box and the picture can no longer disagree. */
+    const art=d.mgrOffice?'manager_desk':(ok(deskArt(d))?deskArt(d):'cubicle_desk');
     const im=ART[art];
     const dw=U1(ART_W[art]||120);
     const dh=Math.round(im.naturalHeight*dw/im.naturalWidth);
@@ -11122,7 +11293,15 @@ function missionLabel(m){
    days in Save-Rite, and "you lost it in the middle of the office" three more. Structural, not a
    level name: a building whose workers stand at posts instead of sitting at desks is a shop floor.
    A third level gets the right word without anyone remembering to add it. */
-function placeWord(){ try{ return desks.some(d=>d.station)?'store':'office'; }catch(e){ return 'office'; } }
+/* ⚠️ THE LEVEL DECLARES WHAT KIND OF BUILDING IT IS, ONCE. Deriving it from "does anybody work
+   standing up" read correctly everywhere I first used it -- log lines, favour asks -- because
+   those all run long after the floor is built. Then the loot pools started using it and it was
+   WRONG, silently: rollContainers() stocks the shelves during boot, BEFORE the crew and their
+   stations exist, so it saw a floor with no stations, called itself an office, and filled a
+   supermarket with staplers again. The same shape as measuring the world before the first tick.
+   One declaration, set by loadLevel before anything reads it, and every consumer keys off that. */
+let buildingKind='office';
+function placeWord(){ return buildingKind; }
 /* what to CALL the place someone keeps their things: furniture, or a spot on the floor */
 function deskNounFor(name){
   try{ const d=desks.find(x=>x.owner===name); return (d&&d.station)?'station':'desk'; }catch(e){ return 'desk'; }
@@ -12206,6 +12385,10 @@ seedTiers();
 function loadLevel(id){
   /* the office is 760 tall and always has been; Save-Rite uses the full world */
   levelH = (id==='office') ? Math.round(OFFICE_H*S) : H;
+  /* ⚠️ THE BUILDING BRINGS ITS OWN PRANKS. A COMPLETE set is written every time, both ways, so
+     loading the office after the store cannot leave shelf tags and price guns behind. */
+  buildingKind = (id==='office') ? 'office' : 'store';
+  applyPrankVocabulary(id);
   if(id!=='grocery'){
     /* The office's five tables are module consts that scaleWorld() already scales by name, so they
        are only REGISTERED here for the draw list — never pushed to levelBoxes. Registering is not
@@ -12607,8 +12790,18 @@ function loadLevel(id){
      fixed coordinate that silently stopped meaning what its comment said. It now sits in the north
      strip ABOVE run 5, so it is at the head of an aisle without standing in one, and it pinches no
      aisle at all. Clear of the deli counter blocker (ends y 126) and of the run tops (y 224). */
-  desks.push({x:820,y:430,w:40,h:60,owner:'you',tier:0,dept:'sales',reserved:false,
-              art:'cubicle_desk_left',seatSide:'left',seatDir:'right',rigged:null,planted:null});
+  /* ⚠️ YOUR LOCKER, NOT A CUBICLE DESK. This record is the ownership spine -- it is what gives
+     you somewhere to keep contraband, tape documents out of sight, craft from, and be audited
+     from -- and it was drawn as an OFFICE CUBICLE DESK, swivel chair and all, standing in the
+     open in the middle of the grocery sales floor. A locker bank is the store's own answer to
+     every one of those jobs: it is where a shop employee's things live, the drawer is the locker,
+     and "taped behind the panel" is taped inside the locker door.
+
+     Moved to the front end against the cash office wall, which is the staff corner of a shop
+     floor -- and near the lanes, so the bagger jobs that complete here stop sending you to the
+     middle of GROCERY. `noChair` because a locker has nothing to sit on; see drawDeskChairs. */
+  desks.push({x:300,y:770,w:44,h:30,owner:'you',tier:0,dept:'sales',reserved:false,
+              art:'lockers',noChair:true,seatSide:'down',seatDir:'up',rigged:null,planted:null});
   /* ---- PRODUCE: four open displays and the store's one refrigerated case ------------------
      DETERMINISTIC VARIANTS, like the shelf runs: a tray's face is a property of the level, not the
      session, so a layout can be judged twice. Laid out 2x2 with no two neighbours alike -- the
@@ -12781,7 +12974,13 @@ function loadLevel(id){
       /* the front-end manager stands in the cross-aisle NORTH of the lanes, in FRONT END. At
          CHK_Y-60 she was at y 460 once the lanes moved -- inside a shelf run AND inside the
          GROCERY zone, which the crew test caught as "front:GROCERY". */
-      ['Danika Osei',       320,           820,      'down' , 'front',  'manager'],
+      /* ⚠️ DERIVED AT LAST, AND FOR THE THIRD TIME. She has been a fixed pair of numbers through
+         two floor plans: CHK_Y-60 put her inside a shelf run when the lanes moved, and (320,820)
+         was the patch for that -- which the crew's own LOCKER then landed 19 units above, less
+         than a nav row, so her post stopped being standable at all. A front-end manager watches
+         the lanes from the cross-aisle in front of them: the middle of the lane block, north of
+         it. Move the lanes and she moves with them. */
+      ['Danika Osei',  Math.round((chkXs[0]+chkXs[chkXs.length-1]+CHK_W)/2), CHK_Y-26, 'down', 'front', 'manager'],
       ['Curtis Lam',        aisle(0),      AISLE_Y,  'down' , 'grocery','staff'  ],
       ['Bekah Thorne',      aisle(2),      AISLE_Y,  'down' , 'grocery','staff'  ],
       /* ⚠️ MOVED TWICE, AND THE SECOND TIME IS THE LESSON. He was authored at (960,420); the wider
