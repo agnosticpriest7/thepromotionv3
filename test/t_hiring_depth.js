@@ -52,15 +52,48 @@ const setPH = (G, arr) => { G.pendingHires.length = 0; arr.forEach(h => G.pendin
 }
 
 // --- (4) the candidate arrives next day as the chosen personality, UNPROFILED ---
+/* ⚠️ THE GUEST SWAP HAS TO BE HELD STILL, OR THIS ASSERTS A COIN TOSS. processHires() rolls
+   rollGuest() on the morning the hire starts: some of the time somebody else entirely walks in,
+   on purpose ("you hire Gary B. and Rod Kimble turns up"). This section is about the candidate
+   YOU vetted arriving, so the swap is suppressed for it -- and asserted separately below, because
+   a test that merely switches a feature off would go green if the feature were deleted.
+
+   It was not written that way, and it passed for two years on luck: seed 7 happened not to roll a
+   guest. A change to the LOOT POOLS -- nothing to do with hiring -- shifted the random stream by
+   a few draws, the roll came up guest, and three assertions went red at once. Nothing about
+   hiring had changed. Anything that consumes randomness upstream could have done it. */
 {
   const w = mgr(), S = w.sandbox, G = w.g; openSeat(S, G);
   S.hireCandidateMenu().items.find(i => /^Hire /.test(i.label)).act();
   const ph = G.pendingHires[G.pendingHires.length - 1];
+  const realRoll = S.rollGuest;
+  S.rollGuest = () => null;                       // the candidate you picked, not a surprise
   const sd = G.day; let g = 0; while (G.day < sd + 1 && g < 120000) { w.run(60); g += 60; G.player.rank = 5; } w.run(1500);
+  S.rollGuest = realRoll;
   const n = G.NPCS.find(x => x.name === ph.cand.name);
   ck('the candidate arrived on the floor', !!n);
   ck('they arrived as the chosen personality', !!n && n.ptype === ph.cand.ptype);
   ck('a new hire is intel you do not have — they arrive unprofiled', !!n && n.profiled === false);
+}
+
+// --- (4b) ...and when the swap DOES fire, somebody else walks in instead ---
+/* the other half of the pair above: forced on rather than left to chance, so this can fail. */
+{
+  const w = mgr(), S = w.sandbox, G = w.g; openSeat(S, G);
+  S.hireCandidateMenu().items.find(i => /^Hire /.test(i.label)).act();
+  const ph = G.pendingHires[G.pendingHires.length - 1];
+  const guest = { name: 'Rod Kimble', ptype: 'peacock' };
+  const realRoll = S.rollGuest;
+  S.rollGuest = () => guest;                      // the surprise, every time
+  const sd = G.day; let g = 0; while (G.day < sd + 1 && g < 120000) { w.run(60); g += 60; G.player.rank = 5; } w.run(1500);
+  S.rollGuest = realRoll;
+  const who = G.NPCS.find(x => x.name === guest.name);
+  const vetted = G.NPCS.find(x => x.name === ph.cand.name);
+  ck('when the guest swap fires, the guest turns up instead of who you vetted',
+     !!who && !vetted, 'guest=' + !!who + ', vetted=' + !!vetted);
+  ck('  ^ and they bring their OWN personality, not the one you vetted',
+     !!who && who.ptype === guest.ptype && who.profiled === false,
+     who ? (who.ptype + ', profiled=' + who.profiled) : 'absent');
 }
 
 // --- (5) a vouched hire settles faster; bad blood can flare into a feud on arrival (the teeth) ---

@@ -473,19 +473,56 @@ DEPTS.forEach(dept => {
    loose in a 1500x1040 store. Four times in five days. */
 {
   const w = mk(); const g = w.g, sb = w.sandbox;
-  w.run(400);
-  const bossOnFloor = g.NPCS.some(n => n.boss);
+  const SCALE = g.layout.S;
+  w.run(3000);
+  for (let i = 0; i < 400 && sb.currentPhase().name !== 'Regular Work'; i++) w.run(40);
   sb.startBossTour();
-  const lapping = g.NPCS.some(n => n.boss && n.lapping);
-  ck('the store does not run a CEO tour for a CEO who is not in the building',
-     !bossOnFloor && !lapping, 'boss on floor=' + bossOnFloor + ', lapping=' + lapping);
+  const walker = g.NPCS.find(n => n.lapping);
+  ck('the rounds are walked by the store OWNER, not a CEO who does not work here',
+     !!walker && walker.storeRole === 'owner' && !g.NPCS.some(n => n.boss),
+     walker ? (walker.name + ', role=' + walker.storeRole) : 'nobody is lapping');
+
+  /* ⚠️ AND HE MUST STILL BE A WORKER. The obvious way to do this was `boss:true` on Merv, which
+     would have been wrong in a way nothing here would have shown: isWorker() EXCLUDES the boss,
+     and Merv is the last rung of the store's own ladder -- the man the player is climbing towards.
+     Flagging him would have quietly removed him from delegation, promotion and succession. The
+     lap moves to him; the role does not. */
+  ck('  ^ and flagging him did not remove him from the ladder he sits at the top of',
+     !!walker && walker.boss !== true && sb.isWorker(walker) === true,
+     walker ? ('boss=' + !!walker.boss + ', isWorker=' + sb.isWorker(walker)) : '-');
+
+  /* the route is derived from the departments, so it cannot be the office's twelve waypoints */
+  ck('  ^ walking a route built from this store, not the office floor plan',
+     !!walker && (walker.route || []).length > 0 && walker.route.length !== 12,
+     walker ? ((walker.route || []).length + ' waypoints') : '-');
+
+  /* ⚠️ AND THE BONUS TASK HAS TO BE COMPLETABLE. The old one asked for the Henderson file from
+     Mr. Sterling, who is not in the building -- a bonus objective that could never be finished. */
+  {
+    const bt = sb.openTask('npc');
+    const onFloor = bt ? g.NPCS.some(n => n.name === bt.target) : false;
+    ck('  ^ and the bonus task names somebody who is actually in the building',
+       !!bt && onFloor && !/Henderson|Sterling/i.test(bt.label),
+       bt ? (bt.label + ' — target present: ' + onFloor) : 'no task');
+  }
+
+  /* he has to actually WALK it: the route-follower lives in updateBoss(), which updateNPC only
+     reaches via `if(n.boss)`, so a non-boss walker with a route set moves nowhere at all */
+  {
+    const from = { x: walker.x, y: walker.y };
+    let far = 0;
+    for (let i = 0; i < 800 && walker.lapping; i++) { w.run(40); far = Math.max(far, Math.hypot(walker.x - from.x, walker.y - from.y)); }
+    ck('  ^ and he actually walks it rather than standing with the flag set',
+       far > 120 * SCALE, Math.round(far / SCALE) + ' authored travelled');
+  }
 
   const ow = createWorld({}); ow.run(400);
   const ob = ow.g.NPCS.find(n => n.boss);
   ow.sandbox.startBossTour();
-  ck('  ^ and the office still runs its own',
-     !!ob && ob.lapping === true && (ob.route || []).length > 0,
-     ob ? (ob.name + ' lapping=' + ob.lapping + ', ' + (ob.route || []).length + ' waypoints') : 'no boss');
+  const ot = ow.sandbox.openTask('npc');
+  ck('  ^ and the office still runs its own, unchanged',
+     !!ob && ob.lapping === true && (ob.route || []).length === 12 && !!ot && /Henderson/.test(ot.label),
+     ob ? (ob.name + ', ' + (ob.route || []).length + ' waypoints, task="' + (ot ? ot.label : '-') + '"') : 'no boss');
 }
 
 console.log('flavour: ' + pass + ' pass, ' + fail + ' fail');

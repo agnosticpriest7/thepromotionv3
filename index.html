@@ -3030,6 +3030,18 @@ function buildBeat(n){
   return pts.length ? pts : null;
 }
 function npcTarget(n){
+  /* ⚠️ THE LAP IS DRIVEN FROM HERE FOR ANYBODY WHO IS NOT `boss`. Sterling moves via
+     updateBoss(), which updateNPC only reaches through `if(n.boss)`. The store's owner is an
+     ordinary worker, so without this his route was set and he never walked a step -- flag on,
+     nobody moving: exactly the shape of the audit walk that sat trapped inside the HR branch. */
+  if(n.lapping&&n.route&&n.route.length&&!n.boss){
+    if(n.routeIdx>=n.route.length){endBossTour();}
+    else{
+      const wp=n.route[n.routeIdx];
+      if(cdist(n,wp)<Math.round(24*S))n.routeIdx++;
+      else return snapTarget(wp.x,wp.y);
+    }
+  }
   const ph=currentPhase().name;
   if(n.dept==='hr')return (n.audit&&n.auditDesk)?auditPoint(n.auditDesk):HR_OFFICE;
   /* DESKBOUND staff skip breaks and stay at their post. Removing them from assignBreakSeats was not
@@ -4183,20 +4195,66 @@ const PROMOTE_OUT=75;
    behaviour walks him home when the route runs out. Route is authored at 1400x760 and scaled
    here (built at runtime, after scaleWorld). Every waypoint was verified walkable + reachable
    from the office (test connectivity check). */
+/* ⚠️ THE ROUNDS ARE WALKED BY WHOEVER RUNS THE BUILDING. Save-Rite has an owner -- Merv, the
+   name on the sign and the last rung of its ladder -- so the walkaround is his. He is NOT given
+   `boss:true`: isWorker() excludes the boss, and Merv is a worker in every sense that matters
+   here -- the ladder succeeds him, delegation counts him, promotion targets him. Flagging him
+   would have quietly removed the man you are trying to replace from the system that replaces
+   him. So the LAP moves to him, not the role. */
+function tourWalker(){
+  if(boss && NPCS.indexOf(boss) >= 0 && boss.alive) return boss;
+  return NPCS.find(n=>n.storeRole==='owner' && n.alive && !n.gone && !n.wentHome) || null;
+}
+/* ⚠️ AND THE STORE'S LAP IS DERIVED. The office round is twelve hand-placed waypoints on a
+   1400x760 floor; those same twelve were being set loose in a 1500x1040 supermarket, which is how
+   a phantom CEO came to walk through shelving. The store's lap is one point per sales-floor
+   department, in the order a walkaround takes them, snapped to open floor -- re-plan the shop and
+   the round re-plans with it. */
+const TOUR_ORDER=['FRONT END','GROCERY','DAIRY','DELI','BAKERY','PRODUCE'];
+function bossRoute(){
+  if(placeWord()==='office')
+    return [[200,520],[180,640],[430,470],[560,470],[900,440],[1150,630],[1300,650],[1320,450],[1280,150],[950,200],[600,200],[300,250]]
+      .map(q=>({x:Math.round(q[0]*S),y:Math.round(q[1]*S)}));
+  const pts=[];
+  for(const nm of TOUR_ORDER)
+    for(const z of ROOMS.filter(r=>r.name===nm)){
+      const t=snapTarget(z.x+z.w/2, z.y+z.h/2);
+      if(t&&isFinite(t.x)&&isFinite(t.y))pts.push({x:t.x,y:t.y});
+    }
+  return pts;
+}
 function startBossTour(){
   /* ⚠️ THERE IS NO CEO IN THE SUPERMARKET. This fired four times over five days in Save-Rite:
      it announced Mr. Sterling by name, added a bonus task to bring the Henderson file to a man
      who is not on the floor -- so it could never be completed -- and set a route AUTHORED FOR THE
      OFFICE (1400x760) running through a 1500x1040 store. The boss object exists; he is simply not
      in NPCS here. Ask whether he is actually in the building rather than assuming he is. */
-  if(!boss||NPCS.indexOf(boss)<0)return;
-  boss.lapping=true;boss.routeIdx=0;boss.goal=null;boss.path=null;boss.stuckT=0;
-  boss.route=[[200,520],[180,640],[430,470],[560,470],[900,440],[1150,630],[1300,650],[1320,450],[1280,150],[950,200],[600,200],[300,250]]
-    .map(p=>({x:Math.round(p[0]*S),y:Math.round(p[1]*S)}));
-  addTask({via:'npc',label:`Bring the Henderson file to ${boss.name} (CEO)`,target:boss.name,bonus:true});
-  logLine(`The CEO, ${boss.name}, is doing his rounds — and wants the Henderson file. Look sharp.`,'a');toast('The CEO is walking the floor');
+  const w=tourWalker();
+  if(!w)return;
+  const route=bossRoute();
+  if(!route.length)return;
+  const store=placeWord()==='store';
+  const title=store?'Owner':'CEO';
+  const want=store?"the day's numbers":'the Henderson file';
+  w.lapping=true;w.routeIdx=0;w.goal=null;w.path=null;w.stuckT=0;w.route=route;
+  /* route now comes from bossRoute(), above */
+
+  addTask({via:'npc',label:`Bring ${want} to ${w.name} (${title})`,target:w.name,bonus:true});
+  logLine(`${store?'The owner':'The CEO'}, ${w.name}, is ${store?'walking the floor':'doing his rounds'} — and wants ${want}. Look sharp.`,'a');
+  toast(`${store?'The owner':'The CEO'} is walking the floor`);
 }
-function endBossTour(){boss.lapping=false;boss.routeIdx=0;boss.goal=null;boss.path=null;const bt=tasks.find(t=>t.bonus&&!t.done);if(bt){tasks=tasks.filter(t=>t!==bt);logLine('The CEO finished his rounds and headed back to his office.','t');renderTasks();}}
+function endBossTour(){
+  /* clear whoever was actually lapping, not `boss` -- in the store that is the owner, and leaving
+     his flag set would strand him on his last waypoint for the rest of the day */
+  const w=NPCS.find(n=>n.lapping)||boss;
+  if(w){w.lapping=false;w.routeIdx=0;w.goal=null;w.path=null;}
+  const bt=tasks.find(t=>t.bonus&&!t.done);
+  if(bt){tasks=tasks.filter(t=>t!==bt);
+    logLine(placeWord()==='store'
+      ? 'The owner finished his walk and went back to his office.'
+      : 'The CEO finished his rounds and headed back to his office.','t');
+    renderTasks();}
+}
 /* ---- Day 1: Dale walks you to your desk (scripted route, no physics) ---- */
 let intro=null;
 /* Dialogue beats gated on POSITION. `hold:true` marks a point of interest — Dale stops
