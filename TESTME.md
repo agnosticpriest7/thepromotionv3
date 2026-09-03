@@ -651,9 +651,16 @@ house, so getting it means going somewhere you have no business being).
   and nothing else does, so the store hasn't gained random locker sweeps. Say if you want those.
 
 **Also fixed, found on the way:**
-- **A phantom CEO was touring the supermarket** — four times in five days. It announced Mr.
-  Sterling by name, added a bonus task to bring him the Henderson file (uncompletable, he isn't in
-  the building), and drove a route authored for the 1400×760 office through a 1500×1040 store.
+- **The CEO's walkaround is Merv's now.** A phantom Mr. Sterling was touring the supermarket four
+  times in five days, with a bonus task to bring him the Henderson file — uncompletable, he is not
+  in the building — and a route authored for the 1400×760 office loose in a 1500×1040 store. Merv
+  walks it instead: a route derived from your own departments, and "Bring the day's numbers to
+  Merv Kastelic (Owner)", which you can actually finish.
+
+  **The care worth knowing about:** I did *not* flag Merv as the boss. `isWorker()` excludes the
+  boss, and Merv is the top rung of the store's ladder — the man you are climbing towards.
+  Flagging him would have quietly pulled him out of delegation, promotion and succession, and
+  nothing would have gone red. The lap moved to him; the role did not.
 - Desk collision boxes were measured against `cubicle_desk` regardless of what sprite the desk
   actually drew. Harmless while every desk *was* a cubicle; the locker was the first that wasn't.
   The office is byte-identical either way — I measured rather than assumed.
