@@ -3034,7 +3034,13 @@ function npcTarget(n){
      updateBoss(), which updateNPC only reaches through `if(n.boss)`. The store's owner is an
      ordinary worker, so without this his route was set and he never walked a step -- flag on,
      nobody moving: exactly the shape of the audit walk that sat trapped inside the HR branch. */
-  if(n.lapping&&n.route&&n.route.length&&!n.boss){
+  /* ...but a lap YIELDS TO THE CLOCK. This branch sits above the meeting/break/clock-out
+     branches, so an ordinary worker on a round kept walking it straight through his own
+     break -- 530 of 531 crew break destinations were behind the swing doors and the odd one
+     out was the owner, still doing his rounds in an empty shop. The boss is exempt from the
+     break handling entirely, which is why the office never showed this. The lap pauses and
+     resumes afterwards: routeIdx is kept, so he picks up where he left off. */
+  if(n.lapping&&n.route&&n.route.length&&!n.boss&&isWorkPhase(currentPhase().name)){
     if(n.routeIdx>=n.route.length){endBossTour();}
     else{
       const wp=n.route[n.routeIdx];
