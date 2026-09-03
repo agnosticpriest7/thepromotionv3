@@ -380,6 +380,151 @@ DEPTS.forEach(dept => {
   }
 }
 
+/* ---- THE STORE'S OWN PRANKS AND THE PARTS THEY TAKE ----------------------------------------
+   ⚠️ THE IDS ARE DELIBERATELY THE SAME FIFTEEN. The tier/personality matrix, the save file and
+   every craft path key on the id, so a store-only set of ids would mean a second copy of all of
+   it and would strand a half-built prank in an old save. What forks is the vocabulary and the
+   recipe, so these assertions check the FORK, not the ids. */
+{
+  const IDS = ['mislabel','calendar','gaslight_s','stain','well',
+               'violation','memo','gaslight','image','expose',
+               'm_zealot','m_climber','m_paranoid','m_peacock','m_socialite'];
+  const sw = mk(); sw.run(400);
+  const ow = createWorld({}); ow.run(400);
+  const sName = id => sw.sandbox.prankName(id), oName = id => ow.sandbox.prankName(id);
+
+  const same = IDS.filter(id => sName(id) === oName(id));
+  ck('every prank reads differently in the store than in the office',
+     same.length === 0,
+     same.length ? 'still office-worded: ' + same.join(', ') : IDS.length + ' re-written');
+
+  /* ⚠️ AND THE OFFICE MUST NOT HAVE MOVED. The vocabulary is applied by mutating shared tables,
+     so the risk is not that the store is wrong -- it is that building the store leaves price guns
+     in the office. Assert the office still says its own words AFTER a store world exists in the
+     same process. */
+  ck('  ^ and building the store did not repaint the office',
+     /colour-coded files/i.test(oName('mislabel')) && /reply-all/i.test(oName('memo')),
+     oName('mislabel'));
+
+  /* part COUNTS are the spec Kyle set: "keep the quantities similar to the Office level" */
+  const cs = id => sw.sandbox.prankPartCount(id), co = id => ow.sandbox.prankPartCount(id);
+  const mismatch = IDS.filter(id => cs(id) !== co(id));
+  ck('each store prank costs the same number of parts as its office counterpart',
+     mismatch.length === 0,
+     mismatch.length ? mismatch.map(id => id + ' ' + cs(id) + ' vs ' + co(id)).join(', ')
+                     : 'counts ' + IDS.map(cs).join(''));
+
+  /* ⚠️ A RECIPE YOU CANNOT SHOP FOR IS A DEAD END, which is what the Master tier already was:
+     three of its five wanted an HR KEYCARD in a building with no HR. Walk the recipes and check
+     the world can supply every part -- across several worlds, because the rare one is deliberately
+     not there every day. */
+  const need = new Set();
+  IDS.forEach(id => sw.sandbox.prankPartList(id).forEach(x => need.add(x)));
+  const found = new Set();
+  for (let d = 0; d < 8; d++) {
+    const x = createWorld({ storage: { 'promo:level':'grocery','promo:newgame':'0','promo:char':'0' }, seed: 20260830 + d });
+    x.run(600);
+    x.g.layout.containers.forEach(c => (c.loot||[]).forEach(i => found.add(i)));
+    x.g.desks.forEach(dd => (dd.loot||[]).forEach(i => found.add(i)));
+  }
+  const unobtainable = Array.from(need).filter(i => !found.has(i));
+  ck('every part a store prank needs can actually be found in the store',
+     need.size >= 6 && unobtainable.length === 0,
+     unobtainable.length ? 'cannot be obtained: ' + unobtainable.join(', ')
+                         : need.size + ' distinct parts, all stocked');
+  ck('  ^ and none of them is office stationery',
+     !Array.from(need).some(i => ['stapler','letterhead','stickynotes','decaf','keycard'].indexOf(i) >= 0),
+     Array.from(need).sort().join(', '));
+}
+
+/* ---- THE MASTER TIER HAS SOMEBODY TO FIND IT -----------------------------------------------
+   ⚠️ RUN IT, DO NOT READ IT. Every master prank in Save-Rite planted its document and queued a
+   tip for HR -- who does not exist -- so it sat on hrTipQueue for the rest of the run. Five
+   pranks built from the rarest parts in the game, not one of which could resolve. Reading tipHR()
+   does not show that. Playing one through does. */
+{
+  const MAP = {zealot:'m_zealot', climber:'m_climber', paranoid:'m_paranoid',
+               peacock:'m_peacock', socialite:'m_socialite'};
+  const w = mk(); const g = w.g, sb = w.sandbox;
+  w.run(3000);
+  for (let i = 0; i < 500 && sb.currentPhase().name !== 'Regular Work'; i++) w.run(40);
+  const target = g.NPCS.find(n => n.storeRole === 'staff' && MAP[n.ptype]);
+  const mgr = g.NPCS.find(n => n.storeRole === 'store');
+  let planted = false, resolved = false, gained = false, had = 0;
+  if (target && mgr) {
+    target.stress = 80;                     // masterVulnerable(): it only sticks on a problem
+    had = target.strikes || 0;
+    const st = g.desks.find(d => d.owner === target.name);
+    sb.masterPlant(target, MAP[target.ptype]);
+    planted = !!(st && st.planted);
+    for (let i = 0; i < 1200 && st.planted; i++) w.run(40);
+    resolved = planted && !st.planted;
+    gained = (target.strikes || 0) > had;
+  }
+  ck('a master prank in the store plants, and the manager comes and finds it',
+     planted && resolved, 'planted=' + planted + ', resolved=' + resolved);
+  ck('  ^ and it lands as a strike on their record', gained,
+     'strikes ' + had + ' -> ' + (target ? (target.strikes || 0) : '?'));
+}
+
+/* ---- AND NO CEO WHO DOES NOT WORK HERE -----------------------------------------------------
+   ⚠️ It announced Mr. Sterling by name, added a bonus task to bring him the Henderson file --
+   uncompletable, since he is not on the floor -- and set a route authored for a 1400x760 office
+   loose in a 1500x1040 store. Four times in five days. */
+{
+  const w = mk(); const g = w.g, sb = w.sandbox;
+  const SCALE = g.layout.S;
+  w.run(3000);
+  for (let i = 0; i < 400 && sb.currentPhase().name !== 'Regular Work'; i++) w.run(40);
+  sb.startBossTour();
+  const walker = g.NPCS.find(n => n.lapping);
+  ck('the rounds are walked by the store OWNER, not a CEO who does not work here',
+     !!walker && walker.storeRole === 'owner' && !g.NPCS.some(n => n.boss),
+     walker ? (walker.name + ', role=' + walker.storeRole) : 'nobody is lapping');
+
+  /* ⚠️ AND HE MUST STILL BE A WORKER. The obvious way to do this was `boss:true` on Merv, which
+     would have been wrong in a way nothing here would have shown: isWorker() EXCLUDES the boss,
+     and Merv is the last rung of the store's own ladder -- the man the player is climbing towards.
+     Flagging him would have quietly removed him from delegation, promotion and succession. The
+     lap moves to him; the role does not. */
+  ck('  ^ and flagging him did not remove him from the ladder he sits at the top of',
+     !!walker && walker.boss !== true && sb.isWorker(walker) === true,
+     walker ? ('boss=' + !!walker.boss + ', isWorker=' + sb.isWorker(walker)) : '-');
+
+  /* the route is derived from the departments, so it cannot be the office's twelve waypoints */
+  ck('  ^ walking a route built from this store, not the office floor plan',
+     !!walker && (walker.route || []).length > 0 && walker.route.length !== 12,
+     walker ? ((walker.route || []).length + ' waypoints') : '-');
+
+  /* ⚠️ AND THE BONUS TASK HAS TO BE COMPLETABLE. The old one asked for the Henderson file from
+     Mr. Sterling, who is not in the building -- a bonus objective that could never be finished. */
+  {
+    const bt = sb.openTask('npc');
+    const onFloor = bt ? g.NPCS.some(n => n.name === bt.target) : false;
+    ck('  ^ and the bonus task names somebody who is actually in the building',
+       !!bt && onFloor && !/Henderson|Sterling/i.test(bt.label),
+       bt ? (bt.label + ' — target present: ' + onFloor) : 'no task');
+  }
+
+  /* he has to actually WALK it: the route-follower lives in updateBoss(), which updateNPC only
+     reaches via `if(n.boss)`, so a non-boss walker with a route set moves nowhere at all */
+  {
+    const from = { x: walker.x, y: walker.y };
+    let far = 0;
+    for (let i = 0; i < 800 && walker.lapping; i++) { w.run(40); far = Math.max(far, Math.hypot(walker.x - from.x, walker.y - from.y)); }
+    ck('  ^ and he actually walks it rather than standing with the flag set',
+       far > 120 * SCALE, Math.round(far / SCALE) + ' authored travelled');
+  }
+
+  const ow = createWorld({}); ow.run(400);
+  const ob = ow.g.NPCS.find(n => n.boss);
+  ow.sandbox.startBossTour();
+  const ot = ow.sandbox.openTask('npc');
+  ck('  ^ and the office still runs its own, unchanged',
+     !!ob && ob.lapping === true && (ob.route || []).length === 12 && !!ot && /Henderson/.test(ot.label),
+     ob ? (ob.name + ', ' + (ob.route || []).length + ' waypoints, task="' + (ot ? ot.label : '-') + '"') : 'no boss');
+}
+
 console.log('flavour: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY FLAVOUR: RED ❌' : 'GROCERY FLAVOUR: GREEN ✅ (five departments, ten voices, no mechanics)');
 process.exit(fail ? 1 : 0);
