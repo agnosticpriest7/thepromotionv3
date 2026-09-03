@@ -623,3 +623,41 @@ office — that sweep is now a test, but it only knows the words I thought of.
 2. **The store's containers stock office supplies** — 11 staplers, letterhead, sticky notes. Making
    that store-native (a price gun, a box cutter, a spare apron) needs new items, and inventing item
    ids right before a test seemed like the wrong trade.
+
+### R. Your locker, and fifteen pranks that belong in a supermarket
+Both things you asked for, plus four bugs that turned up while building them.
+
+**Your "desk" is a locker bank now.** It was an office cubicle — swivel chair and all — standing in
+the open in the middle of the sales floor, and it's the spine of the whole contraband system
+(drawer, hidden panel, crafting, audits). A locker answers every one of those jobs in the store's
+own language: the drawer is the locker, and "taped behind the panel" is taped inside the door. It
+moved to the front end against the cash-office wall, which also fixes the thing from item Q — "Bag
+the orders at your lane" used to complete **384 units from the nearest till**, and now it's 86.
+
+**Fifteen store pranks, seven store parts.** Same five personalities × three tiers as the office,
+same number of parts per prank slot-for-slot, so the crafting economy is unchanged — only the
+fiction moved. New parts: a price gun, a blank temperature log, packing tape, a box cutter, a spray
+bottle of sanitiser, a spare apron, and **the manager's master key** (the store's version of the HR
+keycard — at most one on the floor, never more than two days in three, and only ever in the back of
+house, so getting it means going somewhere you have no business being).
+
+**What to look at:**
+- Craft something. The parts list and the prank names should read like a shop, not an office.
+- **Try a Master prank.** They could never resolve here before — they plant a document and tip HR,
+  and there is no HR, so all five queued forever and quietly ate the rarest parts in the game.
+  Now a tip fetches **Lorne**. He walks over, opens the locker, and it lands as a strike. It only
+  sticks on someone already in trouble, same as the office.
+- I deliberately did **not** wire the manager into the *random* audit — a master prank summons him
+  and nothing else does, so the store hasn't gained random locker sweeps. Say if you want those.
+
+**Also fixed, found on the way:**
+- **A phantom CEO was touring the supermarket** — four times in five days. It announced Mr.
+  Sterling by name, added a bonus task to bring him the Henderson file (uncompletable, he isn't in
+  the building), and drove a route authored for the 1400×760 office through a 1500×1040 store.
+- Desk collision boxes were measured against `cubicle_desk` regardless of what sprite the desk
+  actually drew. Harmless while every desk *was* a cubicle; the locker was the first that wasn't.
+  The office is byte-identical either way — I measured rather than assumed.
+- Danika's post was a hardcoded pair of numbers for the third floor plan running, and the locker
+  landed 19 units above it, less than a nav row, so it stopped being standable. Derived now.
+- The store was still stocking staplers because the shelves get filled during boot, *before* the
+  crew exist — so the "is this a shop" test saw no staff standing at posts and said "office".
