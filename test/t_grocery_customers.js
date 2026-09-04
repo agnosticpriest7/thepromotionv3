@@ -29,8 +29,8 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
   const staffAtBoot = g.NPCS.length;
   w.run(9000, { ignoreGameOver: true });
   ck('the shop fills up on its own, without anything spawning them by hand',
-     S.customersOnFloor() > 0 && S.customersOnFloor() <= TARGET,
-     S.customersOnFloor() + ' shoppers, cap ' + TARGET);
+     S.customersOnFloor() > 0 && S.customersOnFloor() <= S.customerPeak(),
+     S.customersOnFloor() + ' shoppers, peak cap ' + S.customerPeak());
   ck('  ^ and the staff count is untouched', g.NPCS.filter(n => !n.customer).length === staffAtBoot,
      staffAtBoot + ' staff before, ' + g.NPCS.filter(n => !n.customer).length + ' after');
 
@@ -65,7 +65,10 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
      (st.firstThrow ? '\n     ' + String(st.firstThrow).split('\n').slice(0, 2).join(' | ') : ''));
   /* THE ARRAY MUST NOT GROW. Dead entries left in NPCS would be a slow leak across five days. */
   ck('  ^ and NPCS does not grow: they are spliced out, not left as corpses',
-     g.NPCS.length <= 12 + TARGET + 2 && g.NPCS.filter(n => n.customer && !n.alive).length === 0,
+     /* ⚠️ BOUND IT AGAINST THE PEAK THE CURVE CAN REACH, asked of the game. This said
+        `12 + TARGET + 2` with TARGET as the flat dial, so the day the shop got a lunch rush
+        it read 22 against a limit of 20 and called a working store a corpse leak. */
+     g.NPCS.length <= 12 + S.customerPeak() + 2 && g.NPCS.filter(n => n.customer && !n.alive).length === 0,
      g.NPCS.length + ' in the array, ' + g.NPCS.filter(n => n.customer).length + ' of them shoppers');
 }
 
@@ -290,6 +293,33 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
      typeof w.sandbox.customerTarget === 'function' && typeof w.sandbox.footfallMult === 'function' &&
      w.sandbox.customerTarget() >= 1,
      'customerTarget() = ' + w.sandbox.customerTarget());
+}
+
+/* ---- AND THEY ARE NOT ALL THE SAME PERSON ---------------------------------------------------
+   ⚠️ 120 SHOPPERS A DAY AND TWO FACES BETWEEN THEM. charIndexFor() falls back to
+   pool[nameHash(name) % pool.length]; every shopper is called "Shopper N", and isFemaleName()
+   does not read that as a woman -- so the entire customer base drew from MALE_POOL, which is two
+   entries long. Nothing was broken and nothing was red: the shop simply had the same two men in
+   it all day. Counted, because no assertion about the spawner would ever have shown it. */
+{
+  const w = mk(); const g = w.g, sb = w.sandbox;
+  const looks = {}; const seen = new Set();
+  for (let i = 0; i < 900; i++) {
+    w.run(40);
+    g.NPCS.filter(n => n.customer).forEach(n => {
+      if (seen.has(n.name)) return; seen.add(n.name);
+      const k = sb.charIndexFor(n); looks[k] = (looks[k] || 0) + 1;
+    });
+  }
+  const distinct = Object.keys(looks).length;
+  ck('  ^ enough shoppers passed through to judge the crowd', seen.size >= 40,
+     seen.size + ' distinct shoppers over the day');
+  ck('the crowd is not all the same person', distinct >= 4,
+     distinct + ' distinct looks across ' + seen.size + ' shoppers');
+  /* a mixed crowd, not just four men: the two pools are men and women, so both must appear */
+  const male = [16, 17].some(i => looks[i]), female = [18, 19].some(i => looks[i]);
+  ck('  ^ and it is a mixed crowd, not four of the same', male && female,
+     'from male pool=' + male + ', from female pool=' + female);
 }
 
 console.log('customers: ' + pass + ' pass, ' + fail + ' fail');

@@ -5497,6 +5497,11 @@ function footfallMult(){
   return m;
 }
 function customerTarget(){ return Math.max(1, Math.round(CUSTOMER_TARGET*footfallMult())); }
+/* the busiest the curve can ever get. Exists so the suite can bound the NPCS array against
+   the real peak instead of restating the dial -- the cap it checked was the flat 6 and went
+   red the moment the lunch rush existed, which is a stale literal, not a leak. */
+function customerPeak(){ let m=0; for(const [,mult] of FOOTFALL) m=Math.max(m,mult);
+  return Math.max(1, Math.round(CUSTOMER_TARGET*m)); }
 const CUSTOMER_STOPS=[2,4];       // how many places one of them looks at before leaving
 const CUSTOMER_DWELL=[1.6,5.0];   // seconds spent at each
 const CUSTOMER_GAP=[1.2,4.0];     // seconds between arrivals
@@ -5529,6 +5534,17 @@ function spawnCustomer(){
   n.mission=null; n.prankBuild=null; n.errand=null; n.order=null; n.rival=false;
   n.arrived=true; n.gone=false; n.wentHome=false;
   n.speed=rand(0.9,1.35)*S;
+  /* ⚠️ 120 SHOPPERS A DAY AND TWO FACES BETWEEN THEM. charIndexFor() falls back to
+     pool[nameHash(name) % pool.length], every shopper is called "Shopper N", and isFemaleName()
+     does not recognise that as a woman -- so all of them drew from MALE_POOL, which is two
+     entries long. The whole customer base of the shop was the same two men, over and over, all
+     day. Measured: 120 distinct shoppers, 2 distinct looks.
+
+     A shopper is explicitly nobody (see the strip above), so they have no name to hash into a
+     look -- give them one at random instead, from BOTH pools, which is four looks and a mixed
+     crowd rather than two. Four is still thin: the real fix is more generic civilian frames on
+     chars.png, which is an art job and is on Kyle's list. */
+  n.sprite=pick(MALE_POOL.concat(FEMALE_POOL));
   n.x=EXIT.x; n.y=EXIT.y; n.lastX=n.x; n.lastY=n.y;
   const all=customerStops();
   const want=Math.round(rand(CUSTOMER_STOPS[0],CUSTOMER_STOPS[1]));
