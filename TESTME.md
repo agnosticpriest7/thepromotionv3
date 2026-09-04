@@ -668,3 +668,49 @@ house, so getting it means going somewhere you have no business being).
   landed 19 units above it, less than a nav row, so it stopped being standable. Derived now.
 - The store was still stocking staplers because the shelves get filled during boot, *before* the
   crew exist — so the "is this a shop" test saw no staff standing at posts and said "office".
+
+### S. Your six props are in
+The frozen aisle exists, and both bare corners have something in them.
+
+**The frozen aisle.** The shelf block moved east (runs now start at x 288) so the 127 authored the
+deleted westmost run left behind could become what it was cleared for. Same move also took the
+GROCERY dead zone from 232 authored of bare floor down to 86. Grocery aisles are unchanged at 65
+clear; the frozen ones are 44–48.
+
+```
+freezer_wall   x  19..45    against the west wall, doors EAST
+freezer_run_a  x  89..142
+freezer_run_b  x 188..241
+shelf runs     x 289, 407, 525, 643, 761
+```
+
+**The rotation you flagged — you were right to.** The single-sided unit is drawn doors-on-the-left,
+which is correct against an *east* wall. The frozen aisle is on the *west* side, so as shipped its
+doors would have faced into the brickwork. It's mirrored at draw time rather than needing a second
+asset. I verified it by drawing the sprite both ways offscreen and measuring which half carries the
+detail — not by looking at it, because at that size I could not tell.
+
+**The other three did not go where the bare floor was**, for two reasons:
+
+- The magazine rack, placed east of the tills, stood square across the **public washroom's
+  doorway** — the 60-unit gap at x 900 — leaving 14 of it. The washroom and both toilets went
+  unreachable.
+- The front end is **deliberately open**: the sightline test asserts it is a stage you can be seen
+  crossing. Furniture there is cover, and cover there is a mechanic, not decoration.
+
+So the trolley bay and magazine rack went to the **entrance**, which is where they'd be in a real
+shop and was also the emptiest room in the building. They sit below the MERV'S sign and east of the
+doors. The loaded pallet took the last of the grocery dead corner.
+
+**What to look at:**
+- Walk the frozen aisle. Check the wall unit's doors face *you*, not the wall.
+- Walk in through the front doors past the trolleys — make sure nothing crowds the doorway.
+- The pallet display sits at the east end of the grocery block; check it doesn't feel like a
+  roadblock rather than a display.
+
+**Two tests were finding props by shape and caught the wrong things** — worth knowing because it
+will happen again the next time you send art in a familiar silhouette: shelf runs were identified
+as "tall and narrow", so the freezers counted as shelving (8 runs where there are 5). And the
+"open front end" sightline probe was a literal at (750,600) — actually the middle of the grocery
+aisle band, which only stayed clear while the shelf block happened to stop short of it. Both ask
+the world now instead of restating a number.
