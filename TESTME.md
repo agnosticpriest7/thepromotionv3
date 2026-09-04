@@ -714,3 +714,38 @@ as "tall and narrow", so the freezers counted as shelving (8 runs where there ar
 "open front end" sightline probe was a literal at (750,600) — actually the middle of the grocery
 aisle band, which only stayed clear while the shelf block happened to stop short of it. Both ask
 the world now instead of restating a number.
+
+### T. Break room seating, and the two props resized
+All three things from your last pass.
+
+**The props.** Trolley bay and pallet display are both a third smaller (120 → 80 and 80 → 53
+authored). The pallet moved to the deli's open east end where you marked it — clear of the corridor
+spur and of the deli case.
+
+**The break room was a worse bug than it looked.** The staff weren't just standing outside: there
+were **no seats at all**. `loadLevel` clears `breakChairs` — it's the office's array, emptied along
+with every other office array — and the store then registered that *emptied* array with its table.
+The seat ring places one seat per available point, which was zero, so all twelve took the standing
+fallback every break. **0 of 12 seated.** Now 8 sit and 4 stand, which is the office's own overflow
+behaviour.
+
+Two more things had to be true and neither was obvious:
+
+- **The table had to move north.** At y=190 its bottom row of chairs landed on the room's south
+  wall, so the snap pushed two of them *through* it — Russ and Garret were taking their break
+  sitting in the **bakery**. Only caught because the test asserts the chairs are in the BREAK ROOM,
+  not merely that people sat somewhere.
+- **The seating code splits people between a break room and a kitchen.** Save-Rite has one break
+  room, so half the crew were being dealt into a kitchen with no chairs in it.
+
+Also fixed: the no-seat fallback point was in **SHIPPING / RECEIVING**, not the break room. It
+stayed invisible because it's behind the swing doors either way, so the existing "breaks happen in
+the back of house" test was satisfied by the wrong room.
+
+**What to look at:** sit through a break. Eight on chairs, four standing around the table, nobody
+outside and nobody in the bakery. Then check the pallet in the deli and the trolleys at the door
+look the right size next to a person.
+
+**One thing worth knowing:** the seat positions are computed from the **render loop**, and the test
+harness never renders — so headless this reads "nobody sits" whether it works or not. The new test
+calls that step by hand. Anything else that only happens while drawing has the same blind spot.
