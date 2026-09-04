@@ -808,7 +808,8 @@ const ART_W={
      grocery block by construction rather than by a number matched by eye. The wall unit is
      exactly half a run in the source (262 of 524), so half the width. */
   freezer_run_a:99, freezer_run_b:99, freezer_wall:50,
-  trolley_bay:216, magazine_rack:216, pallet_display:144,
+  /* a third smaller, both of them, on Kyle's eye: 216 -> 144 and 144 -> 96 */
+  trolley_bay:144, magazine_rack:216, pallet_display:96,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   /* ⚠️ THE ART'S ASPECT IS LOCKED, SO WIDTH CHOOSES LENGTH TOO. Every sprite draws at
@@ -3537,8 +3538,17 @@ function assignBreakSeats(){
            n.seat=standRing(cx,cy,Math.round(82*S),Math.round(62*S),standing,Math.max(4,list.length-pool.length));standing++;}
     });
   };
-  place(brk,[{chairs:breakChairs,table:breakTable},{chairs:breakChairs2,table:breakTable2}]);
-  place(kit,[{chairs:kitchenChairs,table:kitchenTable}]);
+  /* ⚠️ ONLY SPLIT PEOPLE BETWEEN ROOMS THE BUILDING ACTUALLY HAS. The office has a break room
+     and a kitchen, so attendees are dealt alternately between them. Save-Rite has ONE break
+     room -- so half the crew were being sent to a kitchen with no chairs in it and stood there.
+     A chair the ring never placed still reads {x:0,y:0}, which is how a level says it does not
+     have that room: ask, rather than assuming both exist. */
+  const placed=arr=>arr.filter(c=>c.x||c.y);
+  const gBrk=[{chairs:placed(breakChairs),table:breakTable},{chairs:placed(breakChairs2),table:breakTable2}];
+  const gKit=[{chairs:placed(kitchenChairs),table:kitchenTable}];
+  if(!gKit[0].chairs.length){ place(att,gBrk); att.forEach(n=>{ try{ unstickEnt(n); }catch(e){} }); return; }
+  place(brk,gBrk);
+  place(kit,gKit);
   /* Going from 12 seats to 24 means almost everyone now walks to a chair instead of loitering, and
      that exposed a latent problem: an NPC already standing inside a blocker had no goal before, so
      nothing moved it — now it has one, and it can't move, which the soak scores as stuck (Hank,
@@ -12810,7 +12820,11 @@ function loadLevel(id){
      of anyone walking in. */
   floorProp(700, 976, 'magazine_rack',  'Magazines and sweets');
   floorProp(864, 980, 'trolley_bay',    'Trolley bay');
-  floorProp(818, 470, 'pallet_display', 'Pallet display');
+  /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor
+     between the deli counter and the bakery, which the sweep counted as 12 bare points and a
+     shopper walks straight past. Clear of the spur mouth at 677..767 and of the case, which
+     ends at 620. */
+  floorProp(781, 322, 'pallet_display', 'Pallet display');
   const runXs=[];                                          // LEFT EDGES; the aisles derive from these
   for(let i=0;i<RUN_COUNT;i++){
     const rx=RUN_X0+i*RUN_GAP;
@@ -13065,7 +13079,22 @@ function loadLevel(id){
     /* IN THE BREAK ROOM. It used to sit at (1330,250), which is the STORE MANAGER / OWNER / STAFF
        WC band — the store's only break table was in the owner's office, and nothing noticed while
        there was nobody to sit at it. */
-    const t={x:1010,y:190,w:40,h:33}; levelBoxes.push(t); LEVEL_TABLES.push({t:t,chairs:[]});
+    /* ⚠️ WITH CHAIRS, WHICH IT HAS NEVER HAD. This registered `chairs:[]`, so crewSeatRing
+       placed no seats -- while the table's eight chairs were still DRAWN around it. Every break,
+       all twelve crew took the standing fallback and loitered outside a room full of empty
+       chairs. Measured before this: 0 of 12 seated. The office seats people at exactly these
+       arrays; the store simply never handed them over. */
+    /* ⚠️ AND IT HAD TO MOVE NORTH TO FIT ITS OWN CHAIRS. At y=190 the table's bottom row of
+       seats landed on the room's south wall (the room is y 94..244), so snapTarget pushed two
+       of them THROUGH it -- Russ and Garret took their break sitting in the BAKERY, at y=290.
+       Centred in the room instead, which leaves a clear row above and below. */
+    const t={x:1010,y:148,w:40,h:33}; levelBoxes.push(t);
+    /* ...AND THE SEATS HAVE TO BE AUTHORED HERE, because loadLevel CLEARS breakChairs a few
+       hundred lines up — they are the office's chairs and this level empties them like every other
+       office array. Registering the emptied array bought nothing: crewSeatRing places
+       min(seats, points) and seats was zero. Eight, one per chair the crew set draws. */
+    for(let i=0;i<8;i++) breakChairs.push({x:0,y:0,by:null});
+    LEVEL_TABLES.push({t:t,chairs:breakChairs});
     /* AND THE OFFICE TABLES ARE RE-POINTED AT IT. assignBreakSeats() seats people in breakChairs,
        which this level clears — so everybody takes the STANDING fallback, and that fallback rings
        `breakTable`, an office const nobody re-authored. Measured before this: the whole crew spent
@@ -13263,7 +13292,11 @@ function loadLevel(id){
     if(dz)job(dz.x+dz.w*0.3,dz.y+dz.h*0.6,'grocery'),job(dz.x+dz.w*0.7,dz.y+dz.h*0.6,'grocery');
   }
   MUSTER.x=Math.round(DOOR_X+DOOR_W/2); MUSTER.y=STORE_S-60;      // the front end, by the doors
-  BREAK_SPOT.x=1370; BREAK_SPOT.y=120;                            // beside the break-room table
+  /* ⚠️ BESIDE THE TABLE, WHICH IS NOT WHERE THIS POINTED. 1370 is in SHIPPING / RECEIVING --
+     the break room is x 908..1100. It stayed invisible because it is only the fallback for
+     somebody with no seat at all, and it is behind the swing doors either way, so the test that
+     checks breaks happen in the back of house was satisfied by the wrong room. */
+  BREAK_SPOT.x=1010; BREAK_SPOT.y=200;                            // beside the break-room table
   /* ---- THE HUDDLE HAPPENS IN RECEIVING. It used to happen at meetingCentre(), the midpoint of
      the two OFFICE meeting tables, which in this building is open floor in the GROCERY aisle --
      eleven of eighteen crew walked out onto the sales floor for it every morning. Of the two

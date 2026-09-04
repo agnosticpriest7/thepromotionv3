@@ -709,6 +709,52 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
          n + ' in ' + Object.entries(where[n].seen).sort((a, b) => b[1] - a[1])[0][0]).join(', ')));
 }
 
+/* ---- THE BREAK ROOM HAS CHAIRS AND THE CREW SIT ON THEM ------------------------------------
+   ⚠️ THE CHAIRS WERE DRAWN AND THE SEATS DID NOT EXIST. loadLevel CLEARS breakChairs -- they are
+   the office's array, emptied along with every other office array -- and the store then registered
+   that emptied array with its table. crewSeatRing places min(seats, points), which was zero, so
+   every break all twelve crew took the standing fallback and loitered outside a room with eight
+   empty chairs in it. Kyle saw it on the TV before any test did, which is the point: nothing here
+   was red.
+
+   ⚠️ AND IT CANNOT BE MEASURED WITHOUT ASKING FOR IT. fitTableSeats() is called from the RENDER
+   loop, and the harness never renders -- so headless, the seats are never fitted and this reads 0
+   whether it works or not. The call below is what makes the assertion mean anything; without it
+   the test would pass the bug straight through. */
+{
+  const bw = mk(); const bg = bw.g, bsb = bw.sandbox;
+  bw.run(2000);
+  bsb.fitTableSeats();                       // the render loop's job, done by hand
+  for (let i = 0; i < 700 && !/Break/.test(bsb.currentPhase().name); i++) bw.run(40);
+  const phase = bsb.currentPhase().name;
+  bg.NPCS.forEach(n => { n.gone = false; n.wentHome = false; });
+  bsb.assignBreakSeats();
+
+  const crew = bg.NPCS.filter(n => !n.customer && n.alive);
+  const onChair = crew.filter(n => n.seat && n.seat.dir);
+  const anySeat = crew.filter(n => n.seat);
+
+  /* anti-vacuity: assignment has to have RUN. "nobody sits on a chair" is also true of a break
+     nobody was assigned to, and that is a different bug with the same reading. */
+  ck('  ^ every crew member was given somewhere to be at break',
+     crew.length >= 10 && anySeat.length === crew.length,
+     anySeat.length + '/' + crew.length + ' assigned, phase "' + phase + '"');
+  ck('the break room has chairs, and the crew sit on them',
+     onChair.length >= 6,
+     onChair.length + ' of ' + crew.length + ' on a real chair, ' +
+     (anySeat.length - onChair.length) + ' standing');
+
+  /* they must be sitting IN the break room, not on chairs that landed somewhere else */
+  {
+    const stray = onChair.filter(n => {
+      const r = bsb.roomAt(n.seat.x, n.seat.y);
+      return !r || r.name !== 'BREAK ROOM';
+    });
+    ck('  ^ and the chairs they sit on are in the BREAK ROOM', stray.length === 0,
+       stray.length ? stray.length + ' seated outside it' : 'all ' + onChair.length + ' inside');
+  }
+}
+
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
