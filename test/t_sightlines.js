@@ -63,6 +63,35 @@ function aislesOf(w) {
   return { mid, top, bot: top + h, midY: top + Math.round(h / 2) };
 }
 
+/* ⚠️ WHERE THE FLOOR IS ACTUALLY OPEN, ASKED OF THE WORLD. This was the literal pair
+   (750,600) -> (900,600), commented "the front end". y=600 is not the front end -- it is the
+   middle of the GROCERY aisle band -- and the line only stayed clear while the shelf block
+   happened to stop short of x=750. The block moved east to make room for the frozen aisle, the
+   last run landed at 761..814, and three assertions went red at once: the "open" probe now ran
+   straight through a shelf run, so being seen and being hidden scored identically and the test
+   reported that sightlines did not work at all.
+
+   Derived now: a horizontal span inside the FRONT END, east of the last checkstand and west of
+   the public washroom wall, at the height of the lane block. Re-plan the shop and it follows. */
+function openSpanOf(w) {
+  const S = w.sandbox || w.S, g = w.g, sc = g.layout.S, au = v => Math.round(v / sc);
+  const fe = g.layout.ROOMS.filter(r => r.name === 'FRONT END')
+    .sort((a, b) => (b.w * b.h) - (a.w * a.h))[0];
+  const tills = g.layout.levelBlockers.filter(b => b.h > 40 * sc && b.w < 60 * sc && b.y > 700 * sc);
+  const eastOfTills = Math.max.apply(null, tills.map(b => au(b.x + b.w)));
+  const x0 = eastOfTills + 24, x1 = au(fe.x + fe.w) - 12;
+  /* pick the row that is ACTUALLY clear rather than assuming the middle one is: the intercom sits
+     on this side of the front end and its inflated cells cross the midline. Scanning keeps the
+     probe honest -- if no row across the front end is open, the "it is a stage" assertion SHOULD
+     fail, because that is exactly the thing it exists to check. */
+  for (let y = au(fe.y) + 20; y < au(fe.y + fe.h) - 20; y += 8) {
+    let clear = true;
+    for (let x = x0; x <= x1 && clear; x += 8) if (!S.walkableAt(x * sc, y * sc)) clear = false;
+    if (clear) return { x0: x0, x1: x1, y: y };
+  }
+  return { x0: x0, x1: x1, y: au(fe.y) + Math.round(au(fe.h) / 2) };
+}
+
 /* ---- 1. THE GRID IS THE SIGHT MODEL ----------------------------------------------------- */
 {
   const w = mk(), S = w.sandbox;
@@ -71,7 +100,8 @@ function aislesOf(w) {
   const AI = aislesOf(w);
   const across = S.sightClear(...p(AI.mid[0], AI.midY), ...p(AI.mid[1], AI.midY));  // a run between
   const along  = S.sightClear(...p(AI.mid[0], AI.top + 30), ...p(AI.mid[0], AI.bot - 30));  // one aisle
-  const open   = S.sightClear(...p(750, 600), ...p(900, 600));   // the front end
+  const OP = openSpanOf(w);
+  const open   = S.sightClear(...p(OP.x0, OP.y), ...p(OP.x1, OP.y));   // the front end, derived
   ck('a shelf run blocks sight, because the nav grid already says it is solid', across === false,
      'aisle 1 -> aisle 2: ' + (across ? 'VISIBLE' : 'BLOCKED'));
   ck('  ^ and along an aisle you can be seen', along === true, along ? 'VISIBLE' : 'BLOCKED');
@@ -81,10 +111,11 @@ function aislesOf(w) {
 /* ---- 2. SEEN COSTS MORE, UNSEEN COSTS LESS — BOTH DIRECTIONS ---------------------------- */
 {
   const ctx = stage(mk());
-  const open = put(ctx, 750, 600, 790, 600, false);
+  const OP2 = openSpanOf(ctx);
+  const open = put(ctx, OP2.x0, OP2.y, OP2.x0 + 40, OP2.y, false);
   ck('a watcher looking straight at you in the open sees you', open.seen === 1, JSON.stringify(open));
 
-  const away = put(ctx, 750, 600, 790, 600, true);
+  const away = put(ctx, OP2.x0, OP2.y, OP2.x0 + 40, OP2.y, true);
   ck('  ^ and the same watcher facing away does not', away.seen === 0, JSON.stringify(away));
 
   ck('being seen costs MORE than being unseen', open.susp > away.susp,
@@ -151,7 +182,8 @@ function aislesOf(w) {
   const ctx = stage(mk());
   const shopper = ctx.g.NPCS.find(n => n.customer && n.alive);
   ck('there is a shopper to aim', !!shopper, shopper ? shopper.name : 'none');
-  ctx.g.player.x = A(750, 600)[0]; ctx.g.player.y = A(750, 600)[1];
+  const OP3 = openSpanOf(ctx);
+  ctx.g.player.x = A(OP3.x0, OP3.y)[0]; ctx.g.player.y = A(OP3.x0, OP3.y)[1];
   shopper.x = ctx.g.player.x + 40; shopper.y = ctx.g.player.y;
   shopper.gone = false; shopper.wentHome = false;
   shopper.face = Math.atan2(ctx.g.player.y - shopper.y, ctx.g.player.x - shopper.x);

@@ -39,9 +39,18 @@ const ART = ['shelf_run_a', 'shelf_run_b', 'shelf_run_c', 'shelf_run_d', 'shelf_
 
 const runsOf = w => w.g.layout.containers.filter(c => c.label === 'Shelf');
 const runBlockers = (w) => {
+  /* ⚠️ MATCHED TO THE SHELF CONTAINERS, NOT TO A SHAPE. This filtered levelBlockers by "tall and
+     narrow", which was every run on the floor for as long as shelving was the only thing shaped
+     like that. The frozen aisle is three more units of exactly those proportions, so the shape
+     filter swept them in: 8 runs where there are 5, and aisle widths of 44/46/48 reported as
+     grocery aisles when they are the frozen ones. A shelf run is a blocker standing under a
+     container labelled 'Shelf' -- ask for that. */
   const S = w.g.layout.S, A = v => Math.round(v / S);
+  const shelfXs = w.g.layout.containers.filter(c => c.label === 'Shelf').map(c => A(c.x + c.w / 2));
   return w.g.layout.levelBlockers.map(b => ({ x: A(b.x), y: A(b.y), w: A(b.w), h: A(b.h) }))
-    .filter(b => b.h > 150 && b.h < 300 && b.w < 100).sort((p, q) => p.x - q.x);
+    .filter(b => b.h > 150 && b.h < 300 && b.w < 100)
+    .filter(b => shelfXs.some(sx => Math.abs(sx - (b.x + b.w / 2)) <= 4))
+    .sort((p, q) => p.x - q.x);
 };
 
 /* ---- 1. THE ART LOADS ------------------------------------------------------------------ */
@@ -181,7 +190,7 @@ const runBlockers = (w) => {
   const w = mk('grocery'), S = w.sandbox, g = w.g;
   const sc = g.layout.S;
   const bl = runBlockers(w);
-  ck('six run blockers, one per run', bl.length === RUNS, bl.length + ' found');
+  ck('one run blocker per shelf run — and the freezers are not shelves', bl.length === RUNS, bl.length + ' found');
 
   const gaps = [];
   for (let i = 0; i < bl.length - 1; i++) gaps.push(bl[i + 1].x - (bl[i].x + bl[i].w));

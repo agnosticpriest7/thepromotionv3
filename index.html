@@ -493,7 +493,9 @@ const SPRITE_ROWS=[
 "..OJjJWTTWJjJO..","..NJJJWTTWJJJN..","...OPPPPPPPPO...","...OPPP..PPPO..."];
 /* ================= SPRITE ART ================= */
 const ART_PATH='Art/sprites/';
-const ART_FILES=['chars','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
+const ART_FILES=['chars',
+  /* Kyle's store props: the frozen aisle, and something for the two bare corners */
+  'freezer_run_a','freezer_run_b','freezer_wall','trolley_bay','magazine_rack','pallet_display','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
   'supply_shelf','whiteboard','plant','couch','toilet','urinal','sink','stall_h','stall_v','mirror',
   /* 'phone' was mapped in OBJ_ART but NEVER listed here, so it never loaded and the sales phones
@@ -622,7 +624,9 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
    newer art). Keyed the same way as the bat sheets. Safe because magenta's signature is
    "green far below BOTH red and blue" — wood, grey metal, blue monitors and red/green
    binders never match, so only the background is eaten. */
-const MAGENTA_BG=new Set(['cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
+const MAGENTA_BG=new Set(['cubicle_desk',
+  /* Kyle's store props: the frozen aisle, and something for the two bare corners */
+  'freezer_run_a','freezer_run_b','freezer_wall','trolley_bay','magazine_rack','pallet_display','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
   'wall_clock','first_aid','fire_extinguisher','kitchen_counter','vending_machine',
   'stall_v','stall_h','couch',
@@ -791,11 +795,20 @@ const ART_SRC={shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,16
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
   deli_case:[2044,623],bakery_case:[2079,623],dairy_case:[1469,748],
   produce_fruit_a:[1242,907],produce_fruit_b:[1163,892],produce_veg:[1232,928],produce_mixed:[1053,907],
-  pallet:[1096,1104],baler:[1037,1157],checkstand:[447,1039],checkstand_r:[447,1039],goback_cart:[900,1125]};
+  pallet:[1096,1104],baler:[1037,1157],checkstand:[447,1039],checkstand_r:[447,1039],goback_cart:[900,1125],
+  freezer_run_a:[524,2129],freezer_run_b:[524,2129],freezer_wall:[262,2129],
+  trolley_bay:[1689,577],magazine_rack:[1657,644],pallet_display:[1018,1097]};
 const ART_H_OF=(a)=>{const d=ART_SRC[a];return d?d[1]/d[0]:1;};
 const ART_W={
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
+  /* ⚠️ THE FREEZER RUNS ARE 99 ON PURPOSE -- the same drawn width as a shelf run, so they drop
+     into the aisle spacing without re-cutting it. At 55 authored the art's own aspect makes them
+     223 tall, which is the shelf run's 183 plus its 43 endcap: the frozen block lines up with the
+     grocery block by construction rather than by a number matched by eye. The wall unit is
+     exactly half a run in the source (262 of 524), so half the width. */
+  freezer_run_a:99, freezer_run_b:99, freezer_wall:50,
+  trolley_bay:216, magazine_rack:216, pallet_display:144,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   /* ⚠️ THE ART'S ASPECT IS LOCKED, SO WIDTH CHOOSES LENGTH TOO. Every sprite draws at
@@ -10235,7 +10248,16 @@ function drawContainers(){
     if(!inView(c.x,c.y,c.w,c.h))continue;
     const art=c.art||CONT_ART[c.kind]||'filing_cabinet';   // c.art = per-container sprite override
     const cx=c.x+c.w/2, cyB=c.y+c.h+U1(4);
-    if(!sprAt(art,cx,cyB,art)){
+    /* ⚠️ MIRRORED WHEN THE PROP HAS A FRONT AND THE WALL IS ON THE WRONG SIDE. freezer_wall is
+       drawn with its doors on the LEFT, which is right for a unit standing against an EAST wall.
+       The frozen aisle is on the store's WEST side, so as drawn its doors would face into the
+       brickwork. `flip` mirrors it about its own centre at draw time — no second asset to keep in
+       step, and the collision box is symmetrical so nothing else has to know. */
+    let drew;
+    if(c.flip){ ctx.save(); ctx.translate(Math.round(cx*2),0); ctx.scale(-1,1);
+                drew=sprAt(art,cx,cyB,art); ctx.restore(); }
+    else drew=sprAt(art,cx,cyB,art);
+    if(!drew){
       ctx.fillStyle='#241d16';ctx.fillRect(c.x,c.y,c.w,c.h);
       ctx.fillStyle='#8a795a';ctx.fillRect(c.x+1,c.y+1,c.w-2,c.h-2);
     }
@@ -12731,7 +12753,13 @@ function loadLevel(id){
      staff, no fiction -- it is the run against the wall, and it only wants its own case art. */
   /* the westmost run is gone -- frozen gets its own fixtures rather than a shelf run wearing
      the wrong art, so the block starts at the second position and runs five deep */
-  const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=142, RUN_COUNT=5;
+  /* ⚠️ THE SHELF BLOCK STARTS AT 288 NOW, AND THE 146 IT GAVE UP IS THE FROZEN AISLE. The
+     westmost run was deleted for frozen and nothing was ever put there -- 127 authored of bare
+     floor a shopper could walk into and find nothing at all. Two double-sided freezer runs plus
+     the single-sided unit against the west wall need 226 of it, so the block moves east. That
+     also takes the GROCERY dead zone measured at x 700..880 from 232 authored down to 85: both
+     bare regions closed by the same move. Aisle widths do not change -- RUN_GAP is still 118. */
+  const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=288, RUN_COUNT=5;
   const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
   const RUN_TOP_Y=420;                                     // below the CROSS-AISLE, above the tills
   const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
@@ -12741,6 +12769,48 @@ function loadLevel(id){
      exactly the run length the aisle-packing limit took away (245 before the art changed). */
   const CAP_H=Math.round(RUN_H*386/1650);
   const RUN_MID_Y=RUN_TOP_Y+Math.round(RUN_H/2);           // halfway down a run, for the crew
+  /* ---- FROZEN. Two double-sided runs, and a single-sided unit flat against the west wall.
+     A freezer is ONE piece per run -- no separate endcap -- and at the shelf run's own drawn
+     width the art's aspect gives 223 tall against the grocery block's 183+43, so the two blocks
+     line up without a fudge factor. The aisles either side are 44 clear, which is a nav row and
+     then some, and the run-to-run gap matches the grocery aisles. */
+  const FRZ_W=Math.round(ART_W.freezer_run_a/S), FRZ_WALL_W=Math.round(ART_W.freezer_wall/S);
+  const FRZ_H=Math.round(FRZ_W*2129/524);                  // 223 - the asset's own aspect
+  const freezer=(x0,w,art,label,flip)=>{
+    const cx=x0+w/2, bottom=RUN_TOP_Y+FRZ_H;
+    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
+                     label:label, kind:'box', art:art, flip:!!flip});
+    levelBlockers.push({x:x0+1, y:RUN_TOP_Y+1, w:w-2, h:FRZ_H-2});
+  };
+  freezer(T+2, FRZ_WALL_W, 'freezer_wall',  'Frozen (wall)', true);   // doors face EAST: mirrored
+  freezer(88,  FRZ_W,      'freezer_run_a', 'Frozen', false);
+  freezer(187, FRZ_W,      'freezer_run_b', 'Frozen', false);
+  /* ---- THE TWO BARE CORNERS. Measured as sample points more than 30 authored from ANY fixture:
+     46 of them in the FRONT END east of the tills, 38 in GROCERY east of the last run. Floor with
+     nothing on it and no reason to walk there. A trolley bay and a magazine rack are what stands
+     beside a till; a loaded pallet is what stands at the end of a run. Each is sized from its own
+     art and placed by its DRAWN footprint, so the blocker and the picture are the same rectangle. */
+  const floorProp=(x0,topY,art,label)=>{
+    const w=Math.round(ART_W[art]/S), d=ART_SRC[art];
+    const h=Math.round(w*d[1]/d[0]), cx=x0+w/2, bottom=topY+h;
+    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
+                     label:label, kind:'box', art:art});
+    levelBlockers.push({x:x0+1, y:topY+1, w:w-2, h:h-2});
+  };
+  /* ⚠️ NOT IN THE FRONT END, AND FOR TWO SEPARATE REASONS, both of which the suite caught. The
+     magazine rack at x 761 stood square across the PUBLIC WC's doorway — the door is the 60-unit
+     gap at x 900, y 800..860, and the rack left 14 of it, so the washroom and both its toilets
+     went unreachable. And the front end is deliberately OPEN: t_sightlines asserts it is a stage
+     you can be seen crossing, so furniture there is cover, and cover there is a mechanic, not
+     decor. Trolleys and a magazine rack live in the entrance in a real shop anyway — which is
+     also the emptiest room in the building. */
+  /* BELOW THE SIGN, not through it. MERV'S hangs across the vestibule at y 946..972 and both of
+     these draw UPWARD from the y they are given, so at 960 they stood over the shop's own name.
+     The doors are the gap at x 560..680, so everything here stays east of 700 and out of the way
+     of anyone walking in. */
+  floorProp(700, 976, 'magazine_rack',  'Magazines and sweets');
+  floorProp(864, 980, 'trolley_bay',    'Trolley bay');
+  floorProp(818, 470, 'pallet_display', 'Pallet display');
   const runXs=[];                                          // LEFT EDGES; the aisles derive from these
   for(let i=0;i<RUN_COUNT;i++){
     const rx=RUN_X0+i*RUN_GAP;
