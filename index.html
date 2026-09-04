@@ -5473,7 +5473,35 @@ function upperRollDay(){
    They are ambient and nothing more: no station, no rank, no department, no personality, no
    dialogue. They walk in, look at a few things, and leave.
    ========================================================================== */
-const CUSTOMER_TARGET=6;          // ⭐ THE DIAL. How many shoppers on the floor at once.
+const CUSTOMER_TARGET=6;          // ⭐ THE DIAL. Baseline shoppers on the floor at once.
+/* ⚠️ A SHOP HAS RUSHES, AND THIS ONE DID NOT. Measured across a full day before this: 5.7
+   customers on the floor on average and 5.7 during Clock-Out -- identical footfall at 8:30 in the
+   morning, at lunchtime, and while the tills are being cashed up. Nothing was wrong with the
+   spawner; there was simply one flat number and no clock in it.
+
+   The curve is a multiplier on the dial, so CUSTOMER_TARGET stays the thing you turn to make the
+   whole store busier or quieter and the shape of the day survives the turning. Hours come off the
+   real clock, not off phase names -- the phases are the STAFF's day (breaks, the meeting) and
+   have nothing to do with when shoppers come in. */
+const FOOTFALL=[            // [from hour, multiplier]  -- store hours run ~8:30 to 17:00
+  [0,    0.45],             // before the doors properly open: a trickle
+  [9.5,  0.85],             // mid-morning
+  [11.5, 1.60],             // the lunch rush, the busiest the shop gets
+  [13.5, 1.00],             // the afternoon lull
+  [15.5, 1.45],             // after work/school -- the second rush
+  [16.5, 0.50],             // last twenty minutes, winding down
+];
+function footfallMult(){
+  const h=clock/60; let m=FOOTFALL[0][1];
+  for(const [from,mult] of FOOTFALL) if(h>=from) m=mult;
+  return m;
+}
+function customerTarget(){ return Math.max(1, Math.round(CUSTOMER_TARGET*footfallMult())); }
+/* the busiest the curve can ever get. Exists so the suite can bound the NPCS array against
+   the real peak instead of restating the dial -- the cap it checked was the flat 6 and went
+   red the moment the lunch rush existed, which is a stale literal, not a leak. */
+function customerPeak(){ let m=0; for(const [,mult] of FOOTFALL) m=Math.max(m,mult);
+  return Math.max(1, Math.round(CUSTOMER_TARGET*m)); }
 const CUSTOMER_STOPS=[2,4];       // how many places one of them looks at before leaving
 const CUSTOMER_DWELL=[1.6,5.0];   // seconds spent at each
 const CUSTOMER_GAP=[1.2,4.0];     // seconds between arrivals
@@ -5506,6 +5534,17 @@ function spawnCustomer(){
   n.mission=null; n.prankBuild=null; n.errand=null; n.order=null; n.rival=false;
   n.arrived=true; n.gone=false; n.wentHome=false;
   n.speed=rand(0.9,1.35)*S;
+  /* ⚠️ 120 SHOPPERS A DAY AND TWO FACES BETWEEN THEM. charIndexFor() falls back to
+     pool[nameHash(name) % pool.length], every shopper is called "Shopper N", and isFemaleName()
+     does not recognise that as a woman -- so all of them drew from MALE_POOL, which is two
+     entries long. The whole customer base of the shop was the same two men, over and over, all
+     day. Measured: 120 distinct shoppers, 2 distinct looks.
+
+     A shopper is explicitly nobody (see the strip above), so they have no name to hash into a
+     look -- give them one at random instead, from BOTH pools, which is four looks and a mixed
+     crowd rather than two. Four is still thin: the real fix is more generic civilian frames on
+     chars.png, which is an art job and is on Kyle's list. */
+  n.sprite=pick(MALE_POOL.concat(FEMALE_POOL));
   n.x=EXIT.x; n.y=EXIT.y; n.lastX=n.x; n.lastY=n.y;
   const all=customerStops();
   const want=Math.round(rand(CUSTOMER_STOPS[0],CUSTOMER_STOPS[1]));
@@ -5568,7 +5607,7 @@ function tickCustomers(dt){
   custSpawnCd-=dt;
   if(custSpawnCd<=0){
     custSpawnCd=rand(CUSTOMER_GAP[0],CUSTOMER_GAP[1]);
-    if(customersOnFloor()<CUSTOMER_TARGET)spawnCustomer();
+    if(customersOnFloor()<customerTarget())spawnCustomer();
   }
 }
 

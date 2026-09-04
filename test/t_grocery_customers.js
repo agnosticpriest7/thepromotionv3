@@ -29,8 +29,8 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
   const staffAtBoot = g.NPCS.length;
   w.run(9000, { ignoreGameOver: true });
   ck('the shop fills up on its own, without anything spawning them by hand',
-     S.customersOnFloor() > 0 && S.customersOnFloor() <= TARGET,
-     S.customersOnFloor() + ' shoppers, cap ' + TARGET);
+     S.customersOnFloor() > 0 && S.customersOnFloor() <= S.customerPeak(),
+     S.customersOnFloor() + ' shoppers, peak cap ' + S.customerPeak());
   ck('  ^ and the staff count is untouched', g.NPCS.filter(n => !n.customer).length === staffAtBoot,
      staffAtBoot + ' staff before, ' + g.NPCS.filter(n => !n.customer).length + ' after');
 
@@ -65,7 +65,10 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
      (st.firstThrow ? '\n     ' + String(st.firstThrow).split('\n').slice(0, 2).join(' | ') : ''));
   /* THE ARRAY MUST NOT GROW. Dead entries left in NPCS would be a slow leak across five days. */
   ck('  ^ and NPCS does not grow: they are spliced out, not left as corpses',
-     g.NPCS.length <= 12 + TARGET + 2 && g.NPCS.filter(n => n.customer && !n.alive).length === 0,
+     /* ⚠️ BOUND IT AGAINST THE PEAK THE CURVE CAN REACH, asked of the game. This said
+        `12 + TARGET + 2` with TARGET as the flat dial, so the day the shop got a lunch rush
+        it read 22 against a limit of 20 and called a working store a corpse leak. */
+     g.NPCS.length <= 12 + S.customerPeak() + 2 && g.NPCS.filter(n => n.customer && !n.alive).length === 0,
      g.NPCS.length + ' in the array, ' + g.NPCS.filter(n => n.customer).length + ' of them shoppers');
 }
 
@@ -249,6 +252,74 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
   ck('  ^ and it still soaks clean', st.throws === 0 && og.renderErrs === 0,
      'throws ' + st.throws + ', renderErrs ' + og.renderErrs +
      (st.firstThrow ? '\n     ' + String(st.firstThrow).split('\n').slice(0, 2).join(' | ') : ''));
+}
+
+/* ---- THE SHOP HAS RUSHES ---------------------------------------------------------------------
+   ⚠️ MEASURED, NOT DECLARED. Before the curve existed the floor held 5.7 shoppers on average at
+   every hour of the day -- including Clock-Out, while the tills are being cashed up. Nothing was
+   broken; there was one flat number and no clock in it. Reading FOOTFALL back would prove only
+   that a table exists, so this samples the actual floor hour by hour and compares the quiet hour
+   to the busy one. */
+{
+  const w = mk();
+  w.run(1200);
+  const byHour = {};
+  for (let i = 0; i < 1400; i++) {
+    w.run(40);
+    const h = Math.floor(w.g.clock / 60);
+    const c = w.g.NPCS.filter(n => n.customer && n.alive && !n.gone).length;
+    byHour[h] = byHour[h] || { sum: 0, n: 0 };
+    byHour[h].sum += c; byHour[h].n++;
+  }
+  const avg = h => (byHour[h] && byHour[h].n) ? byHour[h].sum / byHour[h].n : -1;
+  const open = avg(8), lunch = avg(12);
+
+  /* ⚠️ ANTI-VACUITY, ANCHORED ON THE THING THAT WOULD GO QUIET. "Lunch is busier than opening"
+     is trivially satisfiable by a shop with no customers at either hour, so assert the rush is
+     genuinely populated first -- otherwise this passes on an empty store. */
+  ck('  ^ the lunch rush actually has shoppers in it to count', lunch >= 5,
+     'lunch hour averaged ' + lunch.toFixed(1) + ' on the floor');
+  ck('the shop is busier at lunchtime than at opening', open >= 0 && lunch > open * 1.6,
+     'open ' + open.toFixed(1) + ' -> lunch ' + lunch.toFixed(1));
+
+  /* and it must come DOWN again -- a curve that only rises is a ramp, not a day */
+  const late = avg(16);
+  ck('  ^ and it quietens down again before close', late >= 0 && late < lunch,
+     'lunch ' + lunch.toFixed(1) + ' -> 16:00 ' + late.toFixed(1));
+
+  /* the dial still governs: the curve multiplies CUSTOMER_TARGET rather than replacing it, so
+     turning the dial has to move the whole day, not just the flat parts */
+  ck('  ^ and the curve is a multiplier on the dial, not a replacement for it',
+     typeof w.sandbox.customerTarget === 'function' && typeof w.sandbox.footfallMult === 'function' &&
+     w.sandbox.customerTarget() >= 1,
+     'customerTarget() = ' + w.sandbox.customerTarget());
+}
+
+/* ---- AND THEY ARE NOT ALL THE SAME PERSON ---------------------------------------------------
+   ⚠️ 120 SHOPPERS A DAY AND TWO FACES BETWEEN THEM. charIndexFor() falls back to
+   pool[nameHash(name) % pool.length]; every shopper is called "Shopper N", and isFemaleName()
+   does not read that as a woman -- so the entire customer base drew from MALE_POOL, which is two
+   entries long. Nothing was broken and nothing was red: the shop simply had the same two men in
+   it all day. Counted, because no assertion about the spawner would ever have shown it. */
+{
+  const w = mk(); const g = w.g, sb = w.sandbox;
+  const looks = {}; const seen = new Set();
+  for (let i = 0; i < 900; i++) {
+    w.run(40);
+    g.NPCS.filter(n => n.customer).forEach(n => {
+      if (seen.has(n.name)) return; seen.add(n.name);
+      const k = sb.charIndexFor(n); looks[k] = (looks[k] || 0) + 1;
+    });
+  }
+  const distinct = Object.keys(looks).length;
+  ck('  ^ enough shoppers passed through to judge the crowd', seen.size >= 40,
+     seen.size + ' distinct shoppers over the day');
+  ck('the crowd is not all the same person', distinct >= 4,
+     distinct + ' distinct looks across ' + seen.size + ' shoppers');
+  /* a mixed crowd, not just four men: the two pools are men and women, so both must appear */
+  const male = [16, 17].some(i => looks[i]), female = [18, 19].some(i => looks[i]);
+  ck('  ^ and it is a mixed crowd, not four of the same', male && female,
+     'from male pool=' + male + ', from female pool=' + female);
 }
 
 console.log('customers: ' + pass + ' pass, ' + fail + ' fail');
