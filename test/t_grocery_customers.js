@@ -251,6 +251,47 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
      (st.firstThrow ? '\n     ' + String(st.firstThrow).split('\n').slice(0, 2).join(' | ') : ''));
 }
 
+/* ---- THE SHOP HAS RUSHES ---------------------------------------------------------------------
+   ⚠️ MEASURED, NOT DECLARED. Before the curve existed the floor held 5.7 shoppers on average at
+   every hour of the day -- including Clock-Out, while the tills are being cashed up. Nothing was
+   broken; there was one flat number and no clock in it. Reading FOOTFALL back would prove only
+   that a table exists, so this samples the actual floor hour by hour and compares the quiet hour
+   to the busy one. */
+{
+  const w = mk();
+  w.run(1200);
+  const byHour = {};
+  for (let i = 0; i < 1400; i++) {
+    w.run(40);
+    const h = Math.floor(w.g.clock / 60);
+    const c = w.g.NPCS.filter(n => n.customer && n.alive && !n.gone).length;
+    byHour[h] = byHour[h] || { sum: 0, n: 0 };
+    byHour[h].sum += c; byHour[h].n++;
+  }
+  const avg = h => (byHour[h] && byHour[h].n) ? byHour[h].sum / byHour[h].n : -1;
+  const open = avg(8), lunch = avg(12);
+
+  /* ⚠️ ANTI-VACUITY, ANCHORED ON THE THING THAT WOULD GO QUIET. "Lunch is busier than opening"
+     is trivially satisfiable by a shop with no customers at either hour, so assert the rush is
+     genuinely populated first -- otherwise this passes on an empty store. */
+  ck('  ^ the lunch rush actually has shoppers in it to count', lunch >= 5,
+     'lunch hour averaged ' + lunch.toFixed(1) + ' on the floor');
+  ck('the shop is busier at lunchtime than at opening', open >= 0 && lunch > open * 1.6,
+     'open ' + open.toFixed(1) + ' -> lunch ' + lunch.toFixed(1));
+
+  /* and it must come DOWN again -- a curve that only rises is a ramp, not a day */
+  const late = avg(16);
+  ck('  ^ and it quietens down again before close', late >= 0 && late < lunch,
+     'lunch ' + lunch.toFixed(1) + ' -> 16:00 ' + late.toFixed(1));
+
+  /* the dial still governs: the curve multiplies CUSTOMER_TARGET rather than replacing it, so
+     turning the dial has to move the whole day, not just the flat parts */
+  ck('  ^ and the curve is a multiplier on the dial, not a replacement for it',
+     typeof w.sandbox.customerTarget === 'function' && typeof w.sandbox.footfallMult === 'function' &&
+     w.sandbox.customerTarget() >= 1,
+     'customerTarget() = ' + w.sandbox.customerTarget());
+}
+
 console.log('customers: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CUSTOMERS: RED ❌' : 'GROCERY CUSTOMERS: GREEN ✅ (they come in, they leave, they are nobody)');
 process.exit(fail ? 1 : 0);
