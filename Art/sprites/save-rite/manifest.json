@@ -1,0 +1,1596 @@
+{
+  "status": "placeholder art; flagged measurements retained; not integrated into game",
+  "generated_with": "built-in image_gen",
+  "walk_format": {
+    "sheet": [
+      552,
+      295
+    ],
+    "cell": [
+      184,
+      295
+    ],
+    "order": [
+      "stride",
+      "neutral",
+      "opposite stride"
+    ],
+    "idle_index": 1,
+    "cycle": [
+      0,
+      1,
+      2,
+      1
+    ],
+    "figure_top": 16,
+    "figure_bottom_exclusive": 278,
+    "right": "per-frame mirror of left; frame order preserved"
+  },
+  "seated_format": {
+    "canvas": [
+      416,
+      416
+    ],
+    "bottom_exclusive": 388,
+    "figure_heights": {
+      "down": 360,
+      "up": 323,
+      "left": 295,
+      "right": 295
+    },
+    "person_only": true,
+    "renderer_scaling_note": "Existing side multiplier1.15/up0.80 and down-content-height normalization still require chair integration review"
+  },
+  "colour_key": {
+    "remove_when": "red-green >60 AND blue-green >60",
+    "enforced_margin": 8,
+    "margin_formula": "60 - max(min(red-green, blue-green)) over surviving figure pixels"
+  },
+  "character_count": 34,
+  "png_count": 184,
+  "characters": [
+    {
+      "id": 1,
+      "art_name": "01_tyson_beck",
+      "master": "masters/save-rite/current-cast/batch1-light/01_tyson_beck.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_01_tyson_beck_down.png",
+          "sha256": "b6ccff50c425b76f233da4e14bf750ce855c32d0a0e8a3ac14e46c155869be43"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_01_tyson_beck_up.png",
+          "sha256": "0422d8f67dcb7a7c457b7793ececf9c7643c8b363f88a20b99ca52f51f7c4d7e"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_01_tyson_beck_left.png",
+          "sha256": "8548b966211a7bf31ab7ba07f422851dbe02c2dc94a13c43f365821ded9c6113"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_01_tyson_beck_right.png",
+          "sha256": "06ce93c296493f996bd2364946404c4a105a198ec761b22935eb17095156b38a"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down colour count",
+        "down neutral W/H",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 2,
+      "art_name": "02_anjali_raval",
+      "master": "masters/save-rite/current-cast/batch1-light/02_anjali_raval.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_02_anjali_raval_down.png",
+          "sha256": "d3d6f28918570d6aff1513192d1238c9a276c7f9f0ad018a24d64fe1b6cea2eb"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_02_anjali_raval_up.png",
+          "sha256": "daf3ec3ba32a9e5bc6f298b634585f65bf443cf24fe565f22c86a7f3f5664f69"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_02_anjali_raval_left.png",
+          "sha256": "be40ca5398ab277739897b1d0f880f17d262d56583b844dbbde8e139a3823645"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_02_anjali_raval_right.png",
+          "sha256": "22e8f43d3da6a0360fab8ec3002ea0abae2cd94e17de6769b00f292565feb7c4"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_02_anjali_raval_down.png",
+          "sha256": "ddbb3b0a2f0e0062211cb8795105b77d2f35322b8f0c431f9dd80132bdbc99c9"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_02_anjali_raval_up.png",
+          "sha256": "3a4662987e12f33745ae9a15e6d1168378a4fc3acca02304cdd6f903148c8e2f"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_02_anjali_raval_left.png",
+          "sha256": "cf75002854cf4d1f16e637650c0e5f92222cea0f49f96a37336142fe78e6aee9"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_02_anjali_raval_right.png",
+          "sha256": "2e52c3818b0a4fae587c9f16384800fa5da609c8a66b9c81c28d083ce8aec667"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs",
+      "integration_note": "Art calls this character Anjali Raval; live CREW calls the intended slot Priya Raval. Resolve mapping explicitly."
+    },
+    {
+      "id": 3,
+      "art_name": "03_marguerite_dubois",
+      "master": "masters/save-rite/current-cast/batch1-light/03_marguerite_dubois.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_03_marguerite_dubois_down.png",
+          "sha256": "58ed8eb7aa4c1b9265081ef6a41f323f689fdefe5ad727da5152332c3e6ebeaf"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_03_marguerite_dubois_up.png",
+          "sha256": "1368bc79f57c54f1daa4e0b992ebdf0221f8311b5451a6fd505e02d67e2649de"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_03_marguerite_dubois_left.png",
+          "sha256": "db97ad6900ca5647ade7c911cfc902bcdcfa051feeb48cdb05f0419c533667f0"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_03_marguerite_dubois_right.png",
+          "sha256": "f7108424f7bfa3dd945ec149b7fa73190d12272a12e7c6afab94d5396a044b4c"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_03_marguerite_dubois_down.png",
+          "sha256": "b687ce817f487da756592c585368e43b3e15604f7c7d100ae1ad06f9ef27c9c6"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_03_marguerite_dubois_up.png",
+          "sha256": "604279c80a8230979ff50b3ddf402e456fc8969d2147b29855cc22e7f6075355"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_03_marguerite_dubois_left.png",
+          "sha256": "97f02a0d028d9dfe0940bccb2fef62f2721160a8d87906be8fa6fd110d14ffe3"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_03_marguerite_dubois_right.png",
+          "sha256": "1132e88d607243e28e39866a3aa2385db468442fc6fb676a696566e3126c37ec"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 4,
+      "art_name": "04_danika_osei",
+      "master": "masters/save-rite/current-cast/batch1-light/04_danika_osei.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_04_danika_osei_down.png",
+          "sha256": "d1319838b112a3d7921177fb92e236ebab105efdadf2a501c7fe62b6ab6791c4"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_04_danika_osei_up.png",
+          "sha256": "d13976d2f0fe53633e22291e05017968d2700e8cad47f2145567be07e5bf181c"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_04_danika_osei_left.png",
+          "sha256": "4ee37e6f98bf3f5ea1d62e3aa760de8a9fd76e716d2b0c64972ba36e9bb67eaa"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_04_danika_osei_right.png",
+          "sha256": "1f93a111fde918d4cc8c4a0b5b4a864bce29d30fd2ac704c888b9d9c0086633c"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_04_danika_osei_down.png",
+          "sha256": "c2f85258c7e526a37a9025f9f357956d10dfa725c0fded80941fa7404aaf8bce"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_04_danika_osei_up.png",
+          "sha256": "6a0c99e0c7fed7e35f315f869d4962e1a115f33d4ae0213feb8674a3c1a205f4"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_04_danika_osei_left.png",
+          "sha256": "ec71605904614905a401221f67525588299702647c77d8b2c06e1ee330f0cdc9"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_04_danika_osei_right.png",
+          "sha256": "363684ed5c57677ecf18af9a1f85ceef175d9abfe14dcfa4f92c699a7ffeb2ef"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 5,
+      "art_name": "05_curtis_lam",
+      "master": "masters/save-rite/batch2/light/05_curtis_lam.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_05_curtis_lam_down.png",
+          "sha256": "6593a7ae739aade5bdbb300d7b1e1c3af7af1b4831f485ceea9ecba8aea9b3d0"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_05_curtis_lam_up.png",
+          "sha256": "7679cb0126f08e796648d9ec8cfbdc9aeb76711b4cfdcd4740d42bbaf1b6e498"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_05_curtis_lam_left.png",
+          "sha256": "3dce22f206ed0557ff2eee48dbddc5d9d440f1f539d6e5f0a176ff04c421ae9d"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_05_curtis_lam_right.png",
+          "sha256": "d333839ed79ededc434058eba91d80d86ab4565ab5b375bcc769f2172643764d"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_05_curtis_lam_down.png",
+          "sha256": "3b34c04e5fd7c6489b7fdae43ee71848d79b9fcdd34995afbfeeecadeeba04ec"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_05_curtis_lam_up.png",
+          "sha256": "c4b2702794b24f0bda67ee8bdbbcf1af5734f9af5ebc9b6821c82f44c13f0159"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_05_curtis_lam_left.png",
+          "sha256": "e3a31ceaffc681742640986b13a979b1ca1368da2bfc1c345179040336bdfb39"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_05_curtis_lam_right.png",
+          "sha256": "de0259cfae31c4fccec3ff1ea861e6cf7161f945f2b645132d02fd689babb7c0"
+        }
+      },
+      "flags": [
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 6,
+      "art_name": "06_bekah_thorne",
+      "master": "masters/save-rite/batch2/light/06_bekah_thorne.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_06_bekah_thorne_down.png",
+          "sha256": "e255beeee95e0a05593b99077b3b062ca302aef5014f97598f907c1109e6c603"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_06_bekah_thorne_up.png",
+          "sha256": "c5994946d3b4f61f00c2959d7359a592ac1a4d7e3ff23af02ab54639bd50e29e"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_06_bekah_thorne_left.png",
+          "sha256": "796af723e6572ac58a0c873d15444a1cc8fbd1ca86f91bd37741a6b824f68e1f"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_06_bekah_thorne_right.png",
+          "sha256": "dfde386a7724e0dc2638a8407cd15917f1a8eb3ba49a14f4b21bcc142bfcc24c"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_06_bekah_thorne_down.png",
+          "sha256": "9d94d08f533f5c001cf9a3b7751d2dea44e65af444c073dc3cbdda58410b5e49"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_06_bekah_thorne_up.png",
+          "sha256": "de2284139d7aca0c49d0da9102f82cec60e269b20374e0f0f1601bd1dffaed82"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_06_bekah_thorne_left.png",
+          "sha256": "0c767f7c241d3c5cbd4210a757a25353fdbff4edf41818b2006329c9fd20eb87"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_06_bekah_thorne_right.png",
+          "sha256": "2687e3e71b558bb66df106d7cd149a0a569c1f1f34017ec0d37323110b36c252"
+        }
+      },
+      "flags": [
+        "down colour count",
+        "down neutral W/H",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 7,
+      "art_name": "07_ade_okonkwo",
+      "master": "masters/save-rite/batch2/light/07_ade_okonkwo.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_07_ade_okonkwo_down.png",
+          "sha256": "8ccb7e86fd130bb9c11bbc67655b509e579e55416f37da9836c888f664461db5"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_07_ade_okonkwo_up.png",
+          "sha256": "9adbcca11b2f615eba0f163e1a477a9245685ecad3a8bd15317e19c1c220af6f"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_07_ade_okonkwo_left.png",
+          "sha256": "0e5b09a7184268fc74deebd8586e5cc8b46d90120121d9dd880035099c327bd2"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_07_ade_okonkwo_right.png",
+          "sha256": "f95bcc677a148f7b307d9887bf95f1189e43376227c9ce446a073f764269dcfc"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 8,
+      "art_name": "08_russ_pelletier",
+      "master": "masters/save-rite/batch2/light/08_russ_pelletier.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_08_russ_pelletier_down.png",
+          "sha256": "fd297259ea7eccfc21b4c821d122061cf949a69be486592ffbb4f6aee76d9ecc"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_08_russ_pelletier_up.png",
+          "sha256": "c4513e7cd9386070607d00aeca1b76b3b898c798fe1eaeb1a6269207afe78663"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_08_russ_pelletier_left.png",
+          "sha256": "94354999f78c468e21c1200b9c7cd79cddfe3de4ca525e41e45197e46c8d38d1"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_08_russ_pelletier_right.png",
+          "sha256": "744ddce5eb0beae267a8945294ea374853f5f74ecce15d7e76b29548a24630ef"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_08_russ_pelletier_down.png",
+          "sha256": "7de249959518412ae92c31eff5dc5eb9b3fa6c9a84bb05ea41c61d565d4064e5"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_08_russ_pelletier_up.png",
+          "sha256": "5d434e23e90b8522bdc1668fc2b305263016274eedc451c63bc25f6492ebb7ab"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_08_russ_pelletier_left.png",
+          "sha256": "24c939b58086dc36fa60f43ddd9707ea4ee78e820127fd56b71c629dc25723fa"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_08_russ_pelletier_right.png",
+          "sha256": "a7941e55bd7111d72c1eac54fa8f76465551e886995e4ac2256c06350d55bcb3"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 9,
+      "art_name": "09_joon_ho_bae",
+      "master": "masters/save-rite/batch2/light/09_joon_ho_bae.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_09_joon_ho_bae_down.png",
+          "sha256": "e1a91f1f2ef3366fd10d9ba0cc2f09d2450f7bdc3ad88cf6f8b8d8e91a372e0e"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_09_joon_ho_bae_up.png",
+          "sha256": "83e4d8fced633ab2b9f46eb3dead8617b10fe7dc173b585576d1dd466269f9f1"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_09_joon_ho_bae_left.png",
+          "sha256": "a592eac3e8fa348d7461bac699ceb71142b37f03570e3b910097e9f6e19f35f9"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_09_joon_ho_bae_right.png",
+          "sha256": "901e9788f82609ae995bfe3cb266db78b0b8ef47910ccea6803e1a881fe8caf2"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 10,
+      "art_name": "10_sam_whitecalf",
+      "master": "masters/save-rite/batch2/light/10_sam_whitecalf.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_10_sam_whitecalf_down.png",
+          "sha256": "1ac032b84d15216ed010084e1fb93dd21e54e4fc6382a32d691c01ce77cdc523"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_10_sam_whitecalf_up.png",
+          "sha256": "6c297da9add817207607eff9c1bf497b270f0950d7f9e7e2e4bad0ceeed65c42"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_10_sam_whitecalf_left.png",
+          "sha256": "d86e93e238c1d920f3fdf80b4fb4f018a6c383d97801c998710331ccbb53f843"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_10_sam_whitecalf_right.png",
+          "sha256": "aaa58a2006aa6ecfec74dbcce3501e84ae1a0594f918c348b8e30a8b2f35a8d5"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left centroid inconclusive/failed",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right centroid inconclusive/failed",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 11,
+      "art_name": "11_cheryl_novak",
+      "master": "masters/save-rite/batch2/light/11_cheryl_novak.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_11_cheryl_novak_down.png",
+          "sha256": "88b51a36319e8b7f827da6930c44451a4bff585611c7fce4cd1f4aefe9e9b227"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_11_cheryl_novak_up.png",
+          "sha256": "b2fbd012942098f85a68bc81f49cd102b4b552d0ca253395753196c21b8a9e6e"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_11_cheryl_novak_left.png",
+          "sha256": "deb926ce77428dc411ec1fa884921eea1f66418d3ffa083b4f9daa483b41103e"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_11_cheryl_novak_right.png",
+          "sha256": "bada731480a50de01d5e38029443f17b56d82e86535824c379115693a50b6706"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "up pixel density",
+        "up colour count",
+        "left colour count",
+        "left neutral W/H",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 12,
+      "art_name": "12_gita_mahal",
+      "master": "masters/save-rite/batch2/light/12_gita_mahal.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_12_gita_mahal_down.png",
+          "sha256": "755174fea32a68800b8a076cf82753a7ec79da4a0b3b10ee5d544c56690edbcc"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_12_gita_mahal_up.png",
+          "sha256": "72611cb1c3b4ff1240ac71a34e003a1fb1d32ae7ee4896b611b441c149c14794"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_12_gita_mahal_left.png",
+          "sha256": "aa1894b8d6e425ec35f99643c59f019e9e59988fe4e6fa166989e70995a09509"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_12_gita_mahal_right.png",
+          "sha256": "e9e58d1ff2c0707e37fd3ef44e33356fdcc2f6e2dcdffbf8b1143aae5d4d42f2"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_12_gita_mahal_down.png",
+          "sha256": "9bbb7b275042bea667c8dd8b297e3aea8b408b9eeaec23a40f0aff12248b6d6c"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_12_gita_mahal_up.png",
+          "sha256": "ce85169eba108af464b792c3510054aa0010fdc592cbb528cd3390faa572a96d"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_12_gita_mahal_left.png",
+          "sha256": "fa55380228804cf975c88b4c811c7e063bfe4693501acc0f02e379039f126706"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_12_gita_mahal_right.png",
+          "sha256": "f52a4ceb3f97608cae4a8d057797a3ca38266c9d8c71998efb4dbf01da87bb4a"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 13,
+      "art_name": "13_vince_carboni",
+      "master": "masters/save-rite/overnight/masters-light/13_vince_carboni.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_13_vince_carboni_down.png",
+          "sha256": "830e2ebfb62966cb01ff261912230963b91b28961c79dc697a17356bd31b416c"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_13_vince_carboni_up.png",
+          "sha256": "2fa17d86052f8e4d2e726513ed0ad9e010c2887896ce48762d6d127b0d5f25e2"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_13_vince_carboni_left.png",
+          "sha256": "6d7b621ceb550ccb3cd9762412edaa353eadcf09f79b77220419a5f6143b2188"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_13_vince_carboni_right.png",
+          "sha256": "6aa082082a1204627bd0513df5367ce6f8066cf249829d3f6d03c240d064e983"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 14,
+      "art_name": "14_aleks_petrov",
+      "master": "masters/save-rite/overnight/masters-light/14_aleks_petrov.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_14_aleks_petrov_down.png",
+          "sha256": "0b9be9a60731f23b5031b5f2e0b7d811cab17d1b8fa67961e52e116076ae71f9"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_14_aleks_petrov_up.png",
+          "sha256": "8f5b2c261ca910d6cb88018d8af3715b6298f76275921af9585bb38e9a7526ca"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_14_aleks_petrov_left.png",
+          "sha256": "646b1fe8eb4ce9fe44cb44ce3cdf7a7f406b6cf8bd3a9eb54c0bbc49b500a0d3"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_14_aleks_petrov_right.png",
+          "sha256": "0fd807a49cc7c564b0613dc3bf6a3368540a9ec1bd4e52a3c61903a0e4ebfbca"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left arms IoU",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right arms IoU",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 15,
+      "art_name": "15_denise_fung",
+      "master": "masters/save-rite/overnight/masters-light/15_denise_fung.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_15_denise_fung_down.png",
+          "sha256": "193d65265d668ddd7f0739da2f2a6259a6929173086e03b165921caf1da54d89"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_15_denise_fung_up.png",
+          "sha256": "74218a49406dbbc1b1500a975b4871ce9c6383bc06e2a480709b533979fb599e"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_15_denise_fung_left.png",
+          "sha256": "29665a2ff0c48bdc20069608cf55e2cda50414cdb4de8b9278646c980e224798"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_15_denise_fung_right.png",
+          "sha256": "8d51df64b9897b5fbfe50bc1cb9170192328ba91c8a6f277e466262876171e3a"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 16,
+      "art_name": "16_bruno_sarr",
+      "master": "masters/save-rite/overnight/masters-light/16_bruno_sarr.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_16_bruno_sarr_down.png",
+          "sha256": "79fc0f91f2e5d3073872d2e3630b7ce54cac510bba504750cab93b3714ddf648"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_16_bruno_sarr_up.png",
+          "sha256": "0d21ca78673179f2aa840f6ca5cf651ec9c9b1f2c45ae7da0aebad74cd1a1e3d"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_16_bruno_sarr_left.png",
+          "sha256": "4c35b01a6cacbc1685ab536b35abbe9387823afdfc105523685faa2c484302f9"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_16_bruno_sarr_right.png",
+          "sha256": "c9f4ee0fa8aa915e303fc610cd279c304201fd60f7e70e53ebaa5ce00cf95a0a"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_16_bruno_sarr_down.png",
+          "sha256": "91441ecec1c5ec0628448c33ce660175757f8c8726daf43e1d15b23ee0301df4"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_16_bruno_sarr_up.png",
+          "sha256": "cc8ddeb1ddad70befbf460cdd89d15426321ae148a89d00be7741adc4b7a1b47"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_16_bruno_sarr_left.png",
+          "sha256": "104f9247616f15de0a1b5e8b9dffb4fc801494de68dee8e5d5186cd809fc21d9"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_16_bruno_sarr_right.png",
+          "sha256": "a57c76e598c64f2e7aa748e8309e3957388b0755574f8aa8e5cfcdfba76036cc"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up colour count",
+        "left centroid inconclusive/failed",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right centroid inconclusive/failed",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 17,
+      "art_name": "17_elaine_kovacs",
+      "master": "masters/save-rite/overnight/masters-light/17_elaine_kovacs.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_17_elaine_kovacs_down.png",
+          "sha256": "873c84df54c0942b5cdad415f8fa900310a3fdb4bd1011282aae5b0a96f64baa"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_17_elaine_kovacs_up.png",
+          "sha256": "d51f50eebd29476ffd050e8581c64b5da9e3f7c563042576154bc27c3ee0e809"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_17_elaine_kovacs_left.png",
+          "sha256": "3d577fd87aa8ce6238c7a0cd4b9f209d03cc678c55719df04261144beceb4dca"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_17_elaine_kovacs_right.png",
+          "sha256": "147a177629dd5a575548a1fe50634c5d9a864dda0bac8c7680dce01b4abf5cae"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 18,
+      "art_name": "18_manny_reyes",
+      "master": "masters/save-rite/overnight/masters-light/18_manny_reyes.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_18_manny_reyes_down.png",
+          "sha256": "6f9a2a75bc3409d78d6dfcee29c8c0a3209a74c29ea569988376458bd2243315"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_18_manny_reyes_up.png",
+          "sha256": "a56aa20c461fab0751d1b9f9d237e34e7c45b94ff4a0452a8631e6520249df2c"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_18_manny_reyes_left.png",
+          "sha256": "a0eb5563b566efc108c223a5cfe28064ec11e98e9fe0df628e1fb56869d6882a"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_18_manny_reyes_right.png",
+          "sha256": "7bdfe99dbedcc37a01b8e4b8ebdf012ae3683686c23ff700c3fe4ca5eb9c09ce"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 19,
+      "art_name": "19_tova_lindqvist",
+      "master": "masters/save-rite/overnight/masters-light/19_tova_lindqvist.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_19_tova_lindqvist_down.png",
+          "sha256": "c92efe18b406abca59584e2b99edfdf96d8be4eb3c47f876dd5c018c79397aaa"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_19_tova_lindqvist_up.png",
+          "sha256": "5bcf947989cfabcdbcd72d351d9541c00dbaa8673affadaa706ccee12536de19"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_19_tova_lindqvist_left.png",
+          "sha256": "7a1a0912663444b5653961ba71f13ac88e83a7337cf6b97a3e749f11f8e149ef"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_19_tova_lindqvist_right.png",
+          "sha256": "7fc511a04953e6d422e7cc0c43036c546bda6972a1a0c2444399186f765e0ea9"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 20,
+      "art_name": "20_doreen_stapp",
+      "master": "masters/save-rite/overnight/masters-light/20_doreen_stapp.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_20_doreen_stapp_down.png",
+          "sha256": "063cbb299bf6d4d8defa48899d375e927cccc661ee4b62a1316c69059c3e048c"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_20_doreen_stapp_up.png",
+          "sha256": "80749dca252d11e7e19ea805f239452e898e488e2c2761c1fbb1be3c670e710d"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_20_doreen_stapp_left.png",
+          "sha256": "28ff4940ac1136275dcf24bfda84694408a022073a5ea2839f35cdfe28313753"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_20_doreen_stapp_right.png",
+          "sha256": "fd24d727b125515986fa2e5cc9f10a1a53ec022922f6839ab85960626b1205d6"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_20_doreen_stapp_down.png",
+          "sha256": "e61d117427210fbca367f4e8e011f7d3f2b30a079871f36a9667fe3068727d40"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_20_doreen_stapp_up.png",
+          "sha256": "3d088a552e6b0feaaa2cdeed703428e6b131018307328376c5d21dc43e08756a"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_20_doreen_stapp_left.png",
+          "sha256": "a791150463ec975cb416feb13be3dbd24ed7dac267b61acbfacb23d4fe0f94ff"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_20_doreen_stapp_right.png",
+          "sha256": "38ae4609aac42c6514b3426657ae245bbfd76373b52391b95485cbab5a636751"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left arms IoU",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right arms IoU",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 21,
+      "art_name": "21_garret_voss",
+      "master": "masters/save-rite/current-cast/batch1-light/21_garret_voss.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_21_garret_voss_down.png",
+          "sha256": "e508b4a5fcc6b0f5e86f89c5883f7453bb6ee9e93f8f16fc7458145531e59d03"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_21_garret_voss_up.png",
+          "sha256": "c21e7ff086e99fb58d51409416fa8b1fc6b58205d92a34f488826649637e965f"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_21_garret_voss_left.png",
+          "sha256": "0848791e96bfa7ce820fcd7a6b3cf02b96fd52396e44ff844a711750ac3b3bee"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_21_garret_voss_right.png",
+          "sha256": "4919fb84851e439f14a7261e30535f59f7cea699bf4d00952e02f83ac5ad8ce2"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_21_garret_voss_down.png",
+          "sha256": "4480f503c3df717d4b02e122b71a099e686945c5bcba240bf5868ac6eef8c4f4"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_21_garret_voss_up.png",
+          "sha256": "8e75368d9a42ea7a45cc9bff94a836c9581366f0c91f56556363f83c0c232640"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_21_garret_voss_left.png",
+          "sha256": "d164ad31e690c2b53ec78c115ca86ac8608313651560bd87b3333a74e5bd8c92"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_21_garret_voss_right.png",
+          "sha256": "da3f03ee619f4ed4de97c039dc79bf4ea9ed291af2c9574ea3c85af38c820cd8"
+        }
+      },
+      "flags": [
+        "down arms IoU (clipboard exception)",
+        "down pixel density",
+        "down colour count",
+        "up arms IoU (clipboard exception)",
+        "up pixel density",
+        "up colour count",
+        "left arms IoU (clipboard exception)",
+        "left centroid inconclusive/failed",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right arms IoU (clipboard exception)",
+        "right centroid inconclusive/failed",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 22,
+      "art_name": "22_lorne_petrie",
+      "master": "masters/save-rite/current-cast/batch1-light/22_lorne_petrie.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_22_lorne_petrie_down.png",
+          "sha256": "f2789549fbf77f2d8e3c559ce120c42db955f2457536a6cb36f9b0053ad925c1"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_22_lorne_petrie_up.png",
+          "sha256": "f65df8a1943f6cf997041e09467747642fe782ba447b584b0a67ae26384c7451"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_22_lorne_petrie_left.png",
+          "sha256": "ba6c6eb3662d0c1cef9b78007eff528aa998d2dd9d5775b705a655210475713e"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_22_lorne_petrie_right.png",
+          "sha256": "41b6d5c31d7e6c23624705c90e82c99fa8f33e7c371ddd9d7cc6c908fc1708ac"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_22_lorne_petrie_down.png",
+          "sha256": "c478c1f3b7172c908cbf2c22427c7a5942e96c0e6a3525cc856c16186f482336"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_22_lorne_petrie_up.png",
+          "sha256": "7422042ea8d0abac2db1910f08ccfa7caf6645019327c886e9e7334c550d2537"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_22_lorne_petrie_left.png",
+          "sha256": "c5a44425c06faa224b5734d14bf570ef96542041abd14cbb5d1d23d8075b7e4b"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_22_lorne_petrie_right.png",
+          "sha256": "e7cbf3116d9ce91eb26b23c0c2141cd001b00fb18c3e8f07033fc27e25699227"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up colour count",
+        "left arms IoU",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right arms IoU",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 23,
+      "art_name": "23_merv_kastelic",
+      "master": "masters/save-rite/current-cast/batch1-light/23_merv_kastelic.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_23_merv_kastelic_down.png",
+          "sha256": "80872f1618ddfe558c530c7e6a08767499b58a87886d6153dc94911d40eb9d9f"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_23_merv_kastelic_up.png",
+          "sha256": "4b7bd815c7d140901337736c9e717f41f4a522266a7b43b97d08bfe8976b1fd4"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_23_merv_kastelic_left.png",
+          "sha256": "b4d9b0383c7cb3e391a3cbf163c36fd0dc9585ab2e3d94680f8c43fe447b5fa9"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_23_merv_kastelic_right.png",
+          "sha256": "7bfa5a53ed497f65a41ab8116863c651992a2443b98ae4251d7a4cae29f86430"
+        }
+      },
+      "seats": {
+        "down": {
+          "path": "sprites/save-rite/sit_23_merv_kastelic_down.png",
+          "sha256": "f95f98104f79ac8e831455c327405c7e8cffcbb5712ab41bb7e53ddef4801417"
+        },
+        "up": {
+          "path": "sprites/save-rite/sit_23_merv_kastelic_up.png",
+          "sha256": "f19d6d446f0c9816e25464111a256bb9384cfe5e16cec35061a7eeca29808e40"
+        },
+        "left": {
+          "path": "sprites/save-rite/sit_23_merv_kastelic_left.png",
+          "sha256": "9772ef5e7c2fc5f8cf570a62a6ee6638f9094ab896beb80f4414141da56606f0"
+        },
+        "right": {
+          "path": "sprites/save-rite/sit_23_merv_kastelic_right.png",
+          "sha256": "04a04b788c0e6842d217f44e4d58135454be48b7ea113478074e1b153348d7d7"
+        }
+      },
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left centroid inconclusive/failed",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right centroid inconclusive/failed",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "live CREW eligible for rotating break chairs"
+    },
+    {
+      "id": 24,
+      "art_name": "24_sandrine_pike",
+      "master": "masters/save-rite/current-cast/batch1-light/24_sandrine_pike.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_24_sandrine_pike_down.png",
+          "sha256": "157c365bdf6c4dc001d4dd9ef43f71748d416784b7f43efceb6988763d3969a6"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_24_sandrine_pike_up.png",
+          "sha256": "7ea5165071329ea2a6cdb87b73f578d7fa3071fbf7a28ea9c5586280e31b97b5"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_24_sandrine_pike_left.png",
+          "sha256": "6c4cd5ce20cbb65ba09695336af3cd8f3ab82d89dd5472622bbabd928b62a09c"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_24_sandrine_pike_right.png",
+          "sha256": "f619ef6fe672cbc1ba42ec5b701fd87d64e3059d208b5e3becf2a03aa205495c"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H",
+        "seated requirement unresolved"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "unresolved: absent from live CREW; walk-only supplied"
+    },
+    {
+      "id": 25,
+      "art_name": "25_shopper_elderly_woman",
+      "master": "masters/save-rite/overnight/masters-light/25_shopper_elderly_woman.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_25_shopper_elderly_woman_down.png",
+          "sha256": "5b6205d8f8d4235684ec5c1a6f19db3bdf2f3f5e6c65c15e3b32590daae71852"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_25_shopper_elderly_woman_up.png",
+          "sha256": "013366e7e225188e66bc3e00c5c49e17ef70576015ea4c2a6cc83fb1403b0ba3"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_25_shopper_elderly_woman_left.png",
+          "sha256": "f5ee4addcd2040348ef9f2a8067d826a0f8e27e258f4c09bb73f0646b2227771"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_25_shopper_elderly_woman_right.png",
+          "sha256": "ade5083884e9641e7d8c91548e2197e2cfe92cfcfec75694253eb5df901164e4"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up colour count",
+        "up neutral W/H",
+        "left arms IoU",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right arms IoU",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 26,
+      "art_name": "26_shopper_work_jacket",
+      "master": "masters/save-rite/overnight/masters-light/26_shopper_work_jacket.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_26_shopper_work_jacket_down.png",
+          "sha256": "e348fa8275b5852cb523e5edd68abf9a0a97910ba8a1b9981fdaf582e5cab5b3"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_26_shopper_work_jacket_up.png",
+          "sha256": "17b559c01cd67146cffe6a32bb3fbb5d3ec358b91a9f2aef0e47d0124106ef33"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_26_shopper_work_jacket_left.png",
+          "sha256": "d9e76e7f9b61a0483257953d5603c6be269715bf5a94a847e53ec8598574c3e0"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_26_shopper_work_jacket_right.png",
+          "sha256": "e8a8f57745edf79e5234d644bd79dbb162c0aa364a4d9861d34ead4ad7370ead"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left centroid inconclusive/failed",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right centroid inconclusive/failed",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 27,
+      "art_name": "27_shopper_mustard_jumper",
+      "master": "masters/save-rite/overnight/masters-light/27_shopper_mustard_jumper.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_27_shopper_mustard_jumper_down.png",
+          "sha256": "b33f40b34bcfaa2665aaf02067e50ce3806b2eb612aa42c04c30b93e59be1706"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_27_shopper_mustard_jumper_up.png",
+          "sha256": "fb888414decdef61e44019f22855085060344a682c532e12df22198446eedd10"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_27_shopper_mustard_jumper_left.png",
+          "sha256": "90a3749de8cd3ec6bf99efddd21ea28ff01a404b23830a1cecfa20a443bc16fc"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_27_shopper_mustard_jumper_right.png",
+          "sha256": "af115883b11b3e035525eae7f0de1749c5e7a412d429af667f0cf27bc05996f2"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 28,
+      "art_name": "28_shopper_teen_hoodie",
+      "master": "masters/save-rite/overnight/masters-light/28_shopper_teen_hoodie.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_28_shopper_teen_hoodie_down.png",
+          "sha256": "936b34aa4fcee70c0fb7d4a43f403c0e4401fe263f2b60a9c675f27ce5276778"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_28_shopper_teen_hoodie_up.png",
+          "sha256": "1850d4c4d165194a62c6fe38ac1492c68cf05b09fbdc281e82abc66c84df212f"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_28_shopper_teen_hoodie_left.png",
+          "sha256": "58ce911921c39523b956f468867919b8dc2fa2efa7eea88f0d986454d6ab9b59"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_28_shopper_teen_hoodie_right.png",
+          "sha256": "81c36597f20c880b1bbc31ff87bdefb8ec8ab153c23fbe1a252a5718b5059554"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 29,
+      "art_name": "29_shopper_hivis_worker",
+      "master": "masters/save-rite/overnight/masters-light/29_shopper_hivis_worker.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_29_shopper_hivis_worker_down.png",
+          "sha256": "b31ac5fd93a8feb2315b4b592bab32c5618cbc8b23f9cd6ad23490cbe051a35c"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_29_shopper_hivis_worker_up.png",
+          "sha256": "19fa0c203c40cb1afbe971422cb55eb59dd732df80bed3123b338f17ee2b4c7f"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_29_shopper_hivis_worker_left.png",
+          "sha256": "95f607ee788a898a3c6bbb705607dfe59ffb24a780de243d2861b1ee1b829a50"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_29_shopper_hivis_worker_right.png",
+          "sha256": "53bc2855a8b2bec09c8bdb5a3955f33e73a264172828f663d9e3cbe687963c23"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 30,
+      "art_name": "30_shopper_teal_blouse",
+      "master": "masters/save-rite/overnight/masters-light/30_shopper_teal_blouse.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_30_shopper_teal_blouse_down.png",
+          "sha256": "671d137d12600aacbb4f4efcf108729b87f0c04458f3ed55400905af32fe3a12"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_30_shopper_teal_blouse_up.png",
+          "sha256": "8c23b5e97c99aeb1cc05b2b0cc1fd5aac08b88214f6d8b837c8e727cf37e67af"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_30_shopper_teal_blouse_left.png",
+          "sha256": "2e84ff3ff7e25b30b16e8d813b99440dc47f6df48727bc38a1cbaaf48bb69c0c"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_30_shopper_teal_blouse_right.png",
+          "sha256": "5753374f280c0a6e82a5394649a3f223f482384c1f9ec24145ecc4c6d9ab4c0f"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 31,
+      "art_name": "31_shopper_white_tee",
+      "master": "masters/save-rite/overnight/masters-light/31_shopper_white_tee.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_31_shopper_white_tee_down.png",
+          "sha256": "185e3d2e6f574db1ebc4c08fd1fc07a6113f81396c499f77cd3c281085f59660"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_31_shopper_white_tee_up.png",
+          "sha256": "7e81b0613614d7dd86a6e8940ae2cef21fdd430f6f846321b2c4c1c03ff191e5"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_31_shopper_white_tee_left.png",
+          "sha256": "da08f97b67bf243d94d2836549b60d90e509c9d8917cd11a975a31234fa49302"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_31_shopper_white_tee_right.png",
+          "sha256": "0e3dcf31c814ef19ac5d77ecc2fc3ff01ae9df417429fe3d4a77a609730fe56e"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 32,
+      "art_name": "32_shopper_rose_cardigan",
+      "master": "masters/save-rite/overnight/masters-light/32_shopper_rose_cardigan.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_32_shopper_rose_cardigan_down.png",
+          "sha256": "bf61451adfe9ee420158e00148485f0708c421e8a544c425e0b7c7c4e0d916b2"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_32_shopper_rose_cardigan_up.png",
+          "sha256": "5aeec373797ea47fbebf6954baa5a59a27df07b4ee80790d9c0d69e707bc206a"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_32_shopper_rose_cardigan_left.png",
+          "sha256": "6f127df1c889f7622ce6b643cdca7adb00228c27d4862c464806532682115d20"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_32_shopper_rose_cardigan_right.png",
+          "sha256": "d71b88a79463ff66d14356dc34ba9a4ed06ddad715bc0a0faf57e7bbe454ee21"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "down neutral W/H",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 33,
+      "art_name": "33_shopper_ginger_flannel",
+      "master": "masters/save-rite/overnight/masters-light/33_shopper_ginger_flannel.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_33_shopper_ginger_flannel_down.png",
+          "sha256": "845787c131c4b4760dd1cb4e8d88bd27953f04381fa584f492d7aed0d8647044"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_33_shopper_ginger_flannel_up.png",
+          "sha256": "82bcc29be2fa871f09414cc95bd635ece0dc5a5d144463106274117801f0dfcb"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_33_shopper_ginger_flannel_left.png",
+          "sha256": "ef7a7f0b1d53a31d9b341192a64af100e33de3a06ec05a53289d3271beb1373b"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_33_shopper_ginger_flannel_right.png",
+          "sha256": "eae0b89b4e5f899e18f5a5a36f284306790cd2f22ec277cda4883cb53e520d35"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down pixel density",
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    },
+    {
+      "id": 34,
+      "art_name": "34_shopper_denim_jacket",
+      "master": "masters/save-rite/overnight/masters-light/34_shopper_denim_jacket.png",
+      "walks": {
+        "down": {
+          "path": "sprites/save-rite/walk_34_shopper_denim_jacket_down.png",
+          "sha256": "62256754c6490177821daa1e2e995fbf430c4981b24c72c0d39bbe383de929b5"
+        },
+        "up": {
+          "path": "sprites/save-rite/walk_34_shopper_denim_jacket_up.png",
+          "sha256": "e7786d90af30904ee26a77db8da829e128eb0ef652ea55adf3a17ad5dd384ae0"
+        },
+        "left": {
+          "path": "sprites/save-rite/walk_34_shopper_denim_jacket_left.png",
+          "sha256": "16eb3aeb6c850a9b88d06fca3ca72b0241f662c3485746c364c7f3973931a459"
+        },
+        "right": {
+          "path": "sprites/save-rite/walk_34_shopper_denim_jacket_right.png",
+          "sha256": "72db9c67c4899a4b505c5dc56fd87349170ef84882d2a33f9f72e6e17a6c8b77"
+        }
+      },
+      "seats": {},
+      "flags": [
+        "down colour count",
+        "up pixel density",
+        "up colour count",
+        "up neutral W/H",
+        "left pixel density",
+        "left colour count",
+        "left neutral W/H",
+        "right pixel density",
+        "right colour count",
+        "right neutral W/H"
+      ],
+      "technical_failures": [],
+      "seated_requirement": "customer; excluded from worker seating"
+    }
+  ]
+}

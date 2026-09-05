@@ -1,0 +1,27 @@
+[
+  {
+    "name": "06_bekah_thorne",
+    "prompt": "Edit image1 Bekah only. Preserve exact red jaw-length bob, headphones centered at neck, white polo and charcoal fabric bib apron single neck loop without pocket, separate trousers and shoes. Correct head/body balance: enlarge head including hair by25% relative to body and broaden square shoulders/body by8%, so final hairtop-to-chin is35% of total height and overall width/height0.45. Keep her twenties, flat closed expression. Waist ties hidden behind back. All style, pose, background stay. Match cartoon scale of image2 walk_karl_down.png and image3 walk_rod_down.png. Single fullbody neutral master, no sheet.",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-e945aa29-d72a-4804-a86c-8074b41ec048.png"
+  },
+  {
+    "name": "08_russ_pelletier",
+    "prompt": "Edit image1 Russ only. Preserve age, ruddy skin, thinning grey hair, thick moustache, heavy belly, white polo, plain charcoal apron with single neckloop/no bib pocket, centered wide back brace. Increase head including hair by45% relative to body and reduce body width modestly so overall width/height .48 and hairtop to underchin35% fullheight. Shorten torso/apron accordingly to stocky cartoon proportions of reference Karl and Rod. Keep both arms straight, hands attached, feet level/wide, symmetric, magenta background. Single fullbody master, no animation sheet.",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-9695278e-81e4-4056-9c98-7d75f7097cae.png"
+  },
+  {
+    "name": "10_sam_whitecalf",
+    "prompt": "Edit this Sam Whitecalf master only, keep identity, long black hair tied back centrally, solid Indigenous man in forties, green plain bib apron and white polo. Remove the one-sided hanging waist tie: all waist ties are hidden behind back, no unilateral details. Enlarge head12% relative to body, reduce body width4%. Target hairtop-to-underchin35% fullheight and silhouette width48% height. Keep headshape, facial features, quiet expression, arms straight, separate dark trousers, brownshoes, magenta background. Fine pixel-art style unchanged. Full single figure.",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-3ddc6167-44ae-49f0-85a3-738521ecc6b2.png"
+  },
+  {
+    "name": "12_gita_mahal",
+    "prompt": "Edit only proportions of this Gita Mahal sprite. Preserve face, grey front streak, centered bun, sturdy square body, uniform green pocketless fabric apron with neckloop and hidden rear ties, white polo, dark trousers, shoes. Reduce entire head+hair+bun to85% of current size relative to body; keep body and shoulder width unchanged. Current head about39%, final target35% figure height measured hairtop to underchin. Arms straight, chin up, assessing. Keep fullfigure centered onmagenta and same detailed pixelart. No added details.",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-0eeadd53-bf5d-47bc-ae45-0a1638b9925b.png"
+  },
+  {
+    "name": "08_russ_pelletier",
+    "prompt": "Both images show Russ. Make a corrected version with the HEAD SIZE EXACTLY MIDWAY between these versions: image1 head too small (30% figureheight), image2 head too large (42%). Target35–36%, preserving image2's body width and compact stance. Keep his same elderly ruddy face, thinning greyhair, thick moustache, whitepolo, plain pocketless charcoal bib apron and central wide backbrace, darktrousers and shoes. Pixelart/style/pose/background unchanged. Singlefullbody master.",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-2b475165-44bb-4ca0-b476-6829902531c2.png"
+  }
+]

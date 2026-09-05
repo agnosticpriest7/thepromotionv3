@@ -1,0 +1,306 @@
+[
+  {
+    "effective_pixel_size_per_1000h": 3.919,
+    "colours_at_192h": 5590,
+    "native_colours": 9990,
+    "bbox": [
+      69,
+      16,
+      187,
+      296
+    ],
+    "width_height": 0.42143,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\01_tyson_beck.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.94,
+    "colours_at_192h": 5020,
+    "native_colours": 8951,
+    "bbox": [
+      72,
+      16,
+      183,
+      296
+    ],
+    "width_height": 0.39643,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\02_anjali_raval.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.773,
+    "colours_at_192h": 6169,
+    "native_colours": 11322,
+    "bbox": [
+      72,
+      16,
+      183,
+      296
+    ],
+    "width_height": 0.39643,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\03_marguerite_dubois.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.76,
+    "colours_at_192h": 6252,
+    "native_colours": 11377,
+    "bbox": [
+      67,
+      16,
+      188,
+      296
+    ],
+    "width_height": 0.43214,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\04_danika_osei.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.845,
+    "colours_at_192h": 6814,
+    "native_colours": 12431,
+    "bbox": [
+      54,
+      16,
+      201,
+      296
+    ],
+    "width_height": 0.525,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\21_garret_voss.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.906,
+    "colours_at_192h": 5421,
+    "native_colours": 9971,
+    "bbox": [
+      55,
+      16,
+      201,
+      296
+    ],
+    "width_height": 0.52143,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\22_lorne_petrie.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.946,
+    "colours_at_192h": 5195,
+    "native_colours": 9526,
+    "bbox": [
+      46,
+      16,
+      210,
+      296
+    ],
+    "width_height": 0.58571,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\23_merv_kastelic.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.88,
+    "colours_at_192h": 4117,
+    "native_colours": 7309,
+    "bbox": [
+      74,
+      16,
+      182,
+      296
+    ],
+    "width_height": 0.38571,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "current-cast\\batch1-light\\24_sandrine_pike.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.813,
+    "colours_at_192h": 5483,
+    "native_colours": 9960,
+    "bbox": [
+      64,
+      16,
+      191,
+      296
+    ],
+    "width_height": 0.45357,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\05_curtis_lam.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.89,
+    "colours_at_192h": 5072,
+    "native_colours": 9173,
+    "bbox": [
+      70,
+      16,
+      185,
+      296
+    ],
+    "width_height": 0.41071,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\06_bekah_thorne.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.718,
+    "colours_at_192h": 5990,
+    "native_colours": 10349,
+    "bbox": [
+      62,
+      16,
+      194,
+      296
+    ],
+    "width_height": 0.47143,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\07_ade_okonkwo.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.719,
+    "colours_at_192h": 7402,
+    "native_colours": 13775,
+    "bbox": [
+      61,
+      16,
+      194,
+      296
+    ],
+    "width_height": 0.475,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\08_russ_pelletier.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.886,
+    "colours_at_192h": 5314,
+    "native_colours": 9324,
+    "bbox": [
+      70,
+      16,
+      186,
+      296
+    ],
+    "width_height": 0.41429,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\09_joon_ho_bae.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.857,
+    "colours_at_192h": 5773,
+    "native_colours": 10486,
+    "bbox": [
+      69,
+      16,
+      187,
+      296
+    ],
+    "width_height": 0.42143,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\10_sam_whitecalf.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.762,
+    "colours_at_192h": 7735,
+    "native_colours": 14487,
+    "bbox": [
+      64,
+      16,
+      191,
+      296
+    ],
+    "width_height": 0.45357,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\11_cheryl_novak.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.813,
+    "colours_at_192h": 6006,
+    "native_colours": 10830,
+    "bbox": [
+      65,
+      16,
+      191,
+      296
+    ],
+    "width_height": 0.45,
+    "height": 280,
+    "margin": 8,
+    "holes": 0,
+    "components": 1,
+    "file": "batch2\\light\\12_gita_mahal.png",
+    "enclosed_key_regions": 0,
+    "border_exact": true
+  }
+]
