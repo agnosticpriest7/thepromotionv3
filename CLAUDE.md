@@ -185,11 +185,18 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   `implied_scale == pxPerMetre() * propSquash(art)` so accidental drift still goes red.
 
 - ⚠️ **SOURCE PIXELS ARE NOT DRAWN PIXELS** — the same family as the `ART_W` trap above, and it
-  produced a confident, entirely wrong hypothesis. A walk strip is 552×295 (four 138×295 frames)
-  and *draws* at 45.0 authored, because `drawChar` scales it to 38 scaled px wide. Reading the
+  produced a confident, entirely wrong hypothesis. A walk strip is 552×295 (**three** 184×295
+  frames — see below) and *draws* at 45.0 authored, because `drawChar` scales it to 38 scaled px
+  wide. Reading the
   source height as if it were the drawn height gave "the character is ~2× too tall"; the measured
   answer was 0.63×, i.e. the opposite direction. **Never reason from a PNG's dimensions — compute
   what the draw call actually produces.**
+  ⚠️ **AND THE FRAME COUNT IN THAT SENTENCE WAS WRONG FOR MONTHS.** It said "four 138×295 frames".
+  `drawChar` slices by `CHAR_FRAMES = 3`, so a 552-wide strip is **three 184-wide cells** — 138 is
+  the *figure* width inside a cell, and 552/138 = 4 is exactly what makes the error look right.
+  Measured by finding the figure clusters in the shipped `walk_kyle_down.png`: three of them, at
+  x 23..161, 216..335 and 391..529. Handing that number to whoever draws the next batch would have
+  produced strips the game slices into fragments. Full spec: **`Art/ART-SPEC.md`**.
 
 - ⚠️ **AN UNEXPLORED PATH IS NOT A HOLLOW ASSERTION — IT IS A MISSING ONE.** The department picker
   shipped with a **softlock**: it sat behind the once-per-gate latch, so pressing B or tapping its
