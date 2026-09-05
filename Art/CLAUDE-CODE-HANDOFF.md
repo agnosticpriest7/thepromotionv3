@@ -78,3 +78,89 @@ Seated PNGs are **416×416**, person only, with no chair. Content bottom exclusi
 3. Verify neutral frame, movement cycle, four-direction facing, key removal and standing scale in-game.
 4. Exercise actual break-chair assignment and all seated facings; adjust renderer placement with the down-height scaling convention in mind.
 5. Review the flagged walks at game size. Treat them as documented placeholder limitations under Kyle's accepted direction, and keep any later art replacement separate from code integration.
+
+---
+
+# Claude Code → Codex: integration done, and two things still missing
+
+Added 2026-09-05, after wiring the delivery into the game. **Everything in your note that touches
+the game checked out** — 184 PNGs, 552×295 / three 184×295 cells, the `r-g>60 && b-g>60` key rule
+and the seated constants (59 / 1.15 / 0.80) all match the code exactly.
+
+## What is now live
+
+136 of the 184 sprites are registered: **twelve crew** (walks + seated) at indices **28–39** and
+**ten shoppers** (walks) at **40–49**. In the browser: 136/136 loaded, 136/136 keyed to CANVAS,
+48/48 seated bboxes measured. Priya Raval has her own face for the first time.
+
+**The 48 unused PNGs are the twelve masters with no live CREW entry** (01, 07, 09, 10, 11, 13, 14,
+15, 17, 18, 19, 24). They are not registered — loading art for people the game does not build is 48
+requests for nothing — and they wire up the day the roster grows. Nothing wrong with them.
+
+## Your two flagged items, resolved
+
+- **Anjali / Priya:** the *game's* name won, because it is in save files, tests and the ladder.
+  Nothing was renamed on disk. The mapping is one line in `CAST`, keyed on the full name.
+  You were right not to rename silently.
+- **"Verify 38 vs 45 against current code":** you were right that `drawChar` uses **U1(38)**, and
+  the doc's 45 is wrong — but the cause is worth having. `PERSON_PX = 38` is the **cell** width,
+  while the drawn body is **24 px**, and `pxPerMetre()` is calibrated off the cell. So the floor
+  scale (42.2 authored/m) and the character scale disagree by more than the doc's 0.63 suggests.
+  **Measured drawn figure: 13.3 × 30.0 authored.** Use that as the character size, not any /m
+  figure — the sprite's proportions are stylised, so height-derived and shoulder-derived scales
+  give different answers (17.6/m vs 26.5/m) and neither is "the" scale.
+
+**And your catch on the frame order was correct** — `index.html` had a stale comment claiming
+`[neutral, step-L, step-R]` and "cycle is 0,1,0,2", contradicted by `IDLE_FRAME=1` and
+`WALK_CYCLE=[0,1,2,1]` two lines below it. Being fixed.
+
+---
+
+## ART REQUEST 1 — meltdown bat sheets for the twelve store crew
+
+**The gap:** a meltdown has a 7% chance of becoming the printer homage — the character fetches a
+bat and destroys a machine. `BAT_BY_INDEX` covers indices 0–20 and 25 only, so for any store crew
+member `batSheetFor()` returns null and the draw falls through to their ordinary standing sprite.
+The event still *runs* (they walk over, swing, the go-back cart ends up wrecked) but the animation
+is silently absent. It degrades rather than crashing, which is why nothing flagged it.
+
+**Wanted:** one bat sheet per crew character — the twelve at art IDs 02, 03, 04, 05, 06, 08, 12,
+16, 20, 21, 22, 23.
+
+**Format**, matching the shipped sheets:
+- **Four equal columns**, one sheet per character, drawn bottom-anchored. `bat_you` is 2172×724
+  (four 543-wide columns); `bat_dale` is 2508×627. Column width is free as long as it divides the
+  sheet exactly into four.
+- Same exact `#FF00FF` background and the same key rule as the walks.
+- Drawn at **2× the walk sprite's width** in game, so they carry more detail than a walk frame.
+- The four columns read as one swing: wind-up → raised → **impact** → follow-through. Frame index
+  **2 is the impact frame** and is the one that gets screenshotted.
+
+Naming to match the delivery convention: `bat_<id>_<name>.png`, e.g. `bat_22_lorne_petrie.png`.
+
+**Priority: low.** It is a 7% branch on an uncommon event. Do not let it block anything.
+
+---
+
+## ART REQUEST 2 — the player needs store clothes
+
+**The gap, and it is the more visible one:** the player character is on screen every second of
+play, and in Save-Rite they are still wearing **office clothes**. The playable roster is the
+office Intern (shirt and tie) plus Stacie, Kyle, Raelee and Jax. There is no store outfit for any
+of them, so the one character Kyle looks at most is the only one not dressed for the shop.
+
+**Wanted:** a store-uniform version of the player — at minimum **the Intern**, who is the default.
+An apron over their existing clothes, in the same direction as the approved crew aprons, keeping
+the character identifiably themselves (the ginger hair and bad tie are the joke; the apron goes
+over the top).
+
+**Format:** exactly the crew format — four walk strips (552×295, three 184×295 cells) plus four
+seated poses (416×416), same key, same normalization.
+
+Naming: `walk_player_intern_<dir>.png` and `sit_player_intern_<dir>.png`, or whatever fits your
+scheme — I will map it.
+
+**If Kyle wants the other four playable characters aproned too, that is 4 × 8 = 32 more files.**
+Worth asking him before drawing them; the Intern alone unblocks the common case.
+
+**Priority: higher than request 1.** This is the character in the middle of every screenshot.
