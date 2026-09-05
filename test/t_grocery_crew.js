@@ -755,6 +755,97 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   }
 }
 
+/* ---- THE CAST WEARS ITS OWN FACE ------------------------------------------------------------
+   ⚠️ A MISSING SPRITE DOES NOT THROW -- IT FALLS BACK TO A STOCK FACE. loadArt's onerror just
+   counts the file as loaded, and charIndexFor's last resort is a name-hash into a two-entry pool.
+   So a typo in any one of 136 registered filenames is invisible: the game boots, nothing is red,
+   and one character quietly wears somebody else's head. That is the failure this section exists
+   for, and it is why the disk check below matters more than the mapping check above it. */
+{
+  const fs = require('fs'), path = require('path');
+  const ROOT = path.join(__dirname, '..');
+  const src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+
+  /* every save-rite name the game registers, taken from the file itself */
+  const names = Array.from(new Set((src.match(/'save-rite\/[a-z0-9_\-\/]+'/g) || [])
+    .map(s => s.slice(1, -1))));
+  ck('  ^ the store cast is actually registered', names.length >= 100,
+     names.length + ' save-rite sprite names in index.html');
+
+  /* SEAT_ART holds BASENAMES, not files -- seatedPersonSpriteFor appends _down/_up/_left/_right.
+     Checking those as filenames looks for twelve PNGs that were never meant to exist. */
+  const files = names.filter(n => /_(down|up|left|right)$/.test(n));
+  const missing = files.filter(n => !fs.existsSync(path.join(ROOT, 'Art', 'sprites', n + '.png')));
+  ck('every registered sprite exists on disk — a 404 is a silent stock face, not an error',
+     missing.length === 0,
+     missing.length ? missing.length + ' missing, first: ' + missing[0] : files.length + ' files present');
+
+  /* ⚠️ AND THE PATHS ARE CASE-SENSITIVE ON PAGES. Windows does not care; the live site does, so a
+     capital letter here ships a character with no head and works perfectly on this machine. */
+  const wrongCase = names.filter(n => n !== n.toLowerCase());
+  ck('  ^ and every one is lower-case, because Pages is case-sensitive and Windows is not',
+     wrongCase.length === 0, wrongCase.length ? wrongCase.join(', ') : 'all lower-case');
+}
+
+/* ---- and the mapping actually reaches every one of them ------------------------------------ */
+{
+  const cw = mk(); cw.run(400);
+  const cg = cw.g, csb = cw.sandbox;
+  const crew = cg.NPCS.filter(n => !n.customer && n.alive);
+  const stock = crew.filter(n => csb.charIndexFor(n) < 28);
+  ck('every store crew member resolves to store art, not an office face',
+     crew.length >= 10 && stock.length === 0,
+     stock.length ? stock.map(n => n.name + '=' + csb.charIndexFor(n)).join(', ')
+                  : crew.length + ' crew, indices ' + crew.map(n => csb.charIndexFor(n)).sort((a,b)=>a-b).join(','));
+
+  /* the one that had actually gone wrong: she matched CAST['Priya'] and wore the OFFICE Priya */
+  const priya = crew.find(n => n.name === 'Priya Raval');
+  ck('  ^ including Priya Raval, who used to inherit the office Priya',
+     !!priya && csb.charIndexFor(priya) >= 28,
+     priya ? ('index ' + csb.charIndexFor(priya)) : 'not on the floor');
+
+  /* seated art for all twelve: station:true means they stand at WORK, not that they skip breaks */
+  /* ⚠️ ASK THE MAPPING AND THE DISK, NOT seatedPersonSpriteFor(). That function gates on ok(),
+     which needs the image LOADED -- and the harness stubs Image, so headless it answers "no seated
+     art" for every character whether the wiring is right or wrong. Verified separately in the
+     browser (8 of 8 seated crew drew real poses, none placeholder); what this can check honestly
+     is that each crew index has a SEAT_ART basename and that its four PNGs are on disk. */
+  const fs2 = require('fs'), path2 = require('path');
+  const ROOT2 = path2.join(__dirname, '..');
+  const src2 = fs2.readFileSync(path2.join(ROOT2, 'index.html'), 'utf8');
+  const seatBlock = src2.slice(src2.indexOf('const SEAT_ART={'), src2.indexOf('function seatedPersonSpriteFor'));
+  const seatMap = {};
+  (seatBlock.match(/(\d+):'([^']+)'/g) || []).forEach(m => {
+    const kv = m.match(/(\d+):'([^']+)'/); seatMap[kv[1]] = kv[2];
+  });
+  const noSeat = crew.filter(n => {
+    const base = seatMap[String(csb.charIndexFor(n))];
+    if (!base) return true;
+    return ['down','up','left','right'].some(d =>
+      !fs2.existsSync(path2.join(ROOT2, 'Art', 'sprites', base + '_' + d + '.png')));
+  });
+  ck('  ^ and every one of them has all four seated poses on disk', noSeat.length === 0,
+     noSeat.length ? noSeat.map(n => n.name).join(', ') : 'all ' + crew.length + ' have four poses');
+
+  /* shoppers: ten looks, and the office pools must NOT have been repointed at them */
+  const looks = {}; const seen = new Set();
+  for (let i = 0; i < 700; i++) {
+    cw.run(40);
+    cg.NPCS.filter(n => n.customer).forEach(n => {
+      if (seen.has(n.name)) return; seen.add(n.name);
+      looks[csb.charIndexFor(n)] = 1;
+    });
+  }
+  ck('  ^ and the shoppers draw from their own ten, not four recycled staff faces',
+     seen.size >= 40 && Object.keys(looks).length >= 8,
+     Object.keys(looks).length + ' looks across ' + seen.size + ' shoppers');
+
+  const ow = createWorld({}); ow.run(400);
+  const leaked = ow.g.NPCS.filter(n => !n.customer && ow.sandbox.charIndexFor(n) >= 28);
+  ck('  ^ and no store face leaked into the office', leaked.length === 0,
+     leaked.length ? leaked.map(n => n.name).join(', ') : 'office cast unchanged');
+}
+
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
