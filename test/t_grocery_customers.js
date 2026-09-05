@@ -314,12 +314,21 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
   const distinct = Object.keys(looks).length;
   ck('  ^ enough shoppers passed through to judge the crowd', seen.size >= 40,
      seen.size + ' distinct shoppers over the day');
-  ck('the crowd is not all the same person', distinct >= 4,
+  ck('the crowd is not all the same person', distinct >= 8,
      distinct + ' distinct looks across ' + seen.size + ' shoppers');
-  /* a mixed crowd, not just four men: the two pools are men and women, so both must appear */
-  const male = [16, 17].some(i => looks[i]), female = [18, 19].some(i => looks[i]);
-  ck('  ^ and it is a mixed crowd, not four of the same', male && female,
-     'from male pool=' + male + ', from female pool=' + female);
+  /* ⚠️ THIS ASSERTED THE MECHANISM AND ROTTED THE MOMENT THE MECHANISM CHANGED. It read
+     `[16,17].some(...)` and `[18,19].some(...)` -- the two office pools -- because back then a
+     shopper's look came from hashing their name into office staff. They have their own ten
+     characters now, so both pools are legitimately empty and this went red on a change that made
+     the thing it cares about STRICTLY BETTER. Textbook 14: assert the contract, not the wiring.
+
+     The contract is that a shopper is a SHOPPER -- drawn from the store's own cast, not recycled
+     from the office -- and that the crowd is varied. Office faces are indices 0..27; the store's
+     cast starts at 28. That survives the pools being renumbered again. */
+  const officeFaces = Object.keys(looks).map(Number).filter(i => i < 28);
+  ck('  ^ and they are shoppers, not recycled office staff', officeFaces.length === 0,
+     officeFaces.length ? 'wearing office faces: ' + officeFaces.join(', ')
+                        : 'all from the store cast (' + Object.keys(looks).sort((a,b)=>a-b).join(',') + ')');
 }
 
 console.log('customers: ' + pass + ' pass, ' + fail + ' fail');
