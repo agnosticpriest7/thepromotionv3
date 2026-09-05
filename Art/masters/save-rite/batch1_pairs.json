@@ -1,0 +1,198 @@
+[
+  {
+    "a": "01_tyson_beck",
+    "b": "03_marguerite_dubois",
+    "silhouette_iou": 0.88752,
+    "palette_intersection": 0.78532,
+    "score": 0.83642
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "02_anjali_raval",
+    "silhouette_iou": 0.91969,
+    "palette_intersection": 0.60832,
+    "score": 0.764
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "03_marguerite_dubois",
+    "silhouette_iou": 0.92078,
+    "palette_intersection": 0.6007,
+    "score": 0.76074
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.91132,
+    "palette_intersection": 0.51073,
+    "score": 0.71102
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.83358,
+    "palette_intersection": 0.57547,
+    "score": 0.70452
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.82196,
+    "palette_intersection": 0.56702,
+    "score": 0.69449
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.82866,
+    "palette_intersection": 0.55604,
+    "score": 0.69235
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.84493,
+    "palette_intersection": 0.45874,
+    "score": 0.65184
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.87628,
+    "palette_intersection": 0.37011,
+    "score": 0.6232
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.90512,
+    "palette_intersection": 0.33761,
+    "score": 0.62136
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.89379,
+    "palette_intersection": 0.33222,
+    "score": 0.61301
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.91036,
+    "palette_intersection": 0.2777,
+    "score": 0.59403
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.83609,
+    "palette_intersection": 0.31534,
+    "score": 0.57571
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.77845,
+    "palette_intersection": 0.37166,
+    "score": 0.57505
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.73534,
+    "palette_intersection": 0.40522,
+    "score": 0.57028
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.83837,
+    "palette_intersection": 0.2902,
+    "score": 0.56428
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.78589,
+    "palette_intersection": 0.31533,
+    "score": 0.55061
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.82062,
+    "palette_intersection": 0.27942,
+    "score": 0.55002
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.81474,
+    "palette_intersection": 0.28124,
+    "score": 0.54799
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.72665,
+    "palette_intersection": 0.35203,
+    "score": 0.53934
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.83848,
+    "palette_intersection": 0.22432,
+    "score": 0.5314
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.72716,
+    "palette_intersection": 0.31311,
+    "score": 0.52013
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.78148,
+    "palette_intersection": 0.25762,
+    "score": 0.51955
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.69544,
+    "palette_intersection": 0.33925,
+    "score": 0.51734
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.71299,
+    "palette_intersection": 0.31855,
+    "score": 0.51577
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.77889,
+    "palette_intersection": 0.22335,
+    "score": 0.50112
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.68373,
+    "palette_intersection": 0.25432,
+    "score": 0.46903
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.63366,
+    "palette_intersection": 0.3038,
+    "score": 0.46873
+  }
+]

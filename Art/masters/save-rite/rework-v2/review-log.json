@@ -1,0 +1,186 @@
+[
+  {
+    "name": "01_tyson_beck",
+    "head_percent": 41.7,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.793,
+      "colours_at_192h": 987,
+      "native_colours": 987,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 404
+      },
+      "post_resize_adjustments": 37
+    }
+  },
+  {
+    "name": "02_anjali_raval",
+    "head_percent": 44.8,
+    "raw_holes": 246,
+    "raw_margin": -168,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.789,
+      "colours_at_192h": 961,
+      "native_colours": 961,
+      "repairs": {
+        "enclosed_key_pixels_filled": 246,
+        "near_key_rim_pixels_adjusted": 264
+      },
+      "post_resize_adjustments": 61
+    }
+  },
+  {
+    "name": "03_marguerite_dubois",
+    "head_percent": 46.3,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.763,
+      "colours_at_192h": 1003,
+      "native_colours": 1003,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 243
+      },
+      "post_resize_adjustments": 42
+    }
+  },
+  {
+    "name": "04_danika_osei",
+    "head_percent": 47.8,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.429,
+      "colours_at_192h": 998,
+      "native_colours": 998,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 468
+      },
+      "post_resize_adjustments": 46
+    }
+  },
+  {
+    "name": "21_garret_voss",
+    "head_percent": 43.6,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.922,
+      "colours_at_192h": 1019,
+      "native_colours": 1019,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 286
+      },
+      "post_resize_adjustments": 14
+    }
+  },
+  {
+    "name": "22_lorne_petrie",
+    "head_percent": 48.1,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 17.43,
+      "colours_at_192h": 1002,
+      "native_colours": 1002,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 242
+      },
+      "post_resize_adjustments": 41
+    }
+  },
+  {
+    "name": "23_merv_kastelic",
+    "head_percent": 42.8,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 17.922,
+      "colours_at_192h": 989,
+      "native_colours": 989,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 480
+      },
+      "post_resize_adjustments": 65
+    }
+  },
+  {
+    "name": "24_sandrine_pike",
+    "head_percent": 49.4,
+    "raw_holes": 0,
+    "raw_margin": 0,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.976,
+      "colours_at_192h": 931,
+      "native_colours": 931,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 169
+      },
+      "post_resize_adjustments": 49
+    }
+  }
+]

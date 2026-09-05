@@ -1,0 +1,170 @@
+[
+  {
+    "name": "intern",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 32,
+    "uncertainty_px": 1,
+    "head_ratio": 0.47368
+  },
+  {
+    "name": "sterling",
+    "top_y": 4,
+    "height": 57,
+    "under_chin_y": 26,
+    "uncertainty_px": 1,
+    "head_ratio": 0.38596
+  },
+  {
+    "name": "brenda",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "marla",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 30,
+    "uncertainty_px": 1,
+    "head_ratio": 0.44828
+  },
+  {
+    "name": "peggy",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 29,
+    "uncertainty_px": 1,
+    "head_ratio": 0.43103
+  },
+  {
+    "name": "marcus",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "priya",
+    "top_y": 4,
+    "height": 57,
+    "under_chin_y": 25,
+    "uncertainty_px": 1,
+    "head_ratio": 0.36842
+  },
+  {
+    "name": "chad",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 27,
+    "uncertainty_px": 1,
+    "head_ratio": 0.39655
+  },
+  {
+    "name": "dana",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "otis",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 25,
+    "uncertainty_px": 1,
+    "head_ratio": 0.36207
+  },
+  {
+    "name": "wren",
+    "top_y": 5,
+    "height": 56,
+    "under_chin_y": 30,
+    "uncertainty_px": 1,
+    "head_ratio": 0.44643
+  },
+  {
+    "name": "sana",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "gil",
+    "top_y": 5,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "ramesh",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 30,
+    "uncertainty_px": 1,
+    "head_ratio": 0.44828
+  },
+  {
+    "name": "vera",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 29,
+    "uncertainty_px": 1,
+    "head_ratio": 0.43103
+  },
+  {
+    "name": "doug",
+    "top_y": 4,
+    "height": 57,
+    "under_chin_y": 27,
+    "uncertainty_px": 1,
+    "head_ratio": 0.40351
+  },
+  {
+    "name": "ravinder",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.41379
+  },
+  {
+    "name": "hank",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.41379
+  },
+  {
+    "name": "zora",
+    "top_y": 4,
+    "height": 57,
+    "under_chin_y": 28,
+    "uncertainty_px": 1,
+    "head_ratio": 0.42105
+  },
+  {
+    "name": "hire_blazer",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 29,
+    "uncertainty_px": 1,
+    "head_ratio": 0.43103
+  },
+  {
+    "name": "dale",
+    "top_y": 4,
+    "height": 58,
+    "under_chin_y": 32,
+    "uncertainty_px": 1,
+    "head_ratio": 0.48276
+  }
+]

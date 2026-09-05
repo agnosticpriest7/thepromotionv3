@@ -1,0 +1,442 @@
+[
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      359,
+      73,
+      888,
+      1176
+    ],
+    "width": 529,
+    "height": 1103,
+    "width_height": 0.4796,
+    "head_top": 73,
+    "baseline": 1175,
+    "neck_row": 434,
+    "head_ratio": 0.39347,
+    "neck_candidate_range": [
+      426,
+      442
+    ],
+    "torso_max_width": 529,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 7386,
+    "components": 1,
+    "component_sizes": [
+      465490
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "01_tyson_beck",
+    "manual_under_chin_y": 533,
+    "manual_head_ratio": 0.4170444242973708,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.793,
+      "colours_at_192h": 987,
+      "native_colours": 987,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 404
+      },
+      "post_resize_adjustments": 37
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      371,
+      67,
+      891,
+      1167
+    ],
+    "width": 520,
+    "height": 1100,
+    "width_height": 0.47273,
+    "head_top": 67,
+    "baseline": 1166,
+    "neck_row": 515,
+    "head_ratio": 0.46818,
+    "neck_candidate_range": [
+      513,
+      517
+    ],
+    "torso_max_width": 463,
+    "key_pixels": 246,
+    "sealed_exact_magenta": 0,
+    "margin": -168,
+    "exterior_key_fringe": 6568,
+    "components": 1,
+    "component_sizes": [
+      442007
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "02_anjali_raval",
+    "manual_under_chin_y": 560,
+    "manual_head_ratio": 0.4481818181818182,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.789,
+      "colours_at_192h": 961,
+      "native_colours": 961,
+      "repairs": {
+        "enclosed_key_pixels_filled": 246,
+        "near_key_rim_pixels_adjusted": 264
+      },
+      "post_resize_adjustments": 61
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      357,
+      64,
+      900,
+      1186
+    ],
+    "width": 543,
+    "height": 1122,
+    "width_height": 0.48396,
+    "head_top": 64,
+    "baseline": 1185,
+    "neck_row": 484,
+    "head_ratio": 0.43137,
+    "neck_candidate_range": [
+      477,
+      490
+    ],
+    "torso_max_width": 515,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 7840,
+    "components": 1,
+    "component_sizes": [
+      472594
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "03_marguerite_dubois",
+    "manual_under_chin_y": 584,
+    "manual_head_ratio": 0.46345811051693403,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.763,
+      "colours_at_192h": 1003,
+      "native_colours": 1003,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 243
+      },
+      "post_resize_adjustments": 42
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      338,
+      61,
+      938,
+      1198
+    ],
+    "width": 600,
+    "height": 1137,
+    "width_height": 0.5277,
+    "head_top": 61,
+    "baseline": 1197,
+    "neck_row": 532,
+    "head_ratio": 0.4679,
+    "neck_candidate_range": [
+      524,
+      539
+    ],
+    "torso_max_width": 479,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 8450,
+    "components": 1,
+    "component_sizes": [
+      476730
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "04_danika_osei",
+    "manual_under_chin_y": 605,
+    "manual_head_ratio": 0.47845206684256814,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.429,
+      "colours_at_192h": 998,
+      "native_colours": 998,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 468
+      },
+      "post_resize_adjustments": 46
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      312,
+      103,
+      930,
+      1150
+    ],
+    "width": 618,
+    "height": 1047,
+    "width_height": 0.59026,
+    "head_top": 103,
+    "baseline": 1149,
+    "neck_row": 405,
+    "head_ratio": 0.38682,
+    "neck_candidate_range": [
+      400,
+      410
+    ],
+    "torso_max_width": 618,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 5276,
+    "components": 1,
+    "component_sizes": [
+      495502
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "21_garret_voss",
+    "manual_under_chin_y": 560,
+    "manual_head_ratio": 0.4364851957975167,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.922,
+      "colours_at_192h": 1019,
+      "native_colours": 1019,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 286
+      },
+      "post_resize_adjustments": 14
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      331,
+      80,
+      925,
+      1168
+    ],
+    "width": 594,
+    "height": 1088,
+    "width_height": 0.54596,
+    "head_top": 80,
+    "baseline": 1167,
+    "neck_row": 464,
+    "head_ratio": 0.42647,
+    "neck_candidate_range": [
+      464,
+      464
+    ],
+    "torso_max_width": 594,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 6056,
+    "components": 1,
+    "component_sizes": [
+      501326
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "22_lorne_petrie",
+    "manual_under_chin_y": 603,
+    "manual_head_ratio": 0.4806985294117647,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 17.43,
+      "colours_at_192h": 1002,
+      "native_colours": 1002,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 242
+      },
+      "post_resize_adjustments": 41
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      267,
+      105,
+      987,
+      1149
+    ],
+    "width": 720,
+    "height": 1044,
+    "width_height": 0.68966,
+    "head_top": 105,
+    "baseline": 1148,
+    "neck_row": 343,
+    "head_ratio": 0.32854,
+    "neck_candidate_range": [
+      330,
+      355
+    ],
+    "torso_max_width": 720,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 5865,
+    "components": 1,
+    "component_sizes": [
+      559389
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "23_merv_kastelic",
+    "manual_under_chin_y": 552,
+    "manual_head_ratio": 0.4281609195402299,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 17.922,
+      "colours_at_192h": 989,
+      "native_colours": 989,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 480
+      },
+      "post_resize_adjustments": 65
+    }
+  },
+  {
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      385,
+      137,
+      871,
+      1109
+    ],
+    "width": 486,
+    "height": 972,
+    "width_height": 0.5,
+    "head_top": 137,
+    "baseline": 1108,
+    "neck_row": 461,
+    "head_ratio": 0.47428,
+    "neck_candidate_range": [
+      459,
+      462
+    ],
+    "torso_max_width": 445,
+    "key_pixels": 0,
+    "sealed_exact_magenta": 0,
+    "margin": 0,
+    "exterior_key_fringe": 7217,
+    "components": 1,
+    "component_sizes": [
+      375956
+    ],
+    "background_method": "corner-seeded flood with L1 tolerance 45; non-flat source",
+    "border_exact_magenta_fraction": 0.0,
+    "name": "24_sandrine_pike",
+    "manual_under_chin_y": 617,
+    "manual_head_ratio": 0.49382716049382713,
+    "manual_uncertainty_px": 10,
+    "game_size": {
+      "canvas": [
+        62,
+        78
+      ],
+      "margin": 8,
+      "holes": 0,
+      "components": 1,
+      "effective_pixel_size_per_1000h": 16.976,
+      "colours_at_192h": 931,
+      "native_colours": 931,
+      "repairs": {
+        "enclosed_key_pixels_filled": 0,
+        "near_key_rim_pixels_adjusted": 169
+      },
+      "post_resize_adjustments": 49
+    }
+  }
+]

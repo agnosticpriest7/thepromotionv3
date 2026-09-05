@@ -1,0 +1,1472 @@
+[
+  {
+    "a": "priya",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.92695,
+    "palette_intersection": 0.60998,
+    "score": 0.76846
+  },
+  {
+    "a": "priya",
+    "b": "zora",
+    "silhouette_iou": 0.93,
+    "palette_intersection": 0.58906,
+    "score": 0.75953
+  },
+  {
+    "a": "sana",
+    "b": "zora",
+    "silhouette_iou": 0.91439,
+    "palette_intersection": 0.5938,
+    "score": 0.75409
+  },
+  {
+    "a": "marla",
+    "b": "sana",
+    "silhouette_iou": 0.86033,
+    "palette_intersection": 0.64651,
+    "score": 0.75342
+  },
+  {
+    "a": "otis",
+    "b": "hank",
+    "silhouette_iou": 0.91718,
+    "palette_intersection": 0.58338,
+    "score": 0.75028
+  },
+  {
+    "a": "sterling",
+    "b": "ramesh",
+    "silhouette_iou": 0.87522,
+    "palette_intersection": 0.62455,
+    "score": 0.74989
+  },
+  {
+    "a": "sterling",
+    "b": "marla",
+    "silhouette_iou": 0.84136,
+    "palette_intersection": 0.64429,
+    "score": 0.74282
+  },
+  {
+    "a": "sterling",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.87815,
+    "palette_intersection": 0.60542,
+    "score": 0.74179
+  },
+  {
+    "a": "ramesh",
+    "b": "vera",
+    "silhouette_iou": 0.91283,
+    "palette_intersection": 0.56191,
+    "score": 0.73737
+  },
+  {
+    "a": "marla",
+    "b": "vera",
+    "silhouette_iou": 0.83391,
+    "palette_intersection": 0.63223,
+    "score": 0.73307
+  },
+  {
+    "a": "marla",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.90372,
+    "palette_intersection": 0.5607,
+    "score": 0.73221
+  },
+  {
+    "a": "zora",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.93203,
+    "palette_intersection": 0.53071,
+    "score": 0.73137
+  },
+  {
+    "a": "sana",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.91308,
+    "palette_intersection": 0.54826,
+    "score": 0.73067
+  },
+  {
+    "a": "sterling",
+    "b": "priya",
+    "silhouette_iou": 0.84284,
+    "palette_intersection": 0.61797,
+    "score": 0.73041
+  },
+  {
+    "a": "sterling",
+    "b": "sana",
+    "silhouette_iou": 0.84182,
+    "palette_intersection": 0.60311,
+    "score": 0.72246
+  },
+  {
+    "a": "marla",
+    "b": "priya",
+    "silhouette_iou": 0.88765,
+    "palette_intersection": 0.5572,
+    "score": 0.72243
+  },
+  {
+    "a": "sterling",
+    "b": "vera",
+    "silhouette_iou": 0.8747,
+    "palette_intersection": 0.56883,
+    "score": 0.72176
+  },
+  {
+    "a": "marla",
+    "b": "zora",
+    "silhouette_iou": 0.9065,
+    "palette_intersection": 0.53024,
+    "score": 0.71837
+  },
+  {
+    "a": "dana",
+    "b": "wren",
+    "silhouette_iou": 0.87821,
+    "palette_intersection": 0.55444,
+    "score": 0.71633
+  },
+  {
+    "a": "priya",
+    "b": "sana",
+    "silhouette_iou": 0.91471,
+    "palette_intersection": 0.51493,
+    "score": 0.71482
+  },
+  {
+    "a": "marcus",
+    "b": "zora",
+    "silhouette_iou": 0.85052,
+    "palette_intersection": 0.56996,
+    "score": 0.71024
+  },
+  {
+    "a": "dana",
+    "b": "ravinder",
+    "silhouette_iou": 0.89607,
+    "palette_intersection": 0.52288,
+    "score": 0.70947
+  },
+  {
+    "a": "priya",
+    "b": "ramesh",
+    "silhouette_iou": 0.80045,
+    "palette_intersection": 0.61444,
+    "score": 0.70745
+  },
+  {
+    "a": "sana",
+    "b": "ramesh",
+    "silhouette_iou": 0.80102,
+    "palette_intersection": 0.61202,
+    "score": 0.70652
+  },
+  {
+    "a": "brenda",
+    "b": "vera",
+    "silhouette_iou": 0.87348,
+    "palette_intersection": 0.53563,
+    "score": 0.70456
+  },
+  {
+    "a": "vera",
+    "b": "zora",
+    "silhouette_iou": 0.83592,
+    "palette_intersection": 0.57224,
+    "score": 0.70408
+  },
+  {
+    "a": "vera",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.87647,
+    "palette_intersection": 0.53021,
+    "score": 0.70334
+  },
+  {
+    "a": "sana",
+    "b": "vera",
+    "silhouette_iou": 0.82984,
+    "palette_intersection": 0.57659,
+    "score": 0.70322
+  },
+  {
+    "a": "chad",
+    "b": "dana",
+    "silhouette_iou": 0.83502,
+    "palette_intersection": 0.56216,
+    "score": 0.69859
+  },
+  {
+    "a": "marla",
+    "b": "ramesh",
+    "silhouette_iou": 0.79668,
+    "palette_intersection": 0.60006,
+    "score": 0.69837
+  },
+  {
+    "a": "ramesh",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.84486,
+    "palette_intersection": 0.55127,
+    "score": 0.69807
+  },
+  {
+    "a": "marcus",
+    "b": "ramesh",
+    "silhouette_iou": 0.90281,
+    "palette_intersection": 0.48912,
+    "score": 0.69597
+  },
+  {
+    "a": "intern",
+    "b": "ramesh",
+    "silhouette_iou": 0.87909,
+    "palette_intersection": 0.51241,
+    "score": 0.69575
+  },
+  {
+    "a": "chad",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.87092,
+    "palette_intersection": 0.51265,
+    "score": 0.69178
+  },
+  {
+    "a": "priya",
+    "b": "vera",
+    "silhouette_iou": 0.82744,
+    "palette_intersection": 0.55366,
+    "score": 0.69055
+  },
+  {
+    "a": "priya",
+    "b": "otis",
+    "silhouette_iou": 0.88803,
+    "palette_intersection": 0.49232,
+    "score": 0.69017
+  },
+  {
+    "a": "marcus",
+    "b": "vera",
+    "silhouette_iou": 0.87016,
+    "palette_intersection": 0.50661,
+    "score": 0.68839
+  },
+  {
+    "a": "sterling",
+    "b": "marcus",
+    "silhouette_iou": 0.92641,
+    "palette_intersection": 0.45001,
+    "score": 0.68821
+  },
+  {
+    "a": "dana",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.89624,
+    "palette_intersection": 0.47963,
+    "score": 0.68794
+  },
+  {
+    "a": "chad",
+    "b": "dale",
+    "silhouette_iou": 0.79763,
+    "palette_intersection": 0.57406,
+    "score": 0.68585
+  },
+  {
+    "a": "sterling",
+    "b": "ravinder",
+    "silhouette_iou": 0.88003,
+    "palette_intersection": 0.48965,
+    "score": 0.68484
+  },
+  {
+    "a": "ravinder",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.92014,
+    "palette_intersection": 0.44691,
+    "score": 0.68352
+  },
+  {
+    "a": "ramesh",
+    "b": "zora",
+    "silhouette_iou": 0.80951,
+    "palette_intersection": 0.55144,
+    "score": 0.68047
+  },
+  {
+    "a": "marcus",
+    "b": "priya",
+    "silhouette_iou": 0.83246,
+    "palette_intersection": 0.52397,
+    "score": 0.67822
+  },
+  {
+    "a": "sterling",
+    "b": "chad",
+    "silhouette_iou": 0.92903,
+    "palette_intersection": 0.42092,
+    "score": 0.67497
+  },
+  {
+    "a": "dana",
+    "b": "vera",
+    "silhouette_iou": 0.86311,
+    "palette_intersection": 0.48632,
+    "score": 0.67471
+  },
+  {
+    "a": "otis",
+    "b": "zora",
+    "silhouette_iou": 0.90148,
+    "palette_intersection": 0.44588,
+    "score": 0.67368
+  },
+  {
+    "a": "gil",
+    "b": "dale",
+    "silhouette_iou": 0.80996,
+    "palette_intersection": 0.53332,
+    "score": 0.67164
+  },
+  {
+    "a": "dana",
+    "b": "sana",
+    "silhouette_iou": 0.90869,
+    "palette_intersection": 0.43002,
+    "score": 0.66936
+  },
+  {
+    "a": "peggy",
+    "b": "chad",
+    "silhouette_iou": 0.80266,
+    "palette_intersection": 0.5348,
+    "score": 0.66873
+  },
+  {
+    "a": "doug",
+    "b": "dale",
+    "silhouette_iou": 0.86603,
+    "palette_intersection": 0.47076,
+    "score": 0.66839
+  },
+  {
+    "a": "otis",
+    "b": "vera",
+    "silhouette_iou": 0.84504,
+    "palette_intersection": 0.48905,
+    "score": 0.66704
+  },
+  {
+    "a": "vera",
+    "b": "ravinder",
+    "silhouette_iou": 0.88036,
+    "palette_intersection": 0.45022,
+    "score": 0.66529
+  },
+  {
+    "a": "sterling",
+    "b": "zora",
+    "silhouette_iou": 0.86047,
+    "palette_intersection": 0.46915,
+    "score": 0.66481
+  },
+  {
+    "a": "peggy",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.88736,
+    "palette_intersection": 0.44181,
+    "score": 0.66459
+  },
+  {
+    "a": "chad",
+    "b": "doug",
+    "silhouette_iou": 0.76671,
+    "palette_intersection": 0.56184,
+    "score": 0.66427
+  },
+  {
+    "a": "chad",
+    "b": "hank",
+    "silhouette_iou": 0.91306,
+    "palette_intersection": 0.41371,
+    "score": 0.66338
+  },
+  {
+    "a": "sterling",
+    "b": "dana",
+    "silhouette_iou": 0.82387,
+    "palette_intersection": 0.50271,
+    "score": 0.66329
+  },
+  {
+    "a": "brenda",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.88786,
+    "palette_intersection": 0.43538,
+    "score": 0.66162
+  },
+  {
+    "a": "intern",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.78641,
+    "palette_intersection": 0.53542,
+    "score": 0.66091
+  },
+  {
+    "a": "brenda",
+    "b": "marcus",
+    "silhouette_iou": 0.90887,
+    "palette_intersection": 0.41081,
+    "score": 0.65984
+  },
+  {
+    "a": "marcus",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.86682,
+    "palette_intersection": 0.44771,
+    "score": 0.65727
+  },
+  {
+    "a": "chad",
+    "b": "wren",
+    "silhouette_iou": 0.83052,
+    "palette_intersection": 0.47955,
+    "score": 0.65503
+  },
+  {
+    "a": "peggy",
+    "b": "hank",
+    "silhouette_iou": 0.83393,
+    "palette_intersection": 0.4756,
+    "score": 0.65477
+  },
+  {
+    "a": "marcus",
+    "b": "sana",
+    "silhouette_iou": 0.83376,
+    "palette_intersection": 0.47546,
+    "score": 0.65461
+  },
+  {
+    "a": "brenda",
+    "b": "zora",
+    "silhouette_iou": 0.85495,
+    "palette_intersection": 0.45219,
+    "score": 0.65357
+  },
+  {
+    "a": "brenda",
+    "b": "chad",
+    "silhouette_iou": 0.88595,
+    "palette_intersection": 0.42006,
+    "score": 0.653
+  },
+  {
+    "a": "peggy",
+    "b": "dana",
+    "silhouette_iou": 0.85146,
+    "palette_intersection": 0.45376,
+    "score": 0.65261
+  },
+  {
+    "a": "brenda",
+    "b": "gil",
+    "silhouette_iou": 0.92532,
+    "palette_intersection": 0.37749,
+    "score": 0.6514
+  },
+  {
+    "a": "chad",
+    "b": "gil",
+    "silhouette_iou": 0.9187,
+    "palette_intersection": 0.37852,
+    "score": 0.64861
+  },
+  {
+    "a": "brenda",
+    "b": "marla",
+    "silhouette_iou": 0.83091,
+    "palette_intersection": 0.46528,
+    "score": 0.6481
+  },
+  {
+    "a": "chad",
+    "b": "ramesh",
+    "silhouette_iou": 0.88242,
+    "palette_intersection": 0.41228,
+    "score": 0.64735
+  },
+  {
+    "a": "sterling",
+    "b": "brenda",
+    "silhouette_iou": 0.89101,
+    "palette_intersection": 0.40277,
+    "score": 0.64689
+  },
+  {
+    "a": "gil",
+    "b": "hank",
+    "silhouette_iou": 0.88827,
+    "palette_intersection": 0.40503,
+    "score": 0.64665
+  },
+  {
+    "a": "chad",
+    "b": "otis",
+    "silhouette_iou": 0.89897,
+    "palette_intersection": 0.39235,
+    "score": 0.64566
+  },
+  {
+    "a": "sterling",
+    "b": "otis",
+    "silhouette_iou": 0.90226,
+    "palette_intersection": 0.3849,
+    "score": 0.64358
+  },
+  {
+    "a": "marla",
+    "b": "marcus",
+    "silhouette_iou": 0.8265,
+    "palette_intersection": 0.46023,
+    "score": 0.64336
+  },
+  {
+    "a": "intern",
+    "b": "vera",
+    "silhouette_iou": 0.85623,
+    "palette_intersection": 0.42901,
+    "score": 0.64262
+  },
+  {
+    "a": "marla",
+    "b": "dana",
+    "silhouette_iou": 0.84334,
+    "palette_intersection": 0.43887,
+    "score": 0.6411
+  },
+  {
+    "a": "otis",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.90051,
+    "palette_intersection": 0.37946,
+    "score": 0.63998
+  },
+  {
+    "a": "intern",
+    "b": "dale",
+    "silhouette_iou": 0.85872,
+    "palette_intersection": 0.42045,
+    "score": 0.63958
+  },
+  {
+    "a": "brenda",
+    "b": "priya",
+    "silhouette_iou": 0.86515,
+    "palette_intersection": 0.41286,
+    "score": 0.639
+  },
+  {
+    "a": "marcus",
+    "b": "otis",
+    "silhouette_iou": 0.88193,
+    "palette_intersection": 0.39576,
+    "score": 0.63884
+  },
+  {
+    "a": "vera",
+    "b": "dale",
+    "silhouette_iou": 0.8172,
+    "palette_intersection": 0.46025,
+    "score": 0.63872
+  },
+  {
+    "a": "peggy",
+    "b": "gil",
+    "silhouette_iou": 0.78894,
+    "palette_intersection": 0.48672,
+    "score": 0.63783
+  },
+  {
+    "a": "marcus",
+    "b": "chad",
+    "silhouette_iou": 0.93988,
+    "palette_intersection": 0.33555,
+    "score": 0.63772
+  },
+  {
+    "a": "priya",
+    "b": "dana",
+    "silhouette_iou": 0.87125,
+    "palette_intersection": 0.40374,
+    "score": 0.6375
+  },
+  {
+    "a": "peggy",
+    "b": "dale",
+    "silhouette_iou": 0.66395,
+    "palette_intersection": 0.60895,
+    "score": 0.63645
+  },
+  {
+    "a": "sterling",
+    "b": "gil",
+    "silhouette_iou": 0.93536,
+    "palette_intersection": 0.33652,
+    "score": 0.63594
+  },
+  {
+    "a": "vera",
+    "b": "hank",
+    "silhouette_iou": 0.84029,
+    "palette_intersection": 0.43117,
+    "score": 0.63573
+  },
+  {
+    "a": "peggy",
+    "b": "wren",
+    "silhouette_iou": 0.8373,
+    "palette_intersection": 0.43151,
+    "score": 0.6344
+  },
+  {
+    "a": "priya",
+    "b": "ravinder",
+    "silhouette_iou": 0.88164,
+    "palette_intersection": 0.38658,
+    "score": 0.63411
+  },
+  {
+    "a": "gil",
+    "b": "vera",
+    "silhouette_iou": 0.85988,
+    "palette_intersection": 0.4079,
+    "score": 0.63389
+  },
+  {
+    "a": "chad",
+    "b": "ravinder",
+    "silhouette_iou": 0.88756,
+    "palette_intersection": 0.3778,
+    "score": 0.63268
+  },
+  {
+    "a": "marla",
+    "b": "otis",
+    "silhouette_iou": 0.87491,
+    "palette_intersection": 0.3902,
+    "score": 0.63256
+  },
+  {
+    "a": "brenda",
+    "b": "dana",
+    "silhouette_iou": 0.84809,
+    "palette_intersection": 0.41411,
+    "score": 0.6311
+  },
+  {
+    "a": "chad",
+    "b": "vera",
+    "silhouette_iou": 0.87126,
+    "palette_intersection": 0.38884,
+    "score": 0.63005
+  },
+  {
+    "a": "wren",
+    "b": "ravinder",
+    "silhouette_iou": 0.86857,
+    "palette_intersection": 0.38789,
+    "score": 0.62823
+  },
+  {
+    "a": "doug",
+    "b": "hank",
+    "silhouette_iou": 0.73643,
+    "palette_intersection": 0.5164,
+    "score": 0.62641
+  },
+  {
+    "a": "brenda",
+    "b": "otis",
+    "silhouette_iou": 0.85855,
+    "palette_intersection": 0.39408,
+    "score": 0.62631
+  },
+  {
+    "a": "sana",
+    "b": "ravinder",
+    "silhouette_iou": 0.89881,
+    "palette_intersection": 0.3534,
+    "score": 0.62611
+  },
+  {
+    "a": "hire_blazer",
+    "b": "dale",
+    "silhouette_iou": 0.74619,
+    "palette_intersection": 0.50526,
+    "score": 0.62572
+  },
+  {
+    "a": "wren",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.8984,
+    "palette_intersection": 0.35117,
+    "score": 0.62478
+  },
+  {
+    "a": "gil",
+    "b": "doug",
+    "silhouette_iou": 0.79499,
+    "palette_intersection": 0.45441,
+    "score": 0.6247
+  },
+  {
+    "a": "otis",
+    "b": "gil",
+    "silhouette_iou": 0.87676,
+    "palette_intersection": 0.3722,
+    "score": 0.62448
+  },
+  {
+    "a": "wren",
+    "b": "ramesh",
+    "silhouette_iou": 0.84644,
+    "palette_intersection": 0.40181,
+    "score": 0.62412
+  },
+  {
+    "a": "brenda",
+    "b": "hank",
+    "silhouette_iou": 0.84916,
+    "palette_intersection": 0.39659,
+    "score": 0.62288
+  },
+  {
+    "a": "brenda",
+    "b": "ramesh",
+    "silhouette_iou": 0.87348,
+    "palette_intersection": 0.37156,
+    "score": 0.62252
+  },
+  {
+    "a": "dana",
+    "b": "ramesh",
+    "silhouette_iou": 0.82402,
+    "palette_intersection": 0.42001,
+    "score": 0.62202
+  },
+  {
+    "a": "peggy",
+    "b": "otis",
+    "silhouette_iou": 0.86082,
+    "palette_intersection": 0.3823,
+    "score": 0.62156
+  },
+  {
+    "a": "dana",
+    "b": "gil",
+    "silhouette_iou": 0.81176,
+    "palette_intersection": 0.43055,
+    "score": 0.62115
+  },
+  {
+    "a": "dana",
+    "b": "dale",
+    "silhouette_iou": 0.73034,
+    "palette_intersection": 0.51072,
+    "score": 0.62053
+  },
+  {
+    "a": "intern",
+    "b": "sterling",
+    "silhouette_iou": 0.80135,
+    "palette_intersection": 0.43847,
+    "score": 0.61991
+  },
+  {
+    "a": "marla",
+    "b": "ravinder",
+    "silhouette_iou": 0.88612,
+    "palette_intersection": 0.35086,
+    "score": 0.61849
+  },
+  {
+    "a": "intern",
+    "b": "wren",
+    "silhouette_iou": 0.80084,
+    "palette_intersection": 0.4332,
+    "score": 0.61702
+  },
+  {
+    "a": "dana",
+    "b": "otis",
+    "silhouette_iou": 0.8667,
+    "palette_intersection": 0.36576,
+    "score": 0.61623
+  },
+  {
+    "a": "priya",
+    "b": "hank",
+    "silhouette_iou": 0.85127,
+    "palette_intersection": 0.38101,
+    "score": 0.61614
+  },
+  {
+    "a": "dana",
+    "b": "zora",
+    "silhouette_iou": 0.87504,
+    "palette_intersection": 0.35724,
+    "score": 0.61614
+  },
+  {
+    "a": "marla",
+    "b": "peggy",
+    "silhouette_iou": 0.91077,
+    "palette_intersection": 0.32107,
+    "score": 0.61592
+  },
+  {
+    "a": "intern",
+    "b": "chad",
+    "silhouette_iou": 0.80634,
+    "palette_intersection": 0.42409,
+    "score": 0.61521
+  },
+  {
+    "a": "ravinder",
+    "b": "zora",
+    "silhouette_iou": 0.90963,
+    "palette_intersection": 0.32069,
+    "score": 0.61516
+  },
+  {
+    "a": "gil",
+    "b": "ravinder",
+    "silhouette_iou": 0.85921,
+    "palette_intersection": 0.36793,
+    "score": 0.61357
+  },
+  {
+    "a": "brenda",
+    "b": "dale",
+    "silhouette_iou": 0.80842,
+    "palette_intersection": 0.41542,
+    "score": 0.61192
+  },
+  {
+    "a": "intern",
+    "b": "brenda",
+    "silhouette_iou": 0.81536,
+    "palette_intersection": 0.40841,
+    "score": 0.61189
+  },
+  {
+    "a": "marcus",
+    "b": "ravinder",
+    "silhouette_iou": 0.87008,
+    "palette_intersection": 0.34923,
+    "score": 0.60966
+  },
+  {
+    "a": "brenda",
+    "b": "sana",
+    "silhouette_iou": 0.84576,
+    "palette_intersection": 0.37255,
+    "score": 0.60916
+  },
+  {
+    "a": "ravinder",
+    "b": "dale",
+    "silhouette_iou": 0.73974,
+    "palette_intersection": 0.47826,
+    "score": 0.609
+  },
+  {
+    "a": "chad",
+    "b": "zora",
+    "silhouette_iou": 0.85239,
+    "palette_intersection": 0.36483,
+    "score": 0.60861
+  },
+  {
+    "a": "ramesh",
+    "b": "dale",
+    "silhouette_iou": 0.85735,
+    "palette_intersection": 0.35776,
+    "score": 0.60755
+  },
+  {
+    "a": "otis",
+    "b": "sana",
+    "silhouette_iou": 0.88672,
+    "palette_intersection": 0.32756,
+    "score": 0.60714
+  },
+  {
+    "a": "gil",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.86157,
+    "palette_intersection": 0.35097,
+    "score": 0.60627
+  },
+  {
+    "a": "priya",
+    "b": "chad",
+    "silhouette_iou": 0.8406,
+    "palette_intersection": 0.3681,
+    "score": 0.60435
+  },
+  {
+    "a": "wren",
+    "b": "vera",
+    "silhouette_iou": 0.88467,
+    "palette_intersection": 0.32352,
+    "score": 0.6041
+  },
+  {
+    "a": "wren",
+    "b": "dale",
+    "silhouette_iou": 0.75234,
+    "palette_intersection": 0.45357,
+    "score": 0.60296
+  },
+  {
+    "a": "hank",
+    "b": "zora",
+    "silhouette_iou": 0.87496,
+    "palette_intersection": 0.32576,
+    "score": 0.60036
+  },
+  {
+    "a": "otis",
+    "b": "ravinder",
+    "silhouette_iou": 0.92101,
+    "palette_intersection": 0.27888,
+    "score": 0.59995
+  },
+  {
+    "a": "peggy",
+    "b": "priya",
+    "silhouette_iou": 0.89935,
+    "palette_intersection": 0.30035,
+    "score": 0.59985
+  },
+  {
+    "a": "ramesh",
+    "b": "ravinder",
+    "silhouette_iou": 0.84476,
+    "palette_intersection": 0.35458,
+    "score": 0.59967
+  },
+  {
+    "a": "brenda",
+    "b": "ravinder",
+    "silhouette_iou": 0.86237,
+    "palette_intersection": 0.3335,
+    "score": 0.59793
+  },
+  {
+    "a": "wren",
+    "b": "sana",
+    "silhouette_iou": 0.8715,
+    "palette_intersection": 0.32206,
+    "score": 0.59678
+  },
+  {
+    "a": "marla",
+    "b": "hank",
+    "silhouette_iou": 0.85736,
+    "palette_intersection": 0.33567,
+    "score": 0.59651
+  },
+  {
+    "a": "peggy",
+    "b": "zora",
+    "silhouette_iou": 0.91255,
+    "palette_intersection": 0.28027,
+    "score": 0.59641
+  },
+  {
+    "a": "chad",
+    "b": "sana",
+    "silhouette_iou": 0.84848,
+    "palette_intersection": 0.3428,
+    "score": 0.59564
+  },
+  {
+    "a": "otis",
+    "b": "ramesh",
+    "silhouette_iou": 0.82165,
+    "palette_intersection": 0.36258,
+    "score": 0.59211
+  },
+  {
+    "a": "marla",
+    "b": "chad",
+    "silhouette_iou": 0.83019,
+    "palette_intersection": 0.35393,
+    "score": 0.59206
+  },
+  {
+    "a": "peggy",
+    "b": "sana",
+    "silhouette_iou": 0.87819,
+    "palette_intersection": 0.30472,
+    "score": 0.59146
+  },
+  {
+    "a": "brenda",
+    "b": "doug",
+    "silhouette_iou": 0.78948,
+    "palette_intersection": 0.3932,
+    "score": 0.59134
+  },
+  {
+    "a": "hank",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.87496,
+    "palette_intersection": 0.30751,
+    "score": 0.59124
+  },
+  {
+    "a": "dana",
+    "b": "hank",
+    "silhouette_iou": 0.8294,
+    "palette_intersection": 0.35282,
+    "score": 0.59111
+  },
+  {
+    "a": "sterling",
+    "b": "hank",
+    "silhouette_iou": 0.92051,
+    "palette_intersection": 0.25895,
+    "score": 0.58973
+  },
+  {
+    "a": "ravinder",
+    "b": "hank",
+    "silhouette_iou": 0.90116,
+    "palette_intersection": 0.27784,
+    "score": 0.5895
+  },
+  {
+    "a": "intern",
+    "b": "priya",
+    "silhouette_iou": 0.74674,
+    "palette_intersection": 0.43126,
+    "score": 0.589
+  },
+  {
+    "a": "marcus",
+    "b": "gil",
+    "silhouette_iou": 0.94729,
+    "palette_intersection": 0.22924,
+    "score": 0.58827
+  },
+  {
+    "a": "marcus",
+    "b": "hank",
+    "silhouette_iou": 0.89015,
+    "palette_intersection": 0.28454,
+    "score": 0.58735
+  },
+  {
+    "a": "peggy",
+    "b": "ravinder",
+    "silhouette_iou": 0.86961,
+    "palette_intersection": 0.3028,
+    "score": 0.58621
+  },
+  {
+    "a": "dana",
+    "b": "doug",
+    "silhouette_iou": 0.68206,
+    "palette_intersection": 0.48962,
+    "score": 0.58584
+  },
+  {
+    "a": "sterling",
+    "b": "dale",
+    "silhouette_iou": 0.78838,
+    "palette_intersection": 0.38292,
+    "score": 0.58565
+  },
+  {
+    "a": "hank",
+    "b": "dale",
+    "silhouette_iou": 0.74727,
+    "palette_intersection": 0.42274,
+    "score": 0.58501
+  },
+  {
+    "a": "marcus",
+    "b": "dana",
+    "silhouette_iou": 0.82084,
+    "palette_intersection": 0.34629,
+    "score": 0.58356
+  },
+  {
+    "a": "peggy",
+    "b": "doug",
+    "silhouette_iou": 0.66183,
+    "palette_intersection": 0.5044,
+    "score": 0.58311
+  },
+  {
+    "a": "intern",
+    "b": "marcus",
+    "silhouette_iou": 0.82358,
+    "palette_intersection": 0.34235,
+    "score": 0.58296
+  },
+  {
+    "a": "wren",
+    "b": "hank",
+    "silhouette_iou": 0.8255,
+    "palette_intersection": 0.33751,
+    "score": 0.58151
+  },
+  {
+    "a": "otis",
+    "b": "doug",
+    "silhouette_iou": 0.71006,
+    "palette_intersection": 0.44875,
+    "score": 0.57941
+  },
+  {
+    "a": "intern",
+    "b": "ravinder",
+    "silhouette_iou": 0.77406,
+    "palette_intersection": 0.37907,
+    "score": 0.57656
+  },
+  {
+    "a": "priya",
+    "b": "wren",
+    "silhouette_iou": 0.87498,
+    "palette_intersection": 0.2755,
+    "score": 0.57524
+  },
+  {
+    "a": "intern",
+    "b": "gil",
+    "silhouette_iou": 0.81449,
+    "palette_intersection": 0.33468,
+    "score": 0.57458
+  },
+  {
+    "a": "gil",
+    "b": "ramesh",
+    "silhouette_iou": 0.88453,
+    "palette_intersection": 0.26271,
+    "score": 0.57362
+  },
+  {
+    "a": "brenda",
+    "b": "wren",
+    "silhouette_iou": 0.84128,
+    "palette_intersection": 0.30246,
+    "score": 0.57187
+  },
+  {
+    "a": "ramesh",
+    "b": "hank",
+    "silhouette_iou": 0.84056,
+    "palette_intersection": 0.30101,
+    "score": 0.57079
+  },
+  {
+    "a": "brenda",
+    "b": "peggy",
+    "silhouette_iou": 0.8095,
+    "palette_intersection": 0.33174,
+    "score": 0.57062
+  },
+  {
+    "a": "marla",
+    "b": "wren",
+    "silhouette_iou": 0.85791,
+    "palette_intersection": 0.28195,
+    "score": 0.56993
+  },
+  {
+    "a": "sterling",
+    "b": "wren",
+    "silhouette_iou": 0.82387,
+    "palette_intersection": 0.31561,
+    "score": 0.56974
+  },
+  {
+    "a": "otis",
+    "b": "wren",
+    "silhouette_iou": 0.83873,
+    "palette_intersection": 0.30073,
+    "score": 0.56973
+  },
+  {
+    "a": "otis",
+    "b": "dale",
+    "silhouette_iou": 0.72579,
+    "palette_intersection": 0.41204,
+    "score": 0.56892
+  },
+  {
+    "a": "intern",
+    "b": "dana",
+    "silhouette_iou": 0.76403,
+    "palette_intersection": 0.37109,
+    "score": 0.56756
+  },
+  {
+    "a": "sana",
+    "b": "hank",
+    "silhouette_iou": 0.85487,
+    "palette_intersection": 0.27805,
+    "score": 0.56646
+  },
+  {
+    "a": "intern",
+    "b": "marla",
+    "silhouette_iou": 0.73605,
+    "palette_intersection": 0.39463,
+    "score": 0.56534
+  },
+  {
+    "a": "wren",
+    "b": "gil",
+    "silhouette_iou": 0.81423,
+    "palette_intersection": 0.31338,
+    "score": 0.56381
+  },
+  {
+    "a": "wren",
+    "b": "zora",
+    "silhouette_iou": 0.88309,
+    "palette_intersection": 0.2421,
+    "score": 0.56259
+  },
+  {
+    "a": "marla",
+    "b": "gil",
+    "silhouette_iou": 0.81683,
+    "palette_intersection": 0.30541,
+    "score": 0.56112
+  },
+  {
+    "a": "vera",
+    "b": "doug",
+    "silhouette_iou": 0.75101,
+    "palette_intersection": 0.37121,
+    "score": 0.56111
+  },
+  {
+    "a": "peggy",
+    "b": "vera",
+    "silhouette_iou": 0.79267,
+    "palette_intersection": 0.32506,
+    "score": 0.55886
+  },
+  {
+    "a": "priya",
+    "b": "gil",
+    "silhouette_iou": 0.83116,
+    "palette_intersection": 0.28358,
+    "score": 0.55737
+  },
+  {
+    "a": "intern",
+    "b": "zora",
+    "silhouette_iou": 0.74849,
+    "palette_intersection": 0.35845,
+    "score": 0.55347
+  },
+  {
+    "a": "marcus",
+    "b": "dale",
+    "silhouette_iou": 0.81145,
+    "palette_intersection": 0.29514,
+    "score": 0.5533
+  },
+  {
+    "a": "sterling",
+    "b": "peggy",
+    "silhouette_iou": 0.80795,
+    "palette_intersection": 0.29828,
+    "score": 0.55312
+  },
+  {
+    "a": "intern",
+    "b": "sana",
+    "silhouette_iou": 0.74052,
+    "palette_intersection": 0.36206,
+    "score": 0.55129
+  },
+  {
+    "a": "intern",
+    "b": "doug",
+    "silhouette_iou": 0.79126,
+    "palette_intersection": 0.30983,
+    "score": 0.55054
+  },
+  {
+    "a": "peggy",
+    "b": "ramesh",
+    "silhouette_iou": 0.76114,
+    "palette_intersection": 0.32758,
+    "score": 0.54436
+  },
+  {
+    "a": "gil",
+    "b": "zora",
+    "silhouette_iou": 0.84413,
+    "palette_intersection": 0.24217,
+    "score": 0.54315
+  },
+  {
+    "a": "sterling",
+    "b": "doug",
+    "silhouette_iou": 0.77557,
+    "palette_intersection": 0.30822,
+    "score": 0.54189
+  },
+  {
+    "a": "sana",
+    "b": "gil",
+    "silhouette_iou": 0.83186,
+    "palette_intersection": 0.24927,
+    "score": 0.54057
+  },
+  {
+    "a": "doug",
+    "b": "hire_blazer",
+    "silhouette_iou": 0.72516,
+    "palette_intersection": 0.34763,
+    "score": 0.5364
+  },
+  {
+    "a": "intern",
+    "b": "hank",
+    "silhouette_iou": 0.77016,
+    "palette_intersection": 0.30029,
+    "score": 0.53523
+  },
+  {
+    "a": "intern",
+    "b": "otis",
+    "silhouette_iou": 0.75307,
+    "palette_intersection": 0.30665,
+    "score": 0.52986
+  },
+  {
+    "a": "marla",
+    "b": "dale",
+    "silhouette_iou": 0.69421,
+    "palette_intersection": 0.35607,
+    "score": 0.52514
+  },
+  {
+    "a": "doug",
+    "b": "ravinder",
+    "silhouette_iou": 0.71876,
+    "palette_intersection": 0.32874,
+    "score": 0.52375
+  },
+  {
+    "a": "marcus",
+    "b": "wren",
+    "silhouette_iou": 0.82146,
+    "palette_intersection": 0.22352,
+    "score": 0.52249
+  },
+  {
+    "a": "priya",
+    "b": "dale",
+    "silhouette_iou": 0.71093,
+    "palette_intersection": 0.33294,
+    "score": 0.52193
+  },
+  {
+    "a": "ramesh",
+    "b": "doug",
+    "silhouette_iou": 0.78691,
+    "palette_intersection": 0.25519,
+    "score": 0.52105
+  },
+  {
+    "a": "zora",
+    "b": "dale",
+    "silhouette_iou": 0.71158,
+    "palette_intersection": 0.3274,
+    "score": 0.51949
+  },
+  {
+    "a": "marcus",
+    "b": "doug",
+    "silhouette_iou": 0.78659,
+    "palette_intersection": 0.25187,
+    "score": 0.51923
+  },
+  {
+    "a": "marla",
+    "b": "doug",
+    "silhouette_iou": 0.69083,
+    "palette_intersection": 0.33183,
+    "score": 0.51133
+  },
+  {
+    "a": "wren",
+    "b": "doug",
+    "silhouette_iou": 0.70093,
+    "palette_intersection": 0.31824,
+    "score": 0.50959
+  },
+  {
+    "a": "intern",
+    "b": "peggy",
+    "silhouette_iou": 0.70292,
+    "palette_intersection": 0.31596,
+    "score": 0.50944
+  },
+  {
+    "a": "sana",
+    "b": "dale",
+    "silhouette_iou": 0.70803,
+    "palette_intersection": 0.31045,
+    "score": 0.50924
+  },
+  {
+    "a": "peggy",
+    "b": "marcus",
+    "silhouette_iou": 0.79782,
+    "palette_intersection": 0.20515,
+    "score": 0.50148
+  },
+  {
+    "a": "doug",
+    "b": "zora",
+    "silhouette_iou": 0.70083,
+    "palette_intersection": 0.28287,
+    "score": 0.49185
+  },
+  {
+    "a": "priya",
+    "b": "doug",
+    "silhouette_iou": 0.70109,
+    "palette_intersection": 0.27202,
+    "score": 0.48655
+  },
+  {
+    "a": "sana",
+    "b": "doug",
+    "silhouette_iou": 0.68449,
+    "palette_intersection": 0.24725,
+    "score": 0.46587
+  }
+]
