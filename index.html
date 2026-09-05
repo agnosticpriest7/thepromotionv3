@@ -1156,8 +1156,13 @@ function charIndexFor(n){
   const pool=isFemaleName(n.name)?FEMALE_POOL:MALE_POOL;
   return pool[nameHash(n.name)%pool.length];
 }
-/* a 3-frame sheet is [neutral, step-L, step-R] — a real walk passes through the
-   neutral pose between steps, so the cycle is 0,1,0,2. animT is DISTANCE walked
+/* ⚠️ A 3-FRAME SHEET IS [stride, NEUTRAL, opposite stride] — the middle column is the
+   standing pose, which is what IDLE_FRAME=1 and WALK_CYCLE=[0,1,2,1] below actually say. This
+   comment claimed [neutral, step-L, step-R] and "the cycle is 0,1,0,2" for months, contradicted
+   by the two lines under it; Codex caught it while drawing against it. Handing that order to
+   whoever draws the next batch puts the standing pose in the wrong column.
+   A real walk passes through the neutral pose between steps, which is why the cycle visits
+   column 1 twice. animT is DISTANCE walked
    (world px), so the cadence matches the speed instead of the frame rate. */
 const IDLE_FRAME=1;              // middle column = standing
 const WALK_CYCLE=[0,1,2,1];      // left foot, pass, right foot, pass
