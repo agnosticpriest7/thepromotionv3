@@ -1,0 +1,9 @@
+filename,selected_attempt,retries,width,height,head_top,baseline,head_ratio,head_ratio_verified,key_pixels,sealed_exact_magenta,margin,components,width_height,height_deviation_from_batch_median_percent,status
+01_tyson_beck.png,4,4,318,756,269,1024,0.37037,0.3783068783068783,0,0,0,1,0.42063,-4.304,FLAGGED — retry cap reached; not production certified
+02_anjali_raval.png,2,4,296,749,277,1025,0.36983,0.35514018691588783,0,0,0,1,0.39519,-5.19,FLAGGED — retry cap reached; not production certified
+03_marguerite_dubois.png,4,4,312,789,218,1006,0.35361,0.3637515842839037,0,0,0,1,0.39544,-0.127,FLAGGED — retry cap reached; not production certified
+04_danika_osei.png,3,4,334,776,299,1074,0.39433,0.4059278350515464,21,0,-188,1,0.43041,-1.772,FLAGGED — retry cap reached; not production certified
+21_garret_voss.png,4,4,421,801,194,994,0.37079,0.39076154806491886,0,0,0,1,0.52559,1.392,FLAGGED — retry cap reached; not production certified
+22_lorne_petrie.png,4,4,412,791,228,1018,0.35777,0.3919089759797724,0,0,0,1,0.52086,0.127,FLAGGED — retry cap reached; not production certified
+23_merv_kastelic.png,4,4,471,802,245,1046,0.30299,0.36159600997506236,0,0,0,1,0.58728,1.519,FLAGGED — retry cap reached; not production certified
+24_sandrine_pike.png,3,4,314,813,243,1055,0.39483,0.40836408364083643,0,0,0,1,0.38622,2.911,FLAGGED — retry cap reached; not production certified

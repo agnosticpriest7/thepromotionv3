@@ -1,0 +1,290 @@
+[
+  {
+    "name": "01_tyson_beck",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.625,
+      "colours_at_192h": 5192,
+      "native_colours": 36392
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.467,
+      "colours_at_192h": 991,
+      "native_colours": 991
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 161
+    },
+    "post_quantization_rim_pixels": 38,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -6.63,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "02_anjali_raval",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.683,
+      "colours_at_192h": 4767,
+      "native_colours": 30534
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.457,
+      "colours_at_192h": 989,
+      "native_colours": 989
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 94
+    },
+    "post_quantization_rim_pixels": 38,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -6.69,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "03_marguerite_dubois",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.396,
+      "colours_at_192h": 5772,
+      "native_colours": 46733
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.388,
+      "colours_at_192h": 996,
+      "native_colours": 996
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 151
+    },
+    "post_quantization_rim_pixels": 61,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -7.08,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "04_danika_osei",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.445,
+      "colours_at_192h": 6400,
+      "native_colours": 42271
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.306,
+      "colours_at_192h": 996,
+      "native_colours": 996
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 21,
+      "near_key_rim_pixels_adjusted": 246
+    },
+    "post_quantization_rim_pixels": 41,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -7.55,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "21_garret_voss",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.528,
+      "colours_at_192h": 6314,
+      "native_colours": 57088
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.482,
+      "colours_at_192h": 1008,
+      "native_colours": 1008
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 167
+    },
+    "post_quantization_rim_pixels": 34,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -6.55,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "22_lorne_petrie",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.566,
+      "colours_at_192h": 5284,
+      "native_colours": 40906
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 17.037,
+      "colours_at_192h": 1000,
+      "native_colours": 1000
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 159
+    },
+    "post_quantization_rim_pixels": 54,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -3.4,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "23_merv_kastelic",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.563,
+      "colours_at_192h": 4923,
+      "native_colours": 39924
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 17.453,
+      "colours_at_192h": 981,
+      "native_colours": 981
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 133
+    },
+    "post_quantization_rim_pixels": 58,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -1.04,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  },
+  {
+    "name": "24_sandrine_pike",
+    "before": {
+      "effective_pixel_size_per_1000h": 1.494,
+      "colours_at_192h": 3955,
+      "native_colours": 28225
+    },
+    "after": {
+      "effective_pixel_size_per_1000h": 16.375,
+      "colours_at_192h": 924,
+      "native_colours": 924
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 152
+    },
+    "post_quantization_rim_pixels": 37,
+    "margin": 8,
+    "key_holes": 0,
+    "components": 1,
+    "canvas": [
+      62,
+      78
+    ],
+    "top": 8,
+    "baseline": 69,
+    "height": 62,
+    "pixel_deviation_percent": -7.16,
+    "checks": {
+      "effective_pixel_size": true,
+      "figure_colour_count": true,
+      "key_holes": true,
+      "margin": true,
+      "one_component": true
+    }
+  }
+]

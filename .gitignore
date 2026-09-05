@@ -16,3 +16,7 @@ test/shots/
 test/floormap.svg
 /tmp/
 .main-index.html
+
+# python bytecode from the art tooling
+__pycache__/
+*.pyc

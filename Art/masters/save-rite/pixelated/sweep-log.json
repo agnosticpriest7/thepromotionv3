@@ -1,0 +1,267 @@
+{
+  "office": [
+    {
+      "name": "intern",
+      "effective_pixel_size_per_1000h": 17.795,
+      "colours_at_192h": 1170,
+      "native_colours": 1170
+    },
+    {
+      "name": "sterling",
+      "effective_pixel_size_per_1000h": 17.686,
+      "colours_at_192h": 977,
+      "native_colours": 977
+    },
+    {
+      "name": "brenda",
+      "effective_pixel_size_per_1000h": 17.637,
+      "colours_at_192h": 1168,
+      "native_colours": 1168
+    },
+    {
+      "name": "marla",
+      "effective_pixel_size_per_1000h": 17.46,
+      "colours_at_192h": 940,
+      "native_colours": 940
+    },
+    {
+      "name": "peggy",
+      "effective_pixel_size_per_1000h": 17.275,
+      "colours_at_192h": 995,
+      "native_colours": 995
+    },
+    {
+      "name": "marcus",
+      "effective_pixel_size_per_1000h": 17.784,
+      "colours_at_192h": 1031,
+      "native_colours": 1031
+    },
+    {
+      "name": "priya",
+      "effective_pixel_size_per_1000h": 17.872,
+      "colours_at_192h": 873,
+      "native_colours": 873
+    },
+    {
+      "name": "chad",
+      "effective_pixel_size_per_1000h": 17.655,
+      "colours_at_192h": 1044,
+      "native_colours": 1044
+    },
+    {
+      "name": "dana",
+      "effective_pixel_size_per_1000h": 17.875,
+      "colours_at_192h": 962,
+      "native_colours": 962
+    },
+    {
+      "name": "otis",
+      "effective_pixel_size_per_1000h": 17.379,
+      "colours_at_192h": 1050,
+      "native_colours": 1050
+    },
+    {
+      "name": "wren",
+      "effective_pixel_size_per_1000h": 18.034,
+      "colours_at_192h": 1041,
+      "native_colours": 1041
+    },
+    {
+      "name": "sana",
+      "effective_pixel_size_per_1000h": 17.873,
+      "colours_at_192h": 874,
+      "native_colours": 874
+    },
+    {
+      "name": "gil",
+      "effective_pixel_size_per_1000h": 17.71,
+      "colours_at_192h": 1086,
+      "native_colours": 1086
+    },
+    {
+      "name": "ramesh",
+      "effective_pixel_size_per_1000h": 17.591,
+      "colours_at_192h": 1162,
+      "native_colours": 1162
+    },
+    {
+      "name": "vera",
+      "effective_pixel_size_per_1000h": 17.493,
+      "colours_at_192h": 1094,
+      "native_colours": 1094
+    },
+    {
+      "name": "doug",
+      "effective_pixel_size_per_1000h": 17.62,
+      "colours_at_192h": 1400,
+      "native_colours": 1400
+    },
+    {
+      "name": "ravinder",
+      "effective_pixel_size_per_1000h": 17.392,
+      "colours_at_192h": 1036,
+      "native_colours": 1036
+    },
+    {
+      "name": "hank",
+      "effective_pixel_size_per_1000h": 17.286,
+      "colours_at_192h": 1110,
+      "native_colours": 1110
+    },
+    {
+      "name": "zora",
+      "effective_pixel_size_per_1000h": 17.661,
+      "colours_at_192h": 967,
+      "native_colours": 967
+    },
+    {
+      "name": "hire_blazer",
+      "effective_pixel_size_per_1000h": 17.338,
+      "colours_at_192h": 1078,
+      "native_colours": 1078
+    },
+    {
+      "name": "dale",
+      "effective_pixel_size_per_1000h": 17.476,
+      "colours_at_192h": 1372,
+      "native_colours": 1372
+    }
+  ],
+  "sweep": [
+    {
+      "height": 56,
+      "colours": 768,
+      "pixel_min": 18.079,
+      "pixel_max": 19.282,
+      "colour_min": 716,
+      "colour_max": 761,
+      "pixel_median": 18.405
+    },
+    {
+      "height": 56,
+      "colours": 1024,
+      "pixel_min": 17.934,
+      "pixel_max": 18.869,
+      "colour_min": 792,
+      "colour_max": 996,
+      "pixel_median": 18.103
+    },
+    {
+      "height": 56,
+      "colours": 1280,
+      "pixel_min": 17.934,
+      "pixel_max": 18.847,
+      "colour_min": 792,
+      "colour_max": 1062,
+      "pixel_median": 18.072
+    },
+    {
+      "height": 60,
+      "colours": 768,
+      "pixel_min": 16.988,
+      "pixel_max": 18.668,
+      "colour_min": 735,
+      "colour_max": 764,
+      "pixel_median": 17.3655
+    },
+    {
+      "height": 60,
+      "colours": 1024,
+      "pixel_min": 16.799,
+      "pixel_max": 17.95,
+      "colour_min": 860,
+      "colour_max": 1006,
+      "pixel_median": 17.011499999999998
+    },
+    {
+      "height": 60,
+      "colours": 1280,
+      "pixel_min": 16.742,
+      "pixel_max": 17.824,
+      "colour_min": 860,
+      "colour_max": 1208,
+      "pixel_median": 16.892
+    },
+    {
+      "height": 64,
+      "colours": 768,
+      "pixel_min": 15.997,
+      "pixel_max": 17.827,
+      "colour_min": 746,
+      "colour_max": 766,
+      "pixel_median": 16.363
+    },
+    {
+      "height": 64,
+      "colours": 1024,
+      "pixel_min": 15.822,
+      "pixel_max": 16.972,
+      "colour_min": 938,
+      "colour_max": 1015,
+      "pixel_median": 16.022
+    },
+    {
+      "height": 64,
+      "colours": 1280,
+      "pixel_min": 15.758,
+      "pixel_max": 16.711,
+      "colour_min": 965,
+      "colour_max": 1243,
+      "pixel_median": 15.9055
+    },
+    {
+      "height": 68,
+      "colours": 768,
+      "pixel_min": 15.219,
+      "pixel_max": 16.67,
+      "colour_min": 745,
+      "colour_max": 766,
+      "pixel_median": 15.5585
+    },
+    {
+      "height": 68,
+      "colours": 1024,
+      "pixel_min": 14.952,
+      "pixel_max": 16.283,
+      "colour_min": 955,
+      "colour_max": 1019,
+      "pixel_median": 15.248000000000001
+    },
+    {
+      "height": 68,
+      "colours": 1280,
+      "pixel_min": 14.776,
+      "pixel_max": 15.824,
+      "colour_min": 1035,
+      "colour_max": 1256,
+      "pixel_median": 15.0785
+    },
+    {
+      "height": 72,
+      "colours": 768,
+      "pixel_min": 14.327,
+      "pixel_max": 16.4,
+      "colour_min": 754,
+      "colour_max": 767,
+      "pixel_median": 14.824
+    },
+    {
+      "height": 72,
+      "colours": 1024,
+      "pixel_min": 14.137,
+      "pixel_max": 16.001,
+      "colour_min": 975,
+      "colour_max": 1017,
+      "pixel_median": 14.431999999999999
+    },
+    {
+      "height": 72,
+      "colours": 1280,
+      "pixel_min": 14.03,
+      "pixel_max": 15.392,
+      "colour_min": 1137,
+      "colour_max": 1261,
+      "pixel_median": 14.2515
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+[
+  {
+    "name": "intern",
+    "effective_pixel_size_per_1000h": 17.795,
+    "colours_at_192h": 1170,
+    "native_colours": 1170
+  },
+  {
+    "name": "sterling",
+    "effective_pixel_size_per_1000h": 17.686,
+    "colours_at_192h": 977,
+    "native_colours": 977
+  },
+  {
+    "name": "brenda",
+    "effective_pixel_size_per_1000h": 17.637,
+    "colours_at_192h": 1168,
+    "native_colours": 1168
+  },
+  {
+    "name": "marla",
+    "effective_pixel_size_per_1000h": 17.46,
+    "colours_at_192h": 940,
+    "native_colours": 940
+  },
+  {
+    "name": "peggy",
+    "effective_pixel_size_per_1000h": 17.275,
+    "colours_at_192h": 995,
+    "native_colours": 995
+  },
+  {
+    "name": "marcus",
+    "effective_pixel_size_per_1000h": 17.784,
+    "colours_at_192h": 1031,
+    "native_colours": 1031
+  },
+  {
+    "name": "priya",
+    "effective_pixel_size_per_1000h": 17.872,
+    "colours_at_192h": 873,
+    "native_colours": 873
+  },
+  {
+    "name": "chad",
+    "effective_pixel_size_per_1000h": 17.655,
+    "colours_at_192h": 1044,
+    "native_colours": 1044
+  },
+  {
+    "name": "dana",
+    "effective_pixel_size_per_1000h": 17.875,
+    "colours_at_192h": 962,
+    "native_colours": 962
+  },
+  {
+    "name": "otis",
+    "effective_pixel_size_per_1000h": 17.379,
+    "colours_at_192h": 1050,
+    "native_colours": 1050
+  },
+  {
+    "name": "wren",
+    "effective_pixel_size_per_1000h": 18.034,
+    "colours_at_192h": 1041,
+    "native_colours": 1041
+  },
+  {
+    "name": "sana",
+    "effective_pixel_size_per_1000h": 17.873,
+    "colours_at_192h": 874,
+    "native_colours": 874
+  },
+  {
+    "name": "gil",
+    "effective_pixel_size_per_1000h": 17.71,
+    "colours_at_192h": 1086,
+    "native_colours": 1086
+  },
+  {
+    "name": "ramesh",
+    "effective_pixel_size_per_1000h": 17.591,
+    "colours_at_192h": 1162,
+    "native_colours": 1162
+  },
+  {
+    "name": "vera",
+    "effective_pixel_size_per_1000h": 17.493,
+    "colours_at_192h": 1094,
+    "native_colours": 1094
+  },
+  {
+    "name": "doug",
+    "effective_pixel_size_per_1000h": 17.62,
+    "colours_at_192h": 1400,
+    "native_colours": 1400
+  },
+  {
+    "name": "ravinder",
+    "effective_pixel_size_per_1000h": 17.392,
+    "colours_at_192h": 1036,
+    "native_colours": 1036
+  },
+  {
+    "name": "hank",
+    "effective_pixel_size_per_1000h": 17.286,
+    "colours_at_192h": 1110,
+    "native_colours": 1110
+  },
+  {
+    "name": "zora",
+    "effective_pixel_size_per_1000h": 17.661,
+    "colours_at_192h": 967,
+    "native_colours": 967
+  },
+  {
+    "name": "hire_blazer",
+    "effective_pixel_size_per_1000h": 17.338,
+    "colours_at_192h": 1078,
+    "native_colours": 1078
+  },
+  {
+    "name": "dale",
+    "effective_pixel_size_per_1000h": 17.476,
+    "colours_at_192h": 1372,
+    "native_colours": 1372
+  }
+]

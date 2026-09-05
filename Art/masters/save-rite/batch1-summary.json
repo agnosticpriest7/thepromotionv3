@@ -1,0 +1,26 @@
+{
+  "office": {
+    "min": 0.46587,
+    "median": 0.6243000000000001,
+    "max": 0.76846
+  },
+  "batch1": {
+    "min": 0.46873,
+    "median": 0.572665,
+    "max": 0.83642
+  },
+  "height_median": 790.0,
+  "height_range": [
+    749,
+    813
+  ],
+  "height_span_percent_median": 8.101,
+  "head_top_range": [
+    194,
+    299
+  ],
+  "baseline_range": [
+    994,
+    1074
+  ]
+}
