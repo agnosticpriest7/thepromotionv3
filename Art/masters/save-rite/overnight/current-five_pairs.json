@@ -1,0 +1,72 @@
+[
+  {
+    "a": "jax",
+    "b": "kyle",
+    "silhouette_iou": 0.92201,
+    "palette_intersection": 0.60561,
+    "score": 0.76381
+  },
+  {
+    "a": "karl",
+    "b": "rod",
+    "silhouette_iou": 0.91508,
+    "palette_intersection": 0.58653,
+    "score": 0.75081
+  },
+  {
+    "a": "jax",
+    "b": "rod",
+    "silhouette_iou": 0.92445,
+    "palette_intersection": 0.48153,
+    "score": 0.70299
+  },
+  {
+    "a": "kyle",
+    "b": "rod",
+    "silhouette_iou": 0.92685,
+    "palette_intersection": 0.46918,
+    "score": 0.69802
+  },
+  {
+    "a": "kyle",
+    "b": "raelee",
+    "silhouette_iou": 0.81506,
+    "palette_intersection": 0.57257,
+    "score": 0.69382
+  },
+  {
+    "a": "jax",
+    "b": "raelee",
+    "silhouette_iou": 0.82899,
+    "palette_intersection": 0.55762,
+    "score": 0.69331
+  },
+  {
+    "a": "raelee",
+    "b": "rod",
+    "silhouette_iou": 0.82365,
+    "palette_intersection": 0.52928,
+    "score": 0.67647
+  },
+  {
+    "a": "karl",
+    "b": "kyle",
+    "silhouette_iou": 0.90915,
+    "palette_intersection": 0.41576,
+    "score": 0.66245
+  },
+  {
+    "a": "jax",
+    "b": "karl",
+    "silhouette_iou": 0.89218,
+    "palette_intersection": 0.40724,
+    "score": 0.64971
+  },
+  {
+    "a": "karl",
+    "b": "raelee",
+    "silhouette_iou": 0.78199,
+    "palette_intersection": 0.46959,
+    "score": 0.62579
+  }
+]

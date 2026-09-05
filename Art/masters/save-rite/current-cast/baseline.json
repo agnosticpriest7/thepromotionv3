@@ -1,0 +1,102 @@
+[
+  {
+    "effective_pixel_size_per_1000h": 4.009,
+    "colours_at_192h": 8102,
+    "native_colours": 13198,
+    "bbox": [
+      34,
+      17,
+      150,
+      278
+    ],
+    "width_height": 0.44444,
+    "height": 261,
+    "margin": -130,
+    "holes": 14,
+    "components": 1,
+    "file": "walk_jax_down.png",
+    "under_chin_y": 123,
+    "head_ratio": 0.4061302681992337,
+    "chin_uncertainty_px": 2
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.923,
+    "colours_at_192h": 10389,
+    "native_colours": 18055,
+    "bbox": [
+      28,
+      16,
+      157,
+      279
+    ],
+    "width_height": 0.49049,
+    "height": 263,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "file": "walk_karl_down.png",
+    "under_chin_y": 128,
+    "head_ratio": 0.42585551330798477,
+    "chin_uncertainty_px": 2
+  },
+  {
+    "effective_pixel_size_per_1000h": 4.07,
+    "colours_at_192h": 7224,
+    "native_colours": 12312,
+    "bbox": [
+      32,
+      17,
+      150,
+      279
+    ],
+    "width_height": 0.45038,
+    "height": 262,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "file": "walk_kyle_down.png",
+    "under_chin_y": 128,
+    "head_ratio": 0.42366412213740456,
+    "chin_uncertainty_px": 2
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.894,
+    "colours_at_192h": 8110,
+    "native_colours": 13906,
+    "bbox": [
+      37,
+      16,
+      146,
+      279
+    ],
+    "width_height": 0.41445,
+    "height": 263,
+    "margin": -126,
+    "holes": 17,
+    "components": 1,
+    "file": "walk_raelee_down.png",
+    "under_chin_y": 110,
+    "head_ratio": 0.3574144486692015,
+    "chin_uncertainty_px": 2
+  },
+  {
+    "effective_pixel_size_per_1000h": 3.991,
+    "colours_at_192h": 10026,
+    "native_colours": 16879,
+    "bbox": [
+      31,
+      19,
+      153,
+      278
+    ],
+    "width_height": 0.47104,
+    "height": 259,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "file": "walk_rod_down.png",
+    "under_chin_y": 122,
+    "head_ratio": 0.39768339768339767,
+    "chin_uncertainty_px": 2
+  }
+]

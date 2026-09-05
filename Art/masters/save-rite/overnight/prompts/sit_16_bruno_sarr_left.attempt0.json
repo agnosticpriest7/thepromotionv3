@@ -1,0 +1,11 @@
+{
+  "name": "16_bruno_sarr",
+  "kind": "sit",
+  "direction": "left",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Bruno Sarr, Deli manager, West African man in thirties, dark brown skin, close-shaved head, neat goatee, fine hairnet. Trim athletic but broad shoulders, immaculate rigid upright posture.. Preserve this exact character and outfit; other images, if present, show the SAME character. Single precise pixel-art game sprite, flat exact #FF00FF background. No text, extra people, scenery. ONE single full-body SEATED pose in strict LEFT side profile. Nose/chest/knees/toes all point LEFT. Torso upright, buttocks sit at imageRIGHT, thighs horizontal extend LEFT, knees bent90degrees, shins hang vertically, feet project LEFT below knees. Hands rest on thighs. Draw PERSON ONLY on INVISIBLE chair, with no chair, table, floor, desk, shadow or cushion. Same identity/hair/clothing as master. For apron let fabric drape over lap with separate trousers below. Garret retains clipboard on lap held centrally.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\16_bruno_sarr.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\animations\\walk_16_bruno_sarr_left.png"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "22_lorne_petrie",
+  "kind": "sit",
+  "direction": "left",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Lorne Petrie, middle-aged tanned man, full grey hair and prominent grey moustache, broad grin, white short-sleeved shirt, green tie, charcoal trousers, brown shoes. Preserve this exact character and outfit; other images, if present, show the SAME character. Single precise pixel-art game sprite, flat exact #FF00FF background. No text, extra people, scenery. ONE single full-body SEATED pose in strict LEFT side profile. Nose/chest/knees/toes all point LEFT. Torso upright, buttocks sit at imageRIGHT, thighs horizontal extend LEFT, knees bent90degrees, shins hang vertically, feet project LEFT below knees. Hands rest on thighs. Draw PERSON ONLY on INVISIBLE chair, with no chair, table, floor, desk, shadow or cushion. Same identity/hair/clothing as master. For apron let fabric drape over lap with separate trousers below. Garret retains clipboard on lap held centrally.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\current-cast\\batch1-light\\22_lorne_petrie.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\animations\\walk_22_lorne_petrie_left.png"
+  ]
+}

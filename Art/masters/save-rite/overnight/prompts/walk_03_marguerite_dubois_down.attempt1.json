@@ -1,0 +1,10 @@
+{
+  "name": "03_marguerite_dubois",
+  "kind": "walk",
+  "direction": "down",
+  "attempt": 1,
+  "prompt": "Precise corrective edit of this exact Marguerite Dubois, elderly fair-skinned woman, silver-grey short tight curls, round glasses, white polo, blue apron, charcoal trousers, brown shoes. Keep identity, face, hair, outfit, pixel style, exact magenta background and THREE cells. Keep neutral column2. Correct column3 so its arms are the OPPOSITE of column1: reverse the raised versus lowered limb across SCREEN-LEFT and SCREEN-RIGHT. Do not repeat column1. All THREE figures face straight toward the viewer, front view. Column1 STRIDE A: screen-left shoe planted low, screen-right shoe raised visibly higher toward knee; opposite arms swing, screen-left hand raised at chest and screen-right hand down. Column2 NEUTRAL STANDING: both shoes together on same baseline, arms hanging. Column3 STRIDE B: screen-right shoe planted low, screen-left shoe raised higher; screen-right hand raised and screen-left hand down. Feet point at viewer throughout, toe fronts visible, NEVER profile-shaped shoes or sideways legs. Shoulder/sleeve/forearm/hand remain continuous.",
+  "references": [
+    "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-6c95b641-5deb-46dc-b281-2d795c755ba4.png"
+  ]
+}

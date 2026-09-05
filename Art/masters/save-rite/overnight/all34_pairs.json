@@ -1,0 +1,3929 @@
+[
+  {
+    "a": "10_sam_whitecalf",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.86007,
+    "palette_intersection": 0.8173,
+    "score": 0.83869
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.87154,
+    "palette_intersection": 0.79066,
+    "score": 0.8311
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "03_marguerite_dubois",
+    "silhouette_iou": 0.88269,
+    "palette_intersection": 0.77347,
+    "score": 0.82808
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.92497,
+    "palette_intersection": 0.71456,
+    "score": 0.81976
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.88459,
+    "palette_intersection": 0.75248,
+    "score": 0.81854
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.8958,
+    "palette_intersection": 0.73679,
+    "score": 0.81629
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.87604,
+    "palette_intersection": 0.7372,
+    "score": 0.80662
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.83713,
+    "palette_intersection": 0.77438,
+    "score": 0.80576
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.85529,
+    "palette_intersection": 0.73442,
+    "score": 0.79486
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.92085,
+    "palette_intersection": 0.65083,
+    "score": 0.78584
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.85361,
+    "palette_intersection": 0.71538,
+    "score": 0.78449
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.87675,
+    "palette_intersection": 0.6729,
+    "score": 0.77483
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.83175,
+    "palette_intersection": 0.71715,
+    "score": 0.77445
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.92456,
+    "palette_intersection": 0.62031,
+    "score": 0.77244
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.84952,
+    "palette_intersection": 0.69184,
+    "score": 0.77068
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.84196,
+    "palette_intersection": 0.69226,
+    "score": 0.76711
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.86587,
+    "palette_intersection": 0.66645,
+    "score": 0.76616
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.89714,
+    "palette_intersection": 0.63391,
+    "score": 0.76553
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "06_bekah_thorne",
+    "silhouette_iou": 0.88212,
+    "palette_intersection": 0.64865,
+    "score": 0.76538
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.92108,
+    "palette_intersection": 0.60671,
+    "score": 0.76389
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "03_marguerite_dubois",
+    "silhouette_iou": 0.92424,
+    "palette_intersection": 0.59766,
+    "score": 0.76095
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.8411,
+    "palette_intersection": 0.67792,
+    "score": 0.75951
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.90757,
+    "palette_intersection": 0.60996,
+    "score": 0.75877
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.90231,
+    "palette_intersection": 0.613,
+    "score": 0.75765
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.89765,
+    "palette_intersection": 0.61671,
+    "score": 0.75718
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "02_anjali_raval",
+    "silhouette_iou": 0.90406,
+    "palette_intersection": 0.60787,
+    "score": 0.75597
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.87517,
+    "palette_intersection": 0.63331,
+    "score": 0.75424
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.86304,
+    "palette_intersection": 0.63744,
+    "score": 0.75024
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.81536,
+    "palette_intersection": 0.68374,
+    "score": 0.74955
+  },
+  {
+    "a": "30_shopper_teal_blouse",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.90106,
+    "palette_intersection": 0.59392,
+    "score": 0.74749
+  },
+  {
+    "a": "30_shopper_teal_blouse",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.90604,
+    "palette_intersection": 0.58493,
+    "score": 0.74549
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.92988,
+    "palette_intersection": 0.5569,
+    "score": 0.74339
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.8826,
+    "palette_intersection": 0.60206,
+    "score": 0.74233
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.89554,
+    "palette_intersection": 0.58483,
+    "score": 0.74019
+  },
+  {
+    "a": "33_shopper_ginger_flannel",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.89969,
+    "palette_intersection": 0.57637,
+    "score": 0.73803
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.89175,
+    "palette_intersection": 0.58311,
+    "score": 0.73743
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.83573,
+    "palette_intersection": 0.635,
+    "score": 0.73536
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.88201,
+    "palette_intersection": 0.58691,
+    "score": 0.73446
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.92026,
+    "palette_intersection": 0.5457,
+    "score": 0.73298
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.9158,
+    "palette_intersection": 0.54214,
+    "score": 0.72897
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.85397,
+    "palette_intersection": 0.60038,
+    "score": 0.72718
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.81758,
+    "palette_intersection": 0.63671,
+    "score": 0.72715
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.81148,
+    "palette_intersection": 0.63437,
+    "score": 0.72292
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.92565,
+    "palette_intersection": 0.51948,
+    "score": 0.72256
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.86336,
+    "palette_intersection": 0.58106,
+    "score": 0.72221
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.93807,
+    "palette_intersection": 0.50507,
+    "score": 0.72157
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.92692,
+    "palette_intersection": 0.51567,
+    "score": 0.72129
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.88119,
+    "palette_intersection": 0.55985,
+    "score": 0.72052
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.87985,
+    "palette_intersection": 0.55769,
+    "score": 0.71877
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.85712,
+    "palette_intersection": 0.57696,
+    "score": 0.71704
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.906,
+    "palette_intersection": 0.52762,
+    "score": 0.71681
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.85818,
+    "palette_intersection": 0.57121,
+    "score": 0.7147
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.84996,
+    "palette_intersection": 0.5786,
+    "score": 0.71428
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.82731,
+    "palette_intersection": 0.60072,
+    "score": 0.71401
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.86962,
+    "palette_intersection": 0.55617,
+    "score": 0.71289
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.85195,
+    "palette_intersection": 0.57343,
+    "score": 0.71269
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.91599,
+    "palette_intersection": 0.50877,
+    "score": 0.71238
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.88146,
+    "palette_intersection": 0.54245,
+    "score": 0.71195
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.91838,
+    "palette_intersection": 0.50272,
+    "score": 0.71055
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.92117,
+    "palette_intersection": 0.49844,
+    "score": 0.7098
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.90138,
+    "palette_intersection": 0.51785,
+    "score": 0.70961
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.88694,
+    "palette_intersection": 0.53182,
+    "score": 0.70938
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.8755,
+    "palette_intersection": 0.54085,
+    "score": 0.70818
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.90222,
+    "palette_intersection": 0.51396,
+    "score": 0.70809
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.90988,
+    "palette_intersection": 0.5054,
+    "score": 0.70764
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.78513,
+    "palette_intersection": 0.62721,
+    "score": 0.70617
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.89135,
+    "palette_intersection": 0.52031,
+    "score": 0.70583
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.86565,
+    "palette_intersection": 0.54525,
+    "score": 0.70545
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.86051,
+    "palette_intersection": 0.54839,
+    "score": 0.70445
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.855,
+    "palette_intersection": 0.5523,
+    "score": 0.70365
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.90088,
+    "palette_intersection": 0.5063,
+    "score": 0.70359
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.87408,
+    "palette_intersection": 0.53242,
+    "score": 0.70325
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.86999,
+    "palette_intersection": 0.53609,
+    "score": 0.70304
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.90022,
+    "palette_intersection": 0.50387,
+    "score": 0.70204
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.90672,
+    "palette_intersection": 0.4943,
+    "score": 0.70051
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.92925,
+    "palette_intersection": 0.47072,
+    "score": 0.69999
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.7979,
+    "palette_intersection": 0.59992,
+    "score": 0.69891
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.83165,
+    "palette_intersection": 0.56574,
+    "score": 0.6987
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.89076,
+    "palette_intersection": 0.50608,
+    "score": 0.69842
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.88785,
+    "palette_intersection": 0.50628,
+    "score": 0.69706
+  },
+  {
+    "a": "29_shopper_hivis_worker",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.87653,
+    "palette_intersection": 0.5176,
+    "score": 0.69706
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.86289,
+    "palette_intersection": 0.52966,
+    "score": 0.69627
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.82243,
+    "palette_intersection": 0.56926,
+    "score": 0.69585
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.78774,
+    "palette_intersection": 0.60081,
+    "score": 0.69427
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.91972,
+    "palette_intersection": 0.46875,
+    "score": 0.69423
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.86494,
+    "palette_intersection": 0.52133,
+    "score": 0.69314
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.81151,
+    "palette_intersection": 0.57307,
+    "score": 0.69229
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.89915,
+    "palette_intersection": 0.4846,
+    "score": 0.69187
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.81974,
+    "palette_intersection": 0.56312,
+    "score": 0.69143
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86904,
+    "palette_intersection": 0.51325,
+    "score": 0.69114
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.8879,
+    "palette_intersection": 0.49369,
+    "score": 0.6908
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.91792,
+    "palette_intersection": 0.4618,
+    "score": 0.68986
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.82388,
+    "palette_intersection": 0.55578,
+    "score": 0.68983
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.9018,
+    "palette_intersection": 0.4776,
+    "score": 0.6897
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.67111,
+    "palette_intersection": 0.7073,
+    "score": 0.6892
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.8513,
+    "palette_intersection": 0.52699,
+    "score": 0.68914
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.87084,
+    "palette_intersection": 0.5067,
+    "score": 0.68877
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.88352,
+    "palette_intersection": 0.4916,
+    "score": 0.68756
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.86038,
+    "palette_intersection": 0.5142,
+    "score": 0.68729
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.83503,
+    "palette_intersection": 0.53931,
+    "score": 0.68717
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.87191,
+    "palette_intersection": 0.50145,
+    "score": 0.68668
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "04_danika_osei",
+    "silhouette_iou": 0.82473,
+    "palette_intersection": 0.54827,
+    "score": 0.6865
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.85144,
+    "palette_intersection": 0.51993,
+    "score": 0.68568
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.8835,
+    "palette_intersection": 0.48735,
+    "score": 0.68543
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.84108,
+    "palette_intersection": 0.52956,
+    "score": 0.68532
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.84407,
+    "palette_intersection": 0.52083,
+    "score": 0.68245
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.88342,
+    "palette_intersection": 0.4805,
+    "score": 0.68196
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.85515,
+    "palette_intersection": 0.50812,
+    "score": 0.68163
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.87769,
+    "palette_intersection": 0.48438,
+    "score": 0.68104
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.86341,
+    "palette_intersection": 0.4968,
+    "score": 0.68011
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.8859,
+    "palette_intersection": 0.47432,
+    "score": 0.68011
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.9044,
+    "palette_intersection": 0.45561,
+    "score": 0.68
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.86854,
+    "palette_intersection": 0.49094,
+    "score": 0.67974
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.91166,
+    "palette_intersection": 0.44689,
+    "score": 0.67928
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.8941,
+    "palette_intersection": 0.4639,
+    "score": 0.679
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.92043,
+    "palette_intersection": 0.43741,
+    "score": 0.67892
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.87911,
+    "palette_intersection": 0.47696,
+    "score": 0.67804
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.91393,
+    "palette_intersection": 0.44067,
+    "score": 0.6773
+  },
+  {
+    "a": "29_shopper_hivis_worker",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.86071,
+    "palette_intersection": 0.49333,
+    "score": 0.67702
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86462,
+    "palette_intersection": 0.48938,
+    "score": 0.677
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.83256,
+    "palette_intersection": 0.51962,
+    "score": 0.67609
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.83109,
+    "palette_intersection": 0.52077,
+    "score": 0.67593
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.87738,
+    "palette_intersection": 0.47298,
+    "score": 0.67518
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.87314,
+    "palette_intersection": 0.47614,
+    "score": 0.67464
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.84817,
+    "palette_intersection": 0.50035,
+    "score": 0.67426
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.8317,
+    "palette_intersection": 0.51517,
+    "score": 0.67343
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.85789,
+    "palette_intersection": 0.48855,
+    "score": 0.67322
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.8828,
+    "palette_intersection": 0.46326,
+    "score": 0.67303
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.7845,
+    "palette_intersection": 0.56123,
+    "score": 0.67287
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.86571,
+    "palette_intersection": 0.47915,
+    "score": 0.67243
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.82225,
+    "palette_intersection": 0.52246,
+    "score": 0.67236
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.88907,
+    "palette_intersection": 0.45539,
+    "score": 0.67223
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.93678,
+    "palette_intersection": 0.40749,
+    "score": 0.67213
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.85022,
+    "palette_intersection": 0.49399,
+    "score": 0.67211
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.82368,
+    "palette_intersection": 0.51973,
+    "score": 0.67171
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.79409,
+    "palette_intersection": 0.54896,
+    "score": 0.67153
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.87572,
+    "palette_intersection": 0.46368,
+    "score": 0.6697
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.85075,
+    "palette_intersection": 0.48721,
+    "score": 0.66898
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.87416,
+    "palette_intersection": 0.4625,
+    "score": 0.66833
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.85204,
+    "palette_intersection": 0.48443,
+    "score": 0.66824
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.81359,
+    "palette_intersection": 0.52203,
+    "score": 0.66781
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.89666,
+    "palette_intersection": 0.43837,
+    "score": 0.66751
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.89339,
+    "palette_intersection": 0.44055,
+    "score": 0.66697
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.87782,
+    "palette_intersection": 0.45387,
+    "score": 0.66585
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.87013,
+    "palette_intersection": 0.46134,
+    "score": 0.66573
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.86014,
+    "palette_intersection": 0.47014,
+    "score": 0.66514
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.86603,
+    "palette_intersection": 0.46402,
+    "score": 0.66502
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.79259,
+    "palette_intersection": 0.53741,
+    "score": 0.665
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.8775,
+    "palette_intersection": 0.45195,
+    "score": 0.66473
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.93572,
+    "palette_intersection": 0.39266,
+    "score": 0.66419
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.79651,
+    "palette_intersection": 0.53038,
+    "score": 0.66344
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.82193,
+    "palette_intersection": 0.50438,
+    "score": 0.66316
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.81701,
+    "palette_intersection": 0.50891,
+    "score": 0.66296
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.78385,
+    "palette_intersection": 0.54044,
+    "score": 0.66215
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86513,
+    "palette_intersection": 0.45912,
+    "score": 0.66212
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.86268,
+    "palette_intersection": 0.46154,
+    "score": 0.66211
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.89237,
+    "palette_intersection": 0.43133,
+    "score": 0.66185
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.87802,
+    "palette_intersection": 0.4455,
+    "score": 0.66176
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.86743,
+    "palette_intersection": 0.45594,
+    "score": 0.66168
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.83745,
+    "palette_intersection": 0.4859,
+    "score": 0.66168
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.82579,
+    "palette_intersection": 0.49727,
+    "score": 0.66153
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.7699,
+    "palette_intersection": 0.55156,
+    "score": 0.66073
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.8063,
+    "palette_intersection": 0.51488,
+    "score": 0.66059
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.86256,
+    "palette_intersection": 0.457,
+    "score": 0.65978
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.84758,
+    "palette_intersection": 0.47164,
+    "score": 0.65961
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.80256,
+    "palette_intersection": 0.51424,
+    "score": 0.6584
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82909,
+    "palette_intersection": 0.4869,
+    "score": 0.65799
+  },
+  {
+    "a": "29_shopper_hivis_worker",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.8304,
+    "palette_intersection": 0.48422,
+    "score": 0.65731
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.89509,
+    "palette_intersection": 0.41832,
+    "score": 0.6567
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.89111,
+    "palette_intersection": 0.42216,
+    "score": 0.65664
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.89194,
+    "palette_intersection": 0.42079,
+    "score": 0.65636
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.8486,
+    "palette_intersection": 0.46375,
+    "score": 0.65617
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.85399,
+    "palette_intersection": 0.4582,
+    "score": 0.65609
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.87892,
+    "palette_intersection": 0.43314,
+    "score": 0.65603
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.8431,
+    "palette_intersection": 0.46802,
+    "score": 0.65556
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.88004,
+    "palette_intersection": 0.42879,
+    "score": 0.65442
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.89697,
+    "palette_intersection": 0.40995,
+    "score": 0.65346
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.8265,
+    "palette_intersection": 0.47939,
+    "score": 0.65294
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.81116,
+    "palette_intersection": 0.4947,
+    "score": 0.65293
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.87879,
+    "palette_intersection": 0.42685,
+    "score": 0.65282
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.86998,
+    "palette_intersection": 0.43487,
+    "score": 0.65243
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.90042,
+    "palette_intersection": 0.40432,
+    "score": 0.65237
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.79407,
+    "palette_intersection": 0.51042,
+    "score": 0.65224
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.79317,
+    "palette_intersection": 0.50971,
+    "score": 0.65144
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.85325,
+    "palette_intersection": 0.44946,
+    "score": 0.65136
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.84637,
+    "palette_intersection": 0.45625,
+    "score": 0.65131
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "06_bekah_thorne",
+    "silhouette_iou": 0.83633,
+    "palette_intersection": 0.46574,
+    "score": 0.65103
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.86853,
+    "palette_intersection": 0.43133,
+    "score": 0.64993
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.83861,
+    "palette_intersection": 0.46092,
+    "score": 0.64976
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.82721,
+    "palette_intersection": 0.4721,
+    "score": 0.64966
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.81894,
+    "palette_intersection": 0.47991,
+    "score": 0.64943
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.85772,
+    "palette_intersection": 0.4409,
+    "score": 0.64931
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.82126,
+    "palette_intersection": 0.4765,
+    "score": 0.64888
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.83273,
+    "palette_intersection": 0.46464,
+    "score": 0.64869
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.88463,
+    "palette_intersection": 0.41247,
+    "score": 0.64855
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.91999,
+    "palette_intersection": 0.37697,
+    "score": 0.64848
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.88073,
+    "palette_intersection": 0.41622,
+    "score": 0.64847
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "06_bekah_thorne",
+    "silhouette_iou": 0.85696,
+    "palette_intersection": 0.43934,
+    "score": 0.64815
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.80969,
+    "palette_intersection": 0.4851,
+    "score": 0.6474
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.86917,
+    "palette_intersection": 0.42546,
+    "score": 0.64731
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.85471,
+    "palette_intersection": 0.43943,
+    "score": 0.64707
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "05_curtis_lam",
+    "silhouette_iou": 0.85542,
+    "palette_intersection": 0.43854,
+    "score": 0.64698
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.89631,
+    "palette_intersection": 0.39682,
+    "score": 0.64657
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.75614,
+    "palette_intersection": 0.5369,
+    "score": 0.64652
+  },
+  {
+    "a": "29_shopper_hivis_worker",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.86627,
+    "palette_intersection": 0.4267,
+    "score": 0.64648
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.89713,
+    "palette_intersection": 0.39573,
+    "score": 0.64643
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.85385,
+    "palette_intersection": 0.43751,
+    "score": 0.64568
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.86036,
+    "palette_intersection": 0.43092,
+    "score": 0.64564
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.91983,
+    "palette_intersection": 0.37054,
+    "score": 0.64518
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.85301,
+    "palette_intersection": 0.43584,
+    "score": 0.64442
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.80039,
+    "palette_intersection": 0.48812,
+    "score": 0.64425
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.89984,
+    "palette_intersection": 0.38816,
+    "score": 0.644
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.87908,
+    "palette_intersection": 0.40816,
+    "score": 0.64362
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.92982,
+    "palette_intersection": 0.35707,
+    "score": 0.64345
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.8264,
+    "palette_intersection": 0.46034,
+    "score": 0.64337
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.85987,
+    "palette_intersection": 0.42663,
+    "score": 0.64325
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.75837,
+    "palette_intersection": 0.52779,
+    "score": 0.64308
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.86335,
+    "palette_intersection": 0.42152,
+    "score": 0.64244
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.8676,
+    "palette_intersection": 0.41706,
+    "score": 0.64233
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.81866,
+    "palette_intersection": 0.466,
+    "score": 0.64233
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.88243,
+    "palette_intersection": 0.40205,
+    "score": 0.64224
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.8268,
+    "palette_intersection": 0.45725,
+    "score": 0.64202
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.75979,
+    "palette_intersection": 0.524,
+    "score": 0.64189
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.81495,
+    "palette_intersection": 0.46883,
+    "score": 0.64189
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.86924,
+    "palette_intersection": 0.41396,
+    "score": 0.6416
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.88672,
+    "palette_intersection": 0.39565,
+    "score": 0.64119
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.67875,
+    "palette_intersection": 0.60287,
+    "score": 0.64081
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.89695,
+    "palette_intersection": 0.3844,
+    "score": 0.64068
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.81808,
+    "palette_intersection": 0.46305,
+    "score": 0.64057
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.87015,
+    "palette_intersection": 0.40983,
+    "score": 0.63999
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.83087,
+    "palette_intersection": 0.44877,
+    "score": 0.63982
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.83342,
+    "palette_intersection": 0.44602,
+    "score": 0.63972
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.84522,
+    "palette_intersection": 0.43372,
+    "score": 0.63947
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.89668,
+    "palette_intersection": 0.38174,
+    "score": 0.63921
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.88113,
+    "palette_intersection": 0.39684,
+    "score": 0.63899
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.81446,
+    "palette_intersection": 0.46157,
+    "score": 0.63801
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.83256,
+    "palette_intersection": 0.44322,
+    "score": 0.63789
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.82999,
+    "palette_intersection": 0.44486,
+    "score": 0.63743
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.88849,
+    "palette_intersection": 0.38516,
+    "score": 0.63682
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.89701,
+    "palette_intersection": 0.37633,
+    "score": 0.63667
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.81951,
+    "palette_intersection": 0.45365,
+    "score": 0.63658
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.86425,
+    "palette_intersection": 0.40788,
+    "score": 0.63606
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.86206,
+    "palette_intersection": 0.40959,
+    "score": 0.63583
+  },
+  {
+    "a": "30_shopper_teal_blouse",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.90114,
+    "palette_intersection": 0.37023,
+    "score": 0.63568
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.87399,
+    "palette_intersection": 0.3969,
+    "score": 0.63545
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.82461,
+    "palette_intersection": 0.44619,
+    "score": 0.6354
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.88516,
+    "palette_intersection": 0.38519,
+    "score": 0.63518
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.85702,
+    "palette_intersection": 0.41312,
+    "score": 0.63507
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.86878,
+    "palette_intersection": 0.40012,
+    "score": 0.63445
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.88507,
+    "palette_intersection": 0.38299,
+    "score": 0.63403
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.7398,
+    "palette_intersection": 0.52765,
+    "score": 0.63373
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.83196,
+    "palette_intersection": 0.43542,
+    "score": 0.63369
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.85705,
+    "palette_intersection": 0.41026,
+    "score": 0.63365
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.8382,
+    "palette_intersection": 0.42864,
+    "score": 0.63342
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.89071,
+    "palette_intersection": 0.37613,
+    "score": 0.63342
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.79364,
+    "palette_intersection": 0.47207,
+    "score": 0.63285
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.90197,
+    "palette_intersection": 0.3617,
+    "score": 0.63184
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.75675,
+    "palette_intersection": 0.50501,
+    "score": 0.63088
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.89554,
+    "palette_intersection": 0.36486,
+    "score": 0.6302
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.69438,
+    "palette_intersection": 0.56542,
+    "score": 0.6299
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.8755,
+    "palette_intersection": 0.38388,
+    "score": 0.62969
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.92563,
+    "palette_intersection": 0.33362,
+    "score": 0.62962
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.84517,
+    "palette_intersection": 0.41338,
+    "score": 0.62927
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.86576,
+    "palette_intersection": 0.39267,
+    "score": 0.62921
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.83663,
+    "palette_intersection": 0.4215,
+    "score": 0.62907
+  },
+  {
+    "a": "30_shopper_teal_blouse",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.8417,
+    "palette_intersection": 0.41644,
+    "score": 0.62907
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.89153,
+    "palette_intersection": 0.36624,
+    "score": 0.62889
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.78716,
+    "palette_intersection": 0.4697,
+    "score": 0.62843
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "05_curtis_lam",
+    "silhouette_iou": 0.82796,
+    "palette_intersection": 0.42855,
+    "score": 0.62825
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.79169,
+    "palette_intersection": 0.46397,
+    "score": 0.62783
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.85863,
+    "palette_intersection": 0.39664,
+    "score": 0.62763
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82557,
+    "palette_intersection": 0.42886,
+    "score": 0.62722
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.87262,
+    "palette_intersection": 0.38102,
+    "score": 0.62682
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.88665,
+    "palette_intersection": 0.36677,
+    "score": 0.62671
+  },
+  {
+    "a": "32_shopper_rose_cardigan",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.9044,
+    "palette_intersection": 0.34819,
+    "score": 0.6263
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.8479,
+    "palette_intersection": 0.40468,
+    "score": 0.62629
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.84243,
+    "palette_intersection": 0.40964,
+    "score": 0.62603
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.88075,
+    "palette_intersection": 0.37079,
+    "score": 0.62577
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.87414,
+    "palette_intersection": 0.37498,
+    "score": 0.62456
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.86144,
+    "palette_intersection": 0.38662,
+    "score": 0.62403
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.76515,
+    "palette_intersection": 0.48238,
+    "score": 0.62376
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.85315,
+    "palette_intersection": 0.39342,
+    "score": 0.62329
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.82031,
+    "palette_intersection": 0.4261,
+    "score": 0.62321
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.69664,
+    "palette_intersection": 0.54892,
+    "score": 0.62278
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.87808,
+    "palette_intersection": 0.36697,
+    "score": 0.62252
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.83037,
+    "palette_intersection": 0.41439,
+    "score": 0.62238
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.92338,
+    "palette_intersection": 0.32118,
+    "score": 0.62228
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.80641,
+    "palette_intersection": 0.43811,
+    "score": 0.62226
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.83528,
+    "palette_intersection": 0.40808,
+    "score": 0.62168
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.86351,
+    "palette_intersection": 0.37894,
+    "score": 0.62122
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.87426,
+    "palette_intersection": 0.36736,
+    "score": 0.62081
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.87998,
+    "palette_intersection": 0.36117,
+    "score": 0.62058
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.90297,
+    "palette_intersection": 0.33771,
+    "score": 0.62034
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.81531,
+    "palette_intersection": 0.42455,
+    "score": 0.61993
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.81038,
+    "palette_intersection": 0.42918,
+    "score": 0.61978
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.81508,
+    "palette_intersection": 0.42435,
+    "score": 0.61971
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.8822,
+    "palette_intersection": 0.35682,
+    "score": 0.61951
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.80199,
+    "palette_intersection": 0.43681,
+    "score": 0.6194
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.83531,
+    "palette_intersection": 0.40349,
+    "score": 0.6194
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.89504,
+    "palette_intersection": 0.34327,
+    "score": 0.61915
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.73397,
+    "palette_intersection": 0.50417,
+    "score": 0.61907
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.84222,
+    "palette_intersection": 0.39521,
+    "score": 0.61871
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.81843,
+    "palette_intersection": 0.41864,
+    "score": 0.61854
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "05_curtis_lam",
+    "silhouette_iou": 0.82835,
+    "palette_intersection": 0.40864,
+    "score": 0.61849
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82017,
+    "palette_intersection": 0.41673,
+    "score": 0.61845
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.80635,
+    "palette_intersection": 0.43007,
+    "score": 0.61821
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.76009,
+    "palette_intersection": 0.47571,
+    "score": 0.6179
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.77751,
+    "palette_intersection": 0.45822,
+    "score": 0.61786
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.86592,
+    "palette_intersection": 0.36889,
+    "score": 0.6174
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.87186,
+    "palette_intersection": 0.3629,
+    "score": 0.61738
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.79817,
+    "palette_intersection": 0.43522,
+    "score": 0.6167
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.8113,
+    "palette_intersection": 0.42173,
+    "score": 0.61651
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.90098,
+    "palette_intersection": 0.33185,
+    "score": 0.61642
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.76868,
+    "palette_intersection": 0.46309,
+    "score": 0.61589
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.89654,
+    "palette_intersection": 0.33485,
+    "score": 0.61569
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.88566,
+    "palette_intersection": 0.34558,
+    "score": 0.61562
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.77913,
+    "palette_intersection": 0.45178,
+    "score": 0.61545
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.91961,
+    "palette_intersection": 0.31107,
+    "score": 0.61534
+  },
+  {
+    "a": "32_shopper_rose_cardigan",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.8791,
+    "palette_intersection": 0.35105,
+    "score": 0.61507
+  },
+  {
+    "a": "31_shopper_white_tee",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.83867,
+    "palette_intersection": 0.39143,
+    "score": 0.61505
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.85057,
+    "palette_intersection": 0.37816,
+    "score": 0.61437
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.82371,
+    "palette_intersection": 0.40467,
+    "score": 0.61419
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86858,
+    "palette_intersection": 0.35928,
+    "score": 0.61393
+  },
+  {
+    "a": "31_shopper_white_tee",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.83082,
+    "palette_intersection": 0.39693,
+    "score": 0.61387
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.88607,
+    "palette_intersection": 0.3413,
+    "score": 0.61369
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.88502,
+    "palette_intersection": 0.34198,
+    "score": 0.6135
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.889,
+    "palette_intersection": 0.33637,
+    "score": 0.61268
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.86039,
+    "palette_intersection": 0.36139,
+    "score": 0.61089
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.75617,
+    "palette_intersection": 0.46487,
+    "score": 0.61052
+  },
+  {
+    "a": "29_shopper_hivis_worker",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82853,
+    "palette_intersection": 0.39152,
+    "score": 0.61002
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.87893,
+    "palette_intersection": 0.34031,
+    "score": 0.60962
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.84265,
+    "palette_intersection": 0.37632,
+    "score": 0.60949
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "06_bekah_thorne",
+    "silhouette_iou": 0.81576,
+    "palette_intersection": 0.40148,
+    "score": 0.60862
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.88627,
+    "palette_intersection": 0.33097,
+    "score": 0.60862
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.82773,
+    "palette_intersection": 0.38827,
+    "score": 0.608
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.894,
+    "palette_intersection": 0.31826,
+    "score": 0.60613
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.74474,
+    "palette_intersection": 0.46633,
+    "score": 0.60553
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.7752,
+    "palette_intersection": 0.43539,
+    "score": 0.6053
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.83618,
+    "palette_intersection": 0.37414,
+    "score": 0.60516
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.8752,
+    "palette_intersection": 0.33503,
+    "score": 0.60511
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.83395,
+    "palette_intersection": 0.37568,
+    "score": 0.60482
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.83361,
+    "palette_intersection": 0.37569,
+    "score": 0.60465
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.67775,
+    "palette_intersection": 0.52979,
+    "score": 0.60377
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.84885,
+    "palette_intersection": 0.35767,
+    "score": 0.60326
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.83585,
+    "palette_intersection": 0.37065,
+    "score": 0.60325
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.76403,
+    "palette_intersection": 0.44231,
+    "score": 0.60317
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86011,
+    "palette_intersection": 0.34579,
+    "score": 0.60295
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.87272,
+    "palette_intersection": 0.33092,
+    "score": 0.60182
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.842,
+    "palette_intersection": 0.36126,
+    "score": 0.60163
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.86002,
+    "palette_intersection": 0.34262,
+    "score": 0.60132
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.84077,
+    "palette_intersection": 0.36103,
+    "score": 0.6009
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.76646,
+    "palette_intersection": 0.4353,
+    "score": 0.60088
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.8536,
+    "palette_intersection": 0.34779,
+    "score": 0.60069
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.84379,
+    "palette_intersection": 0.35752,
+    "score": 0.60066
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.9302,
+    "palette_intersection": 0.27089,
+    "score": 0.60054
+  },
+  {
+    "a": "28_shopper_teen_hoodie",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.87495,
+    "palette_intersection": 0.32443,
+    "score": 0.59969
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.84748,
+    "palette_intersection": 0.35132,
+    "score": 0.5994
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.84386,
+    "palette_intersection": 0.35385,
+    "score": 0.59885
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.86224,
+    "palette_intersection": 0.33247,
+    "score": 0.59736
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.79006,
+    "palette_intersection": 0.40421,
+    "score": 0.59714
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.81272,
+    "palette_intersection": 0.38097,
+    "score": 0.59685
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.85064,
+    "palette_intersection": 0.34198,
+    "score": 0.59631
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.81249,
+    "palette_intersection": 0.37758,
+    "score": 0.59504
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.8552,
+    "palette_intersection": 0.33483,
+    "score": 0.59502
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.88793,
+    "palette_intersection": 0.30166,
+    "score": 0.5948
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.80217,
+    "palette_intersection": 0.38734,
+    "score": 0.59475
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.87842,
+    "palette_intersection": 0.31073,
+    "score": 0.59458
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.87478,
+    "palette_intersection": 0.31269,
+    "score": 0.59374
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.82055,
+    "palette_intersection": 0.3667,
+    "score": 0.59363
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.81712,
+    "palette_intersection": 0.36907,
+    "score": 0.5931
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.807,
+    "palette_intersection": 0.3791,
+    "score": 0.59305
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.91144,
+    "palette_intersection": 0.27422,
+    "score": 0.59283
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.87718,
+    "palette_intersection": 0.30844,
+    "score": 0.59281
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.84289,
+    "palette_intersection": 0.34273,
+    "score": 0.59281
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.85199,
+    "palette_intersection": 0.33188,
+    "score": 0.59194
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.82353,
+    "palette_intersection": 0.35937,
+    "score": 0.59145
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.75679,
+    "palette_intersection": 0.425,
+    "score": 0.59089
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.73521,
+    "palette_intersection": 0.44559,
+    "score": 0.5904
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.87947,
+    "palette_intersection": 0.30057,
+    "score": 0.59002
+  },
+  {
+    "a": "31_shopper_white_tee",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82908,
+    "palette_intersection": 0.35077,
+    "score": 0.58993
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.86163,
+    "palette_intersection": 0.31743,
+    "score": 0.58953
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.83985,
+    "palette_intersection": 0.33822,
+    "score": 0.58904
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.74659,
+    "palette_intersection": 0.43132,
+    "score": 0.58896
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.83027,
+    "palette_intersection": 0.34738,
+    "score": 0.58882
+  },
+  {
+    "a": "26_shopper_work_jacket",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82943,
+    "palette_intersection": 0.34809,
+    "score": 0.58876
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.82098,
+    "palette_intersection": 0.35639,
+    "score": 0.58869
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.81247,
+    "palette_intersection": 0.36487,
+    "score": 0.58867
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.82144,
+    "palette_intersection": 0.35475,
+    "score": 0.58809
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.85897,
+    "palette_intersection": 0.31609,
+    "score": 0.58753
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.78151,
+    "palette_intersection": 0.39283,
+    "score": 0.58717
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.86848,
+    "palette_intersection": 0.30554,
+    "score": 0.58701
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.79661,
+    "palette_intersection": 0.37723,
+    "score": 0.58692
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.82243,
+    "palette_intersection": 0.35024,
+    "score": 0.58633
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.85379,
+    "palette_intersection": 0.31763,
+    "score": 0.58571
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.85405,
+    "palette_intersection": 0.31614,
+    "score": 0.5851
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.76836,
+    "palette_intersection": 0.40072,
+    "score": 0.58454
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.78742,
+    "palette_intersection": 0.37992,
+    "score": 0.58367
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "07_ade_okonkwo",
+    "silhouette_iou": 0.79208,
+    "palette_intersection": 0.37511,
+    "score": 0.58359
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.77618,
+    "palette_intersection": 0.39059,
+    "score": 0.58338
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.83409,
+    "palette_intersection": 0.3326,
+    "score": 0.58335
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.84724,
+    "palette_intersection": 0.31879,
+    "score": 0.58302
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.84581,
+    "palette_intersection": 0.32015,
+    "score": 0.58298
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.82831,
+    "palette_intersection": 0.33728,
+    "score": 0.5828
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.82855,
+    "palette_intersection": 0.33702,
+    "score": 0.58279
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.80989,
+    "palette_intersection": 0.35542,
+    "score": 0.58266
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.8278,
+    "palette_intersection": 0.33646,
+    "score": 0.58213
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.88562,
+    "palette_intersection": 0.27816,
+    "score": 0.58189
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.78503,
+    "palette_intersection": 0.37846,
+    "score": 0.58175
+  },
+  {
+    "a": "05_curtis_lam",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.84804,
+    "palette_intersection": 0.31535,
+    "score": 0.58169
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.69561,
+    "palette_intersection": 0.46721,
+    "score": 0.58141
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.84289,
+    "palette_intersection": 0.31989,
+    "score": 0.58139
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.87197,
+    "palette_intersection": 0.28992,
+    "score": 0.58094
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.81187,
+    "palette_intersection": 0.34828,
+    "score": 0.58008
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.89807,
+    "palette_intersection": 0.26116,
+    "score": 0.57961
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.82142,
+    "palette_intersection": 0.33742,
+    "score": 0.57942
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.78284,
+    "palette_intersection": 0.37484,
+    "score": 0.57884
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.81231,
+    "palette_intersection": 0.34478,
+    "score": 0.57855
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.77976,
+    "palette_intersection": 0.37733,
+    "score": 0.57855
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.77981,
+    "palette_intersection": 0.37667,
+    "score": 0.57824
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.87023,
+    "palette_intersection": 0.28591,
+    "score": 0.57807
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.84205,
+    "palette_intersection": 0.31373,
+    "score": 0.57789
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.83662,
+    "palette_intersection": 0.31818,
+    "score": 0.5774
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.79322,
+    "palette_intersection": 0.36089,
+    "score": 0.57705
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.84006,
+    "palette_intersection": 0.31192,
+    "score": 0.57599
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.7716,
+    "palette_intersection": 0.37771,
+    "score": 0.57465
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "09_joon_ho_bae",
+    "silhouette_iou": 0.76245,
+    "palette_intersection": 0.38661,
+    "score": 0.57453
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.85413,
+    "palette_intersection": 0.29405,
+    "score": 0.57409
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.83583,
+    "palette_intersection": 0.3118,
+    "score": 0.57381
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.8676,
+    "palette_intersection": 0.27929,
+    "score": 0.57344
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.82882,
+    "palette_intersection": 0.31798,
+    "score": 0.5734
+  },
+  {
+    "a": "24_sandrine_pike",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.88434,
+    "palette_intersection": 0.26218,
+    "score": 0.57326
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.8237,
+    "palette_intersection": 0.32253,
+    "score": 0.57311
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.77018,
+    "palette_intersection": 0.37519,
+    "score": 0.57268
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.77597,
+    "palette_intersection": 0.3687,
+    "score": 0.57234
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.84349,
+    "palette_intersection": 0.3006,
+    "score": 0.57205
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.78991,
+    "palette_intersection": 0.35375,
+    "score": 0.57183
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.82077,
+    "palette_intersection": 0.32226,
+    "score": 0.57151
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.73674,
+    "palette_intersection": 0.40502,
+    "score": 0.57088
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.83785,
+    "palette_intersection": 0.30373,
+    "score": 0.57079
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.85077,
+    "palette_intersection": 0.28921,
+    "score": 0.56999
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.82704,
+    "palette_intersection": 0.31273,
+    "score": 0.56989
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.87179,
+    "palette_intersection": 0.26688,
+    "score": 0.56933
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.77515,
+    "palette_intersection": 0.36344,
+    "score": 0.5693
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.84467,
+    "palette_intersection": 0.29153,
+    "score": 0.5681
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.77678,
+    "palette_intersection": 0.35839,
+    "score": 0.56758
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.80241,
+    "palette_intersection": 0.3313,
+    "score": 0.56685
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.84798,
+    "palette_intersection": 0.2845,
+    "score": 0.56624
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.76349,
+    "palette_intersection": 0.36745,
+    "score": 0.56547
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.77083,
+    "palette_intersection": 0.35996,
+    "score": 0.5654
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.78132,
+    "palette_intersection": 0.34883,
+    "score": 0.56508
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.83432,
+    "palette_intersection": 0.29335,
+    "score": 0.56384
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.79496,
+    "palette_intersection": 0.33193,
+    "score": 0.56344
+  },
+  {
+    "a": "15_denise_fung",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.74189,
+    "palette_intersection": 0.38391,
+    "score": 0.5629
+  },
+  {
+    "a": "07_ade_okonkwo",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.81391,
+    "palette_intersection": 0.31097,
+    "score": 0.56244
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "08_russ_pelletier",
+    "silhouette_iou": 0.74145,
+    "palette_intersection": 0.38306,
+    "score": 0.56226
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "06_bekah_thorne",
+    "silhouette_iou": 0.73935,
+    "palette_intersection": 0.38209,
+    "score": 0.56072
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.78448,
+    "palette_intersection": 0.33626,
+    "score": 0.56037
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.79156,
+    "palette_intersection": 0.32806,
+    "score": 0.55981
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.8331,
+    "palette_intersection": 0.28647,
+    "score": 0.55979
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.81084,
+    "palette_intersection": 0.30814,
+    "score": 0.55949
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "10_sam_whitecalf",
+    "silhouette_iou": 0.7532,
+    "palette_intersection": 0.36496,
+    "score": 0.55908
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.79187,
+    "palette_intersection": 0.32497,
+    "score": 0.55842
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.85318,
+    "palette_intersection": 0.26239,
+    "score": 0.55778
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.77447,
+    "palette_intersection": 0.33632,
+    "score": 0.55539
+  },
+  {
+    "a": "14_aleks_petrov",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.73659,
+    "palette_intersection": 0.37407,
+    "score": 0.55533
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.84522,
+    "palette_intersection": 0.26264,
+    "score": 0.55393
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.80658,
+    "palette_intersection": 0.30062,
+    "score": 0.5536
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.81585,
+    "palette_intersection": 0.29114,
+    "score": 0.55349
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "05_curtis_lam",
+    "silhouette_iou": 0.72082,
+    "palette_intersection": 0.38555,
+    "score": 0.55319
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.77796,
+    "palette_intersection": 0.32775,
+    "score": 0.55285
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.68509,
+    "palette_intersection": 0.42054,
+    "score": 0.55281
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.83557,
+    "palette_intersection": 0.26876,
+    "score": 0.55217
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.76967,
+    "palette_intersection": 0.3346,
+    "score": 0.55214
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "12_gita_mahal",
+    "silhouette_iou": 0.71545,
+    "palette_intersection": 0.38779,
+    "score": 0.55162
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.81936,
+    "palette_intersection": 0.28156,
+    "score": 0.55046
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.73018,
+    "palette_intersection": 0.3704,
+    "score": 0.55029
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.78518,
+    "palette_intersection": 0.31532,
+    "score": 0.55025
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.76161,
+    "palette_intersection": 0.33782,
+    "score": 0.54971
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.76081,
+    "palette_intersection": 0.33832,
+    "score": 0.54956
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.79592,
+    "palette_intersection": 0.30214,
+    "score": 0.54903
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.79317,
+    "palette_intersection": 0.30195,
+    "score": 0.54756
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.87085,
+    "palette_intersection": 0.22306,
+    "score": 0.54695
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.85388,
+    "palette_intersection": 0.23946,
+    "score": 0.54667
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "18_manny_reyes",
+    "silhouette_iou": 0.74112,
+    "palette_intersection": 0.35086,
+    "score": 0.54599
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.65427,
+    "palette_intersection": 0.43582,
+    "score": 0.54504
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "11_cheryl_novak",
+    "silhouette_iou": 0.79791,
+    "palette_intersection": 0.28898,
+    "score": 0.54345
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "15_denise_fung",
+    "silhouette_iou": 0.75463,
+    "palette_intersection": 0.33113,
+    "score": 0.54288
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.83872,
+    "palette_intersection": 0.24688,
+    "score": 0.5428
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.82876,
+    "palette_intersection": 0.25616,
+    "score": 0.54246
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.81035,
+    "palette_intersection": 0.27361,
+    "score": 0.54198
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.8028,
+    "palette_intersection": 0.28013,
+    "score": 0.54146
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.7521,
+    "palette_intersection": 0.32886,
+    "score": 0.54048
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.80402,
+    "palette_intersection": 0.27489,
+    "score": 0.53946
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.76504,
+    "palette_intersection": 0.31334,
+    "score": 0.53919
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.7305,
+    "palette_intersection": 0.34753,
+    "score": 0.53902
+  },
+  {
+    "a": "12_gita_mahal",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.74539,
+    "palette_intersection": 0.33139,
+    "score": 0.53839
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.85196,
+    "palette_intersection": 0.22479,
+    "score": 0.53838
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.82412,
+    "palette_intersection": 0.25214,
+    "score": 0.53813
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.83108,
+    "palette_intersection": 0.24222,
+    "score": 0.53665
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.75941,
+    "palette_intersection": 0.3138,
+    "score": 0.53661
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.83924,
+    "palette_intersection": 0.23301,
+    "score": 0.53612
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "20_doreen_stapp",
+    "silhouette_iou": 0.77177,
+    "palette_intersection": 0.29463,
+    "score": 0.5332
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "26_shopper_work_jacket",
+    "silhouette_iou": 0.72016,
+    "palette_intersection": 0.34582,
+    "score": 0.53299
+  },
+  {
+    "a": "27_shopper_mustard_jumper",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.83865,
+    "palette_intersection": 0.22603,
+    "score": 0.53234
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.71081,
+    "palette_intersection": 0.35375,
+    "score": 0.53228
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.70185,
+    "palette_intersection": 0.36257,
+    "score": 0.53221
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.79039,
+    "palette_intersection": 0.27359,
+    "score": 0.53199
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.81598,
+    "palette_intersection": 0.24773,
+    "score": 0.53186
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.73765,
+    "palette_intersection": 0.32447,
+    "score": 0.53106
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.77801,
+    "palette_intersection": 0.28231,
+    "score": 0.53016
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.76802,
+    "palette_intersection": 0.28842,
+    "score": 0.52822
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.6962,
+    "palette_intersection": 0.35851,
+    "score": 0.52735
+  },
+  {
+    "a": "18_manny_reyes",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.76018,
+    "palette_intersection": 0.29248,
+    "score": 0.52633
+  },
+  {
+    "a": "08_russ_pelletier",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.75658,
+    "palette_intersection": 0.29592,
+    "score": 0.52625
+  },
+  {
+    "a": "02_anjali_raval",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.72331,
+    "palette_intersection": 0.32893,
+    "score": 0.52612
+  },
+  {
+    "a": "06_bekah_thorne",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.77408,
+    "palette_intersection": 0.27699,
+    "score": 0.52554
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.81829,
+    "palette_intersection": 0.23038,
+    "score": 0.52433
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.83051,
+    "palette_intersection": 0.21576,
+    "score": 0.52314
+  },
+  {
+    "a": "13_vince_carboni",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.81396,
+    "palette_intersection": 0.23227,
+    "score": 0.52311
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.78049,
+    "palette_intersection": 0.2606,
+    "score": 0.52055
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.67881,
+    "palette_intersection": 0.36088,
+    "score": 0.51984
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.76351,
+    "palette_intersection": 0.27466,
+    "score": 0.51908
+  },
+  {
+    "a": "03_marguerite_dubois",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.78329,
+    "palette_intersection": 0.2544,
+    "score": 0.51884
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.70795,
+    "palette_intersection": 0.32873,
+    "score": 0.51834
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.71161,
+    "palette_intersection": 0.32359,
+    "score": 0.5176
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.82713,
+    "palette_intersection": 0.20667,
+    "score": 0.5169
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "16_bruno_sarr",
+    "silhouette_iou": 0.7037,
+    "palette_intersection": 0.32744,
+    "score": 0.51557
+  },
+  {
+    "a": "19_tova_lindqvist",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.81999,
+    "palette_intersection": 0.20538,
+    "score": 0.51268
+  },
+  {
+    "a": "09_joon_ho_bae",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.74695,
+    "palette_intersection": 0.27785,
+    "score": 0.5124
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.76476,
+    "palette_intersection": 0.25966,
+    "score": 0.51221
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.75933,
+    "palette_intersection": 0.26475,
+    "score": 0.51204
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "29_shopper_hivis_worker",
+    "silhouette_iou": 0.69275,
+    "palette_intersection": 0.32755,
+    "score": 0.51015
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "30_shopper_teal_blouse",
+    "silhouette_iou": 0.75227,
+    "palette_intersection": 0.26392,
+    "score": 0.5081
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.70717,
+    "palette_intersection": 0.30875,
+    "score": 0.50796
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.74373,
+    "palette_intersection": 0.26519,
+    "score": 0.50446
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "14_aleks_petrov",
+    "silhouette_iou": 0.70888,
+    "palette_intersection": 0.29869,
+    "score": 0.50378
+  },
+  {
+    "a": "20_doreen_stapp",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.7725,
+    "palette_intersection": 0.23413,
+    "score": 0.50331
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.77601,
+    "palette_intersection": 0.22989,
+    "score": 0.50295
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.7458,
+    "palette_intersection": 0.25842,
+    "score": 0.50211
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "19_tova_lindqvist",
+    "silhouette_iou": 0.73705,
+    "palette_intersection": 0.26678,
+    "score": 0.50191
+  },
+  {
+    "a": "01_tyson_beck",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.75617,
+    "palette_intersection": 0.24736,
+    "score": 0.50177
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "25_shopper_elderly_woman",
+    "silhouette_iou": 0.73833,
+    "palette_intersection": 0.26142,
+    "score": 0.49987
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "13_vince_carboni",
+    "silhouette_iou": 0.69389,
+    "palette_intersection": 0.30374,
+    "score": 0.49881
+  },
+  {
+    "a": "10_sam_whitecalf",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.69116,
+    "palette_intersection": 0.30088,
+    "score": 0.49602
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "33_shopper_ginger_flannel",
+    "silhouette_iou": 0.73584,
+    "palette_intersection": 0.24728,
+    "score": 0.49156
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "32_shopper_rose_cardigan",
+    "silhouette_iou": 0.78479,
+    "palette_intersection": 0.19671,
+    "score": 0.49075
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.70597,
+    "palette_intersection": 0.27422,
+    "score": 0.4901
+  },
+  {
+    "a": "11_cheryl_novak",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.76603,
+    "palette_intersection": 0.20475,
+    "score": 0.48539
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "17_elaine_kovacs",
+    "silhouette_iou": 0.69516,
+    "palette_intersection": 0.26984,
+    "score": 0.4825
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.7767,
+    "palette_intersection": 0.18482,
+    "score": 0.48076
+  },
+  {
+    "a": "17_elaine_kovacs",
+    "b": "22_lorne_petrie",
+    "silhouette_iou": 0.75404,
+    "palette_intersection": 0.20697,
+    "score": 0.4805
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "31_shopper_white_tee",
+    "silhouette_iou": 0.71063,
+    "palette_intersection": 0.24906,
+    "score": 0.47984
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "34_shopper_denim_jacket",
+    "silhouette_iou": 0.78136,
+    "palette_intersection": 0.16879,
+    "score": 0.47508
+  },
+  {
+    "a": "21_garret_voss",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.69889,
+    "palette_intersection": 0.24687,
+    "score": 0.47288
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "24_sandrine_pike",
+    "silhouette_iou": 0.68143,
+    "palette_intersection": 0.26218,
+    "score": 0.47181
+  },
+  {
+    "a": "16_bruno_sarr",
+    "b": "21_garret_voss",
+    "silhouette_iou": 0.71679,
+    "palette_intersection": 0.22386,
+    "score": 0.47033
+  },
+  {
+    "a": "22_lorne_petrie",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.71528,
+    "palette_intersection": 0.22305,
+    "score": 0.46917
+  },
+  {
+    "a": "04_danika_osei",
+    "b": "23_merv_kastelic",
+    "silhouette_iou": 0.63267,
+    "palette_intersection": 0.30138,
+    "score": 0.46702
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "28_shopper_teen_hoodie",
+    "silhouette_iou": 0.691,
+    "palette_intersection": 0.24257,
+    "score": 0.46679
+  },
+  {
+    "a": "25_shopper_elderly_woman",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.75884,
+    "palette_intersection": 0.1632,
+    "score": 0.46102
+  },
+  {
+    "a": "23_merv_kastelic",
+    "b": "27_shopper_mustard_jumper",
+    "silhouette_iou": 0.64627,
+    "palette_intersection": 0.19447,
+    "score": 0.42037
+  }
+]

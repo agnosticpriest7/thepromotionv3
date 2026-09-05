@@ -1,0 +1,10 @@
+{
+  "name": "09_joon_ho_bae",
+  "kind": "walk",
+  "direction": "down",
+  "attempt": 1,
+  "prompt": "Precise corrective edit of this exact Joon-Ho Bae, young East Asian man, short black parted hair, round glasses, white polo, dark-green plain bib apron tied at waist, charcoal trousers and brown shoes. Keep identity, face, hair, outfit, pixel style, exact magenta background and THREE cells. CHANGE ONLY COLUMN3. Preserve FIRST and SECOND columns exactly. Make THIRD column a horizontally reversed copy of FIRST column from shoulders to feet: raised hand and lifted shoe swap screen sides, lowered hand and planted shoe swap screen sides. Preserve head facing FRONT and exact same face/hair/costume. Do not change column1 to resemble column3. Column3 must be the opposite. No side views.",
+  "references": [
+    "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-7d25da54-df32-4d86-9626-ba26bd26d401.png"
+  ]
+}

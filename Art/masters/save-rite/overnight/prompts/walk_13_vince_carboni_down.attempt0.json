@@ -1,0 +1,11 @@
+{
+  "name": "13_vince_carboni",
+  "kind": "walk",
+  "direction": "down",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Vince Carboni, Deli, man in his fifties, Mediterranean complexion, thick greying black hair and heavy brows. Broad barrel chest and thick neck. Loud open expression, mouth mid-speech.. Preserve this exact character and outfit; other images, if present, show the SAME character. Use case: identity-preserve. Asset: a THREE-FRAME horizontal game walk strip, one row, exactly THREE equally spaced full-body copies of ONE character. Plain exact #FF00FF background, no labels, no ground, no shadows. Preserve the identity, clothing, hair, colours, build and pixel-art treatment of attached identity master. Style standard is Batch 1 Light; named baseline montage contains middle frames of walk_jax_down, walk_karl_down, walk_kyle_down, walk_raelee_down, walk_rod_down. Clean pixel clusters, bold outlines, readable sprite faces, no painterly details. Entire bodies and all feet visible with space around each, same head top and foot baseline in every cell. Uniform frame dimensions. Aim landscape 1536x832, three512x832cells. All figures same scale: approximately740px tall inside cells. All THREE figures face straight toward the viewer, front view. Column1 STRIDE A: screen-left shoe planted low, screen-right shoe raised visibly higher toward knee; opposite arms swing, screen-left hand raised at chest and screen-right hand down. Column2 NEUTRAL STANDING: both shoes together on same baseline, arms hanging. Column3 STRIDE B: screen-right shoe planted low, screen-left shoe raised higher; screen-right hand raised and screen-left hand down. Feet point at viewer throughout, toe fronts visible, NEVER profile-shaped shoes or sideways legs. Shoulder/sleeve/forearm/hand remain continuous. The additional montage is STYLE ONLY from the five named baseline files; none of its characters should appear in this output.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\13_vince_carboni.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\five-named-baselines.png"
+  ]
+}

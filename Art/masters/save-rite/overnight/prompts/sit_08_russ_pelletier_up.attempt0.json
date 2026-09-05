@@ -1,0 +1,11 @@
+{
+  "name": "08_russ_pelletier",
+  "kind": "sit",
+  "direction": "up",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Russ Pelletier, older fair heavyset man, balding grey hair and grey moustache, stern brows, white polo, charcoal plain bib apron tied at waist, charcoal trousers and brown shoes. Preserve this exact character and outfit; other images, if present, show the SAME character. Single precise pixel-art game sprite, flat exact #FF00FF background. No text, extra people, scenery. ONE single SEATED pose facing straight AWAY, back of head and upper body. Hips and knees bent90degrees as seated on INVISIBLE chair, thighs extend away from viewer, compact rounded seated buttocks at lower edge, lower legs mostly hidden by body. Hands on thighs mostly hidden at sides. This is a SITTING body with shortened silhouette, not a standing rear view. No visible face, no chair, furniture, floor, desk or shadow. Preserve hair and outfit from identity. Apron visible only at neckloop/waistties from back.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\batch2\\light\\08_russ_pelletier.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\animations\\walk_08_russ_pelletier_up.png"
+  ]
+}

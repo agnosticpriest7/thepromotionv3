@@ -1,0 +1,306 @@
+[
+  {
+    "effective_pixel_size_per_1000h": 1.625,
+    "colours_at_192h": 5192,
+    "native_colours": 36392,
+    "bbox": [
+      469,
+      269,
+      787,
+      1025
+    ],
+    "width_height": 0.42063,
+    "height": 756,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "01_tyson_beck",
+    "head_ratio": 0.3783068783068783,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.919,
+      "colours_at_192h": 5590,
+      "native_colours": 9990,
+      "bbox": [
+        69,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.42143,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 161
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.683,
+    "colours_at_192h": 4767,
+    "native_colours": 30534,
+    "bbox": [
+      478,
+      277,
+      774,
+      1026
+    ],
+    "width_height": 0.39519,
+    "height": 749,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "02_anjali_raval",
+    "head_ratio": 0.35514018691588783,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.94,
+      "colours_at_192h": 5020,
+      "native_colours": 8951,
+      "bbox": [
+        72,
+        16,
+        183,
+        296
+      ],
+      "width_height": 0.39643,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 94
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.396,
+    "colours_at_192h": 5772,
+    "native_colours": 46733,
+    "bbox": [
+      469,
+      218,
+      781,
+      1007
+    ],
+    "width_height": 0.39544,
+    "height": 789,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "03_marguerite_dubois",
+    "head_ratio": 0.3637515842839037,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.773,
+      "colours_at_192h": 6169,
+      "native_colours": 11322,
+      "bbox": [
+        72,
+        16,
+        183,
+        296
+      ],
+      "width_height": 0.39643,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 151
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.445,
+    "colours_at_192h": 6400,
+    "native_colours": 42271,
+    "bbox": [
+      460,
+      299,
+      794,
+      1075
+    ],
+    "width_height": 0.43041,
+    "height": 776,
+    "margin": -188,
+    "holes": 21,
+    "components": 1,
+    "name": "04_danika_osei",
+    "head_ratio": 0.4059278350515464,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.76,
+      "colours_at_192h": 6252,
+      "native_colours": 11377,
+      "bbox": [
+        67,
+        16,
+        188,
+        296
+      ],
+      "width_height": 0.43214,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 21,
+      "near_key_rim_pixels_adjusted": 246
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.528,
+    "colours_at_192h": 6314,
+    "native_colours": 57088,
+    "bbox": [
+      417,
+      194,
+      838,
+      995
+    ],
+    "width_height": 0.52559,
+    "height": 801,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "21_garret_voss",
+    "head_ratio": 0.39076154806491886,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.845,
+      "colours_at_192h": 6814,
+      "native_colours": 12431,
+      "bbox": [
+        54,
+        16,
+        201,
+        296
+      ],
+      "width_height": 0.525,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 167
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.566,
+    "colours_at_192h": 5284,
+    "native_colours": 40906,
+    "bbox": [
+      417,
+      228,
+      829,
+      1019
+    ],
+    "width_height": 0.52086,
+    "height": 791,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "22_lorne_petrie",
+    "head_ratio": 0.3919089759797724,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.906,
+      "colours_at_192h": 5421,
+      "native_colours": 9971,
+      "bbox": [
+        55,
+        16,
+        201,
+        296
+      ],
+      "width_height": 0.52143,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 159
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.563,
+    "colours_at_192h": 4923,
+    "native_colours": 39924,
+    "bbox": [
+      392,
+      245,
+      863,
+      1047
+    ],
+    "width_height": 0.58728,
+    "height": 802,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "23_merv_kastelic",
+    "head_ratio": 0.36159600997506236,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.946,
+      "colours_at_192h": 5195,
+      "native_colours": 9526,
+      "bbox": [
+        46,
+        16,
+        210,
+        296
+      ],
+      "width_height": 0.58571,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 133
+    }
+  },
+  {
+    "effective_pixel_size_per_1000h": 1.494,
+    "colours_at_192h": 3955,
+    "native_colours": 28225,
+    "bbox": [
+      469,
+      243,
+      783,
+      1056
+    ],
+    "width_height": 0.38622,
+    "height": 813,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "24_sandrine_pike",
+    "head_ratio": 0.40836408364083643,
+    "light": {
+      "effective_pixel_size_per_1000h": 3.88,
+      "colours_at_192h": 4117,
+      "native_colours": 7309,
+      "bbox": [
+        74,
+        16,
+        182,
+        296
+      ],
+      "width_height": 0.38571,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 152
+    }
+  }
+]

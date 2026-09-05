@@ -1,0 +1,974 @@
+{
+  "13_vince_carboni": {
+    "effective_pixel_size_per_1000h": 1.01,
+    "colours_at_192h": 6115,
+    "native_colours": 70628,
+    "bbox": [
+      345,
+      53,
+      908,
+      1168
+    ],
+    "width_height": 0.50493,
+    "height": 1115,
+    "margin": -191,
+    "holes": 667,
+    "components": 1,
+    "name": "13_vince_carboni",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-75675e57-c85f-4d99-b17d-4c423925b542.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\13_vince_carboni.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3452914798206278,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.898,
+      "colours_at_192h": 6209,
+      "native_colours": 11413,
+      "bbox": [
+        57,
+        16,
+        198,
+        296
+      ],
+      "width_height": 0.50357,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 667,
+      "near_key_rim_pixels_adjusted": 225
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\13_vince_carboni.png",
+    "under_chin_y": 438,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": false,
+      "head": true,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "14_aleks_petrov": {
+    "effective_pixel_size_per_1000h": 1.015,
+    "colours_at_192h": 5446,
+    "native_colours": 74546,
+    "bbox": [
+      391,
+      55,
+      864,
+      1200
+    ],
+    "width_height": 0.4131,
+    "height": 1145,
+    "margin": -193,
+    "holes": 2183,
+    "components": 1,
+    "name": "14_aleks_petrov",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-ae574727-640e-48e5-9d37-f1df061f305f.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\14_aleks_petrov.attempt1.png",
+    "attempt": 1,
+    "anatomical_head_ratio": 0.3021834061135371,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.841,
+      "colours_at_192h": 5705,
+      "native_colours": 10454,
+      "bbox": [
+        70,
+        16,
+        186,
+        296
+      ],
+      "width_height": 0.41429,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 2183,
+      "near_key_rim_pixels_adjusted": 299
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\14_aleks_petrov.png",
+    "under_chin_y": 401,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "15_denise_fung": {
+    "effective_pixel_size_per_1000h": 1.107,
+    "colours_at_192h": 5104,
+    "native_colours": 58343,
+    "bbox": [
+      408,
+      77,
+      844,
+      1143
+    ],
+    "width_height": 0.40901,
+    "height": 1066,
+    "margin": -180,
+    "holes": 491,
+    "components": 1,
+    "name": "15_denise_fung",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-c26e1516-9fc0-493e-9aab-48afb9c42b48.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\15_denise_fung.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3395872420262664,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.867,
+      "colours_at_192h": 5089,
+      "native_colours": 9210,
+      "bbox": [
+        70,
+        16,
+        185,
+        296
+      ],
+      "width_height": 0.41071,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 491,
+      "near_key_rim_pixels_adjusted": 294
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\15_denise_fung.png",
+    "under_chin_y": 439,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "16_bruno_sarr": {
+    "effective_pixel_size_per_1000h": 1.083,
+    "colours_at_192h": 4954,
+    "native_colours": 63374,
+    "bbox": [
+      377,
+      43,
+      872,
+      1209
+    ],
+    "width_height": 0.42453,
+    "height": 1166,
+    "margin": -195,
+    "holes": 5852,
+    "components": 1,
+    "name": "16_bruno_sarr",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-944ffa2c-6a4c-471a-a5d2-0fe1f764f0d3.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\16_bruno_sarr.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.30874785591766724,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.953,
+      "colours_at_192h": 4937,
+      "native_colours": 8969,
+      "bbox": [
+        68,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.425,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 5852,
+      "near_key_rim_pixels_adjusted": 214
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\16_bruno_sarr.png",
+    "under_chin_y": 403,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "17_elaine_kovacs": {
+    "effective_pixel_size_per_1000h": 0.934,
+    "colours_at_192h": 6976,
+    "native_colours": 84411,
+    "bbox": [
+      377,
+      53,
+      871,
+      1184
+    ],
+    "width_height": 0.43678,
+    "height": 1131,
+    "margin": -192,
+    "holes": 93,
+    "components": 8,
+    "name": "17_elaine_kovacs",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-39f22280-f71a-4a3f-a336-e17e550b3840.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\17_elaine_kovacs.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.28028293545534927,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.661,
+      "colours_at_192h": 6842,
+      "native_colours": 12380,
+      "bbox": [
+        67,
+        16,
+        189,
+        296
+      ],
+      "width_height": 0.43571,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 93,
+      "near_key_rim_pixels_adjusted": 246
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\17_elaine_kovacs.png",
+    "under_chin_y": 370,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "18_manny_reyes": {
+    "effective_pixel_size_per_1000h": 1.017,
+    "colours_at_192h": 6406,
+    "native_colours": 69833,
+    "bbox": [
+      379,
+      59,
+      848,
+      1162
+    ],
+    "width_height": 0.4252,
+    "height": 1103,
+    "margin": -195,
+    "holes": 1228,
+    "components": 1,
+    "name": "18_manny_reyes",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-25e3fc15-bda7-4da6-85b8-ac83db0229f6.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\18_manny_reyes.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.35539437896645515,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.733,
+      "colours_at_192h": 6463,
+      "native_colours": 11538,
+      "bbox": [
+        68,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.425,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 1228,
+      "near_key_rim_pixels_adjusted": 179
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\18_manny_reyes.png",
+    "under_chin_y": 451,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": true,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "19_tova_lindqvist": {
+    "effective_pixel_size_per_1000h": 1.035,
+    "colours_at_192h": 7083,
+    "native_colours": 83205,
+    "bbox": [
+      379,
+      93,
+      868,
+      1150
+    ],
+    "width_height": 0.46263,
+    "height": 1057,
+    "margin": -194,
+    "holes": 1053,
+    "components": 1,
+    "name": "19_tova_lindqvist",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-e0747041-b66e-4928-93bb-aadd8edabd5e.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\19_tova_lindqvist.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3226111636707663,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.696,
+      "colours_at_192h": 6992,
+      "native_colours": 12660,
+      "bbox": [
+        63,
+        16,
+        193,
+        296
+      ],
+      "width_height": 0.46429,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 1053,
+      "near_key_rim_pixels_adjusted": 199
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\19_tova_lindqvist.png",
+    "under_chin_y": 434,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "20_doreen_stapp": {
+    "effective_pixel_size_per_1000h": 0.96,
+    "colours_at_192h": 8653,
+    "native_colours": 102525,
+    "bbox": [
+      360,
+      50,
+      882,
+      1150
+    ],
+    "width_height": 0.47455,
+    "height": 1100,
+    "margin": -12,
+    "holes": 5,
+    "components": 1,
+    "name": "20_doreen_stapp",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-0164e75d-2c1f-4f28-8ceb-ff9256e18820.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\20_doreen_stapp.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3718181818181818,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.676,
+      "colours_at_192h": 8486,
+      "native_colours": 15648,
+      "bbox": [
+        61,
+        16,
+        194,
+        296
+      ],
+      "width_height": 0.475,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 5,
+      "near_key_rim_pixels_adjusted": 243
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\20_doreen_stapp.png",
+    "under_chin_y": 459,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": true,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "25_shopper_elderly_woman": {
+    "effective_pixel_size_per_1000h": 0.966,
+    "colours_at_192h": 7510,
+    "native_colours": 96972,
+    "bbox": [
+      399,
+      57,
+      826,
+      1147
+    ],
+    "width_height": 0.39174,
+    "height": 1090,
+    "margin": -13,
+    "holes": 11,
+    "components": 1,
+    "name": "25_shopper_elderly_woman",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-0f4af331-f8a5-47e5-8957-aff0df2eb561.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\25_shopper_elderly_woman.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3926605504587156,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.633,
+      "colours_at_192h": 7528,
+      "native_colours": 14023,
+      "bbox": [
+        73,
+        16,
+        183,
+        296
+      ],
+      "width_height": 0.39286,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 11,
+      "near_key_rim_pixels_adjusted": 293
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\25_shopper_elderly_woman.png",
+    "under_chin_y": 485,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": false,
+      "head": false,
+      "pixel": true,
+      "colours": true,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "26_shopper_work_jacket": {
+    "effective_pixel_size_per_1000h": 1.294,
+    "colours_at_192h": 6512,
+    "native_colours": 40898,
+    "bbox": [
+      413,
+      169,
+      837,
+      1040
+    ],
+    "width_height": 0.4868,
+    "height": 871,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "26_shopper_work_jacket",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-351e33a3-c1eb-46fe-a795-bb49749c004c.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\26_shopper_work_jacket.attempt1.png",
+    "attempt": 1,
+    "anatomical_head_ratio": 0.35017221584385766,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.741,
+      "colours_at_192h": 6401,
+      "native_colours": 10697,
+      "bbox": [
+        60,
+        16,
+        196,
+        296
+      ],
+      "width_height": 0.48571,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 200
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\26_shopper_work_jacket.png",
+    "under_chin_y": 474,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": true,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "27_shopper_mustard_jumper": {
+    "effective_pixel_size_per_1000h": 0.971,
+    "colours_at_192h": 5866,
+    "native_colours": 47464,
+    "bbox": [
+      403,
+      91,
+      852,
+      1150
+    ],
+    "width_height": 0.42398,
+    "height": 1059,
+    "margin": -195,
+    "holes": 96,
+    "components": 3,
+    "name": "27_shopper_mustard_jumper",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-6a098470-e1fb-4c01-92d3-60ea264e33fe.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\27_shopper_mustard_jumper.attempt1.png",
+    "attempt": 1,
+    "anatomical_head_ratio": 0.3276676109537299,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.645,
+      "colours_at_192h": 5610,
+      "native_colours": 9569,
+      "bbox": [
+        68,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.425,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 96,
+      "near_key_rim_pixels_adjusted": 196
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\27_shopper_mustard_jumper.png",
+    "under_chin_y": 438,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "28_shopper_teen_hoodie": {
+    "effective_pixel_size_per_1000h": 0.985,
+    "colours_at_192h": 5386,
+    "native_colours": 41778,
+    "bbox": [
+      402,
+      79,
+      852,
+      1165
+    ],
+    "width_height": 0.41436,
+    "height": 1086,
+    "margin": 0,
+    "holes": 0,
+    "components": 1,
+    "name": "28_shopper_teen_hoodie",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-00b6c718-21d7-4ef3-b2a2-a99eff5fa3d7.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\28_shopper_teen_hoodie.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.36003683241252304,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.72,
+      "colours_at_192h": 5213,
+      "native_colours": 8610,
+      "bbox": [
+        70,
+        16,
+        186,
+        296
+      ],
+      "width_height": 0.41429,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 0,
+      "near_key_rim_pixels_adjusted": 292
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\28_shopper_teen_hoodie.png",
+    "under_chin_y": 470,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "29_shopper_hivis_worker": {
+    "effective_pixel_size_per_1000h": 1.046,
+    "colours_at_192h": 7258,
+    "native_colours": 80601,
+    "bbox": [
+      372,
+      90,
+      868,
+      1130
+    ],
+    "width_height": 0.47692,
+    "height": 1040,
+    "margin": -194,
+    "holes": 382,
+    "components": 1,
+    "name": "29_shopper_hivis_worker",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-4d29c1b5-6b6b-426a-9419-4017470f8c4c.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\29_shopper_hivis_worker.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.3471153846153846,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.735,
+      "colours_at_192h": 7130,
+      "native_colours": 13024,
+      "bbox": [
+        61,
+        16,
+        195,
+        296
+      ],
+      "width_height": 0.47857,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 382,
+      "near_key_rim_pixels_adjusted": 194
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\29_shopper_hivis_worker.png",
+    "under_chin_y": 451,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": true,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "30_shopper_teal_blouse": {
+    "effective_pixel_size_per_1000h": 0.992,
+    "colours_at_192h": 6504,
+    "native_colours": 71714,
+    "bbox": [
+      384,
+      89,
+      868,
+      1162
+    ],
+    "width_height": 0.45107,
+    "height": 1073,
+    "margin": -193,
+    "holes": 101,
+    "components": 1,
+    "name": "30_shopper_teal_blouse",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-a9028a5f-6604-4423-8509-a6654b47aedd.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\30_shopper_teal_blouse.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.33550792171481825,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.738,
+      "colours_at_192h": 6447,
+      "native_colours": 11589,
+      "bbox": [
+        65,
+        16,
+        191,
+        296
+      ],
+      "width_height": 0.45,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 101,
+      "near_key_rim_pixels_adjusted": 271
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\30_shopper_teal_blouse.png",
+    "under_chin_y": 449,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "31_shopper_white_tee": {
+    "effective_pixel_size_per_1000h": 0.972,
+    "colours_at_192h": 4837,
+    "native_colours": 53959,
+    "bbox": [
+      395,
+      70,
+      850,
+      1180
+    ],
+    "width_height": 0.40991,
+    "height": 1110,
+    "margin": -195,
+    "holes": 2318,
+    "components": 1,
+    "name": "31_shopper_white_tee",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-ee3b2160-a0f7-4878-9dbc-e2f27757e69f.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\31_shopper_white_tee.attempt1.png",
+    "attempt": 1,
+    "anatomical_head_ratio": 0.3153153153153153,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.795,
+      "colours_at_192h": 4817,
+      "native_colours": 8535,
+      "bbox": [
+        70,
+        16,
+        185,
+        296
+      ],
+      "width_height": 0.41071,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 2318,
+      "near_key_rim_pixels_adjusted": 265
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\31_shopper_white_tee.png",
+    "under_chin_y": 420,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "32_shopper_rose_cardigan": {
+    "effective_pixel_size_per_1000h": 0.914,
+    "colours_at_192h": 8126,
+    "native_colours": 93485,
+    "bbox": [
+      377,
+      58,
+      853,
+      1179
+    ],
+    "width_height": 0.42462,
+    "height": 1121,
+    "margin": -194,
+    "holes": 449,
+    "components": 4,
+    "name": "32_shopper_rose_cardigan",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-39cc9806-23d5-4b64-8c8c-6a89f2c962bc.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\32_shopper_rose_cardigan.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.34255129348795715,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.627,
+      "colours_at_192h": 7828,
+      "native_colours": 14269,
+      "bbox": [
+        68,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.425,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 449,
+      "near_key_rim_pixels_adjusted": 226
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\32_shopper_rose_cardigan.png",
+    "under_chin_y": 442,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": true,
+      "pixel": true,
+      "colours": true,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "33_shopper_ginger_flannel": {
+    "effective_pixel_size_per_1000h": 1.043,
+    "colours_at_192h": 6951,
+    "native_colours": 69308,
+    "bbox": [
+      390,
+      115,
+      869,
+      1161
+    ],
+    "width_height": 0.45793,
+    "height": 1046,
+    "margin": -195,
+    "holes": 776,
+    "components": 4,
+    "name": "33_shopper_ginger_flannel",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-c969d31c-8050-4114-a229-d00b4628c336.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\33_shopper_ginger_flannel.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.38718929254302104,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.717,
+      "colours_at_192h": 6805,
+      "native_colours": 12053,
+      "bbox": [
+        64,
+        16,
+        192,
+        296
+      ],
+      "width_height": 0.45714,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 776,
+      "near_key_rim_pixels_adjusted": 293
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\33_shopper_ginger_flannel.png",
+    "under_chin_y": 520,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": false,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  },
+  "34_shopper_denim_jacket": {
+    "effective_pixel_size_per_1000h": 0.988,
+    "colours_at_192h": 5998,
+    "native_colours": 70888,
+    "bbox": [
+      396,
+      78,
+      849,
+      1149
+    ],
+    "width_height": 0.42297,
+    "height": 1071,
+    "margin": -188,
+    "holes": 246,
+    "components": 1,
+    "name": "34_shopper_denim_jacket",
+    "source": "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-77bd1bf0-45ca-4b9d-a3b5-e3ae81c2b834.png",
+    "raw": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-raw\\34_shopper_denim_jacket.png",
+    "attempt": 0,
+    "anatomical_head_ratio": 0.34827264239028943,
+    "head_check": "manual under-chin, includes hair/cap, not neck or narrowest-row heuristic",
+    "light": {
+      "effective_pixel_size_per_1000h": 3.687,
+      "colours_at_192h": 5880,
+      "native_colours": 10578,
+      "bbox": [
+        69,
+        16,
+        187,
+        296
+      ],
+      "width_height": 0.42143,
+      "height": 280,
+      "margin": 8,
+      "holes": 0,
+      "components": 1
+    },
+    "repairs": {
+      "enclosed_key_pixels_filled": 246,
+      "near_key_rim_pixels_adjusted": 229
+    },
+    "output": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\masters-light\\34_shopper_denim_jacket.png",
+    "under_chin_y": 451,
+    "manual_uncertainty_px": 8,
+    "checks": {
+      "width": true,
+      "head": true,
+      "pixel": true,
+      "colours": false,
+      "margin": true,
+      "holes": true,
+      "components": true
+    }
+  }
+}

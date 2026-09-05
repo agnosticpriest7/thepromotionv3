@@ -494,6 +494,47 @@ const SPRITE_ROWS=[
 /* ================= SPRITE ART ================= */
 const ART_PATH='Art/sprites/';
 const ART_FILES=['chars',
+  /* ⚠️ SAVE-RITE CAST (Codex, 2026-09-04). Names carry their own subfolder because the
+     loader is `ART_PATH + name + '.png'` -- so `save-rite/walk_...` loads from the delivery
+     folder directly. Copying them flat into Art/sprites/ would have meant two copies of
+     16 MB free to drift apart. Twelve crew (walks + seated) and ten shoppers (walks only);
+     the twelve masters with no live CREW entry are deliberately NOT loaded -- art for
+     people the game does not build is 48 requests for nothing. */
+  'save-rite/walk_02_anjali_raval_down','save-rite/walk_02_anjali_raval_up','save-rite/walk_02_anjali_raval_left','save-rite/walk_02_anjali_raval_right',
+  'save-rite/sit_02_anjali_raval_down','save-rite/sit_02_anjali_raval_up','save-rite/sit_02_anjali_raval_left','save-rite/sit_02_anjali_raval_right',
+  'save-rite/walk_03_marguerite_dubois_down','save-rite/walk_03_marguerite_dubois_up','save-rite/walk_03_marguerite_dubois_left','save-rite/walk_03_marguerite_dubois_right',
+  'save-rite/sit_03_marguerite_dubois_down','save-rite/sit_03_marguerite_dubois_up','save-rite/sit_03_marguerite_dubois_left','save-rite/sit_03_marguerite_dubois_right',
+  'save-rite/walk_04_danika_osei_down','save-rite/walk_04_danika_osei_up','save-rite/walk_04_danika_osei_left','save-rite/walk_04_danika_osei_right',
+  'save-rite/sit_04_danika_osei_down','save-rite/sit_04_danika_osei_up','save-rite/sit_04_danika_osei_left','save-rite/sit_04_danika_osei_right',
+  'save-rite/walk_05_curtis_lam_down','save-rite/walk_05_curtis_lam_up','save-rite/walk_05_curtis_lam_left','save-rite/walk_05_curtis_lam_right',
+  'save-rite/sit_05_curtis_lam_down','save-rite/sit_05_curtis_lam_up','save-rite/sit_05_curtis_lam_left','save-rite/sit_05_curtis_lam_right',
+  'save-rite/walk_06_bekah_thorne_down','save-rite/walk_06_bekah_thorne_up','save-rite/walk_06_bekah_thorne_left','save-rite/walk_06_bekah_thorne_right',
+  'save-rite/sit_06_bekah_thorne_down','save-rite/sit_06_bekah_thorne_up','save-rite/sit_06_bekah_thorne_left','save-rite/sit_06_bekah_thorne_right',
+  'save-rite/walk_08_russ_pelletier_down','save-rite/walk_08_russ_pelletier_up','save-rite/walk_08_russ_pelletier_left','save-rite/walk_08_russ_pelletier_right',
+  'save-rite/sit_08_russ_pelletier_down','save-rite/sit_08_russ_pelletier_up','save-rite/sit_08_russ_pelletier_left','save-rite/sit_08_russ_pelletier_right',
+  'save-rite/walk_12_gita_mahal_down','save-rite/walk_12_gita_mahal_up','save-rite/walk_12_gita_mahal_left','save-rite/walk_12_gita_mahal_right',
+  'save-rite/sit_12_gita_mahal_down','save-rite/sit_12_gita_mahal_up','save-rite/sit_12_gita_mahal_left','save-rite/sit_12_gita_mahal_right',
+  'save-rite/walk_16_bruno_sarr_down','save-rite/walk_16_bruno_sarr_up','save-rite/walk_16_bruno_sarr_left','save-rite/walk_16_bruno_sarr_right',
+  'save-rite/sit_16_bruno_sarr_down','save-rite/sit_16_bruno_sarr_up','save-rite/sit_16_bruno_sarr_left','save-rite/sit_16_bruno_sarr_right',
+  'save-rite/walk_20_doreen_stapp_down','save-rite/walk_20_doreen_stapp_up','save-rite/walk_20_doreen_stapp_left','save-rite/walk_20_doreen_stapp_right',
+  'save-rite/sit_20_doreen_stapp_down','save-rite/sit_20_doreen_stapp_up','save-rite/sit_20_doreen_stapp_left','save-rite/sit_20_doreen_stapp_right',
+  'save-rite/walk_21_garret_voss_down','save-rite/walk_21_garret_voss_up','save-rite/walk_21_garret_voss_left','save-rite/walk_21_garret_voss_right',
+  'save-rite/sit_21_garret_voss_down','save-rite/sit_21_garret_voss_up','save-rite/sit_21_garret_voss_left','save-rite/sit_21_garret_voss_right',
+  'save-rite/walk_22_lorne_petrie_down','save-rite/walk_22_lorne_petrie_up','save-rite/walk_22_lorne_petrie_left','save-rite/walk_22_lorne_petrie_right',
+  'save-rite/sit_22_lorne_petrie_down','save-rite/sit_22_lorne_petrie_up','save-rite/sit_22_lorne_petrie_left','save-rite/sit_22_lorne_petrie_right',
+  'save-rite/walk_23_merv_kastelic_down','save-rite/walk_23_merv_kastelic_up','save-rite/walk_23_merv_kastelic_left','save-rite/walk_23_merv_kastelic_right',
+  'save-rite/sit_23_merv_kastelic_down','save-rite/sit_23_merv_kastelic_up','save-rite/sit_23_merv_kastelic_left','save-rite/sit_23_merv_kastelic_right',
+  'save-rite/walk_25_shopper_elderly_woman_down','save-rite/walk_25_shopper_elderly_woman_up','save-rite/walk_25_shopper_elderly_woman_left','save-rite/walk_25_shopper_elderly_woman_right',
+  'save-rite/walk_26_shopper_work_jacket_down','save-rite/walk_26_shopper_work_jacket_up','save-rite/walk_26_shopper_work_jacket_left','save-rite/walk_26_shopper_work_jacket_right',
+  'save-rite/walk_27_shopper_mustard_jumper_down','save-rite/walk_27_shopper_mustard_jumper_up','save-rite/walk_27_shopper_mustard_jumper_left','save-rite/walk_27_shopper_mustard_jumper_right',
+  'save-rite/walk_28_shopper_teen_hoodie_down','save-rite/walk_28_shopper_teen_hoodie_up','save-rite/walk_28_shopper_teen_hoodie_left','save-rite/walk_28_shopper_teen_hoodie_right',
+  'save-rite/walk_29_shopper_hivis_worker_down','save-rite/walk_29_shopper_hivis_worker_up','save-rite/walk_29_shopper_hivis_worker_left','save-rite/walk_29_shopper_hivis_worker_right',
+  'save-rite/walk_30_shopper_teal_blouse_down','save-rite/walk_30_shopper_teal_blouse_up','save-rite/walk_30_shopper_teal_blouse_left','save-rite/walk_30_shopper_teal_blouse_right',
+  'save-rite/walk_31_shopper_white_tee_down','save-rite/walk_31_shopper_white_tee_up','save-rite/walk_31_shopper_white_tee_left','save-rite/walk_31_shopper_white_tee_right',
+  'save-rite/walk_32_shopper_rose_cardigan_down','save-rite/walk_32_shopper_rose_cardigan_up','save-rite/walk_32_shopper_rose_cardigan_left','save-rite/walk_32_shopper_rose_cardigan_right',
+  'save-rite/walk_33_shopper_ginger_flannel_down','save-rite/walk_33_shopper_ginger_flannel_up','save-rite/walk_33_shopper_ginger_flannel_left','save-rite/walk_33_shopper_ginger_flannel_right',
+  'save-rite/walk_34_shopper_denim_jacket_down','save-rite/walk_34_shopper_denim_jacket_up','save-rite/walk_34_shopper_denim_jacket_left','save-rite/walk_34_shopper_denim_jacket_right',
+
   /* Kyle's store props: the frozen aisle, and something for the two bare corners */
   'freezer_run_a','freezer_run_b','freezer_wall','trolley_bay','magazine_rack','pallet_display','cubicle_desk','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right','assistant_desk','manager_desk','ceo_desk','conference_table','reception_desk','reception_desk2','office_chair',
   'filing_cabinet','printer','water_cooler','coffee_machine','vending_machine','fridge','lockers',
@@ -625,6 +666,47 @@ let artLoaded=0, artTotal=ART_FILES.length, artReady=false;
    "green far below BOTH red and blue" — wood, grey metal, blue monitors and red/green
    binders never match, so only the background is eaten. */
 const MAGENTA_BG=new Set(['cubicle_desk',
+  /* ⚠️ SAVE-RITE CAST (Codex, 2026-09-04). Names carry their own subfolder because the
+     loader is `ART_PATH + name + '.png'` -- so `save-rite/walk_...` loads from the delivery
+     folder directly. Copying them flat into Art/sprites/ would have meant two copies of
+     16 MB free to drift apart. Twelve crew (walks + seated) and ten shoppers (walks only);
+     the twelve masters with no live CREW entry are deliberately NOT loaded -- art for
+     people the game does not build is 48 requests for nothing. */
+  'save-rite/walk_02_anjali_raval_down','save-rite/walk_02_anjali_raval_up','save-rite/walk_02_anjali_raval_left','save-rite/walk_02_anjali_raval_right',
+  'save-rite/sit_02_anjali_raval_down','save-rite/sit_02_anjali_raval_up','save-rite/sit_02_anjali_raval_left','save-rite/sit_02_anjali_raval_right',
+  'save-rite/walk_03_marguerite_dubois_down','save-rite/walk_03_marguerite_dubois_up','save-rite/walk_03_marguerite_dubois_left','save-rite/walk_03_marguerite_dubois_right',
+  'save-rite/sit_03_marguerite_dubois_down','save-rite/sit_03_marguerite_dubois_up','save-rite/sit_03_marguerite_dubois_left','save-rite/sit_03_marguerite_dubois_right',
+  'save-rite/walk_04_danika_osei_down','save-rite/walk_04_danika_osei_up','save-rite/walk_04_danika_osei_left','save-rite/walk_04_danika_osei_right',
+  'save-rite/sit_04_danika_osei_down','save-rite/sit_04_danika_osei_up','save-rite/sit_04_danika_osei_left','save-rite/sit_04_danika_osei_right',
+  'save-rite/walk_05_curtis_lam_down','save-rite/walk_05_curtis_lam_up','save-rite/walk_05_curtis_lam_left','save-rite/walk_05_curtis_lam_right',
+  'save-rite/sit_05_curtis_lam_down','save-rite/sit_05_curtis_lam_up','save-rite/sit_05_curtis_lam_left','save-rite/sit_05_curtis_lam_right',
+  'save-rite/walk_06_bekah_thorne_down','save-rite/walk_06_bekah_thorne_up','save-rite/walk_06_bekah_thorne_left','save-rite/walk_06_bekah_thorne_right',
+  'save-rite/sit_06_bekah_thorne_down','save-rite/sit_06_bekah_thorne_up','save-rite/sit_06_bekah_thorne_left','save-rite/sit_06_bekah_thorne_right',
+  'save-rite/walk_08_russ_pelletier_down','save-rite/walk_08_russ_pelletier_up','save-rite/walk_08_russ_pelletier_left','save-rite/walk_08_russ_pelletier_right',
+  'save-rite/sit_08_russ_pelletier_down','save-rite/sit_08_russ_pelletier_up','save-rite/sit_08_russ_pelletier_left','save-rite/sit_08_russ_pelletier_right',
+  'save-rite/walk_12_gita_mahal_down','save-rite/walk_12_gita_mahal_up','save-rite/walk_12_gita_mahal_left','save-rite/walk_12_gita_mahal_right',
+  'save-rite/sit_12_gita_mahal_down','save-rite/sit_12_gita_mahal_up','save-rite/sit_12_gita_mahal_left','save-rite/sit_12_gita_mahal_right',
+  'save-rite/walk_16_bruno_sarr_down','save-rite/walk_16_bruno_sarr_up','save-rite/walk_16_bruno_sarr_left','save-rite/walk_16_bruno_sarr_right',
+  'save-rite/sit_16_bruno_sarr_down','save-rite/sit_16_bruno_sarr_up','save-rite/sit_16_bruno_sarr_left','save-rite/sit_16_bruno_sarr_right',
+  'save-rite/walk_20_doreen_stapp_down','save-rite/walk_20_doreen_stapp_up','save-rite/walk_20_doreen_stapp_left','save-rite/walk_20_doreen_stapp_right',
+  'save-rite/sit_20_doreen_stapp_down','save-rite/sit_20_doreen_stapp_up','save-rite/sit_20_doreen_stapp_left','save-rite/sit_20_doreen_stapp_right',
+  'save-rite/walk_21_garret_voss_down','save-rite/walk_21_garret_voss_up','save-rite/walk_21_garret_voss_left','save-rite/walk_21_garret_voss_right',
+  'save-rite/sit_21_garret_voss_down','save-rite/sit_21_garret_voss_up','save-rite/sit_21_garret_voss_left','save-rite/sit_21_garret_voss_right',
+  'save-rite/walk_22_lorne_petrie_down','save-rite/walk_22_lorne_petrie_up','save-rite/walk_22_lorne_petrie_left','save-rite/walk_22_lorne_petrie_right',
+  'save-rite/sit_22_lorne_petrie_down','save-rite/sit_22_lorne_petrie_up','save-rite/sit_22_lorne_petrie_left','save-rite/sit_22_lorne_petrie_right',
+  'save-rite/walk_23_merv_kastelic_down','save-rite/walk_23_merv_kastelic_up','save-rite/walk_23_merv_kastelic_left','save-rite/walk_23_merv_kastelic_right',
+  'save-rite/sit_23_merv_kastelic_down','save-rite/sit_23_merv_kastelic_up','save-rite/sit_23_merv_kastelic_left','save-rite/sit_23_merv_kastelic_right',
+  'save-rite/walk_25_shopper_elderly_woman_down','save-rite/walk_25_shopper_elderly_woman_up','save-rite/walk_25_shopper_elderly_woman_left','save-rite/walk_25_shopper_elderly_woman_right',
+  'save-rite/walk_26_shopper_work_jacket_down','save-rite/walk_26_shopper_work_jacket_up','save-rite/walk_26_shopper_work_jacket_left','save-rite/walk_26_shopper_work_jacket_right',
+  'save-rite/walk_27_shopper_mustard_jumper_down','save-rite/walk_27_shopper_mustard_jumper_up','save-rite/walk_27_shopper_mustard_jumper_left','save-rite/walk_27_shopper_mustard_jumper_right',
+  'save-rite/walk_28_shopper_teen_hoodie_down','save-rite/walk_28_shopper_teen_hoodie_up','save-rite/walk_28_shopper_teen_hoodie_left','save-rite/walk_28_shopper_teen_hoodie_right',
+  'save-rite/walk_29_shopper_hivis_worker_down','save-rite/walk_29_shopper_hivis_worker_up','save-rite/walk_29_shopper_hivis_worker_left','save-rite/walk_29_shopper_hivis_worker_right',
+  'save-rite/walk_30_shopper_teal_blouse_down','save-rite/walk_30_shopper_teal_blouse_up','save-rite/walk_30_shopper_teal_blouse_left','save-rite/walk_30_shopper_teal_blouse_right',
+  'save-rite/walk_31_shopper_white_tee_down','save-rite/walk_31_shopper_white_tee_up','save-rite/walk_31_shopper_white_tee_left','save-rite/walk_31_shopper_white_tee_right',
+  'save-rite/walk_32_shopper_rose_cardigan_down','save-rite/walk_32_shopper_rose_cardigan_up','save-rite/walk_32_shopper_rose_cardigan_left','save-rite/walk_32_shopper_rose_cardigan_right',
+  'save-rite/walk_33_shopper_ginger_flannel_down','save-rite/walk_33_shopper_ginger_flannel_up','save-rite/walk_33_shopper_ginger_flannel_left','save-rite/walk_33_shopper_ginger_flannel_right',
+  'save-rite/walk_34_shopper_denim_jacket_down','save-rite/walk_34_shopper_denim_jacket_up','save-rite/walk_34_shopper_denim_jacket_left','save-rite/walk_34_shopper_denim_jacket_right',
+
   /* Kyle's store props: the frozen aisle, and something for the two bare corners */
   'freezer_run_a','freezer_run_b','freezer_wall','trolley_bay','magazine_rack','pallet_display','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
@@ -896,6 +978,32 @@ const DIR_ROW={down:0,up:1,left:2,right:3};
 
    Index numbering continues past CHAR_COUNT so it can never collide with a sheet face. */
 const CHAR_SHEETS={
+  /* ⚠️ SAVE-RITE, 28..49. 0-20 are chars.png columns and 21-27 the playable/guest strips, so
+     the store's cast starts above both. Measured before wiring: these draw 29.4 authored tall
+     against the existing cast's 30.0-31.1, so they stand at the right size beside them. */
+  28:{down:'save-rite/walk_02_anjali_raval_down', up:'save-rite/walk_02_anjali_raval_up', left:'save-rite/walk_02_anjali_raval_left', right:'save-rite/walk_02_anjali_raval_right'},   // Priya Raval
+  29:{down:'save-rite/walk_03_marguerite_dubois_down', up:'save-rite/walk_03_marguerite_dubois_up', left:'save-rite/walk_03_marguerite_dubois_left', right:'save-rite/walk_03_marguerite_dubois_right'},   // Marguerite Dubois
+  30:{down:'save-rite/walk_04_danika_osei_down', up:'save-rite/walk_04_danika_osei_up', left:'save-rite/walk_04_danika_osei_left', right:'save-rite/walk_04_danika_osei_right'},   // Danika Osei
+  31:{down:'save-rite/walk_05_curtis_lam_down', up:'save-rite/walk_05_curtis_lam_up', left:'save-rite/walk_05_curtis_lam_left', right:'save-rite/walk_05_curtis_lam_right'},   // Curtis Lam
+  32:{down:'save-rite/walk_06_bekah_thorne_down', up:'save-rite/walk_06_bekah_thorne_up', left:'save-rite/walk_06_bekah_thorne_left', right:'save-rite/walk_06_bekah_thorne_right'},   // Bekah Thorne
+  33:{down:'save-rite/walk_08_russ_pelletier_down', up:'save-rite/walk_08_russ_pelletier_up', left:'save-rite/walk_08_russ_pelletier_left', right:'save-rite/walk_08_russ_pelletier_right'},   // Russ Pelletier
+  34:{down:'save-rite/walk_12_gita_mahal_down', up:'save-rite/walk_12_gita_mahal_up', left:'save-rite/walk_12_gita_mahal_left', right:'save-rite/walk_12_gita_mahal_right'},   // Gita Mahal
+  35:{down:'save-rite/walk_16_bruno_sarr_down', up:'save-rite/walk_16_bruno_sarr_up', left:'save-rite/walk_16_bruno_sarr_left', right:'save-rite/walk_16_bruno_sarr_right'},   // Bruno Sarr
+  36:{down:'save-rite/walk_20_doreen_stapp_down', up:'save-rite/walk_20_doreen_stapp_up', left:'save-rite/walk_20_doreen_stapp_left', right:'save-rite/walk_20_doreen_stapp_right'},   // Doreen Stapp
+  37:{down:'save-rite/walk_21_garret_voss_down', up:'save-rite/walk_21_garret_voss_up', left:'save-rite/walk_21_garret_voss_left', right:'save-rite/walk_21_garret_voss_right'},   // Garret Voss
+  38:{down:'save-rite/walk_22_lorne_petrie_down', up:'save-rite/walk_22_lorne_petrie_up', left:'save-rite/walk_22_lorne_petrie_left', right:'save-rite/walk_22_lorne_petrie_right'},   // Lorne Petrie
+  39:{down:'save-rite/walk_23_merv_kastelic_down', up:'save-rite/walk_23_merv_kastelic_up', left:'save-rite/walk_23_merv_kastelic_left', right:'save-rite/walk_23_merv_kastelic_right'},   // Merv Kastelic
+  40:{down:'save-rite/walk_25_shopper_elderly_woman_down', up:'save-rite/walk_25_shopper_elderly_woman_up', left:'save-rite/walk_25_shopper_elderly_woman_left', right:'save-rite/walk_25_shopper_elderly_woman_right'},
+  41:{down:'save-rite/walk_26_shopper_work_jacket_down', up:'save-rite/walk_26_shopper_work_jacket_up', left:'save-rite/walk_26_shopper_work_jacket_left', right:'save-rite/walk_26_shopper_work_jacket_right'},
+  42:{down:'save-rite/walk_27_shopper_mustard_jumper_down', up:'save-rite/walk_27_shopper_mustard_jumper_up', left:'save-rite/walk_27_shopper_mustard_jumper_left', right:'save-rite/walk_27_shopper_mustard_jumper_right'},
+  43:{down:'save-rite/walk_28_shopper_teen_hoodie_down', up:'save-rite/walk_28_shopper_teen_hoodie_up', left:'save-rite/walk_28_shopper_teen_hoodie_left', right:'save-rite/walk_28_shopper_teen_hoodie_right'},
+  44:{down:'save-rite/walk_29_shopper_hivis_worker_down', up:'save-rite/walk_29_shopper_hivis_worker_up', left:'save-rite/walk_29_shopper_hivis_worker_left', right:'save-rite/walk_29_shopper_hivis_worker_right'},
+  45:{down:'save-rite/walk_30_shopper_teal_blouse_down', up:'save-rite/walk_30_shopper_teal_blouse_up', left:'save-rite/walk_30_shopper_teal_blouse_left', right:'save-rite/walk_30_shopper_teal_blouse_right'},
+  46:{down:'save-rite/walk_31_shopper_white_tee_down', up:'save-rite/walk_31_shopper_white_tee_up', left:'save-rite/walk_31_shopper_white_tee_left', right:'save-rite/walk_31_shopper_white_tee_right'},
+  47:{down:'save-rite/walk_32_shopper_rose_cardigan_down', up:'save-rite/walk_32_shopper_rose_cardigan_up', left:'save-rite/walk_32_shopper_rose_cardigan_left', right:'save-rite/walk_32_shopper_rose_cardigan_right'},
+  48:{down:'save-rite/walk_33_shopper_ginger_flannel_down', up:'save-rite/walk_33_shopper_ginger_flannel_up', left:'save-rite/walk_33_shopper_ginger_flannel_left', right:'save-rite/walk_33_shopper_ginger_flannel_right'},
+  49:{down:'save-rite/walk_34_shopper_denim_jacket_down', up:'save-rite/walk_34_shopper_denim_jacket_up', left:'save-rite/walk_34_shopper_denim_jacket_left', right:'save-rite/walk_34_shopper_denim_jacket_right'},
+
   21:{down:'walk_stacie_down', up:'walk_stacie_up', left:'walk_stacie_left', right:'walk_stacie_right'},
   22:{down:'walk_kyle_down',   up:'walk_kyle_up',   left:'walk_kyle_left',   right:'walk_kyle_right'},
   23:{down:'walk_raelee_down', up:'walk_raelee_up', left:'walk_raelee_left', right:'walk_raelee_right'},
@@ -976,6 +1084,25 @@ function faceDir(f){
    change one number here. Nothing else in the game refers to a sprite slot.
 ============================================================================ */
 const CAST={
+  /* ⚠️ SAVE-RITE CREW, BY FULL NAME. charIndexFor() checks the full name BEFORE the first-name
+     fallback, which matters for exactly one of these: the store's Priya Raval would otherwise
+     hit CAST['Priya'] = 6 and wear the OFFICE Priya's face, which is what she has been doing.
+     Her art is filed under `anjali_raval` -- Codex flagged the mismatch rather than renaming
+     silently, and the GAME's name wins here because it is in save files, tests and the ladder.
+     Nothing was renamed on disk; the mapping is this line. */
+  'Priya Raval': 28,
+  'Marguerite Dubois': 29,
+  'Danika Osei': 30,
+  'Curtis Lam': 31,
+  'Bekah Thorne': 32,
+  'Russ Pelletier': 33,
+  'Gita Mahal': 34,
+  'Bruno Sarr': 35,
+  'Doreen Stapp': 36,
+  'Garret Voss': 37,
+  'Lorne Petrie': 38,
+  'Merv Kastelic': 39,
+
   'you':            0,    // ginger, blue shirt, cheap tie
   'Mr. Sterling':   1,    // the CEO: silver hair, charcoal three-piece
   'Brenda':         2,    // HR: red blazer, glasses
@@ -999,6 +1126,8 @@ const CAST={
 };
 /* new hires draw from these */
 const MALE_POOL=[16,17];      // turban + grey zip-up, bearded + mustard shirt
+/* the store's own shoppers -- ten characters drawn for the job, indices 40..49 */
+const SHOPPER_POOL=[40,41,42,43,44,45,46,47,48,49];
 const FEMALE_POOL=[18,19];    // braids + teal blouse, navy blazer + grey skirt
 /* every name the game can produce is listed. The "guess from the last letter" fallback
    put Deborah in a turban and a grey zip-up, which is exactly the sort of thing it does. */
@@ -1027,8 +1156,13 @@ function charIndexFor(n){
   const pool=isFemaleName(n.name)?FEMALE_POOL:MALE_POOL;
   return pool[nameHash(n.name)%pool.length];
 }
-/* a 3-frame sheet is [neutral, step-L, step-R] — a real walk passes through the
-   neutral pose between steps, so the cycle is 0,1,0,2. animT is DISTANCE walked
+/* ⚠️ A 3-FRAME SHEET IS [stride, NEUTRAL, opposite stride] — the middle column is the
+   standing pose, which is what IDLE_FRAME=1 and WALK_CYCLE=[0,1,2,1] below actually say. This
+   comment claimed [neutral, step-L, step-R] and "the cycle is 0,1,0,2" for months, contradicted
+   by the two lines under it; Codex caught it while drawing against it. Handing that order to
+   whoever draws the next batch puts the standing pose in the wrong column.
+   A real walk passes through the neutral pose between steps, which is why the cycle visits
+   column 1 twice. animT is DISTANCE walked
    (world px), so the cadence matches the speed instead of the frame rate. */
 const IDLE_FRAME=1;              // middle column = standing
 const WALK_CYCLE=[0,1,2,1];      // left foot, pass, right foot, pass
@@ -1112,7 +1246,24 @@ function chairSpriteFor(dir){ return dir==='down'?'chair_down':dir==='up'?'chair
    _side (faces right, mirrored for left) OR explicit _left/_right. Add a character in TWO steps:
    list the PNGs in ART_FILES, and add a line here — the magenta-key/bbox pass is derived from this
    map (isSeatedPersonSprite), so it can't be missed. Unlisted faces fall back to the placeholder. */
-const SEAT_ART={0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod', 26:'sit_karl', 27:'sit_nwh'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
+const SEAT_ART={
+  /* ⚠️ THE STORE'S CREW SIT DOWN AT BREAK, so all twelve need seated art -- station:true means
+     they STAND at work, it does not excuse them from a chair. seatedPersonSpriteFor() appends
+     _down/_up/_left/_right to these, and isSeatedPersonSprite() keys off the same basenames, so
+     the subfolder prefix rides through both. */
+  28:'save-rite/sit_02_anjali_raval',
+  29:'save-rite/sit_03_marguerite_dubois',
+  30:'save-rite/sit_04_danika_osei',
+  31:'save-rite/sit_05_curtis_lam',
+  32:'save-rite/sit_06_bekah_thorne',
+  33:'save-rite/sit_08_russ_pelletier',
+  34:'save-rite/sit_12_gita_mahal',
+  35:'save-rite/sit_16_bruno_sarr',
+  36:'save-rite/sit_20_doreen_stapp',
+  37:'save-rite/sit_21_garret_voss',
+  38:'save-rite/sit_22_lorne_petrie',
+  39:'save-rite/sit_23_merv_kastelic',
+  0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod', 26:'sit_karl', 27:'sit_nwh'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
 function seatedPersonSpriteFor(npc,dir){
@@ -5567,7 +5718,12 @@ function spawnCustomer(){
      look -- give them one at random instead, from BOTH pools, which is four looks and a mixed
      crowd rather than two. Four is still thin: the real fix is more generic civilian frames on
      chars.png, which is an art job and is on Kyle's list. */
-  n.sprite=pick(MALE_POOL.concat(FEMALE_POOL));
+  /* ⚠️ TEN REAL SHOPPER LOOKS NOW, NOT FOUR RECYCLED STAFF FACES. This used to draw from the
+     two-entry office pools, so 120 shoppers a day wore four faces between them. SHOPPER_POOL is
+     separate on purpose: MALE_POOL/FEMALE_POOL are still the fallback for any NPC with no CAST
+     entry, office included, and pointing those at store shoppers would put a supermarket
+     customer behind an office desk. */
+  n.sprite=pick(SHOPPER_POOL.length?SHOPPER_POOL:MALE_POOL.concat(FEMALE_POOL));
   n.x=EXIT.x; n.y=EXIT.y; n.lastX=n.x; n.lastY=n.y;
   const all=customerStops();
   const want=Math.round(rand(CUSTOMER_STOPS[0],CUSTOMER_STOPS[1]));

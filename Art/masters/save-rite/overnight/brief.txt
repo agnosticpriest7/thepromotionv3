@@ -1,0 +1,196 @@
+Three parts, in order. Kyle is asleep. Work through them without asking. If something blocks you, record it, skip it, and continue — a stalled run is worse than a flagged item.
+
+Part	Work	Rough size
+A	Batch 3 masters — Deli and Bakery	8 characters
+B	Batch 4 masters — shoppers	10 characters
+C	Every animation pose for all 34	the bulk of the night
+Standing rules for the whole run
+
+Checkpoint after every single output. Write the file, append to the manifest, then continue. Long unattended runs stall; losing one strip is fine, losing the night is not.
+
+Retry cap of 4 per output. If it still fails, keep the best attempt, record which check failed and by how much, and move on.
+
+The baseline is these five files, named so it cannot drift again:
+
+walk_jax_down.png   walk_karl_down.png   walk_kyle_down.png
+walk_raelee_down.png   walk_rod_down.png
+
+Never take a style reference by description. "The office cast" spans two eras — chars.png is legacy, the individual walk sets are current. That ambiguity has cost two full correction cycles. If a brief names a style target without naming the files it came from, query it.
+
+Metric	Target
+Effective pixel size per 1000h	~3.97, within ±15%
+Width ÷ height	0.41 – 0.49
+Head ratio	34 – 36%, manual under-chin boundary
+Figure colours	inside the baseline range
+
+Colour key: the loader removes red − green > 60 AND blue − green > 60. Hue-based at any brightness — dark plum removed, bright red safe, purple is the danger. Enforce margin ≥ 8, then measure it independently.
+
+PART A — batch 3: Deli and Bakery
+
+First: confirm the reworded apron read correctly in batch 2. Deli and Bakery wear the same garment. If it still reads as dungarees, fix the wording here rather than adding eight more.
+
+The uniform
+
+Short-sleeved white polo shirt. A plain fabric bib apron on a single neck strap, tied at the waist over it — not overalls, no shoulder straps, no bib pocket. The apron hangs flat from the neck and has no trouser legs. Dark charcoal trousers, plain dark brown shoes.
+
+Department	Apron
+Deli (13–16)	white, with a navy trim band across the bib
+Bakery (17–20)	cream, flour-dusted
+
+The navy trim exists because a butcher's red-and-white stripe is the one uniform that sits near the colour key. Nothing red on the Deli staff at all.
+
+⚠️ Two characters describe a slim build
+
+Aleks is written as thin and Manny as slim. Those are real character notes, but slenderness is the established default drift — batch 1's three rejected masters were all characters with no build cue.
+
+Thin means thin within the cast's range. Both must still measure ≥ 0.41 width ÷ height. They should read as the narrowest people in the batch while remaining the same species as everyone else. Below 0.41 is a fail, not a character trait.
+
+The eight
+
+13 Vince Carboni — Deli. Fifties, Mediterranean, thick greying black hair, heavy brows. Broad and barrel-chested, thick through the neck. Loud and open, mouth mid-speech.
+
+14 Aleks Petrov — Deli. Early twenties, Eastern European, pale, sandy hair. The narrowest build in the batch — lean and wiry, but still solid enough to sit in the cast. Nervous: hunched shoulders, wary eyes, chin tucked.
+
+15 Denise Fung — Deli. Forties, Chinese, black hair in a severe short cut. Compact and square, planted stance. Arms rigid. A flat, genuinely frightening stare.
+
+16 Bruno Sarr — Deli Manager. Thirties, West African, dark brown skin, close-shaved head, neat goatee. Trim and upright but broad-shouldered — athletic, not slight. Immaculate and rigid. Wears a hairnet.
+
+17 Elaine Kovacs — Bakery. Fifties, Eastern European, fair, greying brown hair pinned under a white cap. Sturdy and thick-set through the shoulders and arms — a lifetime of lifting trays. Deeply tired, shoulders sagging.
+
+18 Manny Reyes — Bakery. Thirties, Filipino, black hair with a faded undercut. Slim but not narrow — lean through the middle, normal shoulders. Faraway, artistic. The heaviest flour dusting in the batch.
+
+19 Tova Lindqvist — Bakery. Early twenties, Scandinavian, very pale, white-blonde hair in two short braids, one each side. Round-faced and sturdy, slightly stocky. Cheerful. Flour on her face as well as the apron.
+
+20 Doreen Stapp — Bakery Manager. Sixties, fair, tight grey curls, small round glasses. Small and round — the shortest and widest in the batch. A sweet smile that doesn't reach the eyes.
+
+PART B — batch 4: the shoppers
+
+Ten civilians. No apron, no polo, no uniform of any kind. These are the crowd — the point is that a day's shoppers stop looking like the same four people.
+
+Every one gets a build cue, same rule as the staff.
+
+25 Woman, seventies. Small and stooped, narrow but not frail. Short curled white hair, glasses. Lavender cardigan over a cream blouse, charcoal skirt.
+
+26 Man, forties. Heavyset, thick through the middle. Balding with dark hair at the sides, short beard. Olive green work jacket over a grey tee, charcoal trousers.
+
+27 Woman, thirties. Tall and lean, but square-shouldered. Dark brown skin, black hair in a high bun. Mustard yellow jumper, charcoal trousers.
+
+28 Teenage boy. Lanky and narrow-shouldered — young, not thin. Pale, messy dark hair over the eyes. Oversized navy hoodie, charcoal trousers. Headphones on the head, over both ears.
+
+29 Man, fifties. Solid and broad, a working build. Tanned, close-cropped grey hair. Dark amber hi-vis vest over a navy work shirt, charcoal trousers, heavy boots. Deep amber or ochre — not bright yellow-green.
+
+30 Woman, forties. Medium and sturdy. Olive skin, shoulder-length brown hair. Teal blouse, charcoal trousers.
+
+31 Man, twenties. Slim but normally proportioned. Light brown skin, short black hair, neat beard. Plain white tee, charcoal trousers.
+
+32 Woman, sixties. Sturdy and round-shouldered. Fair skin, short grey bob, glasses on a chain hanging down both sides of the neck. Dusty rose cardigan, charcoal skirt.
+
+33 Man, thirties. Average and solid. Red hair, full ginger beard, freckled. Dark green flannel over a plain tee, charcoal trousers.
+
+34 Woman, twenties. Petite and compact. East Asian, straight black hair to the shoulders. Pale blue denim jacket, charcoal trousers.
+
+Watch the purples. #25's lavender and #32's dusty rose are the two closest to the colour key in the whole cast. Measure their margins explicitly and report them.
+
+PART C — every animation pose
+
+This is the bulk of the night. Study the existing office art before generating anything.
+
+C1. Learn the format from the files that already exist
+
+The Art/sprites/ folder contains complete, shipped, current-style animation for seven characters. Read them. They answer questions this brief can only describe.
+
+Walk cycles — 28 files, four facings each:
+
+walk_jax_down/up/left/right.png       walk_karl_*.png
+walk_kyle_*.png                        walk_nwh_*.png
+walk_raelee_*.png                      walk_rod_*.png
+walk_stacie_*.png
+
+Three frames per strip, 184×295 per frame (Stacie 229×374). Study:
+
+How the three frames relate. The live constants use middle-frame idle and cycle [0,1,2,1] — so frame 1 is a stride, frame 2 is the neutral standing pose, frame 3 is the opposite stride. Confirm this from the files and match it; a code comment describing an older order has drifted and is wrong.
+How the four facings relate. Height, head top, baseline, palette.
+How a profile walk is actually drawn in this project — this is the single most useful thing in the folder.
+
+Seated poses — around 110 files, sit_<name>_<facing>.png, one pose per file, person drawn separately from the chair. Study construction and canvas conventions.
+
+Report what you learn before generating. Specifically: the frame order confirmed from the files, how the facings are anchored to each other, and anything the description above got wrong.
+
+C2. Work out what each character actually needs
+
+Do not assume. Determine from the code which sets each character requires:
+
+Store staff stand at stations rather than sitting — a station is a spot on the floor, not a desk. So they may need walk sheets and no seated art.
+Management have offices with desks — Merv, Lorne, Garret and possibly Sandrine likely need seated poses.
+The break room has tables and chairs, which may pull more characters into needing seated art.
+Shoppers walk and never sit.
+No meltdown bat_ sheets for the store. That was an office-only event; Kyle has confirmed it doesn't apply here.
+
+Report the requirement per character, then generate to it. If the code is ambiguous, generate the walk set and note the seated question rather than guessing.
+
+C3. ⚠️ The profile walk — the failure that has cost the most time
+
+This has failed four times in this project. Three times on an office character, once on a shopper. The failure is always identical and it will happen again unless it's designed against.
+
+Why it fails: in a side view a viewer cannot tell a left leg from a right one. An instruction like "left foot forward, then right foot forward" is therefore undrawable — and the same contact pose gets drawn twice. The walk reads as a limp.
+
+The fix that works: draw the two legs in different tones — near leg light, far leg dark — as a property of the leg, not of where it happens to be standing. The near leg stays lighter whether it is forward or behind. That makes the swap both drawable and measurable. Then strip the tone difference so the shipped sprite has one trouser colour.
+
+Verify it numerically, per band:
+
+Legs, 60–100% of figure height
+Arms, 38–62% of figure height
+IoU(stride A, mirrored stride B) must exceed IoU(stride A, stride B) in both bands
+
+If the flipped comparison doesn't win, the strip repeats a pose and must be regenerated.
+
+C4. The other known failure modes
+
+Right is mirrored from left. Never generated. A mirror cannot come out backwards; a generated strip can, and has. Note that the existing office art is inconsistent here — Kyle, NWH and Raelee are exact mirrors at 0 differing pixels, while Jax, Karl, Rod and Stacie are not. Mirror.
+
+The back view generates undersized unless explicitly told to match the front's size. State it every time and verify height against the front strip.
+
+Front and back walks show the step as height on the canvas, not as legs swinging sideways across the body. Both feet point toward or away from the viewer; you see the front of each shoe or the backs of the heels, never a shoe in profile. The stepping foot lifts and sits higher; the planted foot stays lower.
+
+Arms are one continuous connected shape — shoulder, sleeve, cuff, forearm, hand — with no gap of background anywhere along it. A floating hand shows as a second connected component. This failed once already on a back view.
+
+Source pixels are not drawn pixels. A 552×295 strip draws at 45 authored units. Reading stored dimensions as on-screen size produced a wrong conclusion by a factor of 12.
+
+C5. Order of work
+
+Complete each character fully before moving to the next, so a stall leaves usable characters rather than 34 half-finished ones.
+
+Character order, most-used first:
+
+Front End and Management (01–04, 21–24) — every run touches these
+Grocery and Produce (05–12)
+Deli and Bakery (13–20)
+Shoppers (25–34)
+
+Per character: front strip → back strip → left strip → mirror to right → verify the set → write → checkpoint → next.
+
+C6. Verify per strip and per set
+Check	Pass
+Stride alternation	per band, flipped IoU > unflipped, legs and arms
+Facing	measured from skin-vs-hair centroid — never read off a thumbnail
+Arm continuity	one connected component per frame
+Within-strip anchors	head top and baseline identical across all three frames
+Between-strip anchors	height, head top and baseline match across all four facings
+Frame order	matches the existing office walk sheets, confirmed from the files
+Holes	0 enclosed key-coloured regions
+Margin	≥ 8, enforced then measured
+Style	pixel size, width ÷ height and colours inside the baseline
+
+Judge nothing from a thumbnail. Facing and alternation need measurement or a 3× view. A backwards sprite looks fine small and is obvious in motion.
+
+What to report in the morning
+
+Lead with anything blocked or flagged, not the successes.
+
+Part A and B: the masters, with width ÷ height and head ratio per character. The purples in #25 and #32 measured explicitly. The apron verdict.
+Part C1: what you learned from the existing walk sheets — frame order confirmed from the files, facing anchoring, and anything this brief described wrongly.
+Part C2: the requirement per character, and how you determined it from the code.
+Per character: which strips are complete, which failed and on what measurement.
+The full 34 presented together at matched height beside the five baseline sprites. The question is whether it reads as one cast.
+Closest similarity pairs across all 34 — a ranking for Kyle's attention, not a regeneration trigger.
+Anything this brief got wrong. Two style baselines have already been corrected by measurement rather than assertion. Assume there's a third.

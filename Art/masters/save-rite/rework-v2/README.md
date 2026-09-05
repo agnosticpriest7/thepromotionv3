@@ -16,7 +16,7 @@ Processed RGB-run pixel-size proxy: 16.429–17.922 versus the previous office b
 
 Approximate anatomical head ratios now span 41.7–49.4%, compared with 35.5–40.8% previously. Sandrine sits slightly above the measured office range, while Tyson and Merv sit toward its middle; this remains a visual review flag, not an automatic regeneration rule. The new references take precedence over an arbitrary universal head ratio.
 
-Kyle’s approval of this style is still pending. Batch 2 remains on hold.
+Kyle has approved this artwork: "I approve of this artwork". Rework-v2 is the approved Batch 1 artwork and the visual reference for subsequent characters. The style-approval gate is cleared; the naming issue below remains an integration follow-up.
 
 
 ---

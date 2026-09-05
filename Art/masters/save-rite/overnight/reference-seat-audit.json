@@ -1,0 +1,1432 @@
+[
+  {
+    "file": "sit_brenda_down.png",
+    "canvas": [
+      423,
+      830
+    ],
+    "bbox": [
+      17,
+      17,
+      407,
+      814
+    ]
+  },
+  {
+    "file": "sit_brenda_left.png",
+    "canvas": [
+      423,
+      830
+    ],
+    "bbox": [
+      17,
+      137,
+      407,
+      814
+    ]
+  },
+  {
+    "file": "sit_brenda_right.png",
+    "canvas": [
+      423,
+      830
+    ],
+    "bbox": [
+      16,
+      137,
+      406,
+      814
+    ]
+  },
+  {
+    "file": "sit_brenda_up.png",
+    "canvas": [
+      423,
+      830
+    ],
+    "bbox": [
+      18,
+      195,
+      404,
+      813
+    ]
+  },
+  {
+    "file": "sit_chad_down.png",
+    "canvas": [
+      508,
+      830
+    ],
+    "bbox": [
+      16,
+      17,
+      491,
+      814
+    ]
+  },
+  {
+    "file": "sit_chad_left.png",
+    "canvas": [
+      508,
+      830
+    ],
+    "bbox": [
+      89,
+      161,
+      420,
+      814
+    ]
+  },
+  {
+    "file": "sit_chad_right.png",
+    "canvas": [
+      508,
+      830
+    ],
+    "bbox": [
+      88,
+      161,
+      419,
+      814
+    ]
+  },
+  {
+    "file": "sit_chad_up.png",
+    "canvas": [
+      508,
+      830
+    ],
+    "bbox": [
+      38,
+      99,
+      468,
+      813
+    ]
+  },
+  {
+    "file": "sit_dale_down.png",
+    "canvas": [
+      506,
+      830
+    ],
+    "bbox": [
+      17,
+      16,
+      489,
+      814
+    ]
+  },
+  {
+    "file": "sit_dale_left.png",
+    "canvas": [
+      506,
+      830
+    ],
+    "bbox": [
+      81,
+      162,
+      424,
+      813
+    ]
+  },
+  {
+    "file": "sit_dale_right.png",
+    "canvas": [
+      506,
+      830
+    ],
+    "bbox": [
+      82,
+      162,
+      425,
+      813
+    ]
+  },
+  {
+    "file": "sit_dale_up.png",
+    "canvas": [
+      506,
+      830
+    ],
+    "bbox": [
+      30,
+      99,
+      474,
+      814
+    ]
+  },
+  {
+    "file": "sit_dana_down.png",
+    "canvas": [
+      445,
+      830
+    ],
+    "bbox": [
+      48,
+      17,
+      396,
+      813
+    ]
+  },
+  {
+    "file": "sit_dana_left.png",
+    "canvas": [
+      445,
+      830
+    ],
+    "bbox": [
+      44,
+      162,
+      401,
+      814
+    ]
+  },
+  {
+    "file": "sit_dana_right.png",
+    "canvas": [
+      445,
+      830
+    ],
+    "bbox": [
+      44,
+      162,
+      401,
+      814
+    ]
+  },
+  {
+    "file": "sit_dana_up.png",
+    "canvas": [
+      445,
+      830
+    ],
+    "bbox": [
+      17,
+      99,
+      428,
+      813
+    ]
+  },
+  {
+    "file": "sit_doug_down.png",
+    "canvas": [
+      528,
+      830
+    ],
+    "bbox": [
+      24,
+      17,
+      504,
+      813
+    ]
+  },
+  {
+    "file": "sit_doug_left.png",
+    "canvas": [
+      528,
+      830
+    ],
+    "bbox": [
+      93,
+      162,
+      435,
+      814
+    ]
+  },
+  {
+    "file": "sit_doug_right.png",
+    "canvas": [
+      528,
+      830
+    ],
+    "bbox": [
+      93,
+      162,
+      435,
+      814
+    ]
+  },
+  {
+    "file": "sit_doug_up.png",
+    "canvas": [
+      528,
+      830
+    ],
+    "bbox": [
+      17,
+      98,
+      512,
+      814
+    ]
+  },
+  {
+    "file": "sit_gil_down.png",
+    "canvas": [
+      452,
+      830
+    ],
+    "bbox": [
+      17,
+      17,
+      435,
+      813
+    ]
+  },
+  {
+    "file": "sit_gil_left.png",
+    "canvas": [
+      452,
+      830
+    ],
+    "bbox": [
+      70,
+      161,
+      383,
+      813
+    ]
+  },
+  {
+    "file": "sit_gil_right.png",
+    "canvas": [
+      452,
+      830
+    ],
+    "bbox": [
+      69,
+      161,
+      382,
+      813
+    ]
+  },
+  {
+    "file": "sit_gil_up.png",
+    "canvas": [
+      452,
+      830
+    ],
+    "bbox": [
+      23,
+      99,
+      429,
+      813
+    ]
+  },
+  {
+    "file": "sit_hank_down.png",
+    "canvas": [
+      518,
+      830
+    ],
+    "bbox": [
+      52,
+      16,
+      466,
+      813
+    ]
+  },
+  {
+    "file": "sit_hank_left.png",
+    "canvas": [
+      518,
+      830
+    ],
+    "bbox": [
+      94,
+      162,
+      424,
+      813
+    ]
+  },
+  {
+    "file": "sit_hank_right.png",
+    "canvas": [
+      518,
+      830
+    ],
+    "bbox": [
+      94,
+      162,
+      424,
+      813
+    ]
+  },
+  {
+    "file": "sit_hank_up.png",
+    "canvas": [
+      518,
+      830
+    ],
+    "bbox": [
+      17,
+      99,
+      501,
+      813
+    ]
+  },
+  {
+    "file": "sit_hire_blazer_down.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      49,
+      16,
+      357,
+      813
+    ]
+  },
+  {
+    "file": "sit_hire_blazer_left.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      38,
+      162,
+      369,
+      813
+    ]
+  },
+  {
+    "file": "sit_hire_blazer_right.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      38,
+      162,
+      369,
+      813
+    ]
+  },
+  {
+    "file": "sit_hire_blazer_up.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      17,
+      98,
+      391,
+      814
+    ]
+  },
+  {
+    "file": "sit_intern_down.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      407,
+      244,
+      863,
+      982
+    ]
+  },
+  {
+    "file": "sit_intern_side.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      434,
+      295,
+      791,
+      931
+    ]
+  },
+  {
+    "file": "sit_intern_up.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      400,
+      314,
+      847,
+      933
+    ]
+  },
+  {
+    "file": "sit_jax_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      63,
+      71,
+      432,
+      868
+    ]
+  },
+  {
+    "file": "sit_jax_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      85,
+      215,
+      409,
+      867
+    ]
+  },
+  {
+    "file": "sit_jax_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      86,
+      215,
+      410,
+      867
+    ]
+  },
+  {
+    "file": "sit_jax_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      8,
+      153,
+      487,
+      868
+    ]
+  },
+  {
+    "file": "sit_karl_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      52,
+      71,
+      443,
+      868
+    ]
+  },
+  {
+    "file": "sit_karl_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      76,
+      215,
+      420,
+      868
+    ]
+  },
+  {
+    "file": "sit_karl_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      75,
+      215,
+      419,
+      868
+    ]
+  },
+  {
+    "file": "sit_karl_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      14,
+      152,
+      481,
+      867
+    ]
+  },
+  {
+    "file": "sit_kyle_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      65,
+      71,
+      432,
+      868
+    ]
+  },
+  {
+    "file": "sit_kyle_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      77,
+      215,
+      418,
+      868
+    ]
+  },
+  {
+    "file": "sit_kyle_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      77,
+      215,
+      418,
+      868
+    ]
+  },
+  {
+    "file": "sit_kyle_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      33,
+      152,
+      463,
+      867
+    ]
+  },
+  {
+    "file": "sit_marcus_down.png",
+    "canvas": [
+      434,
+      830
+    ],
+    "bbox": [
+      16,
+      17,
+      417,
+      813
+    ]
+  },
+  {
+    "file": "sit_marcus_left.png",
+    "canvas": [
+      434,
+      830
+    ],
+    "bbox": [
+      52,
+      162,
+      383,
+      813
+    ]
+  },
+  {
+    "file": "sit_marcus_right.png",
+    "canvas": [
+      434,
+      830
+    ],
+    "bbox": [
+      51,
+      162,
+      382,
+      813
+    ]
+  },
+  {
+    "file": "sit_marcus_up.png",
+    "canvas": [
+      434,
+      830
+    ],
+    "bbox": [
+      30,
+      99,
+      403,
+      814
+    ]
+  },
+  {
+    "file": "sit_marla_down.png",
+    "canvas": [
+      409,
+      831
+    ],
+    "bbox": [
+      17,
+      17,
+      392,
+      814
+    ]
+  },
+  {
+    "file": "sit_marla_left.png",
+    "canvas": [
+      409,
+      831
+    ],
+    "bbox": [
+      26,
+      128,
+      384,
+      814
+    ]
+  },
+  {
+    "file": "sit_marla_right.png",
+    "canvas": [
+      409,
+      831
+    ],
+    "bbox": [
+      25,
+      128,
+      383,
+      814
+    ]
+  },
+  {
+    "file": "sit_marla_up.png",
+    "canvas": [
+      409,
+      831
+    ],
+    "bbox": [
+      21,
+      17,
+      388,
+      814
+    ]
+  },
+  {
+    "file": "sit_nwh_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      57,
+      70,
+      440,
+      868
+    ]
+  },
+  {
+    "file": "sit_nwh_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      69,
+      215,
+      426,
+      868
+    ]
+  },
+  {
+    "file": "sit_nwh_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      70,
+      215,
+      427,
+      868
+    ]
+  },
+  {
+    "file": "sit_nwh_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      37,
+      153,
+      459,
+      867
+    ]
+  },
+  {
+    "file": "sit_otis_down.png",
+    "canvas": [
+      441,
+      830
+    ],
+    "bbox": [
+      16,
+      17,
+      424,
+      813
+    ]
+  },
+  {
+    "file": "sit_otis_left.png",
+    "canvas": [
+      441,
+      830
+    ],
+    "bbox": [
+      76,
+      161,
+      365,
+      813
+    ]
+  },
+  {
+    "file": "sit_otis_right.png",
+    "canvas": [
+      441,
+      830
+    ],
+    "bbox": [
+      76,
+      161,
+      365,
+      813
+    ]
+  },
+  {
+    "file": "sit_otis_up.png",
+    "canvas": [
+      441,
+      830
+    ],
+    "bbox": [
+      45,
+      99,
+      396,
+      813
+    ]
+  },
+  {
+    "file": "sit_peggy_down.png",
+    "canvas": [
+      464,
+      830
+    ],
+    "bbox": [
+      70,
+      17,
+      394,
+      813
+    ]
+  },
+  {
+    "file": "sit_peggy_left.png",
+    "canvas": [
+      464,
+      830
+    ],
+    "bbox": [
+      70,
+      162,
+      395,
+      813
+    ]
+  },
+  {
+    "file": "sit_peggy_right.png",
+    "canvas": [
+      464,
+      830
+    ],
+    "bbox": [
+      69,
+      162,
+      394,
+      813
+    ]
+  },
+  {
+    "file": "sit_peggy_up.png",
+    "canvas": [
+      464,
+      830
+    ],
+    "bbox": [
+      18,
+      98,
+      446,
+      812
+    ]
+  },
+  {
+    "file": "sit_priya_down.png",
+    "canvas": [
+      454,
+      830
+    ],
+    "bbox": [
+      65,
+      16,
+      388,
+      813
+    ]
+  },
+  {
+    "file": "sit_priya_left.png",
+    "canvas": [
+      454,
+      830
+    ],
+    "bbox": [
+      42,
+      162,
+      411,
+      814
+    ]
+  },
+  {
+    "file": "sit_priya_right.png",
+    "canvas": [
+      454,
+      830
+    ],
+    "bbox": [
+      43,
+      162,
+      412,
+      814
+    ]
+  },
+  {
+    "file": "sit_priya_up.png",
+    "canvas": [
+      454,
+      830
+    ],
+    "bbox": [
+      16,
+      99,
+      438,
+      813
+    ]
+  },
+  {
+    "file": "sit_raelee_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      91,
+      70,
+      404,
+      867
+    ]
+  },
+  {
+    "file": "sit_raelee_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      81,
+      215,
+      414,
+      868
+    ]
+  },
+  {
+    "file": "sit_raelee_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      81,
+      215,
+      414,
+      868
+    ]
+  },
+  {
+    "file": "sit_raelee_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      33,
+      153,
+      464,
+      867
+    ]
+  },
+  {
+    "file": "sit_ramesh_down.png",
+    "canvas": [
+      541,
+      830
+    ],
+    "bbox": [
+      30,
+      18,
+      511,
+      812
+    ]
+  },
+  {
+    "file": "sit_ramesh_left.png",
+    "canvas": [
+      541,
+      830
+    ],
+    "bbox": [
+      95,
+      162,
+      446,
+      813
+    ]
+  },
+  {
+    "file": "sit_ramesh_right.png",
+    "canvas": [
+      541,
+      830
+    ],
+    "bbox": [
+      95,
+      162,
+      446,
+      813
+    ]
+  },
+  {
+    "file": "sit_ramesh_up.png",
+    "canvas": [
+      541,
+      830
+    ],
+    "bbox": [
+      16,
+      100,
+      525,
+      812
+    ]
+  },
+  {
+    "file": "sit_ravinder_down.png",
+    "canvas": [
+      405,
+      830
+    ],
+    "bbox": [
+      25,
+      17,
+      380,
+      814
+    ]
+  },
+  {
+    "file": "sit_ravinder_left.png",
+    "canvas": [
+      405,
+      830
+    ],
+    "bbox": [
+      40,
+      161,
+      366,
+      813
+    ]
+  },
+  {
+    "file": "sit_ravinder_right.png",
+    "canvas": [
+      405,
+      830
+    ],
+    "bbox": [
+      39,
+      161,
+      365,
+      813
+    ]
+  },
+  {
+    "file": "sit_ravinder_up.png",
+    "canvas": [
+      405,
+      830
+    ],
+    "bbox": [
+      17,
+      99,
+      388,
+      814
+    ]
+  },
+  {
+    "file": "sit_rod_down.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      48,
+      70,
+      447,
+      867
+    ]
+  },
+  {
+    "file": "sit_rod_left.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      69,
+      215,
+      425,
+      867
+    ]
+  },
+  {
+    "file": "sit_rod_right.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      70,
+      215,
+      426,
+      867
+    ]
+  },
+  {
+    "file": "sit_rod_up.png",
+    "canvas": [
+      496,
+      884
+    ],
+    "bbox": [
+      20,
+      153,
+      474,
+      867
+    ]
+  },
+  {
+    "file": "sit_sana_down.png",
+    "canvas": [
+      428,
+      830
+    ],
+    "bbox": [
+      60,
+      17,
+      368,
+      813
+    ]
+  },
+  {
+    "file": "sit_sana_left.png",
+    "canvas": [
+      428,
+      830
+    ],
+    "bbox": [
+      44,
+      162,
+      386,
+      813
+    ]
+  },
+  {
+    "file": "sit_sana_right.png",
+    "canvas": [
+      428,
+      830
+    ],
+    "bbox": [
+      42,
+      162,
+      384,
+      813
+    ]
+  },
+  {
+    "file": "sit_sana_up.png",
+    "canvas": [
+      428,
+      830
+    ],
+    "bbox": [
+      18,
+      100,
+      410,
+      814
+    ]
+  },
+  {
+    "file": "sit_stacie_down.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      404,
+      118,
+      833,
+      1088
+    ]
+  },
+  {
+    "file": "sit_stacie_side.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      395,
+      222,
+      820,
+      1039
+    ]
+  },
+  {
+    "file": "sit_stacie_up.png",
+    "canvas": [
+      1254,
+      1254
+    ],
+    "bbox": [
+      402,
+      219,
+      850,
+      912
+    ]
+  },
+  {
+    "file": "sit_sterling_down.png",
+    "canvas": [
+      488,
+      831
+    ],
+    "bbox": [
+      32,
+      16,
+      455,
+      815
+    ]
+  },
+  {
+    "file": "sit_sterling_left.png",
+    "canvas": [
+      488,
+      831
+    ],
+    "bbox": [
+      58,
+      161,
+      430,
+      814
+    ]
+  },
+  {
+    "file": "sit_sterling_right.png",
+    "canvas": [
+      488,
+      831
+    ],
+    "bbox": [
+      58,
+      161,
+      430,
+      814
+    ]
+  },
+  {
+    "file": "sit_sterling_up.png",
+    "canvas": [
+      488,
+      831
+    ],
+    "bbox": [
+      16,
+      99,
+      471,
+      814
+    ]
+  },
+  {
+    "file": "sit_vera_down.png",
+    "canvas": [
+      529,
+      830
+    ],
+    "bbox": [
+      97,
+      16,
+      432,
+      813
+    ]
+  },
+  {
+    "file": "sit_vera_left.png",
+    "canvas": [
+      529,
+      830
+    ],
+    "bbox": [
+      83,
+      161,
+      447,
+      813
+    ]
+  },
+  {
+    "file": "sit_vera_right.png",
+    "canvas": [
+      529,
+      830
+    ],
+    "bbox": [
+      82,
+      161,
+      446,
+      813
+    ]
+  },
+  {
+    "file": "sit_vera_up.png",
+    "canvas": [
+      529,
+      830
+    ],
+    "bbox": [
+      18,
+      100,
+      511,
+      812
+    ]
+  },
+  {
+    "file": "sit_wren_down.png",
+    "canvas": [
+      513,
+      830
+    ],
+    "bbox": [
+      65,
+      17,
+      448,
+      814
+    ]
+  },
+  {
+    "file": "sit_wren_left.png",
+    "canvas": [
+      513,
+      830
+    ],
+    "bbox": [
+      87,
+      162,
+      426,
+      813
+    ]
+  },
+  {
+    "file": "sit_wren_right.png",
+    "canvas": [
+      513,
+      830
+    ],
+    "bbox": [
+      87,
+      162,
+      426,
+      813
+    ]
+  },
+  {
+    "file": "sit_wren_up.png",
+    "canvas": [
+      513,
+      830
+    ],
+    "bbox": [
+      17,
+      99,
+      496,
+      813
+    ]
+  },
+  {
+    "file": "sit_zora_down.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      45,
+      17,
+      361,
+      813
+    ]
+  },
+  {
+    "file": "sit_zora_left.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      30,
+      162,
+      376,
+      813
+    ]
+  },
+  {
+    "file": "sit_zora_right.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      31,
+      162,
+      377,
+      813
+    ]
+  },
+  {
+    "file": "sit_zora_up.png",
+    "canvas": [
+      407,
+      830
+    ],
+    "bbox": [
+      17,
+      99,
+      390,
+      813
+    ]
+  }
+]
