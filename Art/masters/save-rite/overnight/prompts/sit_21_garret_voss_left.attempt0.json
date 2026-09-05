@@ -1,0 +1,11 @@
+{
+  "name": "21_garret_voss",
+  "kind": "sit",
+  "direction": "left",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Garret Voss, middle-aged pale ruddy man, thinning sandy hair, anxious eyebrows, pale blue short-sleeved shirt and navy tie, charcoal trousers, brown shoes, central clipboard held with BOTH hands. Preserve this exact character and outfit; other images, if present, show the SAME character. Single precise pixel-art game sprite, flat exact #FF00FF background. No text, extra people, scenery. ONE single full-body SEATED pose in strict LEFT side profile. Nose/chest/knees/toes all point LEFT. Torso upright, buttocks sit at imageRIGHT, thighs horizontal extend LEFT, knees bent90degrees, shins hang vertically, feet project LEFT below knees. Hands rest on thighs. Draw PERSON ONLY on INVISIBLE chair, with no chair, table, floor, desk, shadow or cushion. Same identity/hair/clothing as master. For apron let fabric drape over lap with separate trousers below. Garret retains clipboard on lap held centrally. EXPLICIT CLIPBOARD EXCEPTION: Garret holds the same central clipboard with BOTH hands while walking or seated; NO swinging arms. For back view the clipboard is occluded in front of his chest, hands stay forward. Do not remove it to satisfy a generic arm pose.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\current-cast\\batch1-light\\21_garret_voss.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\animations\\walk_21_garret_voss_left.png"
+  ]
+}

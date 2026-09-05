@@ -1,0 +1,41 @@
+async function runCharacter(name) {
+const nd=load("nightDir"), py="C:\\Users\\Kyle_\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe", identity=load("animationDescriptions")[name.slice(0,2)], master=load("animationCastPaths")[name];
+image((await tools.view_image({path:master,detail:"original"})).image_url);
+const sequence=[["walk","down"],["walk","up"],["walk","left"]];
+if([2,3,4,5,6,8,12,16,20,21,22,23].includes(parseInt(name)))sequence.push(["sit","down"],["sit","up"],["sit","left"]);
+for(const [kind,dir] of sequence){
+ let refs=[master], p="", attempts=[], best=null;
+ const specific="IMAGE1 is the ONLY identity to draw: "+identity+". Preserve this exact character and outfit; other images, if present, show the SAME character. ";
+ if(kind==="walk"){
+   p=specific+load("animationCommon")+load("animationDirectionPrompts")[dir];
+   if(dir==="down")refs.push(nd+"\\five-named-baselines.png");else refs.push(nd+"\\animations\\walk_"+name+"_down.png");
+   if(dir==="down")p+=" The additional montage is STYLE ONLY from the five named baseline files; none of its characters should appear in this output.";
+ } else {p=specific+"Single precise pixel-art game sprite, flat exact #FF00FF background. No text, extra people, scenery. "+load("seatPrompts")[dir]; if(dir!=="down")refs.push(nd+"\\animations\\walk_"+name+"_"+dir+".png");}
+ if(name.startsWith("21"))p+=" EXPLICIT CLIPBOARD EXCEPTION: Garret holds the same central clipboard with BOTH hands while walking or seated; NO swinging arms. For back view the clipboard is occluded in front of his chest, hands stay forward. Do not remove it to satisfy a generic arm pose.";
+ for(let attempt=0;attempt<=4;attempt++){
+   text(await tools.apply_patch("*** Begin Patch\n*** Add File: "+nd.replaceAll("\\","/")+"/prompts/"+kind+"_"+name+"_"+dir+".attempt"+attempt+".json\n+"+JSON.stringify({name,kind,direction:dir,attempt,prompt:p,references:refs},null,2).replaceAll("\n","\n+")+"\n*** End Patch"));
+   let r;
+   try {r=await tools.image_gen__imagegen({prompt:p,referenced_image_paths:refs});} catch(e){text({name,kind,dir,blocked:String(e)});break;}
+   generatedImage(r);const src=r.output_hint.match(/ as (C:\\.*?\.png) by default/)[1];
+   const res=await tools.exec_command({cmd:"& '"+py+"' '"+nd+"\\animation.py' '"+name+"' "+kind+" "+dir+" '"+src+"' "+attempt,max_output_tokens:1500});text(res);
+   let q;try{q=JSON.parse(res.output.trim().split("\n").filter(Boolean).at(-1));}catch(e){text({name,kind,dir,checkpointError:true});break;}
+   const failBands=Object.entries(q.alternation||{}).filter(([band,v])=>!v.pass&&!(name.startsWith("21")&&band==="arms")).map(([band])=>band);
+   const faceFail=dir==="left"&&kind==="walk"&&q.facing?.pass===false;
+   const keyFail=kind==="walk"?!q.key:!!(q.key?.holes||q.key?.margin<8||q.key?.components!==1);
+   const detached=(q.detached||[]).some(Boolean);
+   const score=(kind==='walk'&&!q.anchors?75:0)+(keyFail?100:0)+(detached?50:0)+(faceFail?5:0)+failBands.length+failBands.reduce((s,b)=>s+Math.min(.99,Math.abs(q.alternation[b].delta||0)),0);
+   attempts.push({attempt,src,score,q});if(!best||score<best.score)best=attempts.at(-1);
+   await yield_control();
+   if(score===0||kind==="sit")break;
+   if(attempt===4)break;
+   refs=[src];p="Precise corrective edit of this exact "+identity+". Keep identity, face, hair, outfit, pixel style, exact magenta background and THREE cells. ";
+   if(faceFail)p+="All three noses, faces, toes and chests must face LEFT; fix any right-facing pose. ";
+   if(detached||keyFail)p+="Join every arm continuously from shoulder through sleeve, forearm and hand, no detached body pieces or magenta holes. Leave generous gutters between figures. ";
+   if(dir==="left")p+=load("animationDirectionPrompts").left+" PRIORITY FIX: "+failBands.join(" and ")+" currently fail opposite-stride silhouette comparison. Make column1 and column3 clearly opposite limb silhouettes with one hand behind RIGHT versus in front LEFT, and one shoe planted lower on LEFT versus RIGHT. Far arm mostly occluded. Keep the LIGHT leg attached to the near hip, forwardLEFT in column1 and behindRIGHT in column3.";
+   else if(failBands.length)p+="CHANGE ONLY COLUMN3. Preserve FIRST and SECOND columns exactly. Make THIRD column a horizontally reversed copy of FIRST column from shoulders to feet: raised hand and lifted shoe swap screen sides, lowered hand and planted shoe swap screen sides. Preserve head facing "+(dir==="down"?"FRONT":"AWAY")+" and exact same face/hair/costume. Do not change column1 to resemble column3. Column3 must be the opposite. No side views.";
+   if(name.startsWith("21"))p+="Keep clipboard BOTH hands at chest, arms do not swing; only legs need alternate.";
+ }
+ if(best&&attempts.at(-1)!==best){text(await tools.exec_command({cmd:"& '"+py+"' '"+nd+"\\animation.py' '"+name+"' "+kind+" "+dir+" '"+best.src+"' "+best.attempt,max_output_tokens:500}));}
+}
+text(await tools.exec_command({cmd:"& '"+py+"' '"+nd+"\\finish_character.py' '"+name+"'",max_output_tokens:1200}));
+}

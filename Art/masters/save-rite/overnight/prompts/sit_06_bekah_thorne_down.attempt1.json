@@ -1,0 +1,10 @@
+{
+  "name": "06_bekah_thorne",
+  "kind": "sit",
+  "direction": "down",
+  "attempt": 1,
+  "mode": "built-in precise background edit",
+  "prompt": "Precise background-only correction of the attached seated pixel-art woman. Preserve every drawn figure pixel, identity, auburn bob, headphones, apron, polo, seated knees and shoes. Replace the ENTIRE black background and ALL glow/vignette with flat solid exact #FF00FF magenta. No shadows or glow outside the figure. One seated person only, no chair, no text.",
+  "reference": "../animation-raw/sit_06_bekah_thorne_down.attempt0.png",
+  "generated_source": "C:/Users/Kyle_/.codex/generated_images/01a06e8d-8e5b-7cb2-aad6-1faff3627d13/exec-dc70e3cf-d64a-405c-83d5-7f993884169e.png"
+}

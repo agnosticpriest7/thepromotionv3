@@ -1,0 +1,10 @@
+{
+  "name": "17_elaine_kovacs",
+  "kind": "walk",
+  "direction": "up",
+  "attempt": 1,
+  "prompt": "Precise corrective edit of this exact Elaine Kovacs, Bakery, fair Eastern European woman in fifties, greying brown hair pinned under white cap. Sturdy thick-set shoulders and strong arms from lifting trays. Deeply tired, sagging shoulders.. Keep identity, face, hair, outfit, pixel style, exact magenta background and THREE cells. CHANGE ONLY COLUMN3. Preserve FIRST and SECOND columns exactly. Make THIRD column a horizontally reversed copy of FIRST column from shoulders to feet: raised hand and lifted shoe swap screen sides, lowered hand and planted shoe swap screen sides. Preserve head facing AWAY and exact same face/hair/costume. Do not change column1 to resemble column3. Column3 must be the opposite. No side views.",
+  "references": [
+    "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-1e4920a6-7f65-4d4a-aed4-7a935ba127cd.png"
+  ]
+}

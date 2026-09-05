@@ -1,0 +1,10 @@
+{
+  "name": "33_shopper_ginger_flannel",
+  "kind": "walk",
+  "direction": "up",
+  "attempt": 2,
+  "prompt": "Precise corrective edit of this exact Civilian man in thirties, freckled skin, red hair and full ginger beard. Average solid build. Dark green flannel over plain neutral tee, charcoal trousers, dark shoes.. Keep identity, face, hair, outfit, pixel style, exact magenta background and THREE cells. CHANGE ONLY COLUMN3. Preserve FIRST and SECOND columns exactly. Make THIRD column a horizontally reversed copy of FIRST column from shoulders to feet: raised hand and lifted shoe swap screen sides, lowered hand and planted shoe swap screen sides. Preserve head facing AWAY and exact same face/hair/costume. Do not change column1 to resemble column3. Column3 must be the opposite. No side views.",
+  "references": [
+    "C:\\Users\\Kyle_\\.codex\\generated_images\\01a06e8d-8e5b-7cb2-aad6-1faff3627d13\\exec-08a45e1b-430e-4813-b8d8-8472779f914f.png"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "23_merv_kastelic",
+  "kind": "walk",
+  "direction": "up",
+  "attempt": 0,
+  "prompt": "IMAGE1 is the ONLY identity to draw: Merv Kastelic, older heavy-bellied fair ruddy man, balding grey side hair, white short-sleeved shirt and navy tie, BROWN trousers, BLACK shoes. Preserve this exact character and outfit; other images, if present, show the SAME character. Use case: identity-preserve. Asset: a THREE-FRAME horizontal game walk strip, one row, exactly THREE equally spaced full-body copies of ONE character. Plain exact #FF00FF background, no labels, no ground, no shadows. Preserve the identity, clothing, hair, colours, build and pixel-art treatment of attached identity master. Style standard is Batch 1 Light; named baseline montage contains middle frames of walk_jax_down, walk_karl_down, walk_kyle_down, walk_raelee_down, walk_rod_down. Clean pixel clusters, bold outlines, readable sprite faces, no painterly details. Entire bodies and all feet visible with space around each, same head top and foot baseline in every cell. Uniform frame dimensions. Aim landscape 1536x832, three512x832cells. All figures same scale: approximately740px tall inside cells. All THREE figures face straight AWAY from viewer, backs of heads and clothing, no faces. Match FRONT strip's figure size EXACTLY: same hair-top, shoulder width, body height and foot baseline. Do not make back figures smaller. Column1 STRIDE A: screen-left heel planted low, screen-right heel lifted noticeably higher; left arm forward away from viewer, right arm back visible beside hip. Column2 NEUTRAL: both heels level, arms down. Column3 STRIDE B: screen-right heel planted low, screen-left heel lifted high; right arm away, left arm back. Shoes show backs of heels, NEVER profile silhouettes. Aprons show only neck loop and waist ties on the back, not a front bib printed on the back. Arms are one continuous shoulder/sleeve/forearm/hand shape.",
+  "references": [
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\current-cast\\batch1-light\\23_merv_kastelic.png",
+    "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\animations\\walk_23_merv_kastelic_down.png"
+  ]
+}
