@@ -472,3 +472,106 @@ colours, edge-harshness 1.13), so the loss is in the animation step, not the sou
 
 **Optional outfits for Stacie, Kyle, Raelee and Jax** remain ungenerated and that is fine — ask Kyle
 before spending 32 files on them.
+
+---
+
+# ART REQUESTS — 2026-09-06 TV pass (Kyle)
+
+Kyle played the store on the Xbox and gave a list. These are the pieces that need art. Everything
+here is **wanted**; the scale question at the bottom is the one that needs his decision before you
+draw, so read that first if you are only going to read one section.
+
+Sizes: deliver at ~**2x the drawn size**, per the DELIVERY SIZE section higher up. Real alpha, not
+magenta. If you are unsure what a prop's drawn size will be, give me the master and say so — I have
+the downscaler and the measured numbers.
+
+## 1. Dairy cooler — fill it up ⭐ wanted
+
+> *"the dairy cooler needs artwork. pallets, crates, etc. let's fill it up"*
+
+`dairy_case` currently reads as an empty white case. A dairy wall in a real shop is **dense**: milk
+crates stacked four high, cardboard shippers, yoghurt in blocks of colour, egg flats, cream in the
+top shelf, the odd empty crate on the floor in front.
+
+**Wanted:** a restocked `dairy_case`, plus **loose dressing props** that can be scattered along the
+dairy wall — a stack of milk crates, a shipper of cartons, an empty crate, a hand-stacked pallet of
+milk. Loose props are more useful than one big painting: I can place them along the wall and vary
+them, and they double for the back room.
+
+Drawn size for reference: `dairy_case` draws **190 px wide** (2.5 m). Loose crates want to be
+roughly **20-35 px** drawn — about half a person's height.
+
+## 2. Public bathroom — it is three toilets in a field ⭐ wanted
+
+> *"public bathroom needs improvement. toilets can be against walls, need dividers, etc."*
+
+Right now the customer toilets sit in open floor with nothing around them. A public bathroom needs
+**stalls**: dividers, doors, a partition run.
+
+The office already has `stall_v` and `stall_h`, which is the right idea — but they are the office's
+and they are small. **Wanted:** a proper stall run for the store — divider panels, a door (closed
+and ajar would be a nice touch), and a **sink counter** with a mirror strip and a hand dryer.
+
+The toilets themselves are fine and go against a wall. What is missing is everything around them.
+
+## 3. Bakery and deli — small shelves ⭐ wanted
+
+> *"Bakery and deli need small shelves"*
+
+Both departments are one long case and nothing else. Real ones have bread racks behind the counter,
+a tray rack, a small dry-goods shelf, boxes.
+
+**Wanted:** a **bread rack** (tall, slotted, loaves visible), a **tray rack** on castors, and a
+**small back-counter shelf** — the low kind with boxes and bags on it. Drawn around **40-80 px**
+wide; these sit behind and beside the counters, not on the sales floor.
+
+## 4. ⚠️ THE SCALE QUESTION — do not draw until Kyle answers
+
+> *"either the sprites are really small, or the props are really large. compare to the office
+> level. that feels better."*
+
+I measured this rather than guessing, and **the obvious reading is wrong**. Per-metre, the store's
+props are *smaller* than the office's (77.9 px/m vs 89.7 — the store is **0.87x** the office). The
+characters are identical in both levels: **54 px**. So nothing in the store is mis-scaled against
+anything else in the store.
+
+What is actually happening is the **two-scales problem** in CLAUDE.md §14: the floor and props are
+drawn at true plan scale (~82 px per metre) and a character is drawn at ~32 px per metre — about
+**2.6x smaller than the world they stand in**. That error has always been there. The office hides it
+because office furniture is small; a desk is 1.4 m, so at plan scale it is only 1.8 character
+heights and reads fine. The store's fixtures are 4-5 m long, so the same error becomes enormous:
+
+| | tallest fixture, in character heights |
+|---|---|
+| office | **2.1x** (vending machine, fridge) |
+| store, ordinary props | 1.8x median — fine |
+| **store aisle runs** | **6.1x** (shelf run) |
+| **store freezers** | **7.4-7.5x** |
+
+So Kyle is right, and it is neither "sprites too small" nor "props too large" on their own — it is
+that **the aisle runs are long, and a person is drawn 2.6x smaller than the floor they stand on.**
+
+**There are only two real fixes and they are Kyle's call:**
+
+- **(A) Make the characters bigger.** Fixes it everywhere and matches "redo the sprites". But it
+  changes the office too — at true plan scale a person would be *taller than a cubicle desk*, and
+  Kyle likes how the office reads today. Probably too far.
+- **(B) Shorten the aisle runs in world units** so no fixture towers over a person — cap the tallest
+  store fixture at roughly **2.5-3 character heights**, matching the office's 2.1 ceiling. This is a
+  **floor relayout**, not just new art: shorter runs mean more of them, or more open floor.
+
+**What I would ask you to draw, if Kyle picks (B):** shelf and freezer run art in **shorter
+segments** — the same 1.2 m width and the same shelf faces, but a run tile about **a third of the
+current length**, so a level can lay 2-3 tiles where the aisle should be long and 1 where it should
+be short. That gives the layout a dial it does not have today, and it is the piece I cannot fake by
+rescaling: scaling the current art down narrows the aisle as well as shortening it.
+
+**Do not start this one until Kyle says (A) or (B).** It is the largest item on the list and the
+only one that can waste a night's work.
+
+## 5. Already handled, for your information
+
+- The **sales-floor "endcap"** was an office bookshelf (`supply_shelf`) standing between the aisles,
+  typed as a printer. It is now an actual printer, in the back offices. No art needed.
+- **Animations were praised** — *"animations are good, no changes needed."*
+- The **12 crew bat sheets** are scrapped; see the section above for why.

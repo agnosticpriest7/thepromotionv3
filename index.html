@@ -1721,6 +1721,27 @@ function inView(x,y,w,h){
   const vw=VW/ZOOM, vh=VH/ZOOM;
   return x < cam.x+vw+CULL_M && x+w > cam.x-CULL_M && y < cam.y+vh+CULL_M && y+h > cam.y-CULL_M;
 }
+/* ⚠️ CULL ON WHAT IS DRAWN, NOT ON THE COLLISION BOX — THE AISLES WERE VANISHING.
+   Every prop is drawn BOTTOM-ANCHORED and scaled to ART_W, so a tall fixture rises far above
+   the little rectangle it collides with: a shelf run's box is 40 units tall and its sprite is
+   330, an overhang of 286; the frozen wall overhangs 363. Culling on the box therefore threw
+   away runs whose art still covered a third of the screen, and walking north made whole rows
+   of shelving and the entire frozen aisle POP OUT at once instead of scrolling off the bottom.
+   Kyle caught it on the TV; measured at CULL_M=200 the box sat 257 units below the viewport
+   while the sprite top was still on screen.
+   RAISING CULL_M WOULD HAVE BEEN THE WRONG FIX — a magic number tuned to today's tallest
+   sprite, silently wrong the next time art is resized (and it was resized twice this week).
+   Ask the sprite how tall it draws instead. */
+function artDrawnH(art){
+  const im=ART[art]; if(!im||!im.naturalWidth)return 0;
+  return im.naturalHeight*U1(ART_W[art]||40)/im.naturalWidth;
+}
+function inViewSpr(x,y,w,h,art,yBottom){
+  const th=artDrawnH(art); if(!th)return inView(x,y,w,h);
+  const by=(yBottom!==undefined)?yBottom:(y+h+U1(4));
+  const top=Math.min(y, by-th);
+  return inView(x, top, w, Math.max(h, by-top));
+}
 const COL={sales:'#3b6ea5',acct:'#4a8c5a',hr:'#c0392b',exec:'#2b2b2b',mgr:'#3d3a30',intern:'#d9a521',
   floor:'#d8d2c4',wall:'#8f8672',wallLt:'#a89e88',desk:'#9c8f6f',deskTop:'#c7bda0',chair:'#5a4632',table:'#7a5c3a'};
 
@@ -2892,6 +2913,13 @@ const sealedZones=[];   // level overhaul: sales-room gating rewired later
    its single pass. The office's five tables are consts scaleWorld already scales by name, so they
    are only REFERENCED here — never pushed to levelBoxes, or they would be scaled twice. */
 const LEVEL_TABLES=[];   // {t, chairs} in draw order
+/* ⚠️ WHERE BAGGING ACTUALLY HAPPENS. The bagger's own job routed `via:'desk'`, which sent them
+   to their LOCKER -- the task said "at your lane" and the marker pointed at where they keep
+   their coat. The lane already knows where its bagging end is (BAG_F, the same fraction the
+   crew's own stations are built from); it just had nowhere to publish it. The level RECORDS
+   these rather than a via deriving them from whatever happens to look like a checkstand -- a
+   derivation is exactly what a mutant absorbs (CLAUDE.md 14). */
+const LEVEL_LANES=[];    // {x,y} bag-end of each checkout lane, in world units
 /* WHERE THIS LEVEL PUTS THE PLAYER, recorded by loadLevel and scaled by scaleWorld on its single
    pass. It exists because a test cannot safely guess it: the soak used to derive "the middle of the
    world", which was true of one empty room and wrong the moment the store gained an entrance to
@@ -5088,7 +5116,7 @@ const GROCERY_TASKS={
    rather than inventing manager-tier department fiction that was not asked for. */
 const GROCERY_DEPT_TASKS={
   front:[
-    {via:'desk',   label:'Bag the orders at your lane'},
+    {via:'lane',   label:'Bag the orders at your lane'},
     {via:'printer',label:'Bring the carts in from the lot'},
     /* `desk`, NOT `board`. The department board is dual-purpose in the office and belongs to the
        MEETING phase while one is running — its menu offers only "take meeting notes" then, so a
@@ -6055,6 +6083,14 @@ function addTask(t){
   if(task.target)task.label=task.label.replace('{name}',task.target.split(' ')[0]);
   tasks.push(task);renderTasks();
 }
+/* the bagging end of whichever lane you are nearest -- a store has several and any of them is
+   "your lane" for a bagger who has not been given one. */
+function nearestLane(){
+  if(!LEVEL_LANES.length)return null;
+  let best=null,bd=Infinity;
+  for(const l of LEVEL_LANES){const d=cdist(player,l); if(d<bd){bd=d;best=l;}}
+  return best?{x:best.x,y:best.y}:null;
+}
 function openTask(via,target){return tasks.find(t=>t.via===via&&!t.done&&(!target||t.target===target));}
 function completeTask(t){if(!t||t.done)return;t.done=true;today.tasks++;SFX.task();markTaskDone(t.label);if(t.kind==='npc'){career.vpFavor++;logLine('Sterling nods. He knows your name now.','g');}const gain=t.bonus?14:8;player.prog=clamp(player.prog+gain,0,100);player.suspicion=clamp(player.suspicion-3,0,100);if(!player.workPass){player.workPass=true;renderLeverage();logLine('Job done for this shift — '+mgrBeefLine()+'. Free time earned.','g');}toast(`Task done. Promotion +${gain}, suspicion −3`);logLine(`Completed: ${t.label}. Promotion +${gain}.`,'g');renderTasks();tryPromote();}
 function doBusywork(){if(player.workCh||player.act){toast('Already busy.');return;}player.workCh={t:8.0,max:8.0};toast('Working... hold still (8s).');}
@@ -6569,6 +6605,18 @@ function buildOptions(t){
       if(!c.loot||!c.loot.length) its.push({label:'Faced up, nothing behind it',disabled:true});
       its.push({label:'Leave it',act:()=>{}});
       return {title:c.label+(c.side&&c.side!=='front'?' ('+c.side+' side)':''),items:its};
+    }
+    /* ⚠️ AND THE BAGGING JOB COMPLETES AT THE TILL. Routing the task to the lane moved the
+       MARKER but left the work with nowhere to be done -- t_grocery_tasks caught it as
+       "BROKEN: lane" within a minute, which is exactly the hollow-route failure CLAUDE.md 14
+       describes: a via that points somewhere real and completes nowhere. The checkstand is a
+       container like any other, so it offers the work the same way a shelf section does. */
+    if(/Checkstand/i.test(c.label||'')){
+      const lt=openTask('lane');
+      if(lt) return {title:c.label,items:[
+        {label:lt.label+' (task)',risk:'good',
+         act:()=>startAct(4,'Bagging the orders',()=>completeTask(lt))},
+        {label:'Leave it',act:()=>{}}]};
     }
     let its=[];
     if(c.loot&&c.loot.length){
@@ -9720,10 +9768,10 @@ function drawDesks(){
   fitDeskBoxes();
   for(const d of desks){
     if(d.station)continue;          // a station has no furniture to draw
-    if(!inView(d.x,d.y,d.w,d.h))continue;
     const isMine=(d.owner==='you');
     const art=deskArt(d);
     const cx=(d.ax!==undefined?d.ax:d.x+d.w/2), cyB=(d.ay!==undefined?d.ay:d.y+d.h+U1(8));
+    if(!inViewSpr(d.x,d.y,d.w,d.h,art,cyB))continue;
     if(!sprAt(art,cx,cyB,art)){
       ctx.fillStyle=isMine?'#c9b98a':'#c3b48c';ctx.fillRect(d.x,d.y,d.w,d.h);
       ctx.strokeStyle='#241d16';ctx.strokeRect(d.x,d.y,d.w,d.h);
@@ -9777,11 +9825,11 @@ function labelBox(txt,cx,by){
 }
 function drawObjects(){
   for(const o of objects){
-    if(!inView(o.x,o.y,o.w,o.h))continue;
     /* a level may stand a different prop in for a trigger kind — the same per-entry `art`
        override containers already support. The TYPE still decides the interaction. */
     const art=o.art||OBJ_ART[o.type];
     const cx=o.x+o.w/2, cyB=o.y+o.h+U1(4);
+    if(!inViewSpr(o.x,o.y,o.w,o.h,art,cyB))continue;   // vending machines and coolers overhang too
     let drew=false;
     /* A printer that's been executed shows its wreck stage (0..3). Stage is driven by how
        many bat-hits it took and persists for the rest of the day. */
@@ -10511,9 +10559,9 @@ const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplie
 function drawContainers(){
   for(const c of CONTAINERS){
     if(c.section)continue;      /* a slice of a fixture: the fixture's own sprite is the picture */
-    if(!inView(c.x,c.y,c.w,c.h))continue;
     const art=c.art||CONT_ART[c.kind]||'filing_cabinet';   // c.art = per-container sprite override
     const cx=c.x+c.w/2, cyB=c.y+c.h+U1(4);
+    if(!inViewSpr(c.x,c.y,c.w,c.h,art,cyB))continue;   // the RUN is the picture, not its footprint
     /* ⚠️ MIRRORED WHEN THE PROP HAS A FRONT AND THE WALL IS ON THE WRONG SIDE. freezer_wall is
        drawn with its doors on the LEFT, which is right for a unit standing against an EAST wall.
        The frozen aisle is on the store's WEST side, so as drawn its doors would face into the
@@ -10970,6 +11018,7 @@ function objectiveTarget(){
   let p=null,txt=t.label;
   switch(t.via){
     case 'desk': p=myDesk?center(myDesk):null; txt='your desk'; break;
+    case 'lane': p=nearestLane(); txt='your lane'; break;
     case 'printer': p=objOf('printer'); txt='the printer'; break;
     case 'supply': p=objOf('supply'); txt='the supply station'; break;
     case 'water': p=objOf('water'); txt='the water cooler'; break;
@@ -12738,6 +12787,11 @@ function scaleWorld(){
   ROOMS.forEach(scaleBox);
   levelBoxes.forEach(scaleBox);
   levelBlockers.forEach(scaleBox);
+  /* ⚠️ AUTHORED UNTIL THIS LINE. The lanes are built in the same authored units as the
+     checkouts they come from, and every consumer -- the compass, the walk-to, the marker --
+     works in SCALED world units. Missing this pass put the bagging marker 1.8x too close to
+     the origin, which reads as a plausible spot on the floor rather than as an error. */
+  LEVEL_LANES.forEach(scaleBox);
   scaleBox(levelSpawn);   // furniture a non-office level authored; office's five are scaled by name above
   if(typeof mgr!=='undefined'&&mgr.route)mgr.route.forEach(scaleBox);
   /* remember where each desk SPRITE sits, so fitDeskBoxes() can move the collision
@@ -12805,7 +12859,7 @@ function loadLevel(id){
       kitchen chairs survived into Save-Rite unfitted, at (0,0). assignBreakSeats deals attendees
       alternately into two rooms, so HALF the crew was handed a chair at the world's top-left
       corner every single break and walked into the north-west wall. */
-   kitchenChairs].forEach(clear);
+   kitchenChairs,LEVEL_LANES].forEach(clear);
   /* The room IS the world. A smaller box floating inside it would leave a walkable field outside
      the walls with nothing in it — the player could stroll out of the shop into a void and the
      room would not really be enclosed. Derived from W/H rather than the authored 1500x760, so a
@@ -13223,6 +13277,7 @@ function loadLevel(id){
     CONTAINERS.push({x:Math.round(x0+CHK_W/2-14), y:CHK_Y+CHK_D-22-Math.round(4/S),
                      w:28,h:22,label:'Checkstand',kind:'cabinet',art:art});
     levelBlockers.push({x:x0+1, y:CHK_Y+1, w:CHK_W-2, h:CHK_D-2});
+    LEVEL_LANES.push({x:Math.round(x0+CHK_W/2), y:Math.round(CHK_Y+CHK_D*BAG_F)});
   };
   /* west of the doors, so you walk in and up the shop rather than into a till */
   checkout(380,'checkstand'); checkout(484,'checkstand_r'); checkout(588,'checkstand');
@@ -13242,7 +13297,13 @@ function loadLevel(id){
        run 2's north end (x 556-616), NOT across an aisle mouth: the first move put it at x 628-662,
        straight over the centre of aisle 2, and the aisle-mouth check caught it. Clear of the deli
        counter blocker (ends y 125). Placeholder art, like every other prop in here. */
-    {type:'printer',x:860,y:560,w:34,h:26,label:'Endcap',         art:'supply_shelf',  jammed:false},
+    /* ⚠️ THIS WAS A BOOKSHELF STANDING IN THE MIDDLE OF THE SALES FLOOR. It was typed
+       `printer` so the office's printer errands had somewhere to land, then dressed in the
+       office's `supply_shelf` art and labelled "Endcap" -- so the store had a tall wooden
+       bookcase parked between the aisles that no supermarket has ever contained. The store has
+       real endcaps now (the shelf runs carry their own), so this can be what it always was
+       underneath: a printer, in the back offices, where a printer belongs. */
+    {type:'printer',x:497,y:152,w:34,h:26,label:'Printer',         art:'printer',       jammed:false},
     {type:'supply', x:1390,y:150,w:34,h:26,label:'Baler', art:'baler'},
     /* along the break room's west wall. They were spread across the middle of the room, which
        left nowhere for the table to go once the crew actually needed somewhere to take a break. */

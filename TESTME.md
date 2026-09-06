@@ -886,3 +886,70 @@ text, in a shop that has none of those things to hand. Save-Rite now gets its ow
 
 **Art total is now 135 MB**, down from 594. Still held back: the Save-Rite cast's own walk strips,
 pending the redraw — the last ~85 MB if the Xbox needs more room.
+
+---
+
+## X — The aisles stop vanishing, bagging happens at a lane
+
+Four things from your TV pass. Two others need your call — see the end.
+
+### The disappearing aisles were a real bug
+
+**Culling was measured against the collision box, not the art.** A shelf run collides with a
+40-unit box and *draws* 330 tall — an overhang of 286; the frozen wall overhangs 363. The cull
+margin was 200 and could never have covered either. So the game threw away runs whose art still
+filled a third of the screen, and walking north made whole rows of shelving and the entire frozen
+aisle **pop out at once** instead of scrolling off the bottom.
+
+Fixed at the root: culling now asks the sprite how tall it draws. Verified across **20 fixtures at
+160 camera positions** — nothing is culled while any part of it is on screen. Raising the margin
+would have been a magic number that rots the next time art is resized, which has happened twice
+this week.
+
+### Bagging is at a lane now
+
+*"Bag the orders at your lane"* routed to **your locker** — the task said "at your lane" and the
+marker pointed at where you keep your coat. It now points at the bagging end of the nearest
+checkout. Measured: 7 units from the checkstand, 510 units from the locker it used to send you to.
+
+### The bookshelf is a printer, in the back offices
+
+That tall wooden bookcase between the aisles was the office's `supply_shelf`, typed as a printer so
+office errands had somewhere to land, and labelled "Endcap". It is now an actual printer, in the
+back offices where a printer belongs.
+
+### Meltdown words, aprons, animations — unchanged and good
+
+**What to look at:**
+- Walk north up the store from the front end. **The aisles should scroll off smoothly**, not blink out.
+- Take a bagging job and follow the compass — it should walk you to a till, not to your locker.
+- The back offices should have a printer; the sales floor should have no bookcase.
+
+---
+
+### Two I need you to decide
+
+**1. The scale.** I measured it and *the obvious reading is wrong*: per metre the store's props are
+**0.87x** the office's — smaller, not larger — and the characters are identical in both levels
+(54 px). The real cause is the two-scales problem: props are drawn at true plan scale and a person
+at about **2.6x smaller than the floor they stand on**. The office hides it because its furniture is
+small; the store's 4-5 m aisle runs make it obvious.
+
+| tallest fixture | in character heights |
+|---|---|
+| office | 2.1x |
+| store, normal props | 1.8x |
+| **store aisle runs** | **6.1x** |
+| **store freezers** | **7.4x** |
+
+Two real options, both yours: **(A)** make characters bigger — fixes it everywhere but changes the
+office, where a person would end up taller than a desk; or **(B)** shorten the aisle runs so nothing
+towers, capping fixtures near the office's 2.1x. (B) is a floor relayout and needs shorter run art
+from Codex. **I'd go with (B)** — the office reads well and you said so, and (A) would drag it out
+of shape to fix the store.
+
+**2. The break-room seating.** I could not reproduce it. Posing the clock into a break deliberately
+suppresses the phase-change block that assigns seats, so I never got a seated frame to measure, and
+I am not going to guess at the seating compositor — it is the piece HANDOFF-8 warns is delicate.
+**If you can get me a screenshot mid-break with people sat down**, or tell me whether it is one
+department/table or all of them, I will fix it properly next pass.
