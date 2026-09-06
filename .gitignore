@@ -20,3 +20,12 @@ test/floormap.svg
 # python bytecode from the art tooling
 __pycache__/
 *.pyc
+
+# ---- ART: raw generation output stays LOCAL --------------------------------------------------
+# These are Codex's working folders, not deliverables. `overnight/animation-raw` alone is 263 MB
+# and NOTHING in the game ever requests it -- ART_PATH is 'Art/sprites/' and only that. A blanket
+# `git add -A` swept 451 MB of them into a PUBLIC repo's history on 2026-09-04 and it took a
+# force-push to undo. The game needs Art/sprites/; the reworkable masters (batch2, current-cast,
+# rework-v2) are small and stay tracked. These two are not.
+Art/masters/**/overnight/
+Art/masters/**/attempts/

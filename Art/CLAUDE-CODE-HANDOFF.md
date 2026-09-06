@@ -164,3 +164,66 @@ scheme — I will map it.
 Worth asking him before drawing them; the Intern alone unblocks the common case.
 
 **Priority: higher than request 1.** This is the character in the middle of every screenshot.
+
+---
+
+# ⚠️ WORKING RULE — WHERE ART GOES, AND WHAT NEVER ENTERS GIT
+
+Added by Claude Code, 2026-09-05, after cleaning up a mess I made. Read this before the next batch.
+
+## What happened
+
+On 2026-09-04 I integrated batch 1 and committed it with a blanket `git add -A`. That swept **451 MB
+of raw generation output** — `overnight/` (378 MB, of which `animation-raw` alone is 263 MB, plus a
+19.4 MB `CAST-PREVIEW.html`) and `attempts/` (73 MB) — into the history of a **public** repository,
+and pushed it. `.git` went to **742 MB**. Nine hundred and forty-two files of intermediate retries,
+3× previews and raw frames, permanently in history, none of which the game has ever requested.
+
+Undoing it took a `git filter-repo` rewrite and a force-push to `main` on 2026-09-05. That is a
+destructive, irreversible operation on a public repo, and it only stayed cheap because the mistake
+was eight commits old. Two more art batches and it would not have been.
+
+**Twice before the rewrite I told Kyle those folders were "still untracked, your call." They were
+not — my own commit had already tracked them.** Worth stating plainly, because the lesson is not
+only about disk: I reported the state of the repo from memory instead of measuring it.
+
+## The rule
+
+**Only `Art/sprites/` ships.** The loader is literally `ART_PATH + name + '.png'` where
+`ART_PATH = 'Art/sprites/'`. Nothing outside that folder is ever fetched by the game, at any point,
+for any reason. A file in `Art/masters/` is for *us*; a file in `Art/sprites/` is for *players*.
+
+| folder | tracked? | why |
+|---|---|---|
+| `Art/sprites/save-rite/` | **YES** | the game loads these. 184 PNGs, 16 MB. Keep it lean. |
+| `Art/masters/save-rite/` (top level) | yes | the clean masters — small, and we rework from them |
+| `…/batch2/`, `…/current-cast/`, `…/rework-v2/` | yes | 41 MB total, reworkable sources, fair price |
+| `…/pixelated/`, `…/references/` | yes | 1 MB each |
+| **`…/overnight/`** | **NO — gitignored** | raw generation run. Local only. |
+| **`…/attempts/`** | **NO — gitignored** | retries. Local only. |
+
+`.gitignore` now carries `Art/masters/**/overnight/` and `Art/masters/**/attempts/`, so those two
+names are safe **by convention** in any future batch folder too. **Use those names** for raw output
+and it can never happen again.
+
+**Codex — nothing you do can cause this.** You have access to the folder on Kyle's machine, not to
+git; you have never committed anything and cannot. This was mine to make and mine to fix. What is
+asked of you is only this:
+
+- **Put raw/intermediate output in a folder called `overnight/` or `attempts/`.** Those names are
+  pre-ignored. Anything else you invent lands in a blanket add.
+- **Keep deliverables separate and final** — the PNGs meant for the game, and nothing beside them.
+- **Say roughly how big a batch is** in your handoff note. 16 MB of sprites is fine forever;
+  263 MB of raw frames is not, and I would rather know before I stage it.
+
+## And the rule for me
+
+- **Never `git add -A` in this repo.** Stage art by explicit path.
+- **`git status` before claiming anything about what is or is not committed.** Do not answer that
+  question from memory — I did, and I was wrong twice in a row.
+- **Check the size of what is being staged** before committing an art batch, not after.
+
+The files themselves were never lost. They are still on this machine at
+`Art/masters/save-rite/overnight/` and `…/attempts/`, exactly as delivered — just untracked now,
+which is where they always should have been. A full pre-rewrite mirror of the repo was taken before
+anything was touched.
