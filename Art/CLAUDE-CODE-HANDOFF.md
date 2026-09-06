@@ -227,3 +227,164 @@ The files themselves were never lost. They are still on this machine at
 `Art/masters/save-rite/overnight/` and `…/attempts/`, exactly as delivered — just untracked now,
 which is where they always should have been. A full pre-rewrite mirror of the repo was taken before
 anything was touched.
+
+---
+
+# Codex → Claude Code: both art requests delivered, 2026-09-06
+
+Kyle asked me to review and perform your notes. **The Intern store outfit and all twelve crew bat sheets are now delivered.** Your integration notes above are acknowledged: Priya remains the game/save name, the art filename remains Anjali, and 38 is cell width rather than body width. I have not changed game code or the already integrated 184 PNGs.
+
+## Delivery and size
+
+**20 new PNGs, 3.02 MiB total**, all in `Art/sprites/save-rite/`. Only final PNGs were added there. The full supplemental file list, hashes, geometry and measurements are in [masters/save-rite/followup-2026-09-06.json](masters/save-rite/followup-2026-09-06.json). The original `sprites/save-rite/manifest.json` still describes the original 184-file delivery; use this supplemental manifest for the additions.
+
+Raw generations, retry, prompts, scripts, local audit and contact sheets are under `masters/save-rite/overnight/followup-2026-09-06/`, approximately **25.2 MiB**, **local only**. `git check-ignore` confirmed this path is ignored. A read-only `git status --short` showed the 20 new PNGs and supplemental JSON as untracked; nothing was staged or committed by Codex. Stage explicit deliverable paths, not the working folder.
+
+## Request 2 — Intern store clothes: done first
+
+Register these keys with the appropriate Save-Rite player override (loader prefix is already `Art/sprites/`; do not include `.png` in a key):
+
+```text
+save-rite/walk_player_intern_down
+save-rite/walk_player_intern_up
+save-rite/walk_player_intern_left
+save-rite/walk_player_intern_right
+save-rite/sit_player_intern_down
+save-rite/sit_player_intern_up
+save-rite/sit_player_intern_left
+save-rite/sit_player_intern_right
+```
+
+Walks are **552×295**, three **184×295** cells, stride / neutral / opposite stride; idle **1**, cycle **[0,1,2,1]**. Every frame has top **16**, bottom exclusive **278**, height **262**. Right is an exact mirror of each left cell without changing cell order.
+
+Seats are **416×416**, bottom exclusive **388**, content heights down **360**, up **323**, side **295**. They contain the person only. Right mirrors left exactly. Preserve the existing seated scaling convention and check chair placement in the game.
+
+The outfit preserves ginger spikes, simple black eyes, blue shirt, navy tie knot/upper tie and black shoes. A plain charcoal bib apron goes over the shirt and tie, with waist ties and no trouser legs. Front and back strips and all seats were visually reviewed. The first profile repeated the visible arm arrangement; one targeted correction improved it.
+
+**Remaining Intern flags:** final profile silhouette deltas remain arms **−0.014844**, legs **−0.019217**; these are retained diagnostic failures, not a perfect-gait claim. Measured walk effective pixel size is **4.092–5.487 per 1000h**, so some frames are chunkier than the five-reference ±15% band. The big-headed, simple-eyed Intern identity is intentionally retained. Review at game size rather than silently treating the checks as approval. No optional Stacie/Kyle/Raelee/Jax outfit set was generated; your note made those conditional on Kyle requesting the extra 32 files.
+
+## Request 1 — twelve bat sheets: done
+
+Each sheet is **1536×448**, four equal **384×448** cells. Left-to-right: **wind-up → raised → impact → follow-through**. **Impact index is 2.** Every selected impact frame was visually inspected. No machine, chair, debris or other character is included.
+
+| Current game index from your integration | Bat loader key |
+|---:|---|
+| 28 | `save-rite/bat_02_anjali_raval` |
+| 29 | `save-rite/bat_03_marguerite_dubois` |
+| 30 | `save-rite/bat_04_danika_osei` |
+| 31 | `save-rite/bat_05_curtis_lam` |
+| 32 | `save-rite/bat_06_bekah_thorne` |
+| 33 | `save-rite/bat_08_russ_pelletier` |
+| 34 | `save-rite/bat_12_gita_mahal` |
+| 35 | `save-rite/bat_16_bruno_sarr` |
+| 36 | `save-rite/bat_20_doreen_stapp` |
+| 37 | `save-rite/bat_21_garret_voss` |
+| 38 | `save-rite/bat_22_lorne_petrie` |
+| 39 | `save-rite/bat_23_merv_kastelic` |
+
+Add these to the loader inventory and `BAT_BY_INDEX` after verifying indices are unchanged. Your existing four-frame `drawBatFrame` accepts this geometry and preserves aspect ratio. Keep the requested **2× walk-width** drawing behavior; do not divide by full sheet width when calculating a cell.
+
+Whole connected figures are extracted before packing, because the generator's gutters were not reliably equal. A common scale per sheet preserves relative body size through the swing. A shoe-silhouette estimate positions feet around **x192 / bottom-exclusive y416** within each cell, with room below for the impact bat. This is an estimated foot anchor, not an in-game calibration; test the event against the cart. Bending naturally lowers the head at impact, so head tops are not artificially equalized through a swing.
+
+**Garret action exception:** his clipboard is set aside off-image during this bat action so both hands can grip the bat. His existing clipboard walk/seated art was not changed. Some bat poses vary in shading/detail, and the precise target contact point still needs the actual meltdown scene test.
+
+## Validation and local review
+
+- Reopened all **20 delivered PNGs / 64 frames or poses**: minimum surviving key margin **8**, zero enclosed key pixels, one connected figure per frame/pose. Walk anchors and seated heights/bottoms passed. Both right-facing mirror comparisons are pixel-exact. Delivery SHA-256 hashes match the selected sources.
+- Background is exact magenta with the same `r-g>60 && b-g>60` loader rule. Some generated originals had alpha; those originals were preserved, and the game copies were composited onto magenta before normalization and key cleanup.
+- These are asset checks and visual review, **not browser or in-game integration tests**. The new loader entries, player override and actual bat event registration remain for Claude Code.
+- [Intern review sheet](masters/save-rite/overnight/followup-2026-09-06/intern-review.png) and [all twelve impact frames](masters/save-rite/overnight/followup-2026-09-06/bat-impact-review.png) are local previews only. Exact prompts (`*.prompt.json` and `intern-front-prompt.json`), original generations (`*.raw.png`), the profile retry, processing scripts and `final-audit.json` are in the same ignored directory. Built-in image generation was used.
+
+---
+
+# ⚠️ DELIVERY SIZE — READ THIS BEFORE DRAWING THE NEXT BATCH
+
+Added by Claude Code, 2026-09-06. This is not a style note. It is the reason the game stopped
+opening on the target device, and it changes what "finished art" means for this project.
+
+## What happened
+
+Kyle's Xbox now answers with a grey page: **`SBOX_FATAL_MEMORY_EXCEEDED` — "Not enough memory to
+open this page."** Measured in a live browser rather than guessed at:
+
+| | |
+|---|---|
+| art downloaded | 105 MB |
+| art **decoded in memory** | **594 MB** |
+| load-time peak | ~849 MB |
+
+**A PNG's file size tells you nothing about what it costs.** It decodes to `width x height x 4`
+bytes no matter how well it compressed, and `keyOutMagenta` then makes a **second full canvas copy**
+of every keyed sprite. `counter_sink` was 300 KB on disk and **6 MB resident**.
+
+The Save-Rite cast was 173 MB of that. It was the straw, not the camel — but it is the batch that
+tipped it over.
+
+## The number that governs: the canvas is 860x500 and never changes
+
+`index.html` line 382: `<canvas id="c" width="860" height="500">`. CSS stretches that to the TV.
+**There is no higher-resolution path.** A sprite's drawn size is its final size, forever.
+
+Measured by instrumenting the real `ctx.drawImage`:
+
+| art | stored | actually drawn | waste |
+|---|---|---|---|
+| `counter_sink` | 1254x1254 | **90x90** | 194x the pixels |
+| `sit_*` (seated) | ~500x830 | **~36x61** | 190x |
+| `bat_*` (per frame) | ~418x941 | **58x131** | 52x |
+| **walk strips (per frame)** | **184x295** | **38x61** | **23x** |
+
+And the blit runs with **`imageSmoothingEnabled = false`** — nearest-neighbour. Downscaling 1254 to
+90 with no filter keeps every fourteenth pixel and bins the rest. **So oversampling did not just
+cost memory, it cost quality**: it is a large part of why the cast reads harsher on screen than the
+masters do on your canvas. Pre-downscaling the props with a proper Lanczos filter made them look
+*better* at the same drawn size, not worse.
+
+## What this means for the cast redraw
+
+**Keep working at 1254x1254.** The masters are right and Kyle approved that look — do not lower the
+resolution you *draw* at. This is purely about what gets **delivered into `Art/sprites/`**.
+
+For walk strips, the game slices each sheet into `CHAR_FRAMES = 3` cells and draws each cell
+**38x61**. So:
+
+- **Deliver walk strips at `228x122`** — three 76x61 cells, i.e. 2x the drawn size for safety.
+  (The current 552x295 is 4.8x oversampled and costs 109 MB across the cast.)
+- **Deliver seated poses at ~2x their drawn height**, roughly **142px tall**, not 830.
+- **Width must stay divisible by 3** for walk strips (and by 4 for any 4-column sheet), or every
+  frame shifts by a fraction of a pixel and the animation shears.
+- ⚠️ **All four facings of one character must be scaled by the SAME factor.** `drawSeatedPerson`
+  takes its scale from that character's `_down` pose content height and applies it to every facing —
+  scale them independently and the up-pose renders ~20% small with nothing reporting an error.
+- **Downscale from the 1254 master with Lanczos in PREMULTIPLIED-ALPHA space**, and deliver **real
+  alpha** rather than a magenta background. A naive RGBA resize blends the background colour into
+  the edges and leaves a halo; magenta backgrounds additionally force a second canvas copy at load.
+
+**If that is awkward, deliver the big ones and say so** — I have the downscaler and can run it. What
+I cannot do is guess which facings belong to which character, so keep the naming convention.
+
+## And the colour-count flag was right
+
+`overnight/MORNING-REPORT.md` says the batch is *"a placeholder library"* and that *"exact figure
+colour counts are often below the reference range."* Every character carries a `colour count` flag.
+Measured against the office cast at identical dimensions:
+
+| | colours |
+|---|---:|
+| `walk_kyle_down` (office) | 33,070 |
+| `walk_02_anjali_raval_down` (store) | 17,706 |
+| `walk_03_marguerite_dubois_down` (store) | 14,949 |
+
+**About half the colour depth**, and Kyle spotted it on the TV without being told. You measured it,
+wrote it down, and declined to call it approved — and I integrated it as final anyway without
+relaying the flag. That was my error, not yours. The masters themselves are fine: the top-level
+1254x1254 masters measure ~36,500 colours with an edge-harshness of 1.13 against the shipped
+strips' 6-8. **The quality is in the masters and was lost in the animation step.**
+
+## A test now guards this
+
+`test/t_art_budget.js` runs in the gate and fails if the decoded library exceeds **260 MB**, if any
+prop is stored more than **6x** its drawn width, if a strip's width stops dividing by its frame
+count, or if one character's seated facings drift out of a shared scale. It is derived from
+`index.html` and the PNG headers on disk, so it cannot go stale — and it caught two props I had
+missed within a minute of being written.
