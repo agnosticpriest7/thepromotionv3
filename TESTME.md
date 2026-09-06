@@ -795,3 +795,49 @@ the **Owner**, who has nobody above them, spent the day *"preparing the district
 **A latent crash fell out of this** and is fixed: the day-roll picked one desk job and one other,
 assuming a desk job always existed. Routing shelf work away from `desk` emptied one rung's desk
 list, and an empty pick builds a broken task. All 36 rank/department combinations now roll cleanly.
+
+---
+
+## V — The Xbox crash, and why the art looks different
+
+**This is the one that matters. The game would not open on your Xbox.**
+
+`SBOX_FATAL_MEMORY_EXCEEDED` was not a fluke or a bad load — the art library genuinely did not fit.
+Measured in a live browser, not guessed:
+
+| | before | after |
+|---|---:|---:|
+| art decoded in memory | **594 MB** | **134 MB** |
+| load-time peak | ~849 MB | ~259 MB |
+| art downloaded | 105 MB | **32 MB** |
+
+**Nothing in the game changed.** `index.html` is byte-for-byte identical on this branch — only the
+PNG files. No layout moved, no behaviour changed, no save format touched.
+
+**What was wrong:** a PNG costs `width x height x 4` bytes in memory regardless of how small the
+file is, and the game's canvas is a fixed **860x500** that CSS stretches to the TV — so a sprite's
+drawn size is its *final* size. `counter_sink` was stored **1254x1254** and drawn **90x90**: 194
+times the pixels, all of them thrown away. The seated poses were 190x. Every prop, bat sheet and
+seated pose is now stored at ~2x its real drawn size.
+
+**The art should look BETTER, not worse — please check this.** The game blits with smoothing off,
+so it was throwing away thirteen of every fourteen pixels with no filtering at all. Downscaling
+properly beforehand keeps more of the detail. The comparison sheet I sent shows it clearest on the
+baler's hazard stripes and the checkstand.
+
+**What to look at:**
+- **Does it open at all on the Xbox?** That is the whole test.
+- Walk the shop floor and the back rooms. Produce, cases, shelves, freezers, the baler, the pallets,
+  checkstands, trolley bay, magazine rack.
+- The office too — desks, chairs, toilets, the printer, the meeting room.
+- Anything that looks *soft or blocky* is worth telling me about; anything **magenta** is a bug (I
+  measured zero magenta pixels on both floors, but the TV is the real test).
+- Break room: sit people down and check the seated poses still read at the right size.
+
+**Held back deliberately:** the character **walk strips** are untouched, because the Save-Rite cast
+is being redrawn. They are still 4.8x oversampled and are the last **~85 MB** on the table. **If the
+Xbox still runs out of memory, tell me and I'll take those down too** — that would bring it to
+about 50 MB.
+
+**A new test guards this permanently.** `t_art_budget.js` fails the gate if the decoded library
+exceeds 260 MB. It caught two props I had missed within a minute of being written.

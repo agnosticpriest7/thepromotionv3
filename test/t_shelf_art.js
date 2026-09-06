@@ -18,6 +18,21 @@
    the assertion is worthless no matter how green the rest is. */
 'use strict';
 const { createWorld } = require('./harness');
+const fsz = require('fs'), pathz = require('path');
+/* ⚠️ ASK THE PNG, DO NOT RESTATE IT (CLAUDE.md 14). These assertions used to read
+   `naturalWidth === 496 && naturalHeight === 1650` -- the literal size of the art on the day they
+   were written. The point they are making is "the harness reported the FILE's real size and not
+   its 64x64 Image stub", and that point is just as true at any other size. When the sprite library
+   was downscaled on 2026-09-06 to fit the Xbox's memory, both went red for a change that was
+   entirely intentional and had nothing to do with shelves. Derived from the header on disk, they
+   cannot rot again -- and they still fail loudly if the stub leaks through. */
+function pngSize(name){
+  const f = pathz.join(__dirname, '..', 'Art', 'sprites', name + '.png');
+  if(!fsz.existsSync(f)) return null;
+  const fd = fsz.openSync(f, 'r'), b = Buffer.alloc(24);
+  fsz.readSync(fd, b, 0, 24, 0); fsz.closeSync(fd);
+  return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+}
 
 let pass = 0, fail = 0;
 const ck = (n, c, d) => { console.log('  ' + (c ? 'PASS' : 'FAIL') + '  ' + n + (d ? '   ' + d : '')); c ? pass++ : fail++; };
@@ -64,8 +79,10 @@ const runBlockers = (w) => {
   /* registered in ART_FILES is what actually loads one — the `phone` scar. And keyed, or every
      run draws on an opaque magenta slab. */
   const dims = ART.map(n => { const im = A[n]; return im ? (im.naturalWidth + 'x' + im.naturalHeight) : 'none'; });
-  ck('  ^ and each reports its real 496x1650, not the 64x64 stub',
-     dims.every(d => d === '496x1650'), dims.join(' '));
+  const want = ART.map(n => { const d = pngSize(n); return d ? (d.w + 'x' + d.h) : 'no file'; });
+  ck('  ^ and each reports the size the PNG on disk actually is, not the 64x64 stub',
+     dims.every((d, i) => d === want[i]) && dims.every(d => d !== '64x64'),
+     dims.join(' ') + '  (files on disk: ' + want.join(' ') + ')');
 
   const fs = require('fs'), path = require('path');
   const notKeyed = ART.filter(n => !new RegExp("'" + n + "'").test(
@@ -108,9 +125,12 @@ const runBlockers = (w) => {
   ck('  ^ and every cap uses the endcap sprite',
      caps.length > 0 && caps.every(c => c.art === 'endcap'),
      [...new Set(caps.map(c => c.art))].join(', '));
-  ck('  ^ which is loaded, at its real 496x386', !!(g.ART && g.ART['endcap']) &&
-     g.ART['endcap'].naturalWidth === 496 && g.ART['endcap'].naturalHeight === 386,
-     g.ART && g.ART['endcap'] ? (g.ART['endcap'].naturalWidth + 'x' + g.ART['endcap'].naturalHeight) : 'MISSING');
+  const capWant = pngSize('endcap'), capIm = g.ART && g.ART['endcap'];
+  ck('  ^ which is loaded, at the size the PNG on disk actually is',
+     !!capIm && !!capWant && capIm.naturalWidth === capWant.w && capIm.naturalHeight === capWant.h
+       && capIm.naturalWidth !== 64,
+     capIm ? (capIm.naturalWidth + 'x' + capIm.naturalHeight
+              + (capWant ? '  (file: ' + capWant.w + 'x' + capWant.h + ')' : '')) : 'MISSING');
 
   /* drawn footprints, the way sprAt actually lays them out: centred on x, bottom on y+h+U1(4).
      ⚠️ measured off the REAL png aspect — the harness reads it from the file header now. */
