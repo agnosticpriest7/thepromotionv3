@@ -388,3 +388,87 @@ prop is stored more than **6x** its drawn width, if a strip's width stops dividi
 count, or if one character's seated facings drift out of a shared scale. It is derived from
 `index.html` and the PNG headers on disk, so it cannot go stale — and it caught two props I had
 missed within a minute of being written.
+
+---
+
+# Integration report — 2026-09-06 delivery
+
+Claude Code. Read the first section before you draw anything else, because half this delivery was
+scrapped for a reason that is nobody's fault but was avoidable.
+
+## The 12 crew bat sheets are scrapped. Do not redraw them.
+
+They were correct work. They were measured, downscaled, registered, wired into `BAT_BY_INDEX`,
+tested and taken through a full gate — and then Kyle pointed out the obvious thing none of us had
+said out loud:
+
+> *"the bat meltdown is office specific... meltdown we need, just not with a bat as that's a very
+> specific Office Space reference"*
+
+He is right. Three men destroying a printer in a field is a joke about **that film** and **that
+building**. A grocery clerk swinging a bat at a printer is a reference to nothing — it is the same
+gag with the meaning removed. The store keeps meltdowns; it loses the bat.
+
+**That was my error to catch, not yours.** The art request in this file asked for "crew meltdown bat
+sheets" and never asked whether a bat belonged in a supermarket at all. You drew exactly what was
+specified. I specified the wrong thing, and I did not notice through registration, testing or a
+green gate. **Roughly 3 MB of delivered art and an evening of generation went in the bin because the
+brief did not ask what the joke was for.**
+
+If a future request looks like it is porting a gag from the office, push back before drawing it.
+
+### What replaced them
+
+`printerMode` is now **scoped** to the office rather than removed — the 7% roll is Kyle's number and
+is untouched (CLAUDE.md §4), it simply cannot fire in the store. Store meltdowns also get their own
+descriptions, because three of the four original ones named a *desk*, a *keyboard* or a *printer
+rant*: the same joke told in text. `t_grocery_crew` now drives 480 store meltdowns and asserts none
+takes the bat, **and** drives 1140 office ones and asserts some do — so the feature is provably
+scoped rather than quietly deleted.
+
+## The player's store clothes are IN, and they are excellent
+
+| art | delivered | registered as |
+|---|---|---|
+| `walk_player_intern_*` | 552x295 | **228x122** |
+| `sit_player_intern_*` | 416x416 | **164x164** |
+
+Magenta keyed to real alpha on the way in, so these need no colour-keying at load — the first
+sprites in the game that stay a plain `<img>` instead of being copied into a canvas. Wired as
+`CHAR_SHEETS[50]` / `SEAT_ART[50]`, with `storeOutfit()` swapping index 0 → 50 for the player only,
+in the store only.
+
+**Your normalisation is exact.** `262/184 = 1.4239` on the player strip and on every crew strip,
+identical to four decimal places; the aproned player renders **54.0px** against the cast's **54.1**.
+
+## Two things I flagged wrong before checking properly
+
+**Your bat sheets were never mis-scaled.** My first probe said the crew would render 45px against a
+55px standing character. That probe scanned **frame 0 only** on your sheets while using a different
+statistic on the office ones. Measured consistently across all four frames: office **31-66px**,
+yours **34-58px** — a 6% median difference, inside the office set's own 2x internal spread.
+
+**And the player was never 5% too tall.** I measured 57.0px against 54.1 and started writing a
+padding fix before checking the source. I had been counting *any* non-zero alpha on the filtered art
+but only hard edges on the magenta art.
+
+Same root cause both times, worth stating for whoever measures next: **magenta-backed art and alpha
+art cannot be compared with the same "is this pixel content" test.** Key the magenta first, then
+threshold alpha, then compare.
+
+## Confirmed correct in your manifest
+
+`impact_index: 2` matched the game's `batFrame===2` hit test; `intern_walk_cycle [0,1,2,1]` with
+`intern_idle_index: 1` matched `WALK_CYCLE` and `IDLE_FRAME`; the 4-column bat layout matched
+`drawBatFrame`. Nothing needed adjusting anywhere.
+
+## What is actually wanted next
+
+The **Save-Rite cast walk strips**, at roughly half the colour depth of the office cast (17,706 vs
+33,070 at identical dimensions) — per your own MORNING-REPORT flag. They are the last ~85 MB in the
+game and the one piece of art Kyle has said reads wrong on the TV. The masters are good (~36,500
+colours, edge-harshness 1.13), so the loss is in the animation step, not the source. Deliver at
+**228x122** per the DELIVERY SIZE section above.
+
+**Optional outfits for Stacie, Kyle, Raelee and Jax** remain ungenerated and that is fine — ask Kyle
+before spending 32 files on them.

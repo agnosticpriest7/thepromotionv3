@@ -841,3 +841,48 @@ about 50 MB.
 
 **A new test guards this permanently.** `t_art_budget.js` fails the gate if the decoded library
 exceeds 260 MB. It caught two props I had missed within a minute of being written.
+
+---
+
+## W — Store clothes, and a meltdown that isn't someone else's joke
+
+Codex's second delivery, integrated — and half of it deliberately thrown away.
+
+### The player wears an apron on the shop floor
+
+You are the Intern in both buildings, but in Save-Rite you now wear a store apron over the shirt
+and tie instead of walking the aisles dressed for a sales meeting. Same ginger hair, same bad tie —
+it just goes under the apron. **The swap is automatic and by building**; the office is untouched.
+
+There was a trap worth knowing about: the player is drawn by **two different code paths** — walking
+goes one way, sitting goes another, and only one passed through the function that decides which
+face you wear. Swapping in one and not the other would have put the apron on you standing up and
+the office shirt on you the moment you sat down, with nothing reporting a fault. Both now go
+through the same resolver, and a test asserts they *agree* rather than checking either alone.
+
+### The bat stays in the office
+
+Twelve store meltdown sheets were drawn, registered, tested and gated — then scrapped, because
+**executing a printer with a baseball bat is an Office Space reference**, and Office Space is Paper
+Supply Co. A grocery clerk doing it is a reference to nothing.
+
+**The store still melts people down.** The 7% roll is untouched — it is *scoped* to the office
+rather than changed (that number is yours). And the words moved with it: three of the four original
+descriptions named a **desk**, a **keyboard** or a **printer rant**, which is the same joke told in
+text, in a shop that has none of those things to hand. Save-Rite now gets its own:
+
+> screamed at a customer and walked off · burst into tears in the back room · kicked a stack of
+> trays across the floor · threw an apron in the bin · swept a shelf clear with one arm · walked
+> out mid-transaction
+
+**What to look at:**
+- Walk the store and check you are in the apron. Start an office run and check you are not.
+- Sit down in the break room — you should still be aproned, seated.
+- Stand next to a crew member. **Nobody should look taller or shorter** (measured 54.0px against
+  the crew's 54.1, but the TV decides).
+- Push somebody in the store to breaking point and read the log line. It should sound like a
+  supermarket, and **nobody should produce a bat.**
+- In the office, the bat homage is unchanged and still fires at 7%.
+
+**Art total is now 135 MB**, down from 594. Still held back: the Save-Rite cast's own walk strips,
+pending the redraw — the last ~85 MB if the Xbox needs more room.
