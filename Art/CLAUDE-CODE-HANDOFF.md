@@ -525,53 +525,99 @@ a tray rack, a small dry-goods shelf, boxes.
 **small back-counter shelf** — the low kind with boxes and bags on it. Drawn around **40-80 px**
 wide; these sit behind and beside the counters, not on the sales floor.
 
-## 4. ⚠️ THE SCALE QUESTION — do not draw until Kyle answers
+## 4. ✅ THE SCALE QUESTION — DECIDED. Kyle picked (B). You are unblocked.
 
-> *"either the sprites are really small, or the props are really large. compare to the office
-> level. that feels better."*
+> *"let's go with option B"*
 
-I measured this rather than guessing, and **the obvious reading is wrong**. Per-metre, the store's
-props are *smaller* than the office's (77.9 px/m vs 89.7 — the store is **0.87x** the office). The
-characters are identical in both levels: **54 px**. So nothing in the store is mis-scaled against
-anything else in the store.
+**(B) = shorten the aisle runs so nothing towers over a person.** We are NOT making the characters
+bigger; the office reads well as it is and enlarging the cast would drag it out of shape to fix the
+store.
 
-What is actually happening is the **two-scales problem** in CLAUDE.md §14: the floor and props are
-drawn at true plan scale (~82 px per metre) and a character is drawn at ~32 px per metre — about
-**2.6x smaller than the world they stand in**. That error has always been there. The office hides it
-because office furniture is small; a desk is 1.4 m, so at plan scale it is only 1.8 character
-heights and reads fine. The store's fixtures are 4-5 m long, so the same error becomes enormous:
+### Why, in one paragraph
 
-| | tallest fixture, in character heights |
-|---|---|
-| office | **2.1x** (vending machine, fridge) |
-| store, ordinary props | 1.8x median — fine |
-| **store aisle runs** | **6.1x** (shelf run) |
-| **store freezers** | **7.4-7.5x** |
+Props are drawn at true plan scale (~82 px per metre) and a person is drawn at ~32 px per metre —
+about **2.6x smaller than the floor they stand on**. That error has always been there. The office
+hides it because office furniture is small: a 1.4 m desk is only 1.8 character heights. The store's
+aisle runs are 4-5 m long, so the same error makes them **6.1x** a person and the freezers **7.4x**,
+against an office ceiling of 2.1x. Kyle saw it immediately on the TV.
 
-So Kyle is right, and it is neither "sprites too small" nor "props too large" on their own — it is
-that **the aisle runs are long, and a person is drawn 2.6x smaller than the floor they stand on.**
+### What to draw: ONE BAY, that stacks
 
-**There are only two real fixes and they are Kyle's call:**
+The problem is not the art, it is that a run is **one long fixed-length sprite**. There is no way to
+make an aisle shorter without also making it narrower, because scaling is uniform. So:
 
-- **(A) Make the characters bigger.** Fixes it everywhere and matches "redo the sprites". But it
-  changes the office too — at true plan scale a person would be *taller than a cubicle desk*, and
-  Kyle likes how the office reads today. Probably too far.
-- **(B) Shorten the aisle runs in world units** so no fixture towers over a person — cap the tallest
-  store fixture at roughly **2.5-3 character heights**, matching the office's 2.1 ceiling. This is a
-  **floor relayout**, not just new art: shorter runs mean more of them, or more open floor.
+| wanted | drawn size | deliver at 2x | replaces |
+|---|---|---|---|
+| `shelf_bay_a` … `shelf_bay_e` | 99 x 110 | **198 x 220** | `shelf_run_a..e` (99 x 330) |
+| `freezer_bay_a`, `freezer_bay_b` | 99 x 71 | **198 x 142** | `freezer_run_a/b` (99 x 402) |
+| `freezer_bay_wall` | 50 x 79 | **100 x 158** | `freezer_wall` (50 x 406) |
 
-**What I would ask you to draw, if Kyle picks (B):** shelf and freezer run art in **shorter
-segments** — the same 1.2 m width and the same shelf faces, but a run tile about **a third of the
-current length**, so a level can lay 2-3 tiles where the aisle should be long and 1 where it should
-be short. That gives the layout a dial it does not have today, and it is the piece I cannot fake by
-rescaling: scaling the current art down narrows the aisle as well as shortening it.
+**The freezer numbers are measured, not chosen.** I ran a self-similarity scan up the existing art:
+`freezer_run_a` repeats every **71 drawn px** and `freezer_wall` every **79** — that is one door
+unit, and there are about 5.7 and 5.1 of them in a run. Cutting on that period means one bay is
+exactly one door and the tile seam lands on a seam that is already there.
 
-**Do not start this one until Kyle says (A) or (B).** It is the largest item on the list and the
-only one that can waste a night's work.
+**The shelf runs have no strong bay repeat.** The same scan finds only shelf slats at 7-9 px and
+nothing convincing above that — your shelf art is a continuous run rather than repeated bays. So
+the 110 px above is a *suggestion, not a measurement*: cut wherever is natural for the art, tell me
+the number, and I will lay the aisles to it. Roughly a third of the current run is the target.
 
-## 5. Already handled, for your information
+The critical requirement either way is that a bay **tiles seamlessly top-to-bottom**: I lay 1, 2 or
+3 end to end and the joins must not show. Same width, same shelf faces, same five product variants —
+this is a re-cut, not a redesign.
+
+`endcap` stays exactly as it is (198 x 154) and still caps the south end of a run.
+
+**The layout change is mine, not yours.** With a stacking bay I get a dial the floor has never had:
+I will lay about **two bays** where a run is today three, which takes an aisle from 6.1 to roughly
+4 character heights, and tune from there against the office's 2.1x ceiling. You do not need to
+guess the final aisle length — just make one bay that repeats cleanly.
+
+## 5. ⭐ FLOORING — the whole grocery level, and it currently has none
+
+> *"floor tiles. we need flooring for the whole grocery level. I'll leave what type and where up to
+> you."*
+
+**The store has no floor art at all.** `drawFloor()` short-circuits for any non-office level and
+paints two flat colours — `#3f4a42` for the world and `#586b5c` for each room. The comment says so
+plainly: *"the grocery room is a walkable box and nothing more until it earns more."* It has earned
+more. That flat wash is a large part of why the shop floor feels empty in Kyle's screenshots.
+
+**Format: 128 x 128, seamlessly tileable, real alpha not needed (these are opaque).** They draw at
+64 x 64. Note this is a change of convention — the office's existing tiles are 256 x 256 and 4x
+oversampled; the new set should be delivered at 2x like everything else.
+
+⚠️ **Two things that make or break a floor tile:** it must tile with **no visible seam**, and it must
+have **no distinctive landmark** — one memorable scuff or crack repeats every 64 px and instantly
+reads as wallpaper. Keep the variation low-frequency and even.
+
+Kyle left the choice to me, so:
+
+| tile | where it goes | what it is |
+|---|---|---|
+| `floor_vct` | **GROCERY aisles, DAIRY, FRONT END** — the biggest area by far, do this one first | classic supermarket vinyl composition tile: off-white/pale grey, fine speckle, large squares with faint grout lines. Slightly polished. This is *the* supermarket floor. |
+| `floor_market` | **PRODUCE** | warm slate or terracotta, larger format, matte. Real shops change the floor under produce to signal "market" — it is the single cheapest trick for making a store feel like a store. |
+| `floor_quarry` | **DELI, BAKERY** | dark red-brown quarry tile, visible grout, non-slip texture. The standard service-department floor because those areas get wet. |
+| `floor_concrete` | **BOH CORRIDOR, receiving, back room** | sealed grey concrete with control joints and honest scuffing. Back of house should look like back of house. |
+| `floor_wc` | **PUBLIC WC** | small white ceramic tile, tight grout grid, slightly institutional. |
+| `floor_carpet_tile` | **CASH OFFICE, store manager and owner offices** | flat commercial carpet tile, grey-blue, faint pattern. Cheap and corporate. |
+| `floor_vinyl_break` | **break room** | plain sheet vinyl or a very subtle check, a bit dated. |
+| `floor_entry` | **ENTRANCE / vestibule** *(optional)* | darker heavy-traffic tile or a walk-off mat texture. If short on time, the entrance can use `floor_vct`. |
+
+**Priority order if you cannot do all eight:** `floor_vct` first — it covers most of the shop and
+would transform the level on its own — then `floor_market`, `floor_quarry`, `floor_concrete`. The
+last four are polish.
+
+I will do the wiring: `drawFloor()` needs a per-room table for the store the way the office already
+has one, and the room rectangles are already authored (GROCERY, DAIRY, DELI, BAKERY, PRODUCE, FRONT
+END, CASH OFFICE, PUBLIC WC, BOH CORRIDOR, ENTRANCE, YARD). Send tiles and I will place them.
+
+## 6. Already handled, for your information
 
 - The **sales-floor "endcap"** was an office bookshelf (`supply_shelf`) standing between the aisles,
   typed as a printer. It is now an actual printer, in the back offices. No art needed.
 - **Animations were praised** — *"animations are good, no changes needed."*
 - The **12 crew bat sheets** are scrapped; see the section above for why.
+- The **office already has a proper bathroom build** (`drawBathroom()` — sinks along the north wall,
+  urinal dividers, stall partitions). The store's bathroom request in section 2 is the same idea
+  with store-appropriate art; worth looking at what the office does before drawing.
