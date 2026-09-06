@@ -749,3 +749,49 @@ look the right size next to a person.
 **One thing worth knowing:** the seat positions are computed from the **render loop**, and the test
 harness never renders — so headless this reads "nobody sits" whether it works or not. The new test
 calls that step by hand. Anything else that only happens while drawing has the same blind spot.
+
+### U. Workable aisles, and a job list that matches your title
+Both things from your last ask, plus one they exposed.
+
+**Every fixture is divided into workable, lootable sections** — 66 of them: three a side on each
+shelf and freezer run, three along each service case, three across each produce tray. 48 grocery,
+12 produce, 3 deli, 3 bakery. (Front end has none — its jobs are bagging and go-backs, not facing.
+Say if you want them.)
+
+You offered "maybe one aisle can be one big container, your call." I kept the three-a-side split:
+it costs nothing, and it makes working an aisle several beats instead of one button press. Which
+side you can reach is decided by the aisle you're standing in.
+
+**The one thing that wasn't optional:** 66 containers all rolling loot took the store from **92
+items on the floor to 243**. Searching anywhere else would have stopped being worth doing. A
+section is somewhere you *work* — one item, one time in seven, so about 9 finds shop-wide.
+
+**The work happens at the shelves now.** Facing, zoning, date codes, rotating a case and culling
+produce were all routed through a generic `desk` fixture — so a job that said *"in your aisle"*
+completed **at your locker**. They complete at a section of **your own department** now; a grocery
+clerk can't zone the deli from the bread aisle.
+
+**Your job list now matches your job title.** The rank table was still the office's, one row out of
+step with the store's ladder — so every rung above clerk was doing the job of the rung *below*, and
+the **Owner**, who has nobody above them, spent the day *"preparing the district report"* and
+*"taking the call from the district manager"*. Now:
+
+| rung | what you actually do |
+|---|---|
+| BAGGER | go-backs, carts, cardboard, water, coffee, bagging |
+| DEPARTMENT CLERK | facing, zoning, date codes, till count, price checks, pallets |
+| DEPARTMENT MANAGER | displays, shrink sheet, department numbers, planogram, training |
+| ASSISTANT MANAGER | shift schedule, reviewing the clerks' zoning, escalated calls, the board |
+| STORE MANAGER | budgets, shrink summary, discipline, the week's numbers, the wholesaler |
+| OWNER | payroll, the books, the delivery rates, deciding whether somebody stays |
+
+**What to look at:**
+- Walk an aisle and press A at the shelves. You should get *"Face the shelves in your aisle (task)"*
+  when it's your department, and *"not your department"* when it isn't.
+- Try the other side of the same run — it's a different section.
+- Check the loot feels right. Most sections are empty; the odd one has something behind the stock.
+- Rank up and read the job list each time. It should read like a promotion, not a reshuffle.
+
+**A latent crash fell out of this** and is fixed: the day-roll picked one desk job and one other,
+assuming a desk job always existed. Routing shelf work away from `desk` emptied one rung's desk
+list, and an empty pick builds a broken task. All 36 rank/department combinations now roll cleanly.
