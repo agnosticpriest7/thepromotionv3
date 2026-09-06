@@ -1,0 +1,1292 @@
+{
+  "date": "2026-09-06",
+  "status": "art delivered; Claude Code registration/in-game test pending",
+  "png_count": 20,
+  "delivery_bytes": 3163525,
+  "local_working_bytes_at_audit": 25614625,
+  "game_paths": [
+    "save-rite/bat_02_anjali_raval",
+    "save-rite/bat_03_marguerite_dubois",
+    "save-rite/bat_04_danika_osei",
+    "save-rite/bat_05_curtis_lam",
+    "save-rite/bat_06_bekah_thorne",
+    "save-rite/bat_08_russ_pelletier",
+    "save-rite/bat_12_gita_mahal",
+    "save-rite/bat_16_bruno_sarr",
+    "save-rite/bat_20_doreen_stapp",
+    "save-rite/bat_21_garret_voss",
+    "save-rite/bat_22_lorne_petrie",
+    "save-rite/bat_23_merv_kastelic",
+    "save-rite/sit_player_intern_down",
+    "save-rite/sit_player_intern_left",
+    "save-rite/sit_player_intern_right",
+    "save-rite/sit_player_intern_up",
+    "save-rite/walk_player_intern_down",
+    "save-rite/walk_player_intern_left",
+    "save-rite/walk_player_intern_right",
+    "save-rite/walk_player_intern_up"
+  ],
+  "files": {
+    "bat_02_anjali_raval.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.552,
+          "colours_at_192h": 5329,
+          "native_colours": 10629,
+          "bbox": [
+            99,
+            118,
+            258,
+            416
+          ],
+          "width_height": 0.53356,
+          "height": 298,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.78,
+          "colours_at_192h": 3812,
+          "native_colours": 11165,
+          "bbox": [
+            126,
+            36,
+            258,
+            416
+          ],
+          "width_height": 0.34737,
+          "height": 380,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.535,
+          "colours_at_192h": 6822,
+          "native_colours": 9387,
+          "bbox": [
+            120,
+            192,
+            265,
+            425
+          ],
+          "width_height": 0.62232,
+          "height": 233,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.189,
+          "colours_at_192h": 6906,
+          "native_colours": 10730,
+          "bbox": [
+            128,
+            165,
+            339,
+            417
+          ],
+          "width_height": 0.8373,
+          "height": 252,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "418ed1e73830aae70bae8042f5529fc860585449c44ade5f49ebb886d4158576",
+      "bytes": 166502
+    },
+    "bat_03_marguerite_dubois.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.093,
+          "colours_at_192h": 7528,
+          "native_colours": 18110,
+          "bbox": [
+            79,
+            87,
+            276,
+            416
+          ],
+          "width_height": 0.59878,
+          "height": 329,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.687,
+          "colours_at_192h": 5601,
+          "native_colours": 16731,
+          "bbox": [
+            108,
+            36,
+            276,
+            416
+          ],
+          "width_height": 0.44211,
+          "height": 380,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.78,
+          "colours_at_192h": 9566,
+          "native_colours": 16561,
+          "bbox": [
+            108,
+            161,
+            274,
+            431
+          ],
+          "width_height": 0.61481,
+          "height": 270,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.535,
+          "colours_at_192h": 9164,
+          "native_colours": 17382,
+          "bbox": [
+            111,
+            127,
+            356,
+            416
+          ],
+          "width_height": 0.84775,
+          "height": 289,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "7176b341bdc999be60e10c56cdd186c39885be39281149127a9d731d4de2c795",
+      "bytes": 263452
+    },
+    "bat_04_danika_osei.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.436,
+          "colours_at_192h": 6752,
+          "native_colours": 14001,
+          "bbox": [
+            86,
+            115,
+            270,
+            417
+          ],
+          "width_height": 0.60927,
+          "height": 302,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.722,
+          "colours_at_192h": 4855,
+          "native_colours": 15340,
+          "bbox": [
+            123,
+            36,
+            260,
+            418
+          ],
+          "width_height": 0.35864,
+          "height": 382,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.094,
+          "colours_at_192h": 8557,
+          "native_colours": 13235,
+          "bbox": [
+            114,
+            174,
+            268,
+            426
+          ],
+          "width_height": 0.61111,
+          "height": 252,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.724,
+          "colours_at_192h": 8142,
+          "native_colours": 14727,
+          "bbox": [
+            119,
+            140,
+            352,
+            418
+          ],
+          "width_height": 0.83813,
+          "height": 278,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "2dde963925dc486d2c541b8253af1de9285c643e0dae2d1f28028510da4192a5",
+      "bytes": 203495
+    },
+    "bat_05_curtis_lam.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.537,
+          "colours_at_192h": 7205,
+          "native_colours": 15083,
+          "bbox": [
+            86,
+            113,
+            267,
+            418
+          ],
+          "width_height": 0.59344,
+          "height": 305,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.762,
+          "colours_at_192h": 4606,
+          "native_colours": 14133,
+          "bbox": [
+            121,
+            36,
+            263,
+            418
+          ],
+          "width_height": 0.37173,
+          "height": 382,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.856,
+          "colours_at_192h": 8267,
+          "native_colours": 14225,
+          "bbox": [
+            113,
+            148,
+            266,
+            418
+          ],
+          "width_height": 0.56667,
+          "height": 270,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.602,
+          "colours_at_192h": 7920,
+          "native_colours": 15343,
+          "bbox": [
+            120,
+            127,
+            367,
+            418
+          ],
+          "width_height": 0.8488,
+          "height": 291,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "29d972fad9c2f537787b599b1372f3320d15cfcbc3f6ff0deb2811747b39445e",
+      "bytes": 233774
+    },
+    "bat_06_bekah_thorne.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.533,
+          "colours_at_192h": 5102,
+          "native_colours": 10126,
+          "bbox": [
+            118,
+            121,
+            249,
+            418
+          ],
+          "width_height": 0.44108,
+          "height": 297,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.756,
+          "colours_at_192h": 3516,
+          "native_colours": 10762,
+          "bbox": [
+            131,
+            36,
+            253,
+            418
+          ],
+          "width_height": 0.31937,
+          "height": 382,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.531,
+          "colours_at_192h": 7490,
+          "native_colours": 9970,
+          "bbox": [
+            129,
+            190,
+            251,
+            418
+          ],
+          "width_height": 0.53509,
+          "height": 228,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.142,
+          "colours_at_192h": 7230,
+          "native_colours": 11135,
+          "bbox": [
+            130,
+            168,
+            299,
+            418
+          ],
+          "width_height": 0.676,
+          "height": 250,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "38f86c8096f6c684809782d6ab7c57d474ba015b71d5fbb74603f4dc43921694",
+      "bytes": 166718
+    },
+    "bat_08_russ_pelletier.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.097,
+          "colours_at_192h": 7031,
+          "native_colours": 16809,
+          "bbox": [
+            80,
+            82,
+            295,
+            418
+          ],
+          "width_height": 0.63988,
+          "height": 336,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.783,
+          "colours_at_192h": 5761,
+          "native_colours": 16260,
+          "bbox": [
+            87,
+            43,
+            298,
+            417
+          ],
+          "width_height": 0.56417,
+          "height": 374,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.656,
+          "colours_at_192h": 8710,
+          "native_colours": 16303,
+          "bbox": [
+            87,
+            154,
+            295,
+            438
+          ],
+          "width_height": 0.73239,
+          "height": 284,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.682,
+          "colours_at_192h": 9169,
+          "native_colours": 16664,
+          "bbox": [
+            88,
+            136,
+            368,
+            418
+          ],
+          "width_height": 0.99291,
+          "height": 282,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "cd89095728f80fa2791b6b407ea1b15af22bed5059e859171b503d342521f3e0",
+      "bytes": 269970
+    },
+    "bat_12_gita_mahal.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.294,
+          "colours_at_192h": 6391,
+          "native_colours": 15205,
+          "bbox": [
+            110,
+            95,
+            263,
+            418
+          ],
+          "width_height": 0.47368,
+          "height": 323,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.757,
+          "colours_at_192h": 4699,
+          "native_colours": 14566,
+          "bbox": [
+            121,
+            36,
+            264,
+            418
+          ],
+          "width_height": 0.37435,
+          "height": 382,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.355,
+          "colours_at_192h": 9411,
+          "native_colours": 13440,
+          "bbox": [
+            110,
+            178,
+            273,
+            416
+          ],
+          "width_height": 0.68487,
+          "height": 238,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.936,
+          "colours_at_192h": 8146,
+          "native_colours": 13909,
+          "bbox": [
+            120,
+            151,
+            336,
+            417
+          ],
+          "width_height": 0.81203,
+          "height": 266,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "1172db1601eb48f8a3c4accedd44ee983589075fba397927f320d24abb801081",
+      "bytes": 206003
+    },
+    "bat_16_bruno_sarr.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.505,
+          "colours_at_192h": 5068,
+          "native_colours": 11373,
+          "bbox": [
+            121,
+            105,
+            262,
+            417
+          ],
+          "width_height": 0.45192,
+          "height": 312,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.865,
+          "colours_at_192h": 3470,
+          "native_colours": 10726,
+          "bbox": [
+            123,
+            36,
+            262,
+            417
+          ],
+          "width_height": 0.36483,
+          "height": 381,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.404,
+          "colours_at_192h": 7364,
+          "native_colours": 10990,
+          "bbox": [
+            111,
+            175,
+            272,
+            417
+          ],
+          "width_height": 0.66529,
+          "height": 242,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.052,
+          "colours_at_192h": 6350,
+          "native_colours": 10992,
+          "bbox": [
+            117,
+            150,
+            322,
+            416
+          ],
+          "width_height": 0.77068,
+          "height": 266,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "f2b093e8f8885cf9d34126b0467d2d1235b70eaa04cc8dfa6316ff797132b9b0",
+      "bytes": 176976
+    },
+    "bat_20_doreen_stapp.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.324,
+          "colours_at_192h": 7636,
+          "native_colours": 16531,
+          "bbox": [
+            99,
+            112,
+            281,
+            423
+          ],
+          "width_height": 0.58521,
+          "height": 311,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.884,
+          "colours_at_192h": 5797,
+          "native_colours": 15864,
+          "bbox": [
+            102,
+            60,
+            280,
+            420
+          ],
+          "width_height": 0.49444,
+          "height": 360,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.078,
+          "colours_at_192h": 9833,
+          "native_colours": 15252,
+          "bbox": [
+            91,
+            166,
+            294,
+            418
+          ],
+          "width_height": 0.80556,
+          "height": 252,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.542,
+          "colours_at_192h": 8648,
+          "native_colours": 16777,
+          "bbox": [
+            101,
+            127,
+            368,
+            418
+          ],
+          "width_height": 0.91753,
+          "height": 291,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "c5987f2c46a3a7a7da1e903b2a4bc5e0868485645f27a83f1ec470e88c552c8b",
+      "bytes": 251613
+    },
+    "bat_21_garret_voss.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.453,
+          "colours_at_192h": 7076,
+          "native_colours": 15716,
+          "bbox": [
+            91,
+            110,
+            273,
+            416
+          ],
+          "width_height": 0.59477,
+          "height": 306,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.843,
+          "colours_at_192h": 4830,
+          "native_colours": 14977,
+          "bbox": [
+            116,
+            44,
+            270,
+            416
+          ],
+          "width_height": 0.41398,
+          "height": 372,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.09,
+          "colours_at_192h": 8319,
+          "native_colours": 13611,
+          "bbox": [
+            111,
+            176,
+            274,
+            433
+          ],
+          "width_height": 0.63424,
+          "height": 257,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.94,
+          "colours_at_192h": 8415,
+          "native_colours": 14870,
+          "bbox": [
+            113,
+            148,
+            369,
+            416
+          ],
+          "width_height": 0.95522,
+          "height": 268,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "103defcaca7d167314d2f5dc3334ad314d265631957cea61cccffa43ab4bc0d4",
+      "bytes": 221008
+    },
+    "bat_22_lorne_petrie.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.894,
+          "colours_at_192h": 5993,
+          "native_colours": 11482,
+          "bbox": [
+            101,
+            133,
+            270,
+            417
+          ],
+          "width_height": 0.59507,
+          "height": 284,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 3.101,
+          "colours_at_192h": 3998,
+          "native_colours": 10832,
+          "bbox": [
+            116,
+            62,
+            269,
+            416
+          ],
+          "width_height": 0.4322,
+          "height": 354,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.483,
+          "colours_at_192h": 7886,
+          "native_colours": 11319,
+          "bbox": [
+            98,
+            183,
+            287,
+            423
+          ],
+          "width_height": 0.7875,
+          "height": 240,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.15,
+          "colours_at_192h": 7084,
+          "native_colours": 11812,
+          "bbox": [
+            118,
+            156,
+            369,
+            416
+          ],
+          "width_height": 0.96538,
+          "height": 260,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "be8dbecc0e21d72853d4cb8d30838d6cf460fb3fc4619bf38af6b739dbc38f73",
+      "bytes": 191589
+    },
+    "bat_23_merv_kastelic.png": {
+      "size": [
+        1536,
+        448
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.534,
+          "colours_at_192h": 4911,
+          "native_colours": 10160,
+          "bbox": [
+            102,
+            114,
+            273,
+            417
+          ],
+          "width_height": 0.56436,
+          "height": 303,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 2.834,
+          "colours_at_192h": 3545,
+          "native_colours": 10462,
+          "bbox": [
+            111,
+            36,
+            274,
+            417
+          ],
+          "width_height": 0.42782,
+          "height": 381,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.672,
+          "colours_at_192h": 7283,
+          "native_colours": 9638,
+          "bbox": [
+            106,
+            196,
+            279,
+            424
+          ],
+          "width_height": 0.75877,
+          "height": 228,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.374,
+          "colours_at_192h": 6824,
+          "native_colours": 10021,
+          "bbox": [
+            109,
+            172,
+            339,
+            416
+          ],
+          "width_height": 0.94262,
+          "height": 244,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "9d34d61cd9e995532874e63c93d613fb0df9d21d89915a8e3a2c40af30643aa0",
+      "bytes": 198584
+    },
+    "sit_player_intern_down.png": {
+      "size": [
+        416,
+        416
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.001,
+          "colours_at_192h": 5992,
+          "native_colours": 14598,
+          "bbox": [
+            128,
+            28,
+            288,
+            388
+          ],
+          "width_height": 0.44444,
+          "height": 360,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "b298bb8ac8ab169ba9b56bc17c015c90b12c9618d6c87f53db08bb121c72fe93",
+      "bytes": 73239
+    },
+    "sit_player_intern_left.png": {
+      "size": [
+        416,
+        416
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.787,
+          "colours_at_192h": 4035,
+          "native_colours": 7478,
+          "bbox": [
+            130,
+            93,
+            286,
+            388
+          ],
+          "width_height": 0.52881,
+          "height": 295,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "dfb5ac7072b4cd3e69e2c8a79ba4dd41d5e3e6f6cfe695bf713d58ae6844f7fd",
+      "bytes": 40846
+    },
+    "sit_player_intern_right.png": {
+      "size": [
+        416,
+        416
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.787,
+          "colours_at_192h": 4030,
+          "native_colours": 7478,
+          "bbox": [
+            130,
+            93,
+            286,
+            388
+          ],
+          "width_height": 0.52881,
+          "height": 295,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "26a5bf40de5c41c8a6883fa35f7de58bd66528e00978b70e07ef639b5af1f909",
+      "bytes": 41161
+    },
+    "sit_player_intern_up.png": {
+      "size": [
+        416,
+        416
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 3.405,
+          "colours_at_192h": 5502,
+          "native_colours": 10942,
+          "bbox": [
+            128,
+            65,
+            288,
+            388
+          ],
+          "width_height": 0.49536,
+          "height": 323,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "fbc1648f0cedbc52c46e8092feb811b38e4f1f6d4c4089774e1c5f0c293eb9ff",
+      "bytes": 62187
+    },
+    "walk_player_intern_down.png": {
+      "size": [
+        552,
+        295
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 5.487,
+          "colours_at_192h": 3959,
+          "native_colours": 4979,
+          "bbox": [
+            30,
+            16,
+            150,
+            278
+          ],
+          "width_height": 0.45802,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.15,
+          "colours_at_192h": 5629,
+          "native_colours": 8870,
+          "bbox": [
+            35,
+            16,
+            148,
+            278
+          ],
+          "width_height": 0.4313,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 5.485,
+          "colours_at_192h": 4010,
+          "native_colours": 5043,
+          "bbox": [
+            35,
+            16,
+            153,
+            278
+          ],
+          "width_height": 0.45038,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "f9bbf4ebdae18657d839c654b813b92f5eb352c652bd5e9689280781e6be597f",
+      "bytes": 91906
+    },
+    "walk_player_intern_left.png": {
+      "size": [
+        552,
+        295
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 4.092,
+          "colours_at_192h": 5112,
+          "native_colours": 7845,
+          "bbox": [
+            30,
+            16,
+            159,
+            278
+          ],
+          "width_height": 0.49237,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 5.42,
+          "colours_at_192h": 3714,
+          "native_colours": 4670,
+          "bbox": [
+            30,
+            16,
+            154,
+            278
+          ],
+          "width_height": 0.47328,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.097,
+          "colours_at_192h": 5204,
+          "native_colours": 8118,
+          "bbox": [
+            22,
+            16,
+            159,
+            278
+          ],
+          "width_height": 0.5229,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "18c208f2623a9aab4cd9e111c1b370b2370db35b8b7fc70fd3b15d13d468d03b",
+      "bytes": 102260
+    },
+    "walk_player_intern_right.png": {
+      "size": [
+        552,
+        295
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 4.092,
+          "colours_at_192h": 5112,
+          "native_colours": 7845,
+          "bbox": [
+            25,
+            16,
+            154,
+            278
+          ],
+          "width_height": 0.49237,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 5.42,
+          "colours_at_192h": 3714,
+          "native_colours": 4670,
+          "bbox": [
+            30,
+            16,
+            154,
+            278
+          ],
+          "width_height": 0.47328,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.097,
+          "colours_at_192h": 5204,
+          "native_colours": 8118,
+          "bbox": [
+            25,
+            16,
+            162,
+            278
+          ],
+          "width_height": 0.5229,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "799580fcd6322acad52f5656af34c1983de782a07da8ea9c0a15045c69b2caad",
+      "bytes": 102471
+    },
+    "walk_player_intern_up.png": {
+      "size": [
+        552,
+        295
+      ],
+      "frames": [
+        {
+          "effective_pixel_size_per_1000h": 5.482,
+          "colours_at_192h": 3472,
+          "native_colours": 4254,
+          "bbox": [
+            30,
+            16,
+            152,
+            278
+          ],
+          "width_height": 0.46565,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.216,
+          "colours_at_192h": 4624,
+          "native_colours": 7064,
+          "bbox": [
+            31,
+            16,
+            153,
+            278
+          ],
+          "width_height": 0.46565,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        },
+        {
+          "effective_pixel_size_per_1000h": 4.181,
+          "colours_at_192h": 4579,
+          "native_colours": 6948,
+          "bbox": [
+            32,
+            16,
+            155,
+            278
+          ],
+          "width_height": 0.46947,
+          "height": 262,
+          "margin": 8,
+          "holes": 0,
+          "components": 1
+        }
+      ],
+      "sha256": "c872b47436560349efce98f4bda204aaf287066c8d787ead98b80bc2b518ba5e",
+      "bytes": 99771
+    }
+  },
+  "bat_frame_order": [
+    "wind-up",
+    "raised",
+    "impact",
+    "follow-through"
+  ],
+  "impact_index": 2,
+  "bat_cells": [
+    384,
+    448
+  ],
+  "bat_sheet": [
+    1536,
+    448
+  ],
+  "bat_foot_anchor_estimate": [
+    192,
+    416
+  ],
+  "intern_walk_cells": [
+    184,
+    295
+  ],
+  "intern_idle_index": 1,
+  "intern_walk_cycle": [
+    0,
+    1,
+    2,
+    1
+  ],
+  "notes": [
+    "Garret sets clipboard aside only during bat action.",
+    "Intern profile IoU retains arms -0.014844 / legs -0.019217; improved visually, not certified perfect gait.",
+    "Some transparent raw generations composited onto exact magenta; alpha originals retained.",
+    "No optional outfits for Stacie, Kyle, Raelee or Jax generated.",
+    "Foot anchor uses silhouette shoe estimate, inspect actual game positioning."
+  ]
+}

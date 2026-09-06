@@ -846,6 +846,105 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
      leaked.length ? leaked.map(n => n.name).join(', ') : 'office cast unchanged');
 }
 
+/* ---- THE STORE MELTS DOWN, BUT NEVER WITH A BAT ----------------------------------------------
+   ⚠️ THE BAT IS A REFERENCE TO A SPECIFIC FILM ABOUT A SPECIFIC BUILDING. Executing a printer in
+   a field is Office Space, and Office Space is Paper Supply Co.; a grocery clerk doing it is a
+   reference to nothing. Twelve store swing sheets were drawn, registered and gated before Kyle
+   pointed that out, and they were scrapped. What survives is the part that mattered: the store
+   still breaks people, it just breaks them like a supermarket.
+
+   This asserts BOTH halves, because either alone is satisfiable by a bug. "No bat in the store"
+   passes trivially if store meltdowns stopped happening at all; "meltdowns happen" passes with
+   the homage still firing. */
+{
+  const w = mk(); w.run(500);
+  const g = w.g, S = w.sandbox;
+  const crew = g.NPCS.filter(n => !n.customer && n.alive);
+
+  /* drive real meltdowns rather than reading the predicate behind them (CLAUDE.md 14) */
+  let melted = 0, batted = 0;
+  for (const n of crew) {
+    for (let i = 0; i < 40; i++) {
+      n.meltCd = 0;
+      S.meltdown(n);
+      melted++;
+      if (n.printerMode) batted++;
+      n.printerMode = false;
+    }
+  }
+  ck('staff still melt down on the shop floor', melted >= 100,
+     melted + ' meltdowns driven across ' + crew.length + ' crew');
+  ck('  ^ but not one of them reaches for a bat — that joke belongs to the office',
+     batted === 0, batted ? batted + ' of ' + melted + ' rolled the printer homage' : '0 of ' + melted);
+
+  /* ⚠️ ANCHOR: the office MUST still do it, or the assertion above is just proving the feature
+     was deleted rather than scoped. This is the half that would have gone unnoticed. */
+  const ow = createWorld({});
+  ow.run(400);
+  const oc = ow.g.NPCS.filter(n => !n.customer && n.alive);
+  let obat = 0, om = 0;
+  for (const n of oc) {
+    for (let i = 0; i < 60; i++) {
+      n.meltCd = 0;
+      ow.sandbox.meltdown(n);
+      om++;
+      if (n.printerMode) obat++;
+      n.printerMode = false;
+    }
+  }
+  ck('  ^ and the OFFICE still does, so this was scoped and not deleted', obat > 0,
+     obat + ' of ' + om + ' office meltdowns took the bat (the roll is 7%)');
+
+  /* and the words match the building too -- three of the four original acts named a desk, a
+     keyboard or a printer rant */
+  const acts = (S.vocab().meltActs || []).join(' | ');
+  ck('  ^ and a store meltdown is described in store words',
+     acts.length > 0 && !/desk|keyboard|printer/i.test(acts), acts || 'no meltActs for the store');
+
+  /* ⚠️ THE PLAYER HAS TWO DRAW PATHS AND ONLY ONE OF THEM GOES THROUGH charIndexFor().
+     The walking player is drawn by drawChar(player, <index passed in>); the SEATED player resolves
+     through charIndexFor(). Swap the outfit in one and not the other and the player wears an apron
+     standing up and an office shirt sitting down, with nothing reporting a fault. Both now route
+     through storeOutfit(), and this asserts they AGREE rather than asserting either one alone. */
+  ck('the player wears store clothes on the shop floor',
+     S.charIndexFor(g.player) === 50 && S.playerSpriteIdx() === 50,
+     'charIndexFor=' + S.charIndexFor(g.player) + '  playerSpriteIdx=' + S.playerSpriteIdx());
+
+  ck('  ^ and BOTH draw paths agree, because only one of them goes through charIndexFor',
+     S.charIndexFor(g.player) === S.playerSpriteIdx(),
+     'seated path ' + S.charIndexFor(g.player) + ' vs walking path ' + S.playerSpriteIdx());
+
+  ck('  ^ and that outfit has both the walk strip and the seated pose it claims',
+     !!S.charStripFor(S.playerSpriteIdx(), 'down') && !!S.seatedPersonSpriteFor(g.player, 'down'),
+     'strip=' + S.charStripFor(S.playerSpriteIdx(), 'down')
+       + '  seat=' + JSON.stringify(S.seatedPersonSpriteFor(g.player, 'down')));
+
+  /* the swap is the PLAYER's alone -- an NPC who happens to share index 0 must not change */
+  const shifted = crew.filter(n => S.charIndexFor(n) === 50);
+  ck('  ^ and nobody else changes clothes with them', shifted.length === 0,
+     shifted.length ? shifted.map(n => n.name).join(', ') : 'the swap is the player only');
+}
+
+/* ---- and the OFFICE is untouched by any of it ---------------------------------------------- */
+{
+  const ow = createWorld({});   // office, default character
+  ow.run(400);
+  const og = ow.g, oS = ow.sandbox;
+  ck('the player wears the office look in the office, not a supermarket apron',
+     oS.charIndexFor(og.player) === 0 && oS.playerSpriteIdx() === 0,
+     'charIndexFor=' + oS.charIndexFor(og.player) + '  playerSpriteIdx=' + oS.playerSpriteIdx());
+
+  /* ⚠️ ANCHOR: if the office world came up with no player at all, the check above would pass on
+     a pair of undefineds. State what would make it vacuous and assert that cannot happen. */
+  ck('  ^ and there was actually a player in that world to ask about',
+     !!og.player && typeof oS.playerSpriteIdx === 'function',
+     og.player ? 'player present' : 'NO PLAYER — the assertion above proved nothing');
+
+  const leaked = og.NPCS.filter(n => !n.customer && oS.charIndexFor(n) >= 28);
+  ck('  ^ and no store sprite leaked into the office cast', leaked.length === 0,
+     leaked.length ? leaked.map(n => n.name).join(', ') : 'office cast unchanged');
+}
+
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
