@@ -81,7 +81,12 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
 /* ---- 3. DELI AND BAKERY SIT FLUSH IN ONE RUN --------------------------------------------- */
 {
   const w = mk('grocery'), g = w.g, L = g.layout, sc = L.S, A = v => Math.round(v / sc);
-  const run = re => L.containers.filter(c => re.test(c.label || '')).sort((a, b) => a.x - b.x);
+  /* ⚠️ EXCLUDE SECTIONS: this measures the DRAWN run, and a section is not drawn.
+     Selecting by label swept in the three 'Deli counter section' boxes the moment cases were
+     divided into workable slices, and the pitch it reported -- 59/17/42 -- was a real case
+     interleaved with its own invisible sections. Third time a label/shape filter has caught
+     something that merely resembles the thing it was hunting. */
+  const run = re => L.containers.filter(c => !c.section && re.test(c.label || '')).sort((a, b) => a.x - b.x);
   /* THE NORTH WALL IS DAIRY AND DELI. Bakery moved to its own block in the north-east when the
      store was re-planned, so it is one case of its own rather than half of the north run. What is
      being asserted is unchanged: a service counter is a RUN of cases, not a scatter of tables. */
