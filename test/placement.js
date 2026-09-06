@@ -131,7 +131,13 @@ function buildContext(opts) {
   (L.objects || []).forEach((e, i) => props.push({
     id: 'O' + (i + 1), arr: 'objects', letter: OBJ_LET[e.type] || '?',
     label: (e.label || e.type), e, cc: cc(e), fp: spriteFootprint(e, 'objects') }));
-  (L.containers || []).forEach((e, i) => props.push({
+  /* ⚠️ A SECTION DRAWS NOTHING, SO IT HAS NO FOOTPRINT TO LINT. Sections are lootable
+     slices of a fixture -- shelf runs, freezer runs, cases, produce trays -- placed strictly
+     INSIDE that fixture's own blocker so they add no collision. This linter is about DRAWN
+     extent: it flagged 39 overlaps that are all a section sitting inside the very sprite it
+     belongs to, which is the design rather than the defect. The fixture itself is still linted.
+  */
+  (L.containers || []).filter(e => !e.section).forEach((e, i) => props.push({
     id: 'C' + (i + 1), arr: 'containers', letter: CONT_LET[e.kind] || '?',
     label: (e.label || e.kind), e, cc: cc(e), fp: spriteFootprint(e, 'containers') }));
 

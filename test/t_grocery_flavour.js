@@ -83,7 +83,13 @@ DEPTS.forEach(dept => {
    This is the assertion that catches vocabulary drifting into mechanics, which is the one thing
    this branch is not allowed to do. */
 {
-  const KINDS = ['desk', 'printer', 'supply', 'water', 'coffee', 'phones', 'board', 'npc'];
+  /* ⚠️ 'section' IS A DELIBERATE NEW MECHANIC, which is why it had to be added here by
+     hand. This guard exists to catch VOCABULARY drifting into mechanics -- a flavour pass
+     quietly inventing a trigger. Kyle asked for the opposite: shelf work that happens at the
+     shelves, so facing, zoning, date codes and rotating a case now complete at a lootable
+     section of your own department instead of at your locker. The guard still bites for
+     anything NOT on this list. */
+  const KINDS = ['desk', 'printer', 'supply', 'water', 'coffee', 'phones', 'board', 'npc', 'section'];
   const dupes = [];
   DEPTS.forEach(dept => {
     const { S, g } = asClerkOf(dept);
