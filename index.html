@@ -2081,7 +2081,15 @@ function rollLoot(kind){
   return out;
 }
 function rollContainers(){
-  CONTAINERS.forEach(c=>{c.loot=rollLoot(c.kind);});
+  /* ⚠️ A SECTION IS SPARSE ON PURPOSE. Rolling a full container's loot into all 66 of them
+     took the store from 92 items on the floor to 243 -- nearly triple -- which would have made
+     searching anywhere else pointless. A shelf section is somewhere you WORK, and only now and
+     then something turns up behind the stock. One item, one time in seven, so the sections add
+     roughly ten finds across the whole shop rather than a hundred and fifty. */
+  CONTAINERS.forEach(c=>{
+    if(c.section){ c.loot = (Math.random()<0.15) ? [pick(lootParts().concat(lootCommon()))] : []; }
+    else c.loot=rollLoot(c.kind);
+  });
   desks.forEach(d=>{if(d.owner&&d.owner!=='you')d.loot=rollLoot('desk');});
   plantKeycard();                     // at most ONE on the whole floor, and not every day
   seedFetchNeeds();                   // ...and every fetchable item exists SOMEWHERE (see below)
@@ -4962,39 +4970,47 @@ const GROCERY_TASKS={
     {via:'water',  label:'Change the water bottle in the break room'},
     {via:'coffee', label:'Bring a coffee to {name}'},
   ],
-  1:[ /* CLERK */
+  /* ⚠️ THESE WERE THE OFFICE'S RUNGS, ONE ROW OUT OF STEP WITH THE STORE'S. The table kept the
+     office's shape and its comments -- rung 3 read DEPARTMENT LEAD, rung 5 read STORE MANAGER --
+     while Save-Rite's ladder is BAGGER > DEPARTMENT CLERK > DEPARTMENT MANAGER > ASSISTANT MANAGER
+     > STORE MANAGER > OWNER. So every rung above the clerk was doing the job of the rung below it,
+     and the OWNER -- who has nobody above them at all -- spent the day preparing a district report
+     and taking a call from the district manager. Realigned to the store's own ladder, one row at a
+     time, with owner work that admits the buck stops there. */
+  1:[ /* DEPARTMENT CLERK */
     {via:'desk',   label:'Count your till before the rush'},
     {via:'phones', label:'Take the price checks on the intercom'},
     {via:'printer',label:'Run the go-backs to the floor'},
     {via:'supply', label:'Break down the cardboard in receiving'},
   ],
-  2:[ /* CLERK */
+  2:[ /* DEPARTMENT MANAGER */
     {via:'desk',   label:'Build a display for the weekly ad'},
     {via:'desk',   label:'Reconcile the shrink sheet'},
-    {via:'phones', label:'Chase the late delivery'},
-    {via:'phones', label:'Call the vendor about the short order'},
-    {via:'printer',label:'Print the shelf tags for the new planogram'},
-  ],
-  3:[ /* DEPARTMENT LEAD */
     {via:'desk',   label:'Close out the department numbers'},
-    {via:'desk',   label:"Review the clerks' zoning before close"},
-    {via:'phones', label:'Win back the standing bakery order'},
-    {via:'phones', label:'Book the holiday delivery window'},
+    {via:'phones', label:'Chase the late delivery'},
+    {via:'printer',label:'Print the shelf tags for the new planogram'},
     {via:'npc',    label:'Train {name} on the department'},
   ],
-  4:[ /* ASSISTANT MANAGER */
+  3:[ /* ASSISTANT MANAGER */
     {via:'desk',   label:'Approve the shift schedule'},
-    {via:'desk',   label:'Write the weekly shrink summary'},
+    {via:'desk',   label:"Review the clerks' zoning before close"},
     {via:'npc',    label:'Give {name} their performance review'},
     {via:'phones', label:'Handle the escalated customer call'},
     {via:'board',  label:'Update the department board for the huddle'},
   ],
-  5:[ /* STORE MANAGER */
-    {via:'desk',   label:'Sign off on the department budget'},
-    {via:'desk',   label:'Prepare the district report'},
+  4:[ /* STORE MANAGER */
+    {via:'desk',   label:'Sign off on the department budgets'},
+    {via:'desk',   label:'Write the weekly shrink summary'},
     {via:'npc',    label:'Discipline {name} (someone has to)'},
-    {via:'board',  label:'Present the numbers at the board'},
-    {via:'phones', label:'Take the call from the district manager'},
+    {via:'board',  label:"Present the week's numbers at the huddle"},
+    {via:'phones', label:'Take the call from the wholesaler'},
+  ],
+  5:[ /* OWNER -- nobody above you, so no report goes upward */
+    {via:'desk',   label:'Sign the payroll'},
+    {via:'desk',   label:'Go through the books with the accountant'},
+    {via:'npc',    label:'Decide whether {name} stays'},
+    {via:'board',  label:"Set the quarter's targets on the board"},
+    {via:'phones', label:'Renegotiate the supply contract'},
   ],
 };
 /* ---- DEPARTMENT WORK -----------------------------------------------------------------------
@@ -5027,27 +5043,27 @@ const GROCERY_DEPT_TASKS={
     {via:'printer',label:'Clear the go-backs off the belt'},
   ],
   grocery:[
-    {via:'desk',   label:'Face the shelves in your aisle'},
-    {via:'water',  label:'Check the date codes in your aisle'},
+    {via:'section',label:'Face the shelves in your aisle'},
+    {via:'section',label:'Check the date codes in your aisle'},
     {via:'supply', label:'Work the pallet down in your aisle'},
-    {via:'desk',   label:'Zone the endcaps before close'},
+    {via:'section',label:'Zone your section before close'},
   ],
   produce:[
-    {via:'supply', label:'Cull the wilted stock off the racks'},
+    {via:'section',label:'Cull the wilted stock off the racks'},
     {via:'water',  label:'Mist the greens'},
-    {via:'desk',   label:'Rotate the berries to the front'},
+    {via:'section',label:'Rotate the berries to the front'},
     {via:'desk',   label:'Build the display on the wall'},
   ],
   deli:[
-    {via:'desk',   label:'Rotate the case before open'},
+    {via:'section',label:'Rotate the case before open'},
     {via:'supply', label:'Break down and wipe the slicer'},
     {via:'desk',   label:'Take the counter for a stretch'},
-    {via:'water',  label:'Pull the short-dated trays'},
+    {via:'section',label:'Pull the short-dated trays'},
   ],
   bakery:[
     {via:'desk',   label:'Pull the racks when the timer goes'},
     {via:'printer',label:"Mark down yesterday's bread"},
-    {via:'desk',   label:"Ice the day's cakes"},
+    {via:'section',label:"Face the bakery case"},
     {via:'supply', label:'Set the morning proof'},
   ],
 };
@@ -5944,7 +5960,14 @@ function rollTasks(){
   const pool=taskPoolFor(player.rank);
   const deskT=pool.filter(t=>t.via==='desk');
   const outT=pool.filter(t=>t.via!=='desk');
-  addTask(pick(deskT));
+  /* ⚠️ A DAY WITH NO DESK JOB IN THE POOL USED TO BUILD AN UNDEFINED TASK. This did
+     `addTask(pick(deskT))` outright, and pick([]) is undefined -- addTask then reads .via off
+     nothing and throws, killing the day roll. It could not happen while every rung had a desk
+     job, which is exactly the kind of assumption that survives until the data moves: routing
+     the shelf work to `section` emptied the grocery bagger's desk list the moment it landed.
+     A bagger has no department in normal play so the combination is unreachable today, but
+     the crash was one data edit away and the fix is to stop assuming. */
+  addTask(pick(deskT.length?deskT:pool));
   /* PHONES TASKS ONLY MAKE SENSE ONCE THE SALES ROOM IS OPEN — in the OFFICE. unlockSales() is
      office-only since the ladder branch, so salesUnlocked is permanently false in Save-Rite: this
      filter quietly removed every phones task from the store's pool, five of them across ranks 1
@@ -6471,6 +6494,24 @@ function buildOptions(t){
   }
   if(t.kind==='container'){
     const c=t.ref;const seen2=seenByAnyone();SFX.drawer();
+    /* ⚠️ A SECTION IS WHERE THE SHELF WORK ACTUALLY HAPPENS. Facing, zoning, date codes and
+       rotating a case used to complete at your LOCKER, because every department job routed through
+       a generic `desk` fixture -- the label said "in your aisle" and the work happened wherever you
+       keep your coat. A section task completes at a section OF YOUR OWN DEPARTMENT, so a grocery
+       clerk faces grocery shelves and cannot zone the deli from the bread aisle. */
+    if(c.section){
+      const st=openTask('section');
+      const mine=!player.storeDept || c.dept===player.storeDept;
+      const its=[];
+      if(st&&mine) its.push({label:st.label+' (task)',risk:'good',
+        act:()=>startAct(4,'Working the section',()=>completeTask(st))});
+      else if(st) its.push({label:st.label+' — not your department',disabled:true});
+      (c.loot&&c.loot.length?c.loot:[]).forEach(id=>its.push(
+        {label:`Take ${ITEMS[id].label}`,risk:seen2?seenTag():'sneaky',act:()=>takeItem(c,id,'pocket')}));
+      if(!c.loot||!c.loot.length) its.push({label:'Faced up, nothing behind it',disabled:true});
+      its.push({label:'Leave it',act:()=>{}});
+      return {title:c.label+(c.side&&c.side!=='front'?' ('+c.side+' side)':''),items:its};
+    }
     let its=[];
     if(c.loot&&c.loot.length){
       c.loot.forEach(id=>{
@@ -10411,6 +10452,7 @@ const CONT_ART={cabinet:'filing_cabinet',locker:'lockers',fridge:'fridge',box:'s
 const CONT_LABEL={cabinet:'cabinet',locker:'locker',fridge:'fridge',box:'supplies',vending:'vending'};
 function drawContainers(){
   for(const c of CONTAINERS){
+    if(c.section)continue;      /* a slice of a fixture: the fixture's own sprite is the picture */
     if(!inView(c.x,c.y,c.w,c.h))continue;
     const art=c.art||CONT_ART[c.kind]||'filing_cabinet';   // c.art = per-container sprite override
     const cx=c.x+c.w/2, cyB=c.y+c.h+U1(4);
@@ -12946,6 +12988,7 @@ function loadLevel(id){
     const cx=x0+w/2, bottom=RUN_TOP_Y+FRZ_H;
     CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
                      label:label, kind:'box', art:art, flip:!!flip});
+    sections(x0, RUN_TOP_Y, w, FRZ_H, 'grocery', 'Freezer section', w > 40 ? 2 : 1);
     levelBlockers.push({x:x0+1, y:RUN_TOP_Y+1, w:w-2, h:FRZ_H-2});
   };
   freezer(T+2, FRZ_WALL_W, 'freezer_wall',  'Frozen (wall)', true);   // doors face EAST: mirrored
@@ -12981,6 +13024,32 @@ function loadLevel(id){
      shopper walks straight past. Clear of the spur mouth at 677..767 and of the case, which
      ends at 620. */
   floorProp(781, 322, 'pallet_display', 'Pallet display');
+  /* ⚠️ A SECTION IS A SLICE OF A FIXTURE YOU CAN WORK AND LOOT, AND IT MUST ADD NO COLLISION.
+     Every entry in CONTAINERS becomes a blocker (see buildBlockers), so thirty section boxes
+     dropped into the aisles would wall the shop in. They are placed strictly INSIDE the fixture's
+     own blocker instead -- the run is already solid, so a box within its footprint changes the nav
+     grid by nothing at all. Verified by comparing aisle clearances before and after.
+
+     `section:true` keeps them out of the draw loop: the run's own sprite is the picture, and a
+     section drawing CONT_ART for its kind would stack a filing cabinet on every shelf.
+
+     WHICH SIDE a section belongs to is its x half, so the aisle you are standing in decides which
+     three you can reach -- nearest-wins targeting does the rest without anyone tracking facing. */
+  function sections(x0, y0, w, h, dept, label, sides){
+    /* three a side is Kyle's spec, so it lives here as a game rule. Declared INSIDE because
+       the freezer runs are authored BEFORE this point and a `const` above them is in its own
+       temporal dead zone -- the function hoists, the constant does not. */
+    const SECTION_BANDS = 3;
+    const cols = (sides === 2) ? [[x0 + 1, Math.floor(w / 2) - 2, 'west'],
+                                 [x0 + Math.ceil(w / 2) + 1, Math.floor(w / 2) - 2, 'east']]
+                               : [[x0 + 1, w - 2, 'front']];
+    const bandH = Math.floor((h - 2) / SECTION_BANDS);
+    for (const [cx0, cw, side] of cols)
+      for (let b = 0; b < SECTION_BANDS; b++)
+        CONTAINERS.push({ x: Math.round(cx0), y: Math.round(y0 + 1 + b * bandH),
+                          w: Math.round(cw),  h: Math.round(bandH - 1),
+                          label: label, kind: 'shelf', section: true, dept: dept, side: side });
+  }
   const runXs=[];                                          // LEFT EDGES; the aisles derive from these
   for(let i=0;i<RUN_COUNT;i++){
     const rx=RUN_X0+i*RUN_GAP;
@@ -13003,6 +13072,8 @@ function loadLevel(id){
        can never drift. Inset 1 authored a side, for the reason the tabletops are inset.
        Blocker-to-blocker ACROSS an aisle is 118-58 = 60 authored - IDENTICAL to the old 92-32, so
        the nav grid sees exactly the aisle it saw before; the caps only extend the block SOUTH. */
+    /* three sections a side, top to bottom, inside the run's own footprint */
+    sections(rx, RUN_TOP_Y, SHELF_W, RUN_H + CAP_H, 'grocery', 'Shelf section', 2);
     levelBlockers.push({x:Math.round(cx-SHELF_W/2+1), y:RUN_TOP_Y+1,
                         w:SHELF_W-2,                  h:RUN_H+CAP_H-2});
   }
@@ -13033,6 +13104,16 @@ function loadLevel(id){
     for(let i=0;i<n;i++)
       CONTAINERS.push({x:Math.round(x0+i*CASE_W+CASE_W/2-14), y:top+CASE_D-22-Math.round(4/S),
                        w:28,h:22,label:label,kind:'cabinet',art:art});
+    /* ⚠️ A CASE HAS ONE FACE, so three sections ALONG it rather than three a side -- the back
+       is where the staff stand. dept comes from the label the run was given, so the dairy case
+       counts as grocery work and the deli/bakery cases as their own. */
+    { const d = /Deli/i.test(label) ? 'deli' : /Bakery/i.test(label) ? 'bakery' : 'grocery';
+      const bw = Math.floor(((x1 - x0) - 2) / 3);
+      for (let b = 0; b < 3; b++)
+        CONTAINERS.push({ x: Math.round(x0 + 1 + b * bw), y: Math.round(top + 1),
+                          w: Math.round(bw - 1), h: Math.round(CASE_D - 2),
+                          label: label + ' section', kind: 'shelf', section: true,
+                          dept: d, side: 'front' }); }
     levelBlockers.push({x:x0+1, y:top+1, w:(x1-x0)-2, h:CASE_D-2});
   };
   /* DAIRY IS THE WALL THE COOLER BACKS ONTO. The cases sit in it, loaded from inside the cooler
@@ -13163,6 +13244,10 @@ function loadLevel(id){
       const th=Math.round(TW*ART_H_OF(art));
       CONTAINERS.push({x:TX[c]+Math.round(TW/2)-14,y:TY[r]+th-22-Math.round(4/S),w:28,h:22,
                        label:'Produce display',kind:'box',art:art});
+      /* ⚠️ A TRAY IS WORKED FROM ALL ROUND, so its three sections run ACROSS it rather than
+         being split into faces -- there is no back to a produce table. Same rule as the rest:
+         strictly inside the tray's own blocker, so the four displays add no new collision. */
+      sections(TX[c], TY[r], TW, th, 'produce', 'Produce section', 1);
       levelBlockers.push({x:TX[c]+1,y:TY[r]+1,w:TW-2,h:th-2});
     }
   }

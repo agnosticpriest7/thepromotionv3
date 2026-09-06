@@ -128,6 +128,123 @@ function completionRun(level, rolls) {
      mids.length + ' aisles' + (blocked.length ? ' — BLOCKED: ' + blocked.join(',') : ''));
 }
 
+/* ---- SHELF SECTIONS: THE WORK HAPPENS AT THE FIXTURE ----------------------------------------
+   ⚠️ EVERY CONTAINER IS A BLOCKER. buildBlockers pushes one rect per CONTAINERS entry, so the
+   sixty-six sections added here are sixty-six new solid boxes -- and dropped in the aisles they
+   would have walled the shop in. They are placed strictly INSIDE the fixture's own blocker, which
+   is already solid, so the nav grid should see exactly what it saw before. That is the assertion
+   worth having: not "sections exist" but "sections cost nothing". */
+{
+  const w = mk('grocery'); const g = w.g, S = w.sandbox;
+  const sc = g.layout.S, A = v => Math.round(v / sc);
+  w.run(400);
+
+  const secs = g.layout.containers.filter(c => c.section);
+  const byDept = {};
+  secs.forEach(c => { byDept[c.dept] = (byDept[c.dept] || 0) + 1; });
+
+  ck('the fixtures are divided into workable sections', secs.length >= 50,
+     secs.length + ' sections: ' + JSON.stringify(byDept));
+
+  /* every department a clerk can be assigned to must have somewhere to do its floor work --
+     otherwise a produce clerk rolls "rotate the berries" and has nowhere to complete it */
+  const need = ['grocery', 'produce', 'deli', 'bakery'];
+  const without = need.filter(d => !byDept[d]);
+  ck('  ^ and every department with floor work has sections to do it in', without.length === 0,
+     without.length ? 'no sections in: ' + without.join(', ') : need.join(', ') + ' all covered');
+
+  /* THE ONE THAT MATTERS: the aisles must be exactly as walkable as before */
+  const runs = g.layout.levelBlockers
+    .filter(b => b.h > 150 * sc && b.w < 80 * sc && b.y > 380 * sc && b.y < 720 * sc)
+    .sort((a, b) => a.x - b.x);
+  const blocked = [];
+  for (let i = 0; i < runs.length - 1; i++) {
+    const mid = Math.round((A(runs[i].x + runs[i].w) + A(runs[i + 1].x)) / 2);
+    let open = 0, rows = 0;
+    for (let y = 430; y <= 640; y += 10) { rows++; if (S.walkableAt(mid * sc, y * sc)) open++; }
+    if (open < rows) blocked.push('x' + mid + ' ' + open + '/' + rows);
+  }
+  ck('  ^ and they add NO collision — every aisle is still clear end to end',
+     runs.length >= 5 && blocked.length === 0,
+     blocked.length ? 'pinched: ' + blocked.join(', ') : runs.length + ' runs, every aisle fully walkable');
+
+  /* ⚠️ AND THEY MUST NOT FLOOD THE LOOT. A full container roll on all sixty-six took the store
+     from 92 items on the floor to 243 -- searching anywhere else would have stopped being worth
+     doing. A section is somewhere you WORK; something turning up behind the stock is occasional. */
+  const inSections = secs.reduce((n, c) => n + ((c.loot || []).length), 0);
+  const inFixtures = g.layout.containers.filter(c => !c.section)
+    .reduce((n, c) => n + ((c.loot || []).length), 0);
+  ck('  ^ and a section is sparse, so the shop is still worth searching',
+     inSections < inFixtures * 0.35,
+     inSections + ' items across ' + secs.length + ' sections vs ' + inFixtures + ' in the fixtures');
+}
+
+/* ---- and the floor work COMPLETES at a section, of your own department --------------------- */
+{
+  const w = mk('grocery'); const g = w.g, S = w.sandbox;
+  w.run(2000);
+  g.player.rank = 1; g.player.storeDept = 'grocery';
+  for (let i = 0; i < 120 && !S.openTask('section'); i++) S.rollTasks();
+  const task = S.openTask('section');
+  ck('a floor job routes to a section rather than to your locker', !!task,
+     task ? '"' + task.label + '"' : 'no section task ever rolled');
+
+  if (task) {
+    const mine = g.layout.containers.find(c => c.section && c.dept === 'grocery');
+    g.player.x = mine.x; g.player.y = mine.y;
+    const m = S.buildOptions({ kind: 'container', ref: mine });
+    const item = (m.items || []).find(i => /\(task\)/.test(i.label) && !i.disabled);
+    ck('  ^ and the section offers it', !!item, item ? item.label : (m.items || []).map(i => i.label).join(' | '));
+    if (item) { item.act(); for (let i = 0; i < 400; i++) w.run(10); }
+    ck('  ^ and working it actually completes the job', task.done === true, 'done=' + task.done);
+
+    /* ⚠️ AND ANOTHER DEPARTMENT'S SECTION MUST REFUSE IT -- otherwise "in your aisle" is a lie
+       and a grocery clerk zones the deli from the bread aisle. */
+    const theirs = g.layout.containers.find(c => c.section && c.dept === 'deli');
+    const m2 = S.buildOptions({ kind: 'container', ref: theirs });
+    const offered = (m2.items || []).some(i => /\(task\)/.test(i.label) && !i.disabled);
+    ck('  ^ and a deli section will not take a grocery clerk\'s work', !offered,
+       offered ? 'the deli accepted it' : 'refused, as it should');
+  }
+}
+
+/* ---- every rung's jobs match the rung's TITLE ----------------------------------------------
+   ⚠️ THE TABLE WAS THE OFFICE'S, ONE ROW OUT OF STEP. Save-Rite's ladder is BAGGER > DEPARTMENT
+   CLERK > DEPARTMENT MANAGER > ASSISTANT MANAGER > STORE MANAGER > OWNER, and the pool still had
+   the office's rungs, so everyone above the clerk did the job of the rung below -- and the OWNER,
+   who has nobody above them, prepared a district report and took a call from the district manager. */
+{
+  const w = mk('grocery'); const g = w.g, S = w.sandbox;
+  w.run(600);
+  g.player.storeDept = 'grocery';
+  const labelsAt = r => { g.player.rank = r; return S.taskPoolFor(r).map(t => t.label).join(' | '); };
+
+  const owner = labelsAt(g.RANKS.length - 1);
+  ck('the OWNER does not report to a district manager', !/district/i.test(owner),
+     /district/i.test(owner) ? owner : 'owner work is owner-level');
+
+  /* every rung must have work, and no two adjacent rungs may be identical -- an offset table
+     shows up as a rung wearing its neighbour's list */
+  const pools = [];
+  for (let r = 0; r < g.RANKS.length; r++) pools.push(labelsAt(r));
+  const empty = pools.filter(p => !p.length).length;
+  const dupes = pools.filter((p, i) => i > 0 && p === pools[i - 1]).length;
+  ck('  ^ and every rung has its own work', empty === 0 && dupes === 0,
+     g.RANKS.length + ' rungs, ' + empty + ' empty, ' + dupes + ' identical to the rung below');
+
+  /* and every via a rung can roll must have somewhere to be completed */
+  const have = {}; (g.layout.objects || []).forEach(o => { have[o.type] = 1; });
+  have.desk = 1; have.npc = 1;
+  have.section = g.layout.containers.some(c => c.section) ? 1 : 0;
+  const dead = [];
+  for (let r = 0; r < g.RANKS.length; r++) {
+    g.player.rank = r;
+    S.taskPoolFor(r).forEach(t => { if (!have[t.via]) dead.push('rung ' + r + ':' + t.via); });
+  }
+  ck('  ^ and no rung can roll a job with nowhere to do it', dead.length === 0,
+     dead.length ? dead.join(', ') : 'every via has a fixture on the floor');
+}
+
 console.log(`grocery tasks: ${pass} pass, ${fail} fail`);
 console.log(fail ? 'GROCERY TASKS: RED ❌' : "GROCERY TASKS: GREEN ✅ (a bagger's day completes)");
 process.exit(fail ? 1 : 0);
