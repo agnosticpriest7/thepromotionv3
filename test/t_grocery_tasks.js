@@ -21,7 +21,13 @@ function pressTaskItem(w, fixture) {
   const S = w.sandbox;
   /* buildOptions takes the {kind, ref} shape nearestInteractable produces, not the prop itself —
      handing it the raw object returns the bare [Close] menu and every completion silently "fails". */
-  const t = fixture.type ? { kind: 'obj', ref: fixture } : { kind: 'desk', ref: fixture };
+  /* ⚠️ THREE KINDS, NOT TWO. A CONTAINER HAS NO `.type`, so the old two-way test called it a
+     desk and handed back the desk menu -- Snoop / Search their drawers / Plant evidence -- and
+     the completion 'failed' with a menu that was never the right menu to begin with. Anything
+     carrying a `kind` is a container (that is the field CONTAINERS entries use). */
+  const t = fixture.type ? { kind: 'obj', ref: fixture }
+          : fixture.kind || fixture.section ? { kind: 'container', ref: fixture }
+          : { kind: 'desk', ref: fixture };
   let opts = null;
   try { opts = S.buildOptions(t); } catch (e) { return 'buildOptions threw: ' + e.message; }
   if (!opts || !opts.items) return 'no menu';
@@ -49,7 +55,16 @@ function completionRun(level, rolls) {
       const via = vias[i], label = labels[i];
       if (done[via] || failed[via]) continue;
       if (via === 'coffee' || via === 'npc' || via === 'meeting') { skipped[via] = label; continue; }
-      const fixture = via === 'desk' ? desks.find(d => d.owner === 'you') : objs.find(o => o.type === via);
+      /* ⚠️ NOT EVERY VIA LANDS ON AN `objects` ENTRY. The store's floor work completes at
+       CONTAINERS -- a shelf section, or the bagging end of a checkstand -- and a lookup that
+       only knows about objects reports those as "no fixture", which reads like a missing prop
+       rather than a test that cannot see it. The routes are real; the enumeration was short. */
+    const conts = L.containers || [];
+    const fixture =
+      via === 'desk'    ? desks.find(d => d.owner === 'you') :
+      via === 'lane'    ? conts.find(c => /Checkstand/i.test(c.label || '')) :
+      via === 'section' ? conts.find(c => c.section && (!g.player.storeDept || c.dept === g.player.storeDept)) :
+      objs.find(o => o.type === via);
       if (!fixture) { failed[via] = label + ' — no fixture for via:' + via; continue; }
       const before = S.taskDoneCount();
       const err = pressTaskItem(w, fixture);

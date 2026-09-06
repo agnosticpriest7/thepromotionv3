@@ -89,7 +89,12 @@ DEPTS.forEach(dept => {
      shelves, so facing, zoning, date codes and rotating a case now complete at a lootable
      section of your own department instead of at your locker. The guard still bites for
      anything NOT on this list. */
-  const KINDS = ['desk', 'printer', 'supply', 'water', 'coffee', 'phones', 'board', 'npc', 'section'];
+  /* the triggers the game can actually service. A vocabulary that invents a new one produces a
+     job with nowhere to be done -- which is what this list exists to stop. 'lane' joins it
+     because bagging now completes at a checkstand (t_grocery_tasks drives it through the real
+     menu); it used to route to `desk`, which sent a bagger to their locker. */
+  const KINDS = ['desk', 'printer', 'supply', 'water', 'coffee', 'phones', 'board', 'npc',
+                 'section', 'lane'];
   const dupes = [];
   DEPTS.forEach(dept => {
     const { S, g } = asClerkOf(dept);
