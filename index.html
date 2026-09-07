@@ -4536,6 +4536,14 @@ function spawnScaled(name,dept,desk,opts){
   n.sprite=gst?gst.sprite:freeSprite(isFemaleName(name)?'f':'m');   // a face nobody on this floor is wearing
   if(gst)n.guest=gst.key;
   n.tier=desk?(desk.tier|0):0;                        // a hire takes the rank of the chair they fill, not always Junior
+  /* ⚠️ AND IN THE STORE, THE DEPARTMENT OF THE STATION THEY FILL. Without this a replacement
+     is a person in no department: invisible to the org chart, to deptStaff(), to department
+     health, and to anything that asks who works in bakery.
+     They come in as STAFF even when the station they are filling was a manager's. A department
+     manager's chair is the player's own promotion route -- unseatTarget() reads the world for a
+     manager rather than an arc flag -- so having HR quietly drop a new manager into the chair the
+     player just cleared would close the rung behind them. Inherit the DEPARTMENT, never the rank. */
+  if(currentLevel!=='office'&&desk&&desk.storeDept){ n.storeDept=desk.storeDept; n.storeRole='staff'; }
   n.career=rand(4,14) + (n.tier*20);                  // and enough standing to plausibly hold it
   n.w=Math.round(16*S); n.h=Math.round(16*S);
   n.speed=n.speed*S;
@@ -11780,7 +11788,12 @@ function renderOrg(){
    invented and nothing can go stale against a cast change. */
 function orgRowsStore(){
   const rows=[];
-  const live=r=>NPCS.find(n=>n.storeRole===r&&n.alive&&!n.gone);
+  /* ⚠️ AND THE SAME MISTAKE ONE ROW UP, WHERE IT IS WORSE. This filtered `gone` too, so at
+     4:59pm -- once the assistant manager had gone home -- the chart read "ASSISTANT MANAGER —
+     VACANT / nobody in the chair". In a game where an empty chair is the promotion signal, that
+     is not a cosmetic slip: it tells the player a rung has opened when nobody has left.
+     `alive` is the right test. Being fired removes you from the org; going home does not. */
+  const live=r=>NPCS.find(n=>n.storeRole===r&&n.alive);
   const top=RANKS.length-1;
   const pct=n=>`<b>${Math.min(99,Math.round(n.career||0))}%</b>`;
   const seat=(role,title,note)=>{
@@ -11796,7 +11809,11 @@ function orgRowsStore(){
   seat('am','ASSISTANT MANAGER','five departments');
   /* the departments, each with its manager first — and YOU in yours, while you are still in one */
   STORE_DEPTS.forEach(d=>{
-    const crew=deptStaff(d.id).filter(n=>!n.gone&&n!==player);
+    /* ⚠️ EVERYONE ON THE BOOKS, NOT EVERYONE CLOCKED IN. This filtered out `gone`, and on
+       day 1 at 08:00 most of the cast has not arrived yet (CLAUDE.md 15) -- so the panel showed 3
+       of 9 first thing and 0 of 9 after close, under a header that says "on the books". An org
+       chart is a roster; who is currently on the floor is what the PEOPLE tab is for. */
+    const crew=deptStaff(d.id).filter(n=>n!==player);
     const mine=(player.storeDept===d.id&&player.rank<3);
     if(!crew.length&&!mine)return;
     const h=deptHealth(d.id);
@@ -14027,8 +14044,18 @@ function loadLevel(id){
      Positions are DERIVED from the fixtures — aisle centres from the shelf runs that were just
      placed, checkout positions from the checkstand runs — so redesigning the floor moves the crew
      with it instead of stranding them inside a shelf. */
-  const stationDesk=(x,y,owner,side)=>{
+  /* ⚠️ A STATION CARRIES ITS OWN DEPARTMENT. It did not, and that is how the store's org
+     chart quietly emptied out: every backfill path pushes {desk, dept:n.dept} and dept is the
+     OFFICE field, so a hire arrived with dept:'sales' and no storeDept at all. deptStaff() selects
+     on storeDept, so the replacement belonged to no department, appeared in no section of the
+     chart, and counted toward no department's health -- while headcount looked fine. Measured:
+     fire one of the twelve and by day 3 the crew is back to twelve and the departments are down
+     to eight, permanently.
+     The station is the right place to keep it. A station IS the bakery counter, so whoever works
+     it is bakery staff, and the fact survives every person who ever stands there. */
+  const stationDesk=(x,y,owner,side,sdept,srole)=>{
     const d={x:Math.round(x-12),y:Math.round(y-12),w:24,h:24,owner:owner,tier:0,dept:'sales',
+             storeDept:sdept||null, storeRole:srole||null,
              reserved:false,station:true,seatSide:side,rigged:null,planted:null};
     desks.push(d); return d;
   };
@@ -14131,7 +14158,7 @@ function loadLevel(id){
          player should be able to walk up to the man they intend to succeed. */
       ['Merv Kastelic',     583,           160,      'up'   , null,     'owner'  ]];
     for(const [name,x,y,side,sdept,srole] of CREW){
-      const d=stationDesk(x,y,name,side);
+      const d=stationDesk(x,y,name,side,sdept,srole);
       /* dept 'sales' deliberately: NOBODY here is dept:'hr'. hrs() therefore comes back empty in
          Save-Rite and triggerAudit() returns at its second line, which is what keeps the whole
          audit/HR apparatus dormant in a level that has no HR office to run it from. */

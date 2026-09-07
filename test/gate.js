@@ -112,6 +112,7 @@ const TESTS = [
   't_grocery.js',
   't_grocery_soak.js',    // 5 in-game days in a NON-office world; asserts the cycle ran, not just that it survived
   't_grocery_crew.js',    // Save-Rite's six staff: a station is a desk that isn't drawn
+  't_store_hire.js',      // ...and a replacement joins the department it was hired into
   't_grocery_ladder.js',  // Save-Rite's own six rungs + the irreversible department branch
   't_grocery_unseat.js',  // three roads to one Department Manager's chair, one resolution
   't_grocery_flavour.js', // per-department task words + what the crew say; words only, no mechanics
