@@ -246,6 +246,34 @@ A test that hardcodes a world coordinate **rots the next time the floor is redes
   quietly. Verified by removing the tick and watching the anchor go red while the check it guards
   still cheerfully reported "all 12 stations standable".
 
+- ⚠️ **`solid()` TAKES A BOX. A CHECK THAT CANNOT FAIL IS WORSE THAN NO CHECK.**
+  `solid({x,y,w,h})` — one object. Called as `solid(x,y,w,h)` it does not throw: `box` is a
+  number, `aabb()` reads `undefined` off it, and the call returns **false for every point in the
+  building**. So a helper named `walkable()` answered *yes* for solid wall, everywhere, in silence.
+  It produced **three confident wrong measurements in one session**, and worse than any of them, a
+  generator that "verified" the intro route against collision and emitted one that walked through
+  receiving's west wall — which then got *quoted* as verified. The suite could not contradict it
+  because the claim had never been tested by anything but the broken helper.
+  The lesson generalises past this one signature: **every probe needs an anti-vacuity anchor on the
+  subsystem it is actually asking about** (§14 above), and the anchor here is one line —
+  "N of M containers are not solid at their own centre". With it, the bug is visible in one run.
+  Two more of the same family, both burned time this session:
+  - **`levelIntro().route` comes back SCALED, not authored.** Re-scaling it invented six route
+    failures that did not exist, right after a real one had just been found — so the fiction looked
+    like corroboration. Print `route[0]` against the source literal before believing any of it.
+  - **A generator that reports a defect and emits its artefact anyway launders the defect.** The
+    route generator printed `blocked: 3@1229,130` and then printed the route underneath it, and I
+    pasted the route in. It exits non-zero now instead of emitting.
+
+- ⚠️ **A PROP'S COLLISION BOX AND ITS DRAWN RECT ARE DIFFERENT SHAPES, AND BOTH CAN RUIN A ROOM.**
+  `floorProp` makes the **whole drawn rect** solid and adds a container box at its foot. Drop a
+  wall fixture 33 units too far south and its box lands on the staff lane: the deli and bakery
+  managers were shoved out of their own zones, `roomAt()` answered `NONE` for the two people whose
+  job is being findable in their department, and **five tests went red on one placement**.
+  Props are also **depth-sorted by drawn bottom**, so a fixture ending below where people stand
+  paints over them — a back wall must end where the floor people stand on begins. When placing
+  anything against a wall, check what stands in front of it, not just that it fits.
+
 Game-rule constants are the exception and *should* be hard-coded — the tray holds 3, the slate offers 3 candidates. Those are the spec; a test SHOULD fail when they change.
 
 ### 15. A harness world is NOT a populated floor — parked NPCs will fake your data
