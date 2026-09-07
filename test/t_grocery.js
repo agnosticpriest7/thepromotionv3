@@ -52,11 +52,16 @@ const CELL = Math.round(20 * 1.8);
   /* RE-PLANNED. The store was laid out to a real supermarket plan: fresh departments around the
      perimeter, dry aisles in the middle, checkouts across the front. DAIRY is a department now
      (its cases sit in the cooler's south wall), CASH OFFICE moved beside the tills, the back rooms
-     hang off a corridor, and there is a dock and a yard outside the building. STAFF WC is gone as
-     a room -- at 78 wide it cost RECEIVING the width it needed, and receiving kept sealing itself
-     with its own furniture; the toilet folds into the break room, as it does in most shops. */
+     hang off a corridor, and there is a dock and a yard outside the building.
+     ⚠️ AND THE COMMENT HERE SAID "STAFF WC IS GONE AS A ROOM" WHILE THE LIST BELOW STILL DEMANDED
+     IT. It was written for a plan that was not carried out; the room survived, and the prose and
+     the spec sat two lines apart disagreeing for as long as nobody removed it. It is gone NOW
+     (Kyle, 2026-09-06) and for the reason the old comment gave plus a better one: a 100-wide room
+     holding one toilet cost the break room the width it needed, so eight chairs served twelve crew
+     and four people stood about outside a full room every break. Its space is break room, which now
+     seats sixteen at two tables. Staff use the public washroom. */
   const want = ['ENTRANCE','FRONT END','GROCERY','PRODUCE','BAKERY','DELI','DAIRY',
-                'BREAK ROOM','STAFF WC','PUBLIC WC','STORE MANAGER','OWNER','ASSISTANT MANAGER',
+                'BREAK ROOM','PUBLIC WC','STORE MANAGER','OWNER','ASSISTANT MANAGER',
                 'CASH OFFICE','BOH CORRIDOR','SHIPPING / RECEIVING','YARD'];
   const have = (L.ROOMS || []).map(r => r.name);
   const missing = want.filter(n => have.indexOf(n) < 0);

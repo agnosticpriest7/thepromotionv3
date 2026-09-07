@@ -38,7 +38,12 @@ const R = n => (L.ROOMS || []).filter(r => r.name === n);
    what it was built for -- so an indoor one duplicated it and ate the width the other rooms
    needed. The dock opens straight into the corridor at truck height now, and the space it freed
    went to a proper break room and the staff WC that had been squeezed out. */
-const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'BREAK ROOM', 'STAFF WC'];
+/* ⚠️ NO STAFF WC (Kyle, 2026-09-06). It was a 100-wide room holding one toilet, and it cost
+   the break room the width it needed -- eight chairs for twelve crew, so four people stood
+   about outside a full room every break. Its space is break room now and staff use the public
+   washroom, which is what happens in most shops. SPEC, fixed at authoring time: this list is
+   the back of house, and a room going missing from it should fail until somebody says so. */
+const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'BREAK ROOM'];
 {
   const missing = BOH.filter(n => R(n).length === 0);
   ck('the back of house has all its rooms', missing.length === 0,
@@ -169,9 +174,14 @@ const BOH = ['WALK-IN COOLER', 'STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER', 'B
      homed.every(h => ['STORE MANAGER', 'OWNER', 'ASSISTANT MANAGER'].indexOf(h.room) >= 0),
      homed.map(h => h.nm + ' in ' + h.room).join(', '));
 
+  /* @W@ NAME THE ROOM. This used to ask only "indoors and off the sales floor", which is true of
+     the break room -- so it passed for as long as the huddle was held in the room the crew take
+     their break in, immediately before taking it there. An assertion that cannot separate the two
+     candidates cannot catch the wrong one. A morning huddle belongs in RECEIVING: the front end is
+     in front of customers and the corridor is 44 deep, so the standing ring spills out of it. */
   const mc = S.meetingCentre(), mr = roomOf(mc.x, mc.y);
-  ck('the store huddle happens indoors, off the shop floor',
-     mr !== 'NONE' && ['GROCERY', 'FRONT END', 'PRODUCE', 'ENTRANCE', 'DAIRY', 'DELI', 'BAKERY'].indexOf(mr) < 0,
+  ck('the store huddle happens in RECEIVING, not in the break room',
+     /RECEIVING/i.test(mr),
      '(' + A(mc.x) + ',' + A(mc.y) + ') -> ' + mr);
   ck('  ^ and somewhere a body can stand', !body(mc.x, mc.y), 'a 16x16 body fits');
 }

@@ -94,7 +94,7 @@ DEPTS.forEach(dept => {
      because bagging now completes at a checkstand (t_grocery_tasks drives it through the real
      menu); it used to route to `desk`, which sent a bagger to their locker. */
   const KINDS = ['desk', 'printer', 'supply', 'water', 'coffee', 'phones', 'board', 'npc',
-                 'section', 'lane'];
+                 'section', 'lane', 'carts'];
   const dupes = [];
   DEPTS.forEach(dept => {
     const { S, g } = asClerkOf(dept);

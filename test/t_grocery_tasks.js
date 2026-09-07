@@ -63,6 +63,7 @@ function completionRun(level, rolls) {
     const fixture =
       via === 'desk'    ? desks.find(d => d.owner === 'you') :
       via === 'lane'    ? conts.find(c => /Checkstand/i.test(c.label || '')) :
+      via === 'carts'   ? conts.find(c => /^Trolley/i.test(c.label || '')) :
       via === 'section' ? conts.find(c => c.section && (!g.player.storeDept || c.dept === g.player.storeDept)) :
       objs.find(o => o.type === via);
       if (!fixture) { failed[via] = label + ' — no fixture for via:' + via; continue; }
