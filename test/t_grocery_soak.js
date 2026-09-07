@@ -30,6 +30,8 @@ const CHUNK = 300;              // a phase is ~3000 frames, so this cannot miss 
    an idle. */
 const w = createWorld({ storage: { 'promo:level': 'grocery', 'promo:newgame': '0', 'promo:char': '0' } });
 const S = w.sandbox, g = w.g, sv = w.rawSave();
+/* ⚠️ SAVE-RITE HAS AN OPENING TOUR NOW, so the player no longer stays on the spawn tile and the
+   position assertion below had to be re-anchored rather than merely relaxed. See section 3. */
 
 /* This asserted "a cast of nobody" through the empty-room and fixtures branches and went correctly
    RED when the crew arrived. What it is really guarding is that the SOAK WORLD IS POPULATED — a
@@ -55,7 +57,11 @@ sv.Store.save = (slot, o) => { saves++; lastSaved = o; return realSave(slot, o);
 const spawn = S.levelSpawnPoint();
 let phaseChanges = 0, prevPhase = S.currentPhase().name;
 const phasesSeen = {};
-let worstAway = 0;
+/* ⚠️ MEASURED FROM WHERE THE TOUR PUTS YOU DOWN, not from the spawn tile. The store's opening
+   tour walks the length of the shop on day 1, so wander-from-spawn now measures the tour and would
+   have to be widened to ~1800px to pass -- a tolerance that would wave through any teleport in the
+   building. Settle first, then watch. */
+let worstAway = 0, settle = null;
 
 const st0 = { throws: 0 };
 for (let i = 0; i < FRAMES / CHUNK; i++) {
@@ -64,8 +70,9 @@ for (let i = 0; i < FRAMES / CHUNK; i++) {
   const ph = S.currentPhase().name;
   phasesSeen[ph] = true;
   if (ph !== prevPhase) { phaseChanges++; prevPhase = ph; }
-  const d = Math.hypot(g.player.x - spawn.x, g.player.y - spawn.y);
-  if (d > worstAway) worstAway = d;
+  if (!settle) { if (!g.intro) settle = { x: g.player.x, y: g.player.y }; }
+  else { const d = Math.hypot(g.player.x - settle.x, g.player.y - settle.y);
+         if (d > worstAway) worstAway = d; }
 }
 
 const days = g.day;
@@ -78,7 +85,8 @@ console.log('  distinct phases   : ' + distinct.length + '  (' + distinct.join('
 console.log('  autosaves written : ' + saves);
 console.log('  render errors     : ' + g.renderErrs);
 console.log('  throws            : ' + st0.throws);
-console.log('  player worst-away : ' + Math.round(worstAway) + 'px from the level spawn (' + spawn.x + ',' + spawn.y + ')');
+console.log('  player worst-away : ' + Math.round(worstAway) + 'px from where the tour left them' +
+            (settle ? ' (' + Math.round(settle.x) + ',' + Math.round(settle.y) + ')' : ' (never settled)'));
 console.log('  ---------------------\n');
 
 /* ---- 1. THE CYCLE ACTUALLY RAN. Without these the rest of the file is theatre. --------- */
@@ -101,18 +109,32 @@ ck('  ^ and it carried the days with it', !!lastSaved && lastSaved.meta.day >= 5
 /* ---- 3. THE POSITION ASSERTION — the one assembleAtElevator has to fail -----------------
    NOT "is the player inside the room": the room IS the world here, so that is trivially true and
    the first version of this assertion passed happily with the player standing on the office
-   elevator. It has to be "is the player where THIS LEVEL put them", compared against a spawn
-   derived from the live world. A throw counter cannot see this bug class at all, and neither can
-   a drift check, because the overwrite fires at boot before any drift can be measured. */
+   elevator. It has to be anchored on something THIS LEVEL authored.
+
+   ⚠️ RE-ANCHORED, NOT RELAXED. It used to compare against the level spawn, which worked only
+   because Save-Rite had no opening tour and the player therefore never moved. It has one now, and
+   it walks them the length of the shop — so the old assertion went red having caught nothing, and
+   the tempting fix, widening the tolerance to cover the walk, would wave through any teleport in
+   the building. Suppressing the tour was tried first and does not work: `intro` is a module-scope
+   `let` and the sandbox will not take an assignment to it.
+   So anchor on YOUR OWN DESK instead. endIntro deposits the player beside it, it is a record this
+   level authored, and it is nowhere near the office's elevator — which is the bug class this
+   assertion exists for. It is arguably a better anchor than the spawn tile ever was, because it
+   stays true for a player who has walked about. */
 {
   const p = g.player, tol = Math.round(20 * 1.8) * 2;   // two nav cells of slack
   ck('the player position is finite', isFinite(p.x) && isFinite(p.y),
      Math.round(p.x) + ',' + Math.round(p.y));
-  const away = Math.hypot(p.x - spawn.x, p.y - spawn.y);
-  ck('the player is still where the LEVEL spawned them, 5 days on', away <= tol,
-     Math.round(away) + 'px away (tolerance ' + tol + ') — at ' + Math.round(p.x) + ',' + Math.round(p.y) +
-     ', level spawn ' + spawn.x + ',' + spawn.y);
-  ck('  ^ and never wandered during the run', worstAway <= tol, Math.round(worstAway) + 'px worst');
+  const mine = S.myDesk();
+  ck('the player has a desk of their own to be measured against', !!mine,
+     mine ? 'yours at ' + Math.round(mine.x) + ',' + Math.round(mine.y) : 'NO DESK — the check below proves nothing');
+  const away = mine ? Math.hypot(p.x - (mine.x + mine.w / 2), p.y - (mine.y + mine.h / 2)) : Infinity;
+  ck('the player is at their OWN workstation, not on an office coordinate', away <= tol * 2,
+     Math.round(away) + 'px from their desk (tolerance ' + (tol * 2) + ') — at ' +
+     Math.round(p.x) + ',' + Math.round(p.y));
+  ck('  ^ and never wandered once the tour put them down', worstAway <= tol,
+     Math.round(worstAway) + 'px worst' + (settle ? '' : ' — NEVER SETTLED, so nothing was watched'));
+  ck('  ^ and the tour did finish', !!settle && !g.intro, settle ? 'settled' : 'the intro never ended');
 }
 
 /* ---- 4. and nothing broke while doing it ---------------------------------------------- */

@@ -793,3 +793,78 @@ For a concrete next-pass target, I propose `deli_backwall` and `bakery_backwall`
 Reuse the existing table/chairs and office vending machine as you suggest. No replacement vending art is justified by this note. Your job triggers, workspace progression, meeting timing, opening tour and break-room extension remain code/layout work. No additional character or furniture regeneration is needed for those changes.
 
 This acknowledges the request and records the proposed art contract; these five assets have **not** been generated during Kyle's review-and-reply request. The current delivery and originals remain intact.
+
+---
+
+# ART REQUEST — flooring round two, and a truck (2026-09-06, third TV pass)
+
+The eight floors are in and the level is transformed — thank you. Kyle has played on them and has
+four things. Three are art; the fourth is a bug of mine, noted at the end so you do not chase it.
+
+## 1. ⭐ `floor_vct` — the plain white is dull. Give it a fleck.
+
+> *"maybe we should add a black dot pattern into the main store. the basic white kinda sucks to
+> look at."*
+
+This is the tile that covers most of the shop, so it is the one worth getting right. **Revise
+`floor_vct`** (same name, same 128x128, same seamless requirement) with a **speckle**: the classic
+supermarket VCT fleck — small dark flecks scattered through an off-white ground, irregular, low
+contrast. Real VCT is never plain; it is chipped stone in resin.
+
+⚠️ **The fleck is exactly the thing that can ruin a tile.** A distinctive cluster repeats every 64
+drawn pixels and reads instantly as wallpaper. Keep the flecks small, dense and evenly distributed,
+with no cluster the eye can lock onto. If in doubt, more flecks and smaller.
+
+## 2. ⭐ `floor_asphalt` — the world outside the building
+
+> *"the area below the shipping receiving should be asphalt, same with below the store."*
+
+There is nothing for the outside at the moment. **Wanted: `floor_asphalt`**, 128x128, seamless,
+opaque — worn blacktop, slightly uneven, faint aggregate, no painted markings in the tile itself
+(bay lines would repeat). Mid-dark grey-black; it wants to read as *outside* against everything
+else on the plan.
+
+## 3. Office floors — something subtle
+
+> *"the managers offices can have some subtle floor color, nothing crazy or that stands out."*
+
+The store manager's, owner's and assistant manager's offices are currently getting the sales-floor
+tile, which is one of the bugs below. They want their own, and Kyle's steer is **subtle**.
+
+`floor_carpet_tile` already exists and is a flat grey-blue — I will use it unless you would rather
+draw **one or two quiet alternatives** so the three offices are not identical: a warmer grey-brown
+carpet tile and a soft green-grey would do it. **Low priority and genuinely optional** — the
+existing tile is fine, this is only so the three rooms are not photocopies.
+
+## 4. ⭐ A semi backed onto the receiving dock
+
+> *"we should have a semi truck backed up to receiving dock. the player doesn't need to be able to
+> walk into the yard"*
+
+**Wanted: `dock_truck`** — the back half of an articulated trailer, reversed square onto the dock,
+seen from the same top-down-ish angle as everything else. Roll shutter up or down is your call; up
+with a glimpse of pallets inside is nicer if it is not much more work. Mud flaps, a number plate, the
+dirt of a working vehicle.
+
+**Size:** the dock is at the top of the YARD, which is 260 authored wide. The trailer should read as
+**most of that width** — around **200-380 px drawn wide**, so deliver at 2x. It is scenery: the
+player never walks into the yard, so nothing has to be walkable or interactive.
+
+If a whole tractor unit is wanted later we can add one, but the trailer alone backed onto the dock is
+the shot — you rarely see the cab from inside the building anyway.
+
+## 5. Still outstanding from last time
+
+`floor_entry` and `floor_concrete` **band when tiled** — see the previous section for the numbers and
+for why an edge-equality check cannot catch it. `floor_concrete` is about to be used a great deal
+more (receiving, the corridor and the cooler are all being re-pointed at it), so its band matters
+more now than it did.
+
+## 6. NOT art — my bug, do not chase it
+
+Kyle also reported *"lots of weird patches everywhere"* in the flooring. **That is not your tiles.**
+`tileFloor` starts its grid at each room's own top-left corner, so every room restarts the pattern
+at its own phase: GROCERY tiles from y=720, FRONT END from y=1260, the base layer from 0. Adjacent
+areas using the *same tile* therefore do not line up, and the seam between them is visible. Six
+rooms are also unmapped and silently getting the sales-floor tile — including the walk-in cooler and
+the receiving dock. Both are code fixes and are mine.
