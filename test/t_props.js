@@ -271,7 +271,13 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
                       physical objects. */
                    dairy_milk_pallet: 1.2, dairy_milk_crates: 0.7, dairy_carton_shipper: 1.0,
                    dairy_empty_crate: 0.6, bakery_back_shelf: 2.0, bakery_bread_rack: 1.8,
-                   bakery_tray_rack: 0.66 };
+                   bakery_tray_rack: 0.66,
+                   /* the washroom kit, same story: registered, never drawn, never sized. The two
+                      thin top-down dividers are deliberately absent -- they are partitions drawn
+                      with HEIGHT rather than floor extent, so a real 'width' for them is their
+                      6 cm thickness and asserting against it would be meaningless. */
+                   wc_sink_counter: 1.6, wc_partition_run: 2.4, wc_door_closed: 0.6,
+                   wc_door_ajar: 0.6, wc_hand_dryer: 0.3 };
   const ppm = w.sandbox.pxPerMetre();
   ck('the store declares one scale, derived from the character sprite',
      ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');
