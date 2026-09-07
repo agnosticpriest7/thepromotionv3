@@ -494,6 +494,22 @@ const SPRITE_ROWS=[
 /* ================= SPRITE ART ================= */
 const ART_PATH='Art/sprites/';
 const ART_FILES=['chars',
+  /* ⚠️ CODEX TV-PASS DELIVERY 2026-09-06. ALL OF THESE ARE GENUINE ALPHA AND NONE IS KEYED.
+     Adding a name to MAGENTA_BG costs a second full canvas copy of the sprite at load for the
+     privilege of scanning for a colour that is not there. The floors are opaque RGB and want no
+     alpha at all. The cast walk strips were removed from MAGENTA_BG in the same pass, for the
+     same reason -- they arrived RGB with a magenta field and now arrive RGBA. */
+  /* floors, drawn 64x64 by tileFloor */
+  'floor_vct','floor_market','floor_quarry','floor_concrete',
+  'floor_wc','floor_carpet_tile','floor_vinyl_break','floor_entry',
+  /* one aisle bay, stacked to length -- see the run builder */
+  'shelf_bay_a','shelf_bay_b','shelf_bay_c','shelf_bay_d',
+  'shelf_bay_e','freezer_bay_a','freezer_bay_b','freezer_bay_wall',
+  /* dairy dressing, bathroom fittings, bakery racks */
+  'dairy_milk_crates','dairy_carton_shipper','dairy_empty_crate','dairy_milk_pallet',
+  'wc_sink_counter','wc_partition_run','wc_door_closed','wc_door_ajar',
+  'wc_divider_v','wc_divider_h','wc_hand_dryer','bakery_bread_rack',
+  'bakery_tray_rack','bakery_back_shelf',
   /* ⚠️ CODEX DELIVERY 2026-09-06 -- crew meltdown sheets and the player's store clothes.
      These carry REAL ALPHA, not a magenta background, so they are deliberately absent from
      MAGENTA_BG: keying them would cost a second full canvas copy of each for no benefit. The
@@ -688,41 +704,18 @@ const MAGENTA_BG=new Set(['cubicle_desk',
      16 MB free to drift apart. Twelve crew (walks + seated) and ten shoppers (walks only);
      the twelve masters with no live CREW entry are deliberately NOT loaded -- art for
      people the game does not build is 48 requests for nothing. */
-  'save-rite/walk_02_anjali_raval_down','save-rite/walk_02_anjali_raval_up','save-rite/walk_02_anjali_raval_left','save-rite/walk_02_anjali_raval_right',
   'save-rite/sit_02_anjali_raval_down','save-rite/sit_02_anjali_raval_up','save-rite/sit_02_anjali_raval_left','save-rite/sit_02_anjali_raval_right',
-  'save-rite/walk_03_marguerite_dubois_down','save-rite/walk_03_marguerite_dubois_up','save-rite/walk_03_marguerite_dubois_left','save-rite/walk_03_marguerite_dubois_right',
   'save-rite/sit_03_marguerite_dubois_down','save-rite/sit_03_marguerite_dubois_up','save-rite/sit_03_marguerite_dubois_left','save-rite/sit_03_marguerite_dubois_right',
-  'save-rite/walk_04_danika_osei_down','save-rite/walk_04_danika_osei_up','save-rite/walk_04_danika_osei_left','save-rite/walk_04_danika_osei_right',
   'save-rite/sit_04_danika_osei_down','save-rite/sit_04_danika_osei_up','save-rite/sit_04_danika_osei_left','save-rite/sit_04_danika_osei_right',
-  'save-rite/walk_05_curtis_lam_down','save-rite/walk_05_curtis_lam_up','save-rite/walk_05_curtis_lam_left','save-rite/walk_05_curtis_lam_right',
   'save-rite/sit_05_curtis_lam_down','save-rite/sit_05_curtis_lam_up','save-rite/sit_05_curtis_lam_left','save-rite/sit_05_curtis_lam_right',
-  'save-rite/walk_06_bekah_thorne_down','save-rite/walk_06_bekah_thorne_up','save-rite/walk_06_bekah_thorne_left','save-rite/walk_06_bekah_thorne_right',
   'save-rite/sit_06_bekah_thorne_down','save-rite/sit_06_bekah_thorne_up','save-rite/sit_06_bekah_thorne_left','save-rite/sit_06_bekah_thorne_right',
-  'save-rite/walk_08_russ_pelletier_down','save-rite/walk_08_russ_pelletier_up','save-rite/walk_08_russ_pelletier_left','save-rite/walk_08_russ_pelletier_right',
   'save-rite/sit_08_russ_pelletier_down','save-rite/sit_08_russ_pelletier_up','save-rite/sit_08_russ_pelletier_left','save-rite/sit_08_russ_pelletier_right',
-  'save-rite/walk_12_gita_mahal_down','save-rite/walk_12_gita_mahal_up','save-rite/walk_12_gita_mahal_left','save-rite/walk_12_gita_mahal_right',
   'save-rite/sit_12_gita_mahal_down','save-rite/sit_12_gita_mahal_up','save-rite/sit_12_gita_mahal_left','save-rite/sit_12_gita_mahal_right',
-  'save-rite/walk_16_bruno_sarr_down','save-rite/walk_16_bruno_sarr_up','save-rite/walk_16_bruno_sarr_left','save-rite/walk_16_bruno_sarr_right',
   'save-rite/sit_16_bruno_sarr_down','save-rite/sit_16_bruno_sarr_up','save-rite/sit_16_bruno_sarr_left','save-rite/sit_16_bruno_sarr_right',
-  'save-rite/walk_20_doreen_stapp_down','save-rite/walk_20_doreen_stapp_up','save-rite/walk_20_doreen_stapp_left','save-rite/walk_20_doreen_stapp_right',
   'save-rite/sit_20_doreen_stapp_down','save-rite/sit_20_doreen_stapp_up','save-rite/sit_20_doreen_stapp_left','save-rite/sit_20_doreen_stapp_right',
-  'save-rite/walk_21_garret_voss_down','save-rite/walk_21_garret_voss_up','save-rite/walk_21_garret_voss_left','save-rite/walk_21_garret_voss_right',
   'save-rite/sit_21_garret_voss_down','save-rite/sit_21_garret_voss_up','save-rite/sit_21_garret_voss_left','save-rite/sit_21_garret_voss_right',
-  'save-rite/walk_22_lorne_petrie_down','save-rite/walk_22_lorne_petrie_up','save-rite/walk_22_lorne_petrie_left','save-rite/walk_22_lorne_petrie_right',
   'save-rite/sit_22_lorne_petrie_down','save-rite/sit_22_lorne_petrie_up','save-rite/sit_22_lorne_petrie_left','save-rite/sit_22_lorne_petrie_right',
-  'save-rite/walk_23_merv_kastelic_down','save-rite/walk_23_merv_kastelic_up','save-rite/walk_23_merv_kastelic_left','save-rite/walk_23_merv_kastelic_right',
   'save-rite/sit_23_merv_kastelic_down','save-rite/sit_23_merv_kastelic_up','save-rite/sit_23_merv_kastelic_left','save-rite/sit_23_merv_kastelic_right',
-  'save-rite/walk_25_shopper_elderly_woman_down','save-rite/walk_25_shopper_elderly_woman_up','save-rite/walk_25_shopper_elderly_woman_left','save-rite/walk_25_shopper_elderly_woman_right',
-  'save-rite/walk_26_shopper_work_jacket_down','save-rite/walk_26_shopper_work_jacket_up','save-rite/walk_26_shopper_work_jacket_left','save-rite/walk_26_shopper_work_jacket_right',
-  'save-rite/walk_27_shopper_mustard_jumper_down','save-rite/walk_27_shopper_mustard_jumper_up','save-rite/walk_27_shopper_mustard_jumper_left','save-rite/walk_27_shopper_mustard_jumper_right',
-  'save-rite/walk_28_shopper_teen_hoodie_down','save-rite/walk_28_shopper_teen_hoodie_up','save-rite/walk_28_shopper_teen_hoodie_left','save-rite/walk_28_shopper_teen_hoodie_right',
-  'save-rite/walk_29_shopper_hivis_worker_down','save-rite/walk_29_shopper_hivis_worker_up','save-rite/walk_29_shopper_hivis_worker_left','save-rite/walk_29_shopper_hivis_worker_right',
-  'save-rite/walk_30_shopper_teal_blouse_down','save-rite/walk_30_shopper_teal_blouse_up','save-rite/walk_30_shopper_teal_blouse_left','save-rite/walk_30_shopper_teal_blouse_right',
-  'save-rite/walk_31_shopper_white_tee_down','save-rite/walk_31_shopper_white_tee_up','save-rite/walk_31_shopper_white_tee_left','save-rite/walk_31_shopper_white_tee_right',
-  'save-rite/walk_32_shopper_rose_cardigan_down','save-rite/walk_32_shopper_rose_cardigan_up','save-rite/walk_32_shopper_rose_cardigan_left','save-rite/walk_32_shopper_rose_cardigan_right',
-  'save-rite/walk_33_shopper_ginger_flannel_down','save-rite/walk_33_shopper_ginger_flannel_up','save-rite/walk_33_shopper_ginger_flannel_left','save-rite/walk_33_shopper_ginger_flannel_right',
-  'save-rite/walk_34_shopper_denim_jacket_down','save-rite/walk_34_shopper_denim_jacket_up','save-rite/walk_34_shopper_denim_jacket_left','save-rite/walk_34_shopper_denim_jacket_right',
-
   /* Kyle's store props: the frozen aisle, and something for the two bare corners */
   'freezer_run_a','freezer_run_b','freezer_wall','trolley_bay','magazine_rack','pallet_display','cubicle_desk_up','cubicle_desk_left','cubicle_desk_right',
   'assistant_desk','lockers','supply_shelf','fridge','filing_cabinet',
@@ -835,6 +828,21 @@ function sprW(n,cx,yBottom,tw){
 }
 /* ---- floor tiling from real textures ---- */
 const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby:'tile_lobby',wood:'wood',marble:'marble'};
+/* @W@ SAVE-RITE'S FLOOR, BY ROOM. A real shop changes its floor to tell you where you are, and
+   that single trick does more for "this is a supermarket" than any prop: pale VCT down the aisles,
+   a warm market tile under produce, quarry tile in the wet service departments, bare concrete the
+   moment you step out of the back door. Names must match ROOMS exactly; anything unlisted gets the
+   base. */
+const LEVEL_FLOOR_BASE='floor_vct';
+const LEVEL_FLOOR={
+  'GROCERY':'floor_vct', 'DAIRY':'floor_vct', 'FRONT END':'floor_vct',
+  'PRODUCE':'floor_market',
+  'DELI':'floor_quarry', 'BAKERY':'floor_quarry',
+  'BOH CORRIDOR':'floor_concrete', 'YARD':'floor_concrete',
+  'CASH OFFICE':'floor_carpet_tile',
+  'PUBLIC WC':'floor_wc',
+  'ENTRANCE':'floor_entry',
+};
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
 /* ⚠️ ONE SCALE FOR THE STORE, DERIVED ONCE, BECAUSE THE PROPS WERE SCALED INDEPENDENTLY.
@@ -889,7 +897,17 @@ function pxPerMetre(){ return (PERSON_PX/S)/SHOULDER_M; }   // 42.2 AUTHORED uni
 /* Source pixel sizes, so a LEVEL can work out a sprite's drawn height while it authors the floor.
    The images load asynchronously and are not available at build time -- which is why the shelf run
    already hardcoded 1650/496 rather than reading ART. This is that same fact, said once. */
-const ART_SRC={shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
+const ART_SRC={
+  /* ⚠️ OPTION B (Kyle, 2026-09-06): AN AISLE IS BUILT FROM BAYS NOW, NOT ONE FIXED SPRITE.
+     A run was a single 496x1650 image, so the only way to shorten an aisle was to scale it --
+     which narrowed it too, and a 1.2 m gondola is 1.2 m wide whatever length it is. A bay is
+     exactly a third of that run (220 of 660) and tiles top-to-bottom, so the floor gets a dial
+     it never had. The old run entries stay: nothing references them now, but they are the
+     record of what the aspect was derived from. */
+  shelf_bay_a:[198,220], shelf_bay_b:[198,220], shelf_bay_c:[198,220],
+  shelf_bay_d:[198,220], shelf_bay_e:[198,220],
+  freezer_bay_a:[198,142], freezer_bay_b:[198,142], freezer_bay_wall:[100,158],
+  shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
   deli_case:[2044,623],bakery_case:[2079,623],dairy_case:[1469,748],
   produce_fruit_a:[1242,907],produce_fruit_b:[1163,892],produce_veg:[1232,928],produce_mixed:[1053,907],
@@ -898,6 +916,17 @@ const ART_SRC={shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,16
   trolley_bay:[1689,577],magazine_rack:[1657,644],pallet_display:[1018,1097]};
 const ART_H_OF=(a)=>{const d=ART_SRC[a];return d?d[1]/d[0]:1;};
 const ART_W={
+  /* ⚠️ THE DELIVERED DRAW SIZES, WHICH ARE HALF THE FILE. Every one of these was drawn to a
+     size I asked for and Codex delivered at 2x, so the number here is not a guess -- it is the
+     brief. The bays keep the runs' 99 (a bay is the same 1.3 m wide fixture, just shorter), and
+     freezer_bay_wall keeps the wall unit's 50. */
+  shelf_bay_a:99, shelf_bay_b:99, shelf_bay_c:99, shelf_bay_d:99,
+  shelf_bay_e:99, freezer_bay_a:99, freezer_bay_b:99, freezer_bay_wall:50,
+  dairy_milk_crates:30, dairy_carton_shipper:30, dairy_empty_crate:25, dairy_milk_pallet:35,
+  wc_sink_counter:100, wc_partition_run:100, wc_door_closed:50, wc_door_ajar:50,
+  wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:18, bakery_bread_rack:70,
+  bakery_tray_rack:50, bakery_back_shelf:80,
+
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
   /* ⚠️ THE FREEZER RUNS ARE 99 ON PURPOSE -- the same drawn width as a shelf run, so they drop
@@ -9320,11 +9349,22 @@ function drawExterior(){
 }
 function drawFloor(){
   const T=Math.round(64*S/1.8);
-  /* A level with no authored floor gets a flat one. Deliberately flat colour, not art — the
-     grocery room is a walkable box and nothing more until it earns more. */
+  /* @W@ THE STORE HAD NO FLOOR AT ALL AND THE COMMENT HERE SAID SO: two flat colours, "a walkable
+     box and nothing more until it earns more". It earned more -- that grey-green wash is a large
+     part of why the shop read as empty on the TV. Floors are per ROOM and keyed by NAME rather than
+     by re-authored rectangles, because the rooms already know where they are and a second copy of
+     their coordinates is the exact thing that rots (CLAUDE.md 14). A room with no entry falls
+     through to the base tile, so adding a room later cannot leave a hole.
+     Still flat-filled first: a tile that fails to load leaves colour behind rather than a void. */
   if(currentLevel!=='office'){
     ctx.fillStyle='#3f4a42'; ctx.fillRect(0,0,W,levelH);
-    ROOMS.forEach(r=>{ ctx.fillStyle='#586b5c'; ctx.fillRect(r.x,r.y,r.w,r.h); });
+    if(!tileFloor(LEVEL_FLOOR_BASE,0,0,W,levelH,T)){
+      ROOMS.forEach(r=>{ ctx.fillStyle='#586b5c'; ctx.fillRect(r.x,r.y,r.w,r.h); });
+    }
+    ROOMS.forEach(r=>{
+      const t=LEVEL_FLOOR[r.name];
+      if(t&&t!==LEVEL_FLOOR_BASE)tileFloor(t,r.x,r.y,r.w,r.h,T);
+    });
     return;
   }
   /* base office carpet everywhere */
@@ -13080,32 +13120,54 @@ function loadLevel(id){
      also takes the GROCERY dead zone measured at x 700..880 from 232 authored down to 85: both
      bare regions closed by the same move. Aisle widths do not change -- RUN_GAP is still 118. */
   const SHELF_W=Math.round(ART_W.shelf_run_a/S), RUN_GAP=118, RUN_X0=288, RUN_COUNT=5;
-  const SHELF_ART=['shelf_run_a','shelf_run_b','shelf_run_c','shelf_run_d','shelf_run_e'];
+  const SHELF_ART=['shelf_bay_a','shelf_bay_b','shelf_bay_c','shelf_bay_d','shelf_bay_e'];
   const RUN_TOP_Y=420;                                     // below the CROSS-AISLE, above the tills
-  const RUN_H=Math.round(SHELF_W*1650/496);                // 199 - the asset's own aspect, not a guess
+  /* ⚠️ TWO BAYS, NOT THREE. The old run was one sprite 3 bays long and stood 6.1 CHARACTER
+     HEIGHTS on screen, against an office whose tallest fixture is 2.1 -- which is what Kyle saw
+     as "the props are really large". The cause is the two-scales problem (CLAUDE.md 14): props
+     are drawn at true plan scale and a person at about 2.6x smaller than the floor they stand
+     on, so the error only becomes visible on fixtures several metres long. Two bays takes an
+     aisle to roughly 4 character heights. This is the ONE number to turn if the shop still
+     reads too big -- or too empty. */
+  const BAY_H=Math.round(SHELF_W*220/198);                 // one bay, from the bay's own aspect
+  const BAYS_PER_RUN=2;
+  const RUN_H=BAY_H*BAYS_PER_RUN;
   /* the cap is 386 of the run's own 1650, so it is derived from the same scale the run is drawn at
      and the two cannot drift apart. 47 authored. Run 199 + cap 47 = 246, which lands the block's
      south face at y 469 against a GROCERY zone that ends at 470 -- so the caps give back almost
      exactly the run length the aisle-packing limit took away (245 before the art changed). */
-  const CAP_H=Math.round(RUN_H*386/1650);
+  /* the cap is unchanged art, so derive it from ITS OWN source rather than from the run's --
+     the run it used to be a fraction of does not exist any more. Same 43 authored as before. */
+  const CAP_H=Math.round(SHELF_W*386/496);
   const RUN_MID_Y=RUN_TOP_Y+Math.round(RUN_H/2);           // halfway down a run, for the crew
   /* ---- FROZEN. Two double-sided runs, and a single-sided unit flat against the west wall.
      A freezer is ONE piece per run -- no separate endcap -- and at the shelf run's own drawn
      width the art's aspect gives 223 tall against the grocery block's 183+43, so the two blocks
      line up without a fudge factor. The aisles either side are 44 clear, which is a nav row and
      then some, and the run-to-run gap matches the grocery aisles. */
-  const FRZ_W=Math.round(ART_W.freezer_run_a/S), FRZ_WALL_W=Math.round(ART_W.freezer_wall/S);
-  const FRZ_H=Math.round(FRZ_W*2129/524);                  // 223 - the asset's own aspect
+  const FRZ_W=Math.round(ART_W.freezer_bay_a/S), FRZ_WALL_W=Math.round(ART_W.freezer_bay_wall/S);
+  /* ⚠️ THE TWO BLOCKS MUST STILL END ON THE SAME LINE. The frozen aisle and the grocery runs were
+     sized so their south faces align without a fudge factor, and that is worth keeping -- but a
+     freezer bay and a shelf bay are different heights (a door unit is not a shelf section), so the
+     counts no longer match even though the blocks must. Each freezer takes the bay count that gets
+     CLOSEST to the grocery block and is then placed from the BOTTOM up, so the faces line up and
+     any remainder is absorbed at the top where it is against a wall and nobody can see it. */
+  const BLOCK_H=RUN_H+CAP_H;
   const freezer=(x0,w,art,label,flip)=>{
-    const cx=x0+w/2, bottom=RUN_TOP_Y+FRZ_H;
-    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
-                     label:label, kind:'box', art:art, flip:!!flip});
-    sections(x0, RUN_TOP_Y, w, FRZ_H, 'grocery', 'Freezer section', w > 40 ? 2 : 1);
-    levelBlockers.push({x:x0+1, y:RUN_TOP_Y+1, w:w-2, h:FRZ_H-2});
+    const src=ART_SRC[art], bayH=Math.round(w*src[1]/src[0]);
+    const bays=Math.max(1,Math.round(BLOCK_H/bayH)), h=bays*bayH;
+    const top=RUN_TOP_Y+BLOCK_H-h, cx=x0+w/2;
+    for(let b=0;b<bays;b++){
+      const bayBottom=top+(b+1)*bayH;
+      CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bayBottom-22-4/S), w:28, h:22,
+                       label:label, kind:'box', art:art, flip:!!flip});
+    }
+    sections(x0, top, w, h, 'grocery', 'Freezer section', w > 40 ? 2 : 1);
+    levelBlockers.push({x:x0+1, y:top+1, w:w-2, h:h-2});
   };
-  freezer(T+2, FRZ_WALL_W, 'freezer_wall',  'Frozen (wall)', true);   // doors face EAST: mirrored
-  freezer(88,  FRZ_W,      'freezer_run_a', 'Frozen', false);
-  freezer(187, FRZ_W,      'freezer_run_b', 'Frozen', false);
+  freezer(T+2, FRZ_WALL_W, 'freezer_bay_wall', 'Frozen (wall)', true);   // doors face EAST: mirrored
+  freezer(88,  FRZ_W,      'freezer_bay_a',    'Frozen', false);
+  freezer(187, FRZ_W,      'freezer_bay_b',    'Frozen', false);
   /* ---- THE TWO BARE CORNERS. Measured as sample points more than 30 authored from ANY fixture:
      46 of them in the FRONT END east of the tills, 38 in GROCERY east of the last run. Floor with
      nothing on it and no reason to walk there. A trolley bay and a magazine rack are what stands
@@ -13169,13 +13231,21 @@ function loadLevel(id){
     /* the sprite is centred on the run and stands with its BOTTOM at cy+h+U1(4) (sprAt), so the
        box is placed BACKWARDS from where the art must land rather than guessed at. */
     const cx=rx+SHELF_W/2, bottom=RUN_TOP_Y+RUN_H;
-    CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom-22-4/S), w:28, h:22,
-                     label:'Shelf', kind:'box',
-                     /* DETERMINISTIC, not random: a run's variant is a property of the level, so
-                        the same aisle reads the same on every load and a layout can be judged
-                        twice. Six runs over five variants -> a,b,c,d,e,a, and the repeat sits at
-                        opposite ends of the floor, so no two ADJACENT runs ever match. */
-                     art:SHELF_ART[i%SHELF_ART.length]});
+    /* DETERMINISTIC, not random: a run's variant is a property of the level, so the same aisle
+       reads the same on every load and a layout can be judged twice. Five runs over five variants,
+       and no two ADJACENT runs ever match.
+       ⚠️ ONE ENTRY PER BAY, BUTTING EXACTLY. The bays are placed from the SAME bottom-anchored
+       arithmetic the single sprite used, one BAY_H apart, so they meet with no gap and no overlap
+       by construction rather than by tuning. That matters: the runs were consolidated INTO one
+       sprite once precisely because a stacked run had drifted into a dotted line of floating units
+       (the ART_W-in-scaled-pixels trap). The guard against that is now a continuity assertion in
+       t_shelf_art rather than a sprite count, because the count is the thing that had to change. */
+    const runArt=SHELF_ART[i%SHELF_ART.length];
+    for(let b=0;b<BAYS_PER_RUN;b++){
+      const bayBottom=RUN_TOP_Y+(b+1)*BAY_H;
+      CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bayBottom-22-4/S), w:28, h:22,
+                       label:'Shelf', kind:'box', art:runArt});
+    }
     /* THE SOUTH CAP. Its own sprite on the same centre line, standing where the run stops, so the
        drawn footprints butt with no gap and no overlap. */
     CONTAINERS.push({x:Math.round(cx-14), y:Math.round(bottom+CAP_H-22-4/S), w:28, h:22,

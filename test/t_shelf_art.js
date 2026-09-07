@@ -44,13 +44,24 @@ const mk = lv => createWorld({ seed: 20260827, storage: { 'promo:level': lv, 'pr
    so each run now carries a distinct face instead of one repeating. The count is an authoring
    fact and belongs written down (CLAUDE.md 14): add or drop a run and this goes red. */
 const RUNS = 5, VARIANTS = 5, AISLES = RUNS - 1;
+/* ⚠️ AN AISLE IS BUILT FROM BAYS NOW (Kyle's option B, 2026-09-06). A run used to be one
+   fixed-length sprite; it is BAYS_PER_RUN stacked tiles, so the floor can choose how long an
+   aisle is without also changing how wide it is. SPEC, fixed at authoring time. */
+const BAYS_PER_RUN = 2;
 /* ⚠️ 65, NOT 60, AND THE RUNS ARE WHY. grocery-prop-scale sized every store prop from its real
    size at one scale, and a gondola run is 1.3 m -- 55 authored, where it had been 60 because it
    was sized to the space rather than to the fixture. The pitch did not move, so the runs stay
    where they were judged and the aisles got the 5 back. Wider is safe; the number is asserted so
    that a future change has to mean it. */
 const AISLE_CLEAR = 65;            // authored, blocker-to-blocker
-const ART = ['shelf_run_a', 'shelf_run_b', 'shelf_run_c', 'shelf_run_d', 'shelf_run_e'];
+const ART = ['shelf_bay_a', 'shelf_bay_b', 'shelf_bay_c', 'shelf_bay_d', 'shelf_bay_e'];
+/* one COLUMN of bays is one aisle run: group the shelf entries by x */
+const columnsOf = w => {
+  const by = {};
+  w.g.layout.containers.filter(c => c.label === 'Shelf')
+    .forEach(c => { (by[Math.round(c.x)] = by[Math.round(c.x)] || []).push(c); });
+  return Object.keys(by).sort((a, b) => a - b).map(k => by[k].sort((a, b) => a.y - b.y));
+};
 
 const runsOf = w => w.g.layout.containers.filter(c => c.label === 'Shelf');
 const runBlockers = (w) => {
@@ -87,20 +98,48 @@ const runBlockers = (w) => {
   const fs = require('fs'), path = require('path');
   const notKeyed = ART.filter(n => !new RegExp("'" + n + "'").test(
     fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8').split('const MAGENTA_BG')[1].split(']);')[0]));
-  ck('  ^ and every one is in MAGENTA_BG, or it draws on a magenta slab',
-     notKeyed.length === 0, notKeyed.length ? notKeyed.join(', ') : 'all five keyed');
+  /* ⚠️ THIS ASSERTION IS INVERTED FROM WHAT IT WAS, ON PURPOSE. The runs used to arrive as RGB
+     with a magenta field and HAD to be in MAGENTA_BG or they drew on a solid pink slab. The bays
+     are genuine alpha, so being in MAGENTA_BG would now be the bug: it costs a second full canvas
+     copy of every one at load to scan for a colour that is not there. */
+  ck('  ^ and NOT one of them is keyed — they are alpha now, and keying costs a canvas copy',
+     notKeyed.length === ART.length,
+     notKeyed.length + ' of ' + ART.length + ' correctly absent from MAGENTA_BG');
 }
 
 /* ---- 2. SIX RUNS, FIVE VARIANTS, NO TWO ADJACENT ALIKE ---------------------------------- */
 {
   const w = mk('grocery');
-  const runs = runsOf(w).sort((a, b) => a.x - b.x);
-  ck('the aisle band is one sprite per run', runs.length === RUNS,
-     runs.length + ' shelf sprites (was 30 = 6 runs x 5 stacked units)');
+  const cols = columnsOf(w);
+  ck('the aisle band is ' + BAYS_PER_RUN + ' bays per run',
+     cols.length === RUNS && cols.every(c => c.length === BAYS_PER_RUN),
+     cols.length + ' runs of [' + cols.map(c => c.length).join(',') + '] bays');
 
-  const seq = runs.map(r => r.art);
-  ck('every run carries one of the five run sprites',
+  /* ⚠️ THE GUARD THAT MATTERS IS CONTINUITY, NOT SPRITE COUNT. These runs were consolidated INTO
+     one sprite once because a stacked run had drifted into a DOTTED LINE OF FLOATING UNITS -- the
+     ART_W-is-in-scaled-pixels trap, which every test passed and only a screenshot caught. Counting
+     sprites was a proxy for "the run is solid"; now that stacking is deliberate, assert the real
+     thing: consecutive bays must butt, within a pixel. */
+  const sc0 = w.g.layout.S;
+  const gaps = [];
+  cols.forEach((col, i) => {
+    for (let b = 1; b < col.length; b++) {
+      const step = (col[b].y - col[b - 1].y) / sc0;
+      const bayH = (w.g.layout.ART_W[col[b].art] / sc0) * 220 / 198;
+      if (Math.abs(step - bayH) > 1.5) gaps.push('run' + i + ' join' + b + ' step ' + step.toFixed(1) + ' vs bay ' + bayH.toFixed(1));
+    }
+  });
+  ck('  ^ and the bays BUTT — no gap, no overlap, no dotted line of floating units',
+     gaps.length === 0, gaps.length ? gaps.join('; ') : 'every join within a pixel');
+
+  const seq = cols.map(c => c[0].art);
+  ck('every run carries one of the five bay sprites',
      seq.length === RUNS && seq.every(a => ART.indexOf(a) >= 0), seq.join(', '));
+
+  /* and a run is ONE variant top to bottom -- a column that changes product halfway is not an aisle */
+  const mixed = cols.filter(c => new Set(c.map(x => x.art)).size !== 1);
+  ck('  ^ and a run does not change product halfway down', mixed.length === 0,
+     mixed.length ? mixed.length + ' mixed columns' : 'each run is one variant');
 
   let clash = [];
   for (let i = 0; i < seq.length - 1; i++) if (seq[i] === seq[i + 1]) clash.push(i + '/' + (i + 1) + '=' + seq[i]);
@@ -117,11 +156,11 @@ const runBlockers = (w) => {
    side — which is why the asset is never flipped rather than merely "not flipped yet". */
 {
   const w = mk('grocery'), g = w.g, L = g.layout, sc = L.S, A = v => Math.round(v / sc);
-  const runs = L.containers.filter(c => c.label === 'Shelf').sort((a, b) => a.x - b.x);
+  const runXs = [...new Set(L.containers.filter(c => c.label === 'Shelf').map(c => Math.round(c.x)))];
   const caps = L.containers.filter(c => c.label === 'Endcap run').sort((a, b) => a.x - b.x);
 
-  ck('every run has exactly one south cap', caps.length === RUNS && runs.length === RUNS,
-     runs.length + ' runs, ' + caps.length + ' caps');
+  ck('every run has exactly one south cap', caps.length === RUNS && runXs.length === RUNS,
+     runXs.length + ' runs, ' + caps.length + ' caps');
   ck('  ^ and every cap uses the endcap sprite',
      caps.length > 0 && caps.every(c => c.art === 'endcap'),
      [...new Set(caps.map(c => c.art))].join(', '));
@@ -136,10 +175,19 @@ const runBlockers = (w) => {
      ⚠️ measured off the REAL png aspect — the harness reads it from the file header now. */
   const drawn = (art) => { const im = g.ART[art], wS = L.ART_W[art];
     return { wA: wS / sc, hA: Math.round(im.naturalHeight * wS / im.naturalWidth) / sc }; };
-  const R = drawn('shelf_run_a'), C = drawn('endcap');
+  const R = drawn('shelf_bay_a'), C = drawn('endcap');
   ck('a cap is exactly as wide as a run, so they cannot be out of step',
      Math.abs(R.wA - C.wA) < 0.01, R.wA.toFixed(1) + ' vs ' + C.wA.toFixed(1) + ' authored');
 
+  /* @W@ THE CAP BUTTS THE LAST BAY, NOT "THE RUN". A run is a column of bays now, so the sprite
+     the cap has to meet is the BOTTOM one -- taking the first, or a whole-run rect, would measure a
+     join that is not the one on screen. */
+  const lastBay = {};
+  L.containers.filter(c => c.label === 'Shelf').forEach(c => {
+    const k = Math.round(c.x);
+    if (!lastBay[k] || c.y > lastBay[k].y) lastBay[k] = c;
+  });
+  const runs = Object.keys(lastBay).sort((a, b) => a - b).map(k => lastBay[k]);
   const joins = [], offsets = [];
   for (let i = 0; i < runs.length; i++) {
     const r = runs[i], c = caps[i];
