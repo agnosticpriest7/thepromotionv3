@@ -1303,7 +1303,10 @@ let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) 
    where a head-and-torso back view should be nearer 60%. That is why the BOTTOM row of every table
    — the row that faces up — read bigger than the top row and the end chairs. Per-character variance
    means one multiplier cannot be perfect for all; this is a knob, like the rest of them. */
-let SEAT_UP_SCALE   = 0.80;        // shrink the away-facing pose to sit alongside the other three
+let SEAT_UP_SCALE   = 1.00;        // TRIM on the derived away-facing correction (drawSeatedPerson).
+                                   // Was 0.80 to "shrink the back pose"; measured, every character's up
+                                   // pose is 0.90 of its down pose, so that made it 0.72 of everyone
+                                   // else -- in BOTH levels. Still a live knob; 1.00 means no extra trim.
 /* Crew-chair TOP row only: slide the sitter DOWN toward the table. Their seat point is set clear of
    the tabletop so the chair reads right, which leaves the figure floating a touch high. Deliberately
    NOT applied to desk sitters — drawSeated passes no crew flag, so their placement is untouched. */
@@ -1401,7 +1404,23 @@ function drawSeatedPerson(npc,dir,cx,cyGround,chairW,chairH,crew){
   const refH=(refBB&&refBB.h)||bb.h||im.naturalHeight||1;
   let scale=U1(SEAT_PERSON_H)/refH;
   if(dir==='left'||dir==='right')scale*=SEAT_SIDE_SCALE;         // the profile pose is narrower — bump it so it doesn't read small
-  else if(dir==='up')scale*=SEAT_UP_SCALE;                      // the back pose is drawn large in source — bring it back in line
+  else if(dir==='up'){
+    /* ⚠️ THE COMMENT HERE SAID "the back pose is drawn large in source". IT IS NOT, AND NEVER
+       WAS. Measured across every seated character in the game -- Sterling, Dana, Wren, Priya,
+       Anjali, Bruno, the player Intern -- the up pose's content is 0.897 to 0.901 of the down
+       pose's. It is drawn SMALLER. So a 0.80 multiplier on top rendered the away-facing sitters
+       at 0.72 of everyone else: 42 drawn px against 59 at the same table, which is the bottom
+       row of Kyle's break-room screenshot looking like children.
+       Derived now, not assumed. The whole point of scaling every facing off the character's own
+       DOWN pose is that they render at a consistent size; asking the art how tall its up pose
+       actually is finishes that job and cannot go stale when new art arrives with different
+       proportions -- which is exactly how this constant became wrong. */
+    const upH=(bb&&bb.h)||im.naturalHeight, dnH=(refBB&&refBB.h)||upH;
+    /* SEAT_UP_SCALE survives as a TRIM on top of the derivation rather than as the whole of it,
+       so the knob HANDOFF-8 documents still works -- it is 1.00 because the derived value is
+       already right, not because the knob was removed. */
+    if(upH>0&&isFinite(dnH))scale*=(dnH/upH)*SEAT_UP_SCALE;
+  }
   const drawW=(im.naturalWidth||1)*scale, drawH=(im.naturalHeight||1)*scale;
   const bbCx=bb.x+(bb.w||im.naturalWidth)/2, bbBot=bb.y+(bb.h||im.naturalHeight);  // anchor by the figure's content box
   // side poses: nudge the sitter FORWARD (toward their facing) so they sit at the front of the seat,
@@ -5073,7 +5092,7 @@ const GROCERY_TASKS={
      now, where they belong, and reach a grocery clerk exactly once. */
   0:[ /* BAGGER — store-wide work; the department half comes from GROCERY_DEPT_TASKS */
     {via:'printer',label:'Run the go-backs to the floor'},
-    {via:'printer',label:'Break down the cardboard in receiving'},
+    {via:'supply', label:'Break down the cardboard in receiving'},
     {via:'supply', label:'Restock the shelves from the back'},
     /* the shared pool kept a `water` job when "Check the date codes in your aisle" lived here.
        That one is GROCERY's now, correctly — but moving it left the Water station with nothing
@@ -5146,36 +5165,36 @@ const GROCERY_TASKS={
 const GROCERY_DEPT_TASKS={
   front:[
     {via:'lane',   label:'Bag the orders at your lane'},
-    {via:'printer',label:'Bring the carts in from the lot'},
+    {via:'carts',  label:'Bring the carts in from the lot'},
     /* `desk`, NOT `board`. The department board is dual-purpose in the office and belongs to the
        MEETING phase while one is running — its menu offers only "take meeting notes" then, so a
        board-bound task rolled before a huddle cannot be completed until the huddle ends.
        t_grocery_tasks caught it: "no task item in menu". A price check happens at your own till
        anyway, which is a better fiction and completable in every phase. */
-    {via:'desk',   label:'Run a price check for a lane'},
-    {via:'printer',label:'Clear the go-backs off the belt'},
+    {via:'lane',   label:'Run a price check for a lane'},
+    {via:'lane',   label:'Clear the go-backs off the belt'},
   ],
   grocery:[
     {via:'section',label:'Face the shelves in your aisle'},
     {via:'section',label:'Check the date codes in your aisle'},
-    {via:'supply', label:'Work the pallet down in your aisle'},
+    {via:'section',label:'Work the pallet down in your aisle'},
     {via:'section',label:'Zone your section before close'},
   ],
   produce:[
     {via:'section',label:'Cull the wilted stock off the racks'},
-    {via:'water',  label:'Mist the greens'},
+    {via:'section',label:'Mist the greens'},
     {via:'section',label:'Rotate the berries to the front'},
-    {via:'desk',   label:'Build the display on the wall'},
+    {via:'section',label:'Build the display on the wall'},
   ],
   deli:[
     {via:'section',label:'Rotate the case before open'},
-    {via:'supply', label:'Break down and wipe the slicer'},
-    {via:'desk',   label:'Take the counter for a stretch'},
+    {via:'section',label:'Break down and wipe the slicer'},
+    {via:'section',label:'Take the counter for a stretch'},
     {via:'section',label:'Pull the short-dated trays'},
   ],
   bakery:[
-    {via:'desk',   label:'Pull the racks when the timer goes'},
-    {via:'printer',label:"Mark down yesterday's bread"},
+    {via:'section',label:'Pull the racks when the timer goes'},
+    {via:'section',label:"Mark down yesterday's bread"},
     {via:'section',label:"Face the bakery case"},
     {via:'supply', label:'Set the morning proof'},
   ],
@@ -6112,6 +6131,27 @@ function addTask(t){
   if(task.target)task.label=task.label.replace('{name}',task.target.split(' ')[0]);
   tasks.push(task);renderTasks();
 }
+/* ⚠️ THE STORE WAS DOING ITS JOBS AT THE OFFICE'S FURNITURE. Every store task had to pick one
+   of the office's trigger types -- desk, printer, supply, water -- because those were the only
+   destinations that existed, and the results read as nonsense on the floor: breaking down cardboard
+   "in receiving" happened at the go-back cart by the front doors, misting the greens happened at
+   the BREAK ROOM water cooler, taking the deli counter happened at your locker. Kyle played it and
+   said so: "why am I breaking down boxes in shipping, from my lockers at the front end?"
+   A fixture via names a real thing on the shop floor. The table is the whole mechanism: a via
+   listed here finds the nearest container whose label matches, and that container offers the work.
+   Departments already had `section` for shelf work; this is the same idea for the singular
+   fixtures that are not shelves. */
+const FIXTURE_VIA={ carts:/^Trolley/i };
+function nearestFixture(via){
+  const re=FIXTURE_VIA[via]; if(!re)return null;
+  let best=null,bd=Infinity;
+  for(const c of CONTAINERS){
+    if(c.section||!re.test(c.label||''))continue;
+    const p={x:c.x+c.w/2,y:c.y+c.h/2}, d=cdist(player,p);
+    if(d<bd){bd=d;best=p;}
+  }
+  return best;
+}
 /* the bagging end of whichever lane you are nearest -- a store has several and any of them is
    "your lane" for a bagger who has not been given one. */
 function nearestLane(){
@@ -6640,11 +6680,21 @@ function buildOptions(t){
        "BROKEN: lane" within a minute, which is exactly the hollow-route failure CLAUDE.md 14
        describes: a via that points somewhere real and completes nowhere. The checkstand is a
        container like any other, so it offers the work the same way a shelf section does. */
+    /* the lane keeps its own entry because a checkstand is where SEVERAL front-end jobs land */
     if(/Checkstand/i.test(c.label||'')){
       const lt=openTask('lane');
       if(lt) return {title:c.label,items:[
         {label:lt.label+' (task)',risk:'good',
-         act:()=>startAct(4,'Bagging the orders',()=>completeTask(lt))},
+         act:()=>startAct(4,'On the lane',()=>completeTask(lt))},
+        {label:'Leave it',act:()=>{}}]};
+    }
+    /* and every other named fixture offers its own via, from the one table */
+    for(const fv in FIXTURE_VIA){
+      if(!FIXTURE_VIA[fv].test(c.label||''))continue;
+      const ft=openTask(fv);
+      if(ft) return {title:c.label,items:[
+        {label:ft.label+' (task)',risk:'good',
+         act:()=>startAct(4,'Working',()=>completeTask(ft))},
         {label:'Leave it',act:()=>{}}]};
     }
     let its=[];
@@ -11059,6 +11109,7 @@ function objectiveTarget(){
   switch(t.via){
     case 'desk': p=myDesk?center(myDesk):null; txt='your desk'; break;
     case 'lane': p=nearestLane(); txt='your lane'; break;
+    case 'carts': p=nearestFixture('carts'); txt='the trolley bay'; break;
     case 'printer': p=objOf('printer'); txt='the printer'; break;
     case 'supply': p=objOf('supply'); txt='the supply station'; break;
     case 'water': p=objOf('water'); txt='the water cooler'; break;
@@ -12981,11 +13032,15 @@ function loadLevel(id){
      with the break between the dairy run and the deli run, so the doors open onto floor. */
   const BOH_ROOMS=[['WALK-IN COOLER',16,289,'#5f8fa8'],['STORE MANAGER',411,125,'#3b6ea5'],
                    ['OWNER',544,125,'#c0392b'],['ASSISTANT MANAGER',775,125,'#3b6ea5'],
-                   ['BREAK ROOM',908,192,'#4a8c5a'],['STAFF WC',1108,100,'#7c7768']];
-  /* ⚠️ NO SEPARATE STAFF WC. It was a 78-wide room whose only cost was RECEIVING's width, and
-     receiving at 128 could not hold two pallets, two desks and a baler without its own furniture
-     sealing it: the grid showed a solid block where the room was. The toilet lives off the break
-     room, which is where it is in every shop, and receiving gets the 206 it needs. */
+                   ['BREAK ROOM',908,300,'#4a8c5a']];
+  /* ⚠️ THE STAFF WC IS GONE AND THE BREAK ROOM HAS ITS SPACE (Kyle, 2026-09-06). It was a 100-wide
+     room containing one toilet, and it cost the break room the width it needed: eight seats for
+     twelve crew, so four people spent every break standing about outside a full room. The break
+     room is 300 wide now and seats two tables. Staff use the public washroom, which is what happens
+     in most shops anyway.
+     The room list is the single source for all three of the doors, the partitions and the zones --
+     dropping an entry removes its doorway and its dividing wall with it, which is why this is one
+     edit and not three. */
   /* the corridor's south wall: a 60-unit door to each room, and the spur left wide open */
   {
     const stops=[];
@@ -13391,7 +13446,6 @@ function loadLevel(id){
     /* ⚠️ THE WASHROOMS USE THE OFFICE'S OWN FITTINGS -- toilet, urinal, sink and mirror have
        been in the sprite table since the office had restrooms, so a washroom here is a placement
        job rather than an art job. STAFF WC had a name and nothing in it. */
-    {type:'toilet', x:1130,y:120,w:26,h:30,label:'Toilet (Staff)',rigged:false},
     {type:'toilet', x:960,y:790,w:26,h:30,label:'Toilet (M)',rigged:false},
     {type:'toilet', x:1040,y:790,w:26,h:30,label:'Toilet (W)',rigged:false},
     {type:'board',  x:1250,y:240,w:40,h:26,label:'Department board'});
@@ -13500,7 +13554,6 @@ function loadLevel(id){
                   {x:800, y:196, w:30,h:24,label:'Assistant manager desk',kind:'cabinet',art:'manager_desk'},
                   /* the break room, and the cash office down beside the tills */
                   {x:925, y:196, w:30,h:24,label:'Staff lockers',    kind:'locker'},
-                  {x:1170, y:190, w:30,h:24,label:'Staff basin',   kind:'cabinet',art:'sink'},
                   {x:1130, y:860, w:30,h:24,label:'Basin',         kind:'cabinet',art:'sink'},
                   {x:40,  y:800, w:30,h:24,label:'Cash office counter',kind:'cabinet',art:'manager_desk'});
   /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
@@ -13518,20 +13571,30 @@ function loadLevel(id){
        seats landed on the room's south wall (the room is y 94..244), so snapTarget pushed two
        of them THROUGH it -- Russ and Garret took their break sitting in the BAKERY, at y=290.
        Centred in the room instead, which leaves a clear row above and below. */
-    const t={x:1010,y:148,w:40,h:33}; levelBoxes.push(t);
+    /* ⚠️ TWO SETS NOW THE ROOM IS WIDE ENOUGH. Twelve crew and eight chairs meant four of them
+       took the standing fallback every single break -- visible on the TV as people loitering
+       against the walls of a room they were supposed to be sitting in. Two eight-seat sets is
+       sixteen, which covers the whole shop with room for the guest hires. Spaced from the room's
+       own edges rather than from each other, so a later resize moves them apart correctly. */
+    const t={x:960,y:148,w:40,h:33}; levelBoxes.push(t);
+    const t2={x:1140,y:148,w:40,h:33}; levelBoxes.push(t2);
     /* ...AND THE SEATS HAVE TO BE AUTHORED HERE, because loadLevel CLEARS breakChairs a few
        hundred lines up — they are the office's chairs and this level empties them like every other
        office array. Registering the emptied array bought nothing: crewSeatRing places
        min(seats, points) and seats was zero. Eight, one per chair the crew set draws. */
     for(let i=0;i<8;i++) breakChairs.push({x:0,y:0,by:null});
-    LEVEL_TABLES.push({t:t,chairs:breakChairs});
+    for(let i=0;i<8;i++) breakChairs2.push({x:0,y:0,by:null});
+    LEVEL_TABLES.push({t:t,chairs:breakChairs},{t:t2,chairs:breakChairs2});
     /* AND THE OFFICE TABLES ARE RE-POINTED AT IT. assignBreakSeats() seats people in breakChairs,
        which this level clears — so everybody takes the STANDING fallback, and that fallback rings
        `breakTable`, an office const nobody re-authored. Measured before this: the whole crew spent
        every break standing in the middle of aisle 5, around a table at authored (900,422) that
        does not exist in this level. Exactly the MUSTER problem: an office coordinate that was
        harmless only for as long as there was nobody to route. */
-    Object.assign(breakTable,t); Object.assign(breakTable2,t); Object.assign(kitchenTable,t);
+    /* ⚠️ breakTable2 gets the SECOND table now there is one. assignBreakSeats deals attendees
+       alternately into the two rooms/tables, so pointing both office consts at the same box put
+       everyone who overflowed into one spot. */
+    Object.assign(breakTable,t); Object.assign(breakTable2,t2); Object.assign(kitchenTable,t);
   }
   /* ---- THE FIRST CREW. Six people, Front End and Grocery only. -----------------------------
      A STATION IS A DESK THAT ISN'T DRAWN. That is the whole mechanism, and it was the question
@@ -13734,7 +13797,18 @@ function loadLevel(id){
      09:00 would be held in front of customers, and the wing's corridor is only 44 units deep,
      which the standing ring would spill straight out of. RECEIVING is the widest open floor
      behind the swing doors and is where a real shop holds its morning huddle. ---------------- */
-  MEETING_SPOT={x:975, y:150};
+  /* ⚠️ AND FOR ALL THAT, THE COORDINATE WAS IN THE BREAK ROOM. The paragraph above says
+     RECEIVING and means it; (975,150) is inside BREAK ROOM, which spans x 908.. -- so the crew
+     held the morning huddle in the room they take their break in, immediately before taking
+     it there. Kyle spotted it from play: "meetings take place right after the break, in the
+     same room as the break. maybe we should have meetings in shipping."
+     t_boh had an assertion for this and it PASSED, because it asked whether the huddle was
+     indoors and off the sales floor -- both true of the break room. A check that cannot tell
+     the two candidate rooms apart was never going to catch the wrong one being chosen; it now
+     names the room it must be in.
+     RECEIVING is authored at 1224,16 260x284. This point is measured clear floor inside it,
+     south of the two pallets at y=150 and west of the baler. */
+  MEETING_SPOT={x:1300, y:230};
   /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
      in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.
