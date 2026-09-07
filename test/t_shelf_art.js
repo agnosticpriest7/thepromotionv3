@@ -47,7 +47,9 @@ const RUNS = 5, VARIANTS = 5, AISLES = RUNS - 1;
 /* ⚠️ AN AISLE IS BUILT FROM BAYS NOW (Kyle's option B, 2026-09-06). A run used to be one
    fixed-length sprite; it is BAYS_PER_RUN stacked tiles, so the floor can choose how long an
    aisle is without also changing how wide it is. SPEC, fixed at authoring time. */
-const BAYS_PER_RUN = 2;
+const BAYS_PER_RUN = 3;   /* two was the option-B cut; Kyle played it and asked for the aisles
+                             back, so this is the whole of that reversal. SPEC: change it here and
+                             in the level together, deliberately. */
 /* ⚠️ 65, NOT 60, AND THE RUNS ARE WHY. grocery-prop-scale sized every store prop from its real
    size at one scale, and a gondola run is 1.3 m -- 55 authored, where it had been 60 because it
    was sized to the space rather than to the fixture. The pitch did not move, so the runs stay

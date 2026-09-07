@@ -896,6 +896,17 @@ const PROP_SQUASH={
   checkstand:0.63, checkstand_r:0.63,   // 2.4 m of pure floor -> the full correction
   pallet:0.75,         // a stack has some height to it, so it needs less than the floor figure
   goback_cart:0.85,    // small and half-elevation; barely needs any
+  /* ⚠️ KYLE'S THIRD TV PASS. These are all honestly sized in metres and all read too big, which is
+     the two-scales problem showing up wherever a fixture is more than a couple of metres across: the
+     floor is drawn at 42.2 authored per metre and a person at about 26.5, so anything sized against
+     the floor towers over the people using it. "the carrots are almost as tall as the player";
+     "deli and bakery counters are pretty huge also".
+     DECLARED HERE RATHER THAN FUDGED INTO THE METRES. Writing deli_case:M(3.2) would have got the
+     same pixels and quietly made the asset a lie about its own size -- and t_props caught exactly
+     that, which is what it is for: "the compression is DATA the test reads rather than an exception
+     the test is taught to ignore". The metres stay true; the squash says what was done to them. */
+  deli_case:0.75, bakery_case:0.75,
+  produce_fruit_a:0.75, produce_fruit_b:0.75, produce_veg:0.75, produce_mixed:0.75,
 };
 /* the optional art name applies that prop's compression. Omit it and you get true plan scale,
    which is what every fixture the floor was packed around still uses. */
@@ -949,7 +960,7 @@ const ART_W={
      exactly half a run in the source (262 of 524), so half the width. */
   freezer_run_a:99, freezer_run_b:99, freezer_wall:50,
   /* a third smaller, both of them, on Kyle's eye: 216 -> 144 and 144 -> 96 */
-  trolley_bay:144, magazine_rack:216, pallet_display:96,
+  trolley_bay:110, magazine_rack:150, pallet_display:96,
   vending_machine:64, fridge:72, lockers:80, supply_shelf:61, whiteboard:82,   // fridge matches the counter run it caps (sole user is the kitchen fridge); 85 -> 72 with the run's 15% cut
   plant:34, couch:110, toilet:34, urinal:26, sink:34, stall_h:70, stall_v:26,
   /* ⚠️ THE ART'S ASPECT IS LOCKED, SO WIDTH CHOOSES LENGTH TOO. Every sprite draws at
@@ -969,11 +980,21 @@ const ART_W={
      per-unit figure was. Deli and bakery share a SCALE, not a width (sources 2044x623 and
      2079x623), which leaves their depths 1 authored apart, under the format's quantisation floor.
      180 also divides both runs exactly: bakery 360 = 2, deli 540 = 3. */
-  deli_case:M(4.27), bakery_case:M(4.27),
+  /* ⚠️ 4.27 m IS A REAL DELI COUNTER AND STILL READS HUGE, for the same reason the produce
+     tables did: sized in metres against a floor drawn 2.6x larger than the people on it. Kyle:
+     "deli and bakery counters are pretty huge also". Judged against the character. */
+  deli_case:M(4.27,'deli_case'), bakery_case:M(4.27,'bakery_case'),
   dairy_case:M(2.5),                                    // 2.5 m of chilled wall
   /* a produce table is 1.8 m -- these were 1.45 m, sized to the gap between the wet wall and the
      aisle band rather than to a table. */
-  produce_fruit_a:M(1.8), produce_fruit_b:M(1.8), produce_veg:M(1.8), produce_mixed:M(1.8),
+  /* ⚠️ 1.8 m IS THE RIGHT WIDTH AND THE WRONG SIZE. A produce table really is 1.8 m across and
+     1.35 deep, so at true plan scale these were correct -- and Kyle played them: "the carrots are
+     almost as tall as the player". They are, because a person is drawn about 2.6x smaller than the
+     floor they stand on, so anything sized honestly in metres towers. Sized against the CHARACTER
+     here rather than against the floor, which is the same judgement PROP_SQUASH exists to record
+     -- see the two-scales note in CLAUDE.md 14. */
+  produce_fruit_a:M(1.8,'produce_fruit_a'), produce_fruit_b:M(1.8,'produce_fruit_b'),
+  produce_veg:M(1.8,'produce_veg'), produce_mixed:M(1.8,'produce_mixed'),
   /* THE TWO KYLE CALLED OUT. A pallet is 1.2 m and a baler 1.5 m; they were 0.92 m and 0.92 m,
      which is why the baler read as a toy next to a checkout lane. */
   pallet:M(1.2,'pallet'), baler:M(1.5,'baler'),
@@ -1326,10 +1347,16 @@ let SEAT_UP_EXTRA   = 0.10;        // small EXTRA lift for the away-facing (up) 
    where a head-and-torso back view should be nearer 60%. That is why the BOTTOM row of every table
    — the row that faces up — read bigger than the top row and the end chairs. Per-character variance
    means one multiplier cannot be perfect for all; this is a knob, like the rest of them. */
-let SEAT_UP_SCALE   = 1.00;        // TRIM on the derived away-facing correction (drawSeatedPerson).
-                                   // Was 0.80 to "shrink the back pose"; measured, every character's up
-                                   // pose is 0.90 of its down pose, so that made it 0.72 of everyone
-                                   // else -- in BOTH levels. Still a live knob; 1.00 means no extra trim.
+/* ⚠️ THIS NUMBER IS NOW LITERALLY "HOW TALL AN AWAY-FACING SITTER READS AGAINST A FRONT-FACING
+   ONE", which is worth saying because it did not used to mean anything so simple. The draw derives
+   the up pose's correction from the art (dnH/upH), and that derivation cancels the pose's own
+   content height -- so whatever is left multiplying it IS the ratio between the two, exactly.
+   0.80 rendered them at 0.72 and Kyle said they looked like children. 1.00 rendered them at parity
+   and he said "scaled way too big" -- and he is right, because matching TOTAL content height is the
+   wrong target: a front-facing sitter's content includes legs and feet, an away-facing one's is head
+   and back down to the seat, so equal totals make the visible half of the back pose too large.
+   0.88 sits between the two and matches the heads rather than the boxes. */
+let SEAT_UP_SCALE   = 0.88;
 /* Crew-chair TOP row only: slide the sitter DOWN toward the table. Their seat point is set clear of
    the tabletop so the chair reads right, which leaves the figure floating a touch high. Deliberately
    NOT applied to desk sitters — drawSeated passes no crew flag, so their placement is untouched. */
@@ -3315,6 +3342,8 @@ const BEAT_OFFICE = {store:'STORE MANAGER', am:'ASSISTANT MANAGER', owner:'OWNER
    else, and before this nothing ever went in -- the tills were counted by nobody. The assistant
    manager is deliberately NOT on this list; it is one entry to add if he should be. */
 const BEAT_EXTRA = {store:['CASH OFFICE'], owner:['CASH OFFICE']};
+/* minutes held at each post, by rung: an owner strolls, a department manager gets on with it */
+const BEAT_DWELL = {owner:[10, 22], store:[7, 15], am:[5, 12], manager:[4, 11]};
 function buildBeat(n){
   const want = [];
   if(BEAT_OFFICE[n.storeRole]){ BEAT_FLOOR.forEach(z=>want.push(z)); want.push(BEAT_OFFICE[n.storeRole]);
@@ -3417,7 +3446,12 @@ function npcTarget(n){
           if(score > bestScore){ bestScore = score; best = k; }
         }
         n.beatIdx = Math.max(0, Math.min(best, n.beat.length - 1));
-        n.beatUntil = clock + rand(4, 11);        // a few minutes at each post
+        /* ⚠️ HOW LONG YOU LINGER IS A PROPERTY OF YOUR RUNG. One dwell for everybody had the
+           OWNER crossing the shop as often as a department manager, which reads as a man with
+           somewhere to be rather than one who owns the place -- Kyle: "The store owner needs to
+           patrol a little slower." Higher up the ladder, longer at each post. */
+        const dw = BEAT_DWELL[n.storeRole] || [4, 11];
+        n.beatUntil = clock + rand(dw[0], dw[1]);
       }
       const b = n.beat[n.beatIdx];
       if(b) return snapTarget(b.x, b.y);
@@ -5186,9 +5220,16 @@ const GROCERY_TASKS={
      which is the exact thing this branch is not allowed to do. They live in GROCERY_DEPT_TASKS
      now, where they belong, and reach a grocery clerk exactly once. */
   0:[ /* BAGGER — store-wide work; the department half comes from GROCERY_DEPT_TASKS */
+    /* ⚠️ A BAGGER'S DAY IS THE FRONT OF THE SHOP. This rung sent them to RECEIVING for the
+       cardboard and to the BACK for stock -- the length of the building away from the lanes they
+       are meant to be working, and on a floor that just got its aisles back to full length that is
+       a long walk twice a shift. Kyle: "bagger tasks should be focused on the bottom half of the
+       store, otherwise the player has to run way too far."
+       The receiving job is not deleted, it is DEMOTED TO ITS OWN RUNG: DEPARTMENT CLERK already
+       carries it, and that is the rung with reason to be back there. */
     {via:'printer',label:'Run the go-backs to the floor'},
-    {via:'supply', label:'Break down the cardboard in receiving'},
-    {via:'supply', label:'Restock the shelves from the back'},
+    {via:'lane',   label:'Wipe the belts down before the rush'},
+    {via:'carts',  label:'Straighten the trolleys in the bay'},
     /* the shared pool kept a `water` job when "Check the date codes in your aisle" lived here.
        That one is GROCERY's now, correctly — but moving it left the Water station with nothing
        pointing at it for four of the five departments, and t_grocery_tasks caught the store
@@ -13319,7 +13360,16 @@ function loadLevel(id){
      aisle to roughly 4 character heights. This is the ONE number to turn if the shop still
      reads too big -- or too empty. */
   const BAY_H=Math.round(SHELF_W*220/198);                 // one bay, from the bay's own aspect
-  const BAYS_PER_RUN=2;
+  /* ⚠️ BACK UP TO THREE. Two bays was the option-B cut and Kyle played it: "the aisles were cut
+     way too short. they should be about 20 to 30% longer maybe?" A bay is 61 authored and cannot be
+     split, so the choice is 165 (two + cap) or 226 (three + cap) -- there is no 206. Three it is,
+     which is +37% rather than the +25% asked for, and worth saying out loud rather than pretending
+     the number landed where he asked.
+     It also mostly undoes option B, and that is the honest read: shortening an aisle was never
+     going to fix "the props feel big", because the props are not big -- a person is drawn 2.6x
+     smaller than the floor they stand on (CLAUDE.md 14). A stubby shop bought a little of that back
+     and cost more than it bought. */
+  const BAYS_PER_RUN=3;
   const RUN_H=BAY_H*BAYS_PER_RUN;
   /* the cap is 386 of the run's own 1650, so it is derived from the same scale the run is drawn at
      and the two cannot drift apart. 47 authored. Run 199 + cap 47 = 246, which lands the block's
@@ -13344,7 +13394,15 @@ function loadLevel(id){
   const BLOCK_H=RUN_H+CAP_H;
   const freezer=(x0,w,art,label,flip)=>{
     const src=ART_SRC[art], bayH=Math.round(w*src[1]/src[0]);
-    const bays=Math.max(1,Math.round(BLOCK_H/bayH)), h=bays*bayH;
+    /* ⚠️ FLOOR, NOT ROUND -- A FREEZER MUST NEVER OUTGROW THE GROCERY BLOCK. Rounding to the
+       NEAREST bay count let the frozen run exceed BLOCK_H and poke out of the top of the aisle
+       band: at three bays per grocery run it took six freezer bays (234 against 226) and stood 8
+       units proud. Nothing looked wrong, but t_sightlines DERIVES the cross-aisle from the
+       topmost tall blocker, so the store's one guaranteed clear run was recomputed 5 units north
+       into the service counters and its own anchor said 'BLOCKED, this test would prove nothing'.
+       Flooring keeps the frozen aisle inside the band; it is a little shorter than the grocery
+       runs, which is true of most shops anyway. */
+    const bays=Math.max(1,Math.floor(BLOCK_H/bayH)), h=bays*bayH;
     const top=RUN_TOP_Y+BLOCK_H-h, cx=x0+w/2;
     for(let b=0;b<bays;b++){
       const bayBottom=top+(b+1)*bayH;
@@ -13380,8 +13438,16 @@ function loadLevel(id){
      these draw UPWARD from the y they are given, so at 960 they stood over the shop's own name.
      The doors are the gap at x 560..680, so everything here stays east of 700 and out of the way
      of anyone walking in. */
-  floorProp(700, 976, 'magazine_rack',  'Magazines and sweets');
-  floorProp(864, 980, 'trolley_bay',    'Trolley bay');
+  /* ⚠️ THE TROLLEYS TAKE THE RACK'S SPOT, AND THE RACK GOES TO THE TILLS. Kyle: "magazine rack
+     in the entrance? I dunno about that. the trolley bay could be a little smaller, and maybe go
+     where the entrance magazine rack was". Trolleys by the doors is right and the rack was only
+     ever here because the front end could not take it -- see the two reasons above, both of which
+     still hold: it must not stand in the PUBLIC WC's doorway (the 60-unit gap at x 900, y 800..860)
+     and it must not become cover on a floor t_sightlines asserts you can be seen crossing.
+     So it goes against the south wall WEST of the tills, where magazines actually live in a shop --
+     clear of that doorway by 200 and off the crossing between the doors and the shop floor. */
+  floorProp(700, 976, 'trolley_bay',    'Trolley bay');
+  floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor
      between the deli counter and the bakery, which the sweep counted as 12 bare points and a
      shopper walks straight past. Clear of the spur mouth at 677..767 and of the case, which
@@ -13710,8 +13776,14 @@ function loadLevel(id){
        against the walls of a room they were supposed to be sitting in. Two eight-seat sets is
        sixteen, which covers the whole shop with room for the guest hires. Spaced from the room's
        own edges rather than from each other, so a later resize moves them apart correctly. */
-    const t={x:960,y:148,w:40,h:33}; levelBoxes.push(t);
-    const t2={x:1140,y:148,w:40,h:33}; levelBoxes.push(t2);
+    /* ⚠️ PLACED FROM THE ROOM, NOT FROM EACH OTHER. Hand-picked at 960 and 1140 the eastern set
+       ran to 1213 against a wall at 1208 -- Kyle: "the new right table is too close to the wall".
+       A crew set spans about 105 authored around its table, so each set's CENTRE needs ~53 of
+       clearance; at 0.28 and 0.72 of a 300-wide room they land 939..1177 with room either side, and
+       a later resize of the room carries them. */
+    const BR_X=908, BR_W=300, TW=40;
+    const t ={x:Math.round(BR_X+BR_W*0.28-TW/2), y:148, w:TW, h:33}; levelBoxes.push(t);
+    const t2={x:Math.round(BR_X+BR_W*0.72-TW/2), y:148, w:TW, h:33}; levelBoxes.push(t2);
     /* ...AND THE SEATS HAVE TO BE AUTHORED HERE, because loadLevel CLEARS breakChairs a few
        hundred lines up — they are the office's chairs and this level empties them like every other
        office array. Registering the emptied array bought nothing: crewSeatRing places

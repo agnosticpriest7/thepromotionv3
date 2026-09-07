@@ -113,10 +113,31 @@ const OFFICE_NOUNS = /\b(TPS|binder|binders|printer|photocop|cubicle|CRM|cold-ca
      What still matters is the claim underneath it — THE STORE INVENTED NO NEW MACHINERY. Its
      triggers must all be triggers the office already had, and a shift must still roll the same
      number of tasks. Those hold; pool size no longer does, on purpose. */
+  /* ⚠️ THE STORE HAS ITS OWN TRIGGERS NOW, DELIBERATELY, AND THIS GUARD WAS ONLY HALF LOOKING.
+     Kyle played the store and the core of "very inconsistent" was that its jobs ran through the
+     OFFICE's trigger types because those were the only destinations that existed: breaking down
+     cardboard "in receiving" happened at the go-back cart by the front doors, misting the greens
+     happened at the break-room water cooler. Fixing that meant giving the store destinations of its
+     own, which is new machinery on purpose.
+     And this assertion had been passing partly by luck: taskPoolVias() returns the RANK pool only,
+     so `section` -- which the store has had for weeks -- was never checked, because it lives in the
+     department pools. It went red the moment two of the new vias were promoted into rank 0. So the
+     store's own triggers are DECLARED here, and the department pools are checked too: a genuinely
+     undeclared trigger still trips it, which is the thing worth keeping. */
+  const STORE_OWN = {
+    section: 1,   // shelf/case work, completed at a fixture of your own department
+    lane:    1,   // the bagging end of a checkout
+    carts:   1,   // the trolley bay
+  };
   const KINDS = {};
   for (let r = 0; r <= 6; r++) (OS.taskPoolVias(r) || []).forEach(v => { KINDS[v] = 1; });
   const invented = [];
-  for (let r = 0; r <= 5; r++) (GS.taskPoolVias(r) || []).forEach(v => { if (!KINDS[v]) invented.push('rank' + r + ':' + v); });
+  for (let r = 0; r <= 5; r++) (GS.taskPoolVias(r) || []).forEach(v => { if (!KINDS[v] && !STORE_OWN[v]) invented.push('rank' + r + ':' + v); });
+  /* the department lists too -- this is where the store's own vias actually live */
+  const dept = (GS.vocab && GS.vocab().deptTasks) || {};
+  Object.keys(dept).forEach(d => (dept[d] || []).forEach(t => {
+    if (!KINDS[t.via] && !STORE_OWN[t.via]) invented.push(d + ':' + t.via);
+  }));
   ck('the store uses only trigger kinds the office already had', invented.length === 0,
      invented.length ? invented.join(', ') : 'kinds in play: ' + Object.keys(KINDS).join(', '));
 
