@@ -1071,3 +1071,77 @@ as bare hardstanding indoors (obvious) instead of shop floor (plausible).
 
 The flecked `floor_vct` (the plain white), `floor_asphalt` for outside, and the semi backed onto the
 dock. Concrete is standing in outside until the asphalt lands.
+
+---
+
+## T — the tour, the huddle, the yard, and Codex's props
+
+### The intro tour
+
+Three separate things were wrong with it and all three are fixed.
+
+**It didn't end.** The store fires seven beats; the end condition was still counting the office's
+eleven, so it could never be satisfied. The tour ran until a 100-second emergency bail — seven beats
+played out by 53 seconds and Lorne then stood at the tills saying nothing for another 47. It's 56
+seconds now and it ends on his last line.
+
+**It walked through a wall.** Leaving receiving, the route cut west straight through the west wall.
+The generator had a check for exactly this and the check was broken — it was calling the collision
+function with the wrong arguments, so "is this walkable?" answered *yes* for solid wall everywhere
+in the building. It leaves through the doorway now.
+
+**They no longer sprint** and the guide is visible from the first frame.
+
+**What to look at:** start a new store game and let the tour run to the end without skipping. It
+should walk Shipping → past the offices → down the corridor → deli → bakery → produce → the tills,
+and **stop when Lorne stops talking**. Nobody should clip a wall or a shelf on the way.
+
+### The morning huddle
+
+Half the crew stood out in the corridor for it. You guessed the pallets and the compactor were in
+the way — they weren't. The room is 77% clear floor and there were 243 places to stand within a
+few steps of the huddle for twelve people. The problem was the huddle's *spot*: it was hand-typed
+near the room's south-west corner, and people arrange themselves in rings up to 78 units out, so the
+outer ring landed outside the room on two sides and pushed those people into the corridor.
+
+It's the room's centre now, worked out from the room itself rather than typed in. **No furniture
+moved** — the pallets and the baler are where they were.
+
+Measured: 7 of 12 in the room before, **12 of 12** after.
+
+**What to look at:** stand in receiving at 9am and count. Everyone should be in there with you.
+
+### The yard
+
+You could walk out into it — 708 units of outdoor scenery, fully reachable through the gap in the
+dock wall. The roller door is shut now. The truck, the asphalt and the yard are all still visible
+past the dock; you just can't wander out there.
+
+### Codex's new props
+
+All in and checked in the browser: **deli and bakery back walls** (the equipment runs above each
+counter — this is what you asked for above deli and bakery), **wall shelving** along receiving's
+north wall, a **counter and noticeboard** in the break room, and the **semi backed onto the dock** —
+whole vehicle, trailer against the dock, cab pointing down the yard.
+
+**What to look at:** the deli and bakery should read as *departments* now rather than a case sitting
+in an empty field. And walk to the dock and look at the truck.
+
+### One thing the gate caught that play wouldn't have
+
+The deli and bakery back walls went in 33 units too far south the first time. They looked fine — but
+their collision box landed exactly where the deli and bakery managers stand, which shoved both of
+them out of their own departments. `roomAt()` then answered NONE for the two people whose entire job
+is being findable in their department, and five tests went red on that one placement: managers not in
+their department, no work to do in deli or bakery, service posts on the customer side of the counter,
+stations unstandable, errand pins straying.
+
+They sit against the wall now with the whole staff lane clear in front. Worth a look when you're
+messing with the bakery manager — she should be *in* the bakery.
+
+### Two new tests
+
+The tour bug was invisible to all 38 tests — every one of them checked what the tour *contained*,
+none checked that it *finished*. There are two more now: one that fails if either tour ends on the
+safety net or leaves dead air, and one that fails if either route crosses a wall, desk or container.
+Both were proved by breaking the code and watching them go red.

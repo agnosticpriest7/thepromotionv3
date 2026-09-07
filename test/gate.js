@@ -104,6 +104,8 @@ const TESTS = [
 
   't_menu_load.js',
   't_intro_axis.js',      // intro walk is cardinal-only — no diagonal art exists
+  't_intro_end.js',       // ...and the tour ENDS on its own last beat, never on the 100s safety net
+  't_intro_route.js',     // ...and neither tour's route crosses a wall, desk or container
   't_hud_column.js',      // right-hand HUD column: one owner, nothing overlaps, in every phase
   't_fiction.js',         // level vocabulary: store words in the store, office byte-identical
   't_grocery_tasks.js',   // a bagger's day completes through the REAL interaction menu
