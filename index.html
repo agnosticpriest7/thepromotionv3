@@ -947,6 +947,8 @@ const ART_SRC={
      there was supposed to be dairy cooler items". Measured off the files, not off a note. */
   dairy_milk_crates:[60,83], dairy_carton_shipper:[60,43], dairy_empty_crate:[50,49],
   dairy_milk_pallet:[70,72], bakery_tray_rack:[100,168], bakery_back_shelf:[160,79],
+  wc_sink_counter:[200,92], wc_partition_run:[200,33], wc_door_closed:[100,23],
+  wc_door_ajar:[100,36], wc_hand_dryer:[36,44],
   bakery_bread_rack:[140,60],
   shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
@@ -972,8 +974,13 @@ const ART_W={
      The tray rack recomputed to exactly the 50 it already had -- which is the check working: it
      was the one that looked right on the TV. */
   dairy_milk_crates:53, dairy_carton_shipper:76, dairy_empty_crate:46, dairy_milk_pallet:91,
-  wc_sink_counter:100, wc_partition_run:100, wc_door_closed:50, wc_door_ajar:50,
-  wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:18,
+  /* ⚠️ THE WHOLE WASHROOM KIT WAS REGISTERED AND DRAWN NOWHERE -- seven sprites, same as the
+     dairy items. Kyle asked "what about bathroom stalls?" and the answer was that Save-Rite's
+     public washroom was a 300x172 room containing two toilets and one basin borrowed from the
+     office. Sized here at true plan scale from real widths, and listed in t_props' REAL_M so it
+     cannot ship at half size the way the last batch did. */
+  wc_sink_counter:122, wc_partition_run:182, wc_door_closed:46, wc_door_ajar:46,
+  wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:23,
   /* ⚠️ THE TRUCK IS 160 WIDE AND 854 TALL DRAWN -- a whole articulated vehicle seen from above,
      rear north against the dock and cab south down the yard, which is why it is nothing like the
      600x400 its first note proposed. Taking the number from the delivered manifest rather than
@@ -13633,6 +13640,19 @@ function loadLevel(id){
      Clear of the east-west run at y=390 and of the turn south at x=1010, both by a body's width. */
   floorProp(916,  412, 'bakery_bread_rack', 'Bread rack');         /* 76x33 -> 412..445 */
   floorProp(1035, 412, 'bakery_bread_rack', 'Bread rack');         /* -> 412..445 */
+  /* ⚠️ THE PUBLIC WASHROOM, WHICH HAD NOTHING IN IT. Room is x 908..1208, y 748..920 and
+     the only door is the 60-unit gap at x900, y 800..860 on the WEST wall -- so the west strip
+     stays clear, and placement.js now fails outright if this room stops being reachable.
+     These are FRONT-ELEVATION pieces, like the deli and bakery back walls: a bank of stall
+     partitions with its doors, and a hand dryer. They line the north wall, and the two toilet
+     fixtures keep their positions in front of it -- toilets are things the player interacts with,
+     so they do not move to suit decor. */
+  floorProp(930,  765, 'wc_partition_run', 'Stall partitions');   /* 101x17 -> bottom 782 */
+  floorProp(1040, 765, 'wc_partition_run', 'Stall partitions');
+  /* centred under their own bank, so they read as that stall's door rather than a loose bar */
+  floorProp(967,  789, 'wc_door_closed',   'Stall door');         /* 26x6  -> bottom 795 */
+  floorProp(1077, 788, 'wc_door_ajar',     'Stall door');         /* 26x9  -> bottom 797 */
+  floorProp(1165, 774, 'wc_hand_dryer',    'Hand dryer');         /* 13x16 -> bottom 790 */
   floorProp(700, 976, 'trolley_bay',    'Trolley bay');
   floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor
@@ -13941,7 +13961,9 @@ function loadLevel(id){
                   {x:800, y:196, w:30,h:24,label:'Assistant manager desk',kind:'cabinet',art:'manager_desk'},
                   /* the break room, and the cash office down beside the tills */
                   {x:925, y:196, w:30,h:24,label:'Staff lockers',    kind:'locker'},
-                  {x:1130, y:860, w:30,h:24,label:'Basin',         kind:'cabinet',art:'sink'},
+                  /* ⚠️ A REAL VANITY, NOT THE OFFICE'S SINGLE BASIN. wc_sink_counter is a
+                     two-basin counter with mirrors, drawn for this room and never once used. */
+                  {x:1130, y:860, w:30,h:24,label:'Basins',        kind:'cabinet',art:'wc_sink_counter'},
                   {x:40,  y:800, w:30,h:24,label:'Cash office counter',kind:'cabinet',art:'manager_desk'});
   /* ---- The break room keeps its table and chairs: staff DO sit there. It is the only table left
      in the store, which is also a live check that the LEVEL_TABLES path still works with one. --- */

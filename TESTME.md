@@ -1222,3 +1222,40 @@ straight through them in full view, which is the exact complaint that rebuilt th
 a prop's size moves *both* its edges, and I was only aiming the
 bottom one — the tray rack's top ended up 11 units out through the back wall of the building.
 `placement.js` flagged it as sprite-through-wall before it ever reached you.
+
+---
+
+## W — the washroom
+
+Same story as the dairy items. **The entire washroom fitting set was registered and drawn nowhere** —
+seven sprites — and Save-Rite's public washroom was a 300×172 room containing two toilets and one
+basin borrowed from the office.
+
+Codex had drawn a proper kit: a **two-basin vanity with mirrors**, a **run of stall partitions**, a
+closed stall door, an open one, and a **hand dryer**. All front-elevation pieces, so they line the
+north wall the way the deli and bakery back walls do.
+
+The washroom now has the stall bank along the back wall with its doors, the hand dryer, and the
+vanity replacing the single office basin — sized at true scale and added to the same table that
+caught the last batch being half size (30 props covered now, up from 18 two days ago).
+
+The two toilets did not move. They're fixtures you interact with, so decor works around them.
+
+**What to look at:** the public washroom, off the front end. It should read as a washroom rather than
+a tiled room with two toilets in it.
+
+### Still unused, and one is worth a decision
+
+Four bathroom sprites remain unplaced: `mirror`, `stall_h`, and the two thin top-down partitions
+`wc_divider_v` / `wc_divider_h`. The office restrooms already build stalls out of `stall_v`, and I
+didn't want to invent a use for the rest just to tick them off.
+
+**The bigger one:** 19 registered sprites are never drawn in either level, totalling **~5.8 MB of
+decoded image memory on every boot**. Most of it is superseded aisle art — `shelf_run_a`..`e`,
+`freezer_run_a`/`b` and `freezer_wall` (2.9 MB) were replaced by the bay system, and
+`cubicle_desk_up` alone is 1.3 MB. Two more, `break_table` and `kitchen_table`, have a draw width
+registered and **no PNG at all**.
+
+Given the Xbox ran out of memory earlier in this project, that's worth reclaiming — but deregistering
+art is the kind of change that can quietly break a fallback, so I've left it. Say the word and I'll
+do it properly with the gate behind it.
