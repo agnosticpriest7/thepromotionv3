@@ -942,6 +942,12 @@ const ART_SRC={
      320x1708, not the 600x400 its first write-up proposed. */
   deli_backwall:[600,103], bakery_backwall:[600,118], wall_shelf_run:[320,61],
   break_counter:[200,79], break_noticeboard:[160,87], dock_truck:[320,1708],
+  /* ⚠️ AND SEVEN MORE THAT HAD NO ENTRY BECAUSE THEY HAD NO PLACEMENT. Registered, given an
+     ART_W, decoded on every boot -- and never drawn. Kyle spotted the gap from play: "I thought
+     there was supposed to be dairy cooler items". Measured off the files, not off a note. */
+  dairy_milk_crates:[60,83], dairy_carton_shipper:[60,43], dairy_empty_crate:[50,49],
+  dairy_milk_pallet:[70,72], bakery_tray_rack:[100,168], bakery_back_shelf:[160,79],
+  bakery_bread_rack:[140,60],
   shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
   deli_case:[2044,623],bakery_case:[2079,623],dairy_case:[1469,748],
@@ -13571,6 +13577,35 @@ function loadLevel(id){
      yard; 474 authored of vehicle in a yard 708 deep. Scenery only -- the player has no reason to
      be out there and Kyle said so. */
   floorProp(1310, 320, 'dock_truck', 'Delivery trailer');
+  /* ⚠️ SEVEN PROPS WERE BEING DECODED EVERY BOOT AND DRAWN NEVER. Registered, sized, and
+     placed nowhere -- so they cost their megabytes and appeared in no frame. Grep could not see it
+     (each name really is 'referenced twice') and no test could: nothing asserts that a registered
+     sprite is USED. Found by rendering the store and panning the camera over all of it with
+     sprAt/sprW intercepted -- the same run-it-and-watch that CLAUDE.md 14 prescribes.
+
+     THE DAIRY BACKSTOCK GOES IN THE WALK-IN COOLER, which is 289x150 of completely empty floor --
+     a cold room with nothing in it. Crates, a pallet and a carton shipper ARE what is in one.
+     Along the north wall, so the whole 128..244 depth stays walkable.
+     ⚠️ AND THE COOLER'S ONLY DOOR IS IN THAT NORTH WALL, at x 131..191 -- the gap between the
+     two wall segments. I read the room's blocked top row as "the wall" and it was the DOORWAY,
+     put a crate stack across it, and sealed the walk-in: t_grocery and t_boh both went red with
+     WALK-IN COOLER unreachable. placement.js passed at 0 FAIL, because the props do not overlap
+     anything and do not stand in a wall -- a doorway is only special if you know it is there.
+     Same shape as the yard an hour earlier, from the opposite direction: that time I shut a room
+     on purpose, this time by accident, and the SAME assertion caught both. Three west of the door,
+     one east, and the 131..191 approach stays open. */
+  floorProp(32,  108, 'dairy_milk_pallet',    'Milk pallet');     /* 20 deep -> bottom 128 */
+  floorProp(66,  105, 'dairy_milk_crates',    'Milk crates');     /* 23 deep -> bottom 128 */
+  floorProp(95,  116, 'dairy_carton_shipper', 'Carton shipper');  /* 12 deep -> bottom 128 */
+  floorProp(205, 114, 'dairy_empty_crate',    'Empty crates');    /* 14 deep -> bottom 128, east of the door */
+  /* ⚠️ THE BAKERY RACKS GO EAST OF THE COUNTER, NOT IN THE STAFF LANE. The lane is only 43
+     deep (280..323) and Doreen's station is at (998,309) -- which is exactly how the back walls put
+     two department managers into roomAt() === NONE last time. The counter's art ends at x1082, so
+     everything from 1090 to the east wall at 1208 is open bakery floor nobody works on, and every
+     bottom edge here sits north of where anyone stands. */
+  floorProp(1090, 278, 'bakery_back_shelf', 'Bakery back shelf'); /* 22 deep -> bottom 300 */
+  floorProp(1140, 283, 'bakery_bread_rack', 'Bread rack');        /* 17 deep -> bottom 300 */
+  floorProp(1178, 279, 'bakery_tray_rack',  'Tray rack');         /* 47 deep -> bottom 326 */
   floorProp(700, 976, 'trolley_bay',    'Trolley bay');
   floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor

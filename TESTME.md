@@ -1145,3 +1145,47 @@ The tour bug was invisible to all 38 tests — every one of them checked what th
 none checked that it *finished*. There are two more now: one that fails if either tour ends on the
 safety net or leaves dead air, and one that fails if either route crosses a wall, desk or container.
 Both were proved by breaking the code and watching them go red.
+
+---
+
+## U — the dairy cooler items you remembered
+
+You were right. **Seven props were registered, sized, decoded on every boot, and drawn nowhere** —
+the four dairy cooler items plus three bakery racks. They cost their memory and appeared in no frame.
+
+Nothing could have caught this: grep sees each name "referenced twice" (both times in tables), and no
+test asserts that a registered sprite is ever *used*. Found by rendering the store and panning the
+camera over all of it with the draw calls intercepted.
+
+**Where they went:**
+- **The walk-in cooler** was 289×150 of completely empty grey floor. It now has the milk pallet, the
+  blue milk crates, a carton shipper and a stack of empties along its north wall — which is what is
+  actually in a cold room.
+- **The bakery** got its back shelf, bread rack and tray rack, at the east end past the counter where
+  nobody works. Not in the staff lane, after last night's lesson.
+
+**What to look at:** walk into the walk-in cooler off the dairy aisle — it shouldn't be a bare box
+any more. Then look at the east end of the bakery.
+
+### And I sealed the cooler doing it
+
+First placement put a crate stack across the cooler's only door, on the north wall. The room became
+unreachable. `placement.js` — the tool whose whole job is catching this — said **0 FAIL**, because it
+only warns when a footprint covers a gap it *guessed* was a door, and the crate missed that guess by
+two units.
+
+It now floods the floor from where you stand and fails outright if any room can't be reached, asking
+the game's own pathfinding rather than my own geometry. (My first attempt used my own geometry and
+missed the same bug — a 14-wide crate doesn't physically block a 60-wide door, but it does block the
+nav grid the game actually walks on, which is the only version that matters.)
+
+### Two other art gaps, your call
+
+- **12 more Save-Rite characters are on disk and unused** — Tyson Beck, Ade Okonkwo, Joon-Ho Bae, Sam
+  Whitecalf, Cheryl Novak, Vince Carboni, Aleks Petrov, Denise Fung, Elaine Kovacs, Manny Reyes, Tova
+  Lindqvist, Sandrine Pike. Codex drew a 34-person cast; the store's roster only uses 12 crew plus 10
+  shoppers. They have walk sprites but **no seated poses** — Codex's own manifest flags them
+  "absent from live CREW; walk-only supplied". Wiring them in means expanding the store's staff,
+  which is a design call, so I've left them.
+- **Three item icons have no PNG** — `drawer`, `shift_covered`, `coffee_run`. They 404 and fall back
+  to their emoji, so nothing is broken, but they're the only art the game asks for and doesn't get.
