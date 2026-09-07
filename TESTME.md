@@ -1015,3 +1015,59 @@ office has. Both are features rather than fixes, so they get their own branch.
 
 **Codex** has been asked for the deli and bakery back walls — the empty space behind the bakery
 manager's desk that you flagged.
+
+---
+
+## Z — The opening tour, your own desk, and the floor stops patching
+
+### Save-Rite has an opening tour
+
+Lorne walks a new bagger round: doors, tills, frozen, dairy, the aisles, deli, bakery, produce,
+through the swing doors to the back rooms and receiving, then out to your lockers. Anticlockwise, so
+it never visibly retraces itself.
+
+**The route is generated, not hand-placed.** Waypoints authored by eye through a building full of
+shelf runs is exactly the thing that looks right and walks through a freezer — so it came out of the
+game's own pathfinder, with every leg then checked walkable at 4-unit intervals.
+
+The trap was your own note about diagonals. A simplifier that just removes redundant points produces
+diagonal legs happily, **and a walkability check passes them** — you'd get the fast up/down/left/right
+flicker again. Every corner is squared, and the test now drives **both buildings** rather than only
+the office.
+
+It's paced to the building too: at the office's walk speed the store tour ran 100 seconds, which is
+a long time to be a passenger on day one. It's about 70 now.
+
+### Your desk follows your job
+
+Being promoted did nothing to your workspace in the store — the whole desk-move block was office-only,
+which is why you kept the bagger's lockers all the way to Owner. It now moves you into the workspace
+of the person whose job you took: your own department as a department manager, then the AM's office,
+the store manager's, the owner's.
+
+### The floor patches
+
+That was a tiling bug, not the art. Every room started its tile grid at its **own corner**, so two
+areas sharing a tile were laid on different phases and the join between them was a visible step. The
+office has had it the whole time and it never showed, because its rooms mostly use a different tile
+from their neighbours — which hides a mismatched grid.
+
+**And six rooms had no floor at all** — including the walk-in cooler and the receiving dock, which is
+why receiving wasn't grey concrete. They were silently getting the sales-floor tile.
+
+The base layer is now the *outside* surface rather than the shop floor, so a room nobody lists reads
+as bare hardstanding indoors (obvious) instead of shop floor (plausible).
+
+**What to look at:**
+- Start a new store game and let the tour run. **Nobody should moonwalk**, and it shouldn't outstay
+  its welcome.
+- Get promoted and check your desk has moved somewhere that matches the badge.
+- Walk the whole shop looking at the floor. **The patches should be gone** — the grid should run
+  continuously through areas that share a tile.
+- Back of house: concrete corridor and receiving, carpet in the three offices, and the break room
+  has the vinyl that was drawn for it and had never been used.
+
+### Still waiting on Codex
+
+The flecked `floor_vct` (the plain white), `floor_asphalt` for outside, and the semi backed onto the
+dock. Concrete is standing in outside until the asphalt lands.
