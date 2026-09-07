@@ -833,15 +833,28 @@ const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby
    a warm market tile under produce, quarry tile in the wet service departments, bare concrete the
    moment you step out of the back door. Names must match ROOMS exactly; anything unlisted gets the
    base. */
-const LEVEL_FLOOR_BASE='floor_vct';
+/* ⚠️ THE BASE IS THE OUTSIDE, AND EVERY ROOM IS LISTED. It used to be the sales-floor tile, which
+   meant two things: supermarket VCT covered the car park, and any room missing from the table below
+   got it silently -- six were, including the WALK-IN COOLER and the RECEIVING DOCK, which is why
+   Kyle asked why receiving was not grey concrete. Making the base the OUTSIDE surface inverts the
+   failure: a room nobody listed now reads as bare hardstanding indoors, which is obvious, instead of
+   as shop floor, which is plausible. Concrete stands in until floor_asphalt is drawn. */
+const LEVEL_FLOOR_BASE='floor_concrete';
 const LEVEL_FLOOR={
+  /* the shop floor */
   'GROCERY':'floor_vct', 'DAIRY':'floor_vct', 'FRONT END':'floor_vct',
   'PRODUCE':'floor_market',
   'DELI':'floor_quarry', 'BAKERY':'floor_quarry',
-  'BOH CORRIDOR':'floor_concrete', 'YARD':'floor_concrete',
-  'CASH OFFICE':'floor_carpet_tile',
   'PUBLIC WC':'floor_wc',
   'ENTRANCE':'floor_entry',
+  /* back of house -- bare, and it should look it */
+  'BOH CORRIDOR':'floor_concrete', 'SHIPPING / RECEIVING':'floor_concrete',
+  'WALK-IN COOLER':'floor_concrete', 'YARD':'floor_concrete',
+  /* the rooms with a door that shuts. Subtle, per Kyle: "nothing crazy or that stands out". */
+  'CASH OFFICE':'floor_carpet_tile', 'STORE MANAGER':'floor_carpet_tile',
+  'OWNER':'floor_carpet_tile', 'ASSISTANT MANAGER':'floor_carpet_tile',
+  /* and the break room finally uses the tile that was drawn for it */
+  'BREAK ROOM':'floor_vinyl_break',
 };
 /* ---- explicit display sizes (in WORLD px) so nothing gets stretched ---- */
 const U1=(v)=>Math.round(v*S/1.8);        // 1.0 = the art's natural game size
@@ -1006,7 +1019,17 @@ function tileFloor(name,x,y,w,h,size){
   const t=size||Math.round(64*S/1.8);
   ctx.save();
   ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
-  for(let ty=y;ty<y+h;ty+=t)for(let tx=x;tx<x+w;tx+=t)ctx.drawImage(im,tx,ty,t,t);
+  /* ⚠️ TILE FROM A WORLD GRID, NOT FROM THIS RECTANGLE'S CORNER. Starting at (x,y) restarts the
+     pattern at every room's own top-left, so two areas sharing a tile are laid on different phases
+     and the join between them is a visible step: the base layer runs from 0, GROCERY from y=720,
+     FRONT END from y=1260, DAIRY from y=468. Kyle saw it as "lots of weird patches everywhere".
+     The office has always had it too and it never showed, because its rooms mostly use a DIFFERENT
+     tile from their neighbours -- which hides a mismatched grid. Save-Rite has large areas of the
+     same tile meeting each other, so it shows.
+     Snapping the origin down to the grid and letting the existing clip handle the overhang costs
+     at most one extra column and row per call. */
+  const x0=Math.floor(x/t)*t, y0=Math.floor(y/t)*t;
+  for(let ty=y0;ty<y+h;ty+=t)for(let tx=x0;tx<x+w;tx+=t)ctx.drawImage(im,tx,ty,t,t);
   ctx.restore();
   return true;
 }
