@@ -252,6 +252,13 @@ function completionRun(level, rolls) {
   const have = {}; (g.layout.objects || []).forEach(o => { have[o.type] = 1; });
   have.desk = 1; have.npc = 1;
   have.section = g.layout.containers.some(c => c.section) ? 1 : 0;
+  /* ⚠️ THE CONTAINER-BACKED VIAS AGAIN. This map is built from `objects` by TYPE, so a via that
+     completes at a CONTAINER -- a checkstand, the trolley bay -- reads as having nowhere to be done
+     and the assertion reports a dead route that is not dead. Same short enumeration that made
+     pressTaskItem hand back a desk menu for a container; derived from the floor, not listed. */
+  const conts = g.layout.containers || [];
+  have.lane  = conts.some(c => /Checkstand/i.test(c.label || '')) ? 1 : 0;
+  have.carts = conts.some(c => /^Trolley/i.test(c.label || '')) ? 1 : 0;
   const dead = [];
   for (let r = 0; r < g.RANKS.length; r++) {
     g.player.rank = r;
