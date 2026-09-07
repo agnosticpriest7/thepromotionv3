@@ -953,3 +953,65 @@ suppresses the phase-change block that assigns seats, so I never got a seated fr
 I am not going to guess at the seating compositor — it is the piece HANDOFF-8 warns is delicate.
 **If you can get me a screenshot mid-break with people sat down**, or tell me whether it is one
 department/table or all of them, I will fix it properly next pass.
+
+---
+
+## Y — The store stops borrowing the office's furniture
+
+Your playthrough notes. Four of six done; the other two are their own branch.
+
+### Jobs happen where the job happens
+
+You asked why you were breaking down boxes in shipping from your lockers at the front end. Because
+*"Break down the cardboard in receiving"* was routed through the **printer**, and the nearest
+printer-typed object is the go-back cart by the front doors — next to your lockers. The same job
+also existed one rank up routed through **supply**, so it had two different destinations depending
+on your rung.
+
+Every store task had to borrow one of the office's trigger types, because those were the only
+destinations that existed. Eleven re-pointed:
+
+| job | went to | goes to now |
+|---|---|---|
+| Break down the cardboard in receiving | go-back cart, front end | the baler, in receiving |
+| Bring the carts in from the lot | go-back cart | the trolley bay |
+| Mist the greens | **the break-room water cooler** | produce |
+| Break down and wipe the slicer | back room | the deli case |
+| Take the counter for a stretch | **your locker** | the deli case |
+| Pull the racks when the timer goes | **your locker** | the bakery case |
+| Run a price check for a lane | your locker | a till |
+
+**What to look at:** take any job and follow the compass. It should walk you somewhere that makes
+sense for the words on the card, and the work should complete when you get there.
+
+### Meetings are in receiving
+
+You were right, and so was the code's own comment — which said the huddle happens in receiving while
+the coordinate sat **inside the break room**. So the crew held the morning huddle in the room they
+were about to take their break in. It's in SHIPPING / RECEIVING now, which is where a real shop
+holds one.
+
+### The break room got the staff washroom's space
+
+The staff WC was a 100-wide room with one toilet in it, and it cost the break room the width it
+needed — eight chairs for twelve crew, which is why four people stand about in your screenshot. The
+break room is **300 wide with two tables and sixteen seats**. Staff use the public washroom.
+
+### The seating bug was in the office too
+
+Back-facing sitters were drawn at **0.72** the size of everyone else at the same table — that's your
+bottom row. A constant shrank them by 0.80 to "bring the back pose in line because it's drawn large
+in source". It isn't: measured across every seated character in the game, the up pose is 0.90 of the
+down pose. It's drawn *smaller*, so the correction made it worse. Derived from the art now.
+
+**What to look at:** sit through a break. **Nobody at either table should be noticeably bigger or
+smaller than anybody else**, and there should be enough chairs for everyone. Then do the same in the
+office — that was wrong there too and should also be better.
+
+### Still to come
+
+**Your desk staying as the front-end lockers after promotions**, and **an opening tour** like the
+office has. Both are features rather than fixes, so they get their own branch.
+
+**Codex** has been asked for the deli and bakery back walls — the empty space behind the bakery
+manager's desk that you flagged.
