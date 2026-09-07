@@ -4644,6 +4644,57 @@ const INTRO_ROUTE=[
    approach holds y550 until x745 before dropping to the desk, which keeps both walkers clear of
    the junior-floor printer at (770,610) — the old 950,550 -> 730,610 diagonal cut straight
    through its sprite. Beat fractions below were recomputed against THIS route. */
+/* ⚠️ SAVE-RITE'S OWN TOUR. The store had none: startIntro() bailed on `currentLevel!=='office'`
+   and a new bagger was dropped on the floor with no idea where anything was. Kyle asked for the
+   office's opening, in the shop.
+
+   THE ROUTE IS GENERATED, NOT AUTHORED. Hand-placed waypoints through a building full of shelf
+   runs is precisely the thing that looks right and walks through a freezer, so these came out of
+   the game's own A* between eleven stops, and every leg was then verified walkable at 4-unit
+   intervals -- corners are not enough when the gaps between runs are 60 wide.
+
+   ⚠️ AND EVERY LEG IS CARDINAL. There is no diagonal walk art: the sprite picker snaps a heading
+   to the nearest of four, so a diagonal makes the walker slide sideways under a left/right sheet.
+   That is the moonwalk t_intro_axis was written for. A distance-tolerance simplifier produces
+   diagonals happily and the walkability check passes them, so the generator squares every corner
+   into an L and proves there are no diagonal legs before emitting.
+
+   Anticlockwise, because a tour that visibly retraces itself reads as a bug: in the doors, along
+   the front, up the west side past frozen and dairy, across the shop floor through the departments,
+   then the swing doors, the back rooms, receiving, and out to your lockers. */
+const STORE_INTRO_ROUTE=[
+  {x:620,y:892},{x:520,y:892},{x:520,y:700},{x:170,y:700},{x:170,y:530},{x:170,y:410},
+  {x:220,y:410},{x:220,y:300},{x:510,y:300},{x:510,y:530},{x:510,y:410},{x:700,y:410},
+  {x:700,y:345},{x:1010,y:345},{x:1010,y:380},{x:1010,y:510},{x:1030,y:510},{x:1030,y:610},
+  {x:1010,y:610},{x:1010,y:620},{x:930,y:620},{x:930,y:510},{x:770,y:510},{x:770,y:310},
+  {x:750,y:310},{x:750,y:70},{x:1050,y:70},{x:1050,y:175},{x:1070,y:175},{x:1070,y:70},
+  {x:1370,y:70},{x:1370,y:190},{x:1300,y:190},{x:1300,y:235},{x:1370,y:235},{x:1370,y:130},
+  {x:750,y:130},{x:750,y:70},{x:530,y:70},{x:530,y:670},{x:350,y:670},{x:350,y:750},
+];
+/* Fractions are MEASURED along the route above by the same generator, not guessed: tills 0.045,
+   frozen 0.126, dairy 0.170, aisles 0.251, deli 0.309, bakery 0.363, produce 0.407, back rooms
+   0.596, receiving 0.699, lockers 1.000. Re-run it if the route moves. */
+const STORE_INTRO_BEATS=[
+  {at:0.000,t:2.4,hold:true,say:"You'll be the new bagger. Come on, before it gets busy — quick walk round."},
+  {at:0.045,t:2.6,hold:true,say:"Front end. Three lanes. You bag at the end of whichever one's moving."},
+  {at:0.126,t:2.5,hold:true,say:"Frozen. Doors shut behind you, always. Head office reads the temperature logs."},
+  {at:0.170,t:2.5,hold:true,say:"Dairy's on the cooler wall. Date codes matter more here than anywhere."},
+  {at:0.251,t:2.7,hold:true,say:"The aisles. You'll face these, zone these, and get very tired of these."},
+  {at:0.309,t:2.5,hold:true,say:"Deli — that's Doreen's. She's been here longer than the building."},
+  {at:0.363,t:2.5,hold:true,say:"Bakery. Racks come out when the timer goes, not when you feel like it."},
+  {at:0.407,t:2.6,hold:true,say:"Produce. Looks after itself until it very much doesn't."},
+  {at:0.596,t:2.8,hold:true,say:"Through the doors — staff only. Break room's here. Your locker isn't."},
+  {at:0.699,t:2.9,hold:true,linger:1.6,say:"Receiving. Deliveries, the baler, and the morning huddle. Nine sharp."},
+  {at:1.000,t:3.0,hold:true,say:"And this is you. Locker's yours. Two jobs a shift — clear them and we'll talk. Go on."},
+];
+/* the tour a level runs: its route, its beats, and who walks you round it */
+function levelIntro(){
+  if(currentLevel==='office')
+    return {route:INTRO_ROUTE, beats:INTRO_BEATS, guide:NPCS.find(n=>n.mgr&&n.alive)||null};
+  return {route:INTRO_ROUTE, beats:STORE_INTRO_BEATS,
+          /* the STORE MANAGER shows a new hire round, which is who does it in a shop */
+          guide:NPCS.find(n=>n.alive&&n.storeRole==='store')||null};
+}
 function routeLen(pts){let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);return L;}
 function routeAt(pts,dist){
   if(dist<=0)return {x:pts[0].x,y:pts[0].y};
@@ -4659,15 +4710,33 @@ function routeAt(pts,dist){
   return {x:pts[pts.length-1].x,y:pts[pts.length-1].y};
 }
 let INTRO_LEN=routeLen(INTRO_ROUTE);   // recomputed after scaleWorld()
-const INTRO_SPEED=Math.round(62*S);   // px/sec — paced so the ~44s walk matches the dialogue, keeping beats in sync with the route
+/* ⚠️ PACED BY THE BUILDING, NOT BY A FIXED SPEED. 62 px/sec was tuned to the office's route
+   so the walk and the dialogue finish together. Save-Rite is a much bigger floor: at the same
+   speed its tour ran 6001 frames against the office's 3851 -- a hundred seconds of being walked
+   about before the player is allowed to touch anything, which is a long time to be a passenger
+   on day one. The store walks faster so the two tours take a comparable time, and a level added
+   later gets the same treatment without anyone remembering to tune it.
+   OFFICE_ROUTE_LEN is the length the 62 was tuned against; it is a reference value, not a
+   measurement of the current route, which is why it is written down rather than computed. */
+const INTRO_BASE_SPEED=Math.round(62*S), OFFICE_ROUTE_LEN=Math.round(2680*S);
+function introSpeed(){
+  if(!INTRO_LEN||currentLevel==='office')return INTRO_BASE_SPEED;
+  const r=INTRO_LEN/OFFICE_ROUTE_LEN;
+  return Math.round(INTRO_BASE_SPEED*Math.max(1,Math.min(2.2,r)));   // never slower, never a sprint
+}
 const INTRO_GAP=Math.round(26*S);     // how far you trail behind Dale
 function startIntro(){
   /* THE TOUR IS OFFICE CONTENT. It walks Dale along an authored route reciting authored beats;
      with no manager and no route there is nothing to run, and dereferencing the missing Dale is
      what would take the boot down. Guarded here rather than at the call site so every caller —
      boot, New Game, and anything added later — is covered by one check. */
-  if(currentLevel!=='office' || !INTRO_ROUTE.length || !NPCS.some(n=>n.mgr&&n.alive)){ intro=null; return; }
-  const dale=NPCS.find(n=>n.mgr&&n.alive);
+  /* ⚠️ WAS `currentLevel!=='office'`, WHICH IS WHY SAVE-RITE HAD NO OPENING AT ALL. The guard is
+     still the same shape -- no route or nobody to walk you round means there is nothing to run and
+     dereferencing the missing guide is what would take the boot down -- it just asks the LEVEL who
+     its guide is instead of assuming Dale. */
+  const li=levelIntro();
+  if(!li.route.length || !li.guide){ intro=null; return; }
+  const dale=li.guide;
   const myD=desks.find(d=>d.owner==='you');
   if(!dale||!myD)return;
   /* NO pre-placing the floor any more. The clock runs during the tour, so everyone keeps their
@@ -4705,14 +4774,17 @@ function tickIntro(dt){
      walks past the next hold-beat's spot until he has said his line there (and then lingers
      a moment). This keeps "that's the Annex / Kitchen / HR" landing while he stands at it,
      and lets the dialogue pace the walk instead of the walk outrunning the dialogue. */
+  /* ⚠️ THE LEVEL'S BEATS, NOT THE OFFICE'S. Three references to INTRO_BEATS in here is
+     three chances to run Dale's script over Save-Rite's route. Read once, used throughout. */
+  const BEATS=levelIntro().beats;
   let capFrac=1;
-  for(let k=intro.i;k<INTRO_BEATS.length;k++){ if(INTRO_BEATS[k].hold){capFrac=INTRO_BEATS[k].at;break;} }
+  for(let k=intro.i;k<BEATS.length;k++){ if(BEATS[k].hold){capFrac=BEATS[k].at;break;} }
   const walking=intro.d<INTRO_LEN;
   const capD=Math.min(INTRO_LEN,capFrac*INTRO_LEN);
-  if(intro.pause<=0 && walking) intro.d=Math.min(capD, intro.d+INTRO_SPEED*dt);
+  if(intro.pause<=0 && walking) intro.d=Math.min(capD, intro.d+introSpeed()*dt);
   const frac=INTRO_LEN>0?(intro.d/INTRO_LEN):1;
-  if(intro.i<INTRO_BEATS.length){
-    const b=INTRO_BEATS[intro.i];
+  if(intro.i<BEATS.length){
+    const b=BEATS[intro.i];
     const ready=(intro.t<=0);                          // previous bubble finished
     const arrived=(frac>=b.at-1e-6) || (b.at>=1 && !walking);
     if(ready&&arrived){
@@ -13847,6 +13919,10 @@ function loadLevel(id){
      names the room it must be in.
      RECEIVING is authored at 1224,16 260x284. This point is measured clear floor inside it,
      south of the two pallets at y=150 and west of the baler. */
+  /* ⚠️ THE ROUTE HAS TO BE PUSHED HERE. loadLevel CLEARS INTRO_ROUTE along with every other
+     office array, and the office never reaches that code because it returns early -- which is
+     why the office keeps its own waypoints and the store had an empty route and no tour. */
+  STORE_INTRO_ROUTE.forEach(p=>INTRO_ROUTE.push({x:p.x,y:p.y}));
   MEETING_SPOT={x:1300, y:230};
   /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
