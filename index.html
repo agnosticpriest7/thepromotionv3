@@ -505,6 +505,11 @@ const ART_FILES=['chars',
   /* one aisle bay, stacked to length -- see the run builder */
   'shelf_bay_a','shelf_bay_b','shelf_bay_c','shelf_bay_d',
   'shelf_bay_e','freezer_bay_a','freezer_bay_b','freezer_bay_wall',
+  /* ⚠️ CODEX TV-PASS TWO. Alpha, and NOT keyed -- same reason as the rest of this block.
+     floor_asphalt is opaque and becomes the level's base surface, so the world outside the shop
+     stops being carpeted in supermarket tile. */
+  'deli_backwall','bakery_backwall','wall_shelf_run','break_counter',
+  'break_noticeboard','dock_truck','floor_asphalt',
   /* dairy dressing, bathroom fittings, bakery racks */
   'dairy_milk_crates','dairy_carton_shipper','dairy_empty_crate','dairy_milk_pallet',
   'wc_sink_counter','wc_partition_run','wc_door_closed','wc_door_ajar',
@@ -839,7 +844,7 @@ const FLOOR_FOR={carpet:'carpet_grey',blue:'carpet_blue',tile:'tile_white',lobby
    Kyle asked why receiving was not grey concrete. Making the base the OUTSIDE surface inverts the
    failure: a room nobody listed now reads as bare hardstanding indoors, which is obvious, instead of
    as shop floor, which is plausible. Concrete stands in until floor_asphalt is drawn. */
-const LEVEL_FLOOR_BASE='floor_concrete';
+const LEVEL_FLOOR_BASE='floor_asphalt';   /* concrete was standing in until this existed */
 const LEVEL_FLOOR={
   /* the shop floor */
   'GROCERY':'floor_vct', 'DAIRY':'floor_vct', 'FRONT END':'floor_vct',
@@ -849,7 +854,7 @@ const LEVEL_FLOOR={
   'ENTRANCE':'floor_entry',
   /* back of house -- bare, and it should look it */
   'BOH CORRIDOR':'floor_concrete', 'SHIPPING / RECEIVING':'floor_concrete',
-  'WALK-IN COOLER':'floor_concrete', 'YARD':'floor_concrete',
+  'WALK-IN COOLER':'floor_concrete', 'YARD':'floor_asphalt',
   /* the rooms with a door that shuts. Subtle, per Kyle: "nothing crazy or that stands out". */
   'CASH OFFICE':'floor_carpet_tile', 'STORE MANAGER':'floor_carpet_tile',
   'OWNER':'floor_carpet_tile', 'ASSISTANT MANAGER':'floor_carpet_tile',
@@ -931,6 +936,12 @@ const ART_SRC={
   shelf_bay_a:[198,220], shelf_bay_b:[198,220], shelf_bay_c:[198,220],
   shelf_bay_d:[198,220], shelf_bay_e:[198,220],
   freezer_bay_a:[198,142], freezer_bay_b:[198,142], freezer_bay_wall:[100,158],
+  /* ⚠️ floorProp DERIVES A PROP'S DEPTH FROM HERE, so a prop registered without an entry takes
+     the boot down on `undefined[1]` -- which is what six new names did. Source pixels, from the
+     delivered files rather than from the note that described them: the trailer in particular is
+     320x1708, not the 600x400 its first write-up proposed. */
+  deli_backwall:[600,103], bakery_backwall:[600,118], wall_shelf_run:[320,61],
+  break_counter:[200,79], break_noticeboard:[160,87], dock_truck:[320,1708],
   shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
   deli_case:[2044,623],bakery_case:[2079,623],dairy_case:[1469,748],
@@ -948,7 +959,13 @@ const ART_W={
   shelf_bay_e:99, freezer_bay_a:99, freezer_bay_b:99, freezer_bay_wall:50,
   dairy_milk_crates:30, dairy_carton_shipper:30, dairy_empty_crate:25, dairy_milk_pallet:35,
   wc_sink_counter:100, wc_partition_run:100, wc_door_closed:50, wc_door_ajar:50,
-  wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:18, bakery_bread_rack:70,
+  wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:18,
+  /* ⚠️ THE TRUCK IS 160 WIDE AND 854 TALL DRAWN -- a whole articulated vehicle seen from above,
+     rear north against the dock and cab south down the yard, which is why it is nothing like the
+     600x400 its first note proposed. Taking the number from the delivered manifest rather than
+     from the prose is the difference between a truck and a smear. */
+  deli_backwall:300, bakery_backwall:300, wall_shelf_run:160,
+  break_counter:100, break_noticeboard:80, dock_truck:160, bakery_bread_rack:70,
   bakery_tray_rack:50, bakery_back_shelf:80,
 
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
@@ -2013,8 +2030,35 @@ function meetingStand(n){
   n.mtgStandPh=currentPhase().name;
   return n.mtgStand;
 }
+/* ⚠️ THE ROOM'S CENTRE IS WHERE THE RINGS FIT; IT IS NOT NECESSARILY SOMEWHERE A BODY FITS.
+   Receiving's centre lands four units from a pallet, so a 16x16 body at it overlaps -- and the
+   huddle would be held with the speaker standing inside a pallet. The two requirements are
+   different and both are real: far enough from the walls that the standing rings stay in the room,
+   and on actual floor.
+   This cannot be settled where MEETING_SPOT is assigned, because `blockers` is empty until the
+   first buildGrid -- a clearance test at load time reads a world with no furniture in it and
+   cheerfully approves standing inside a pallet (CLAUDE.md 14). So resolve it on first use, once
+   the world exists, and cache: nearest standable point to the room's centre, spiralling out. */
+let _mtgResolved=null;
+function resolveMeetingSpot(){
+  const B=Math.round(16*S);
+  const fits=(x,y)=>!solid({x:x-B/2,y:y-B/2,w:B,h:B});
+  if(fits(MEETING_SPOT.x,MEETING_SPOT.y))return {x:MEETING_SPOT.x,y:MEETING_SPOT.y};
+  for(let r=Math.round(6*S); r<=Math.round(90*S); r+=Math.round(6*S))
+    for(let a=0;a<360;a+=15){
+      const x=Math.round(MEETING_SPOT.x+r*Math.cos(a*Math.PI/180));
+      const y=Math.round(MEETING_SPOT.y+r*Math.sin(a*Math.PI/180));
+      if(fits(x,y))return {x:x,y:y};
+    }
+  return {x:MEETING_SPOT.x,y:MEETING_SPOT.y};   // nothing clear: keep the honest answer
+}
 function meetingCentre(){
-  if(MEETING_SPOT)return {x:MEETING_SPOT.x, y:MEETING_SPOT.y};
+  if(MEETING_SPOT){
+    if(_mtgResolved)return {x:_mtgResolved.x, y:_mtgResolved.y};
+    if(!blockers.length)return {x:MEETING_SPOT.x, y:MEETING_SPOT.y};   // pre-tick: nothing to test against yet
+    _mtgResolved=resolveMeetingSpot();
+    return {x:_mtgResolved.x, y:_mtgResolved.y};
+  }
   return {x:Math.round((meetingTable.x+meetingTable.w/2 + meetingTable2.x+meetingTable2.w/2)/2),
           y:Math.round((meetingTable.y+meetingTable.h/2 + meetingTable2.y+meetingTable2.h/2)/2)};
 }
@@ -4716,33 +4760,48 @@ const INTRO_ROUTE=[
    diagonals happily and the walkability check passes them, so the generator squares every corner
    into an L and proves there are no diagonal legs before emitting.
 
-   Anticlockwise, because a tour that visibly retraces itself reads as a bug: in the doors, along
-   the front, up the west side past frozen and dairy, across the shop floor through the departments,
-   then the swing doors, the back rooms, receiving, and out to your lockers. */
+   ⚠️ AND VERIFYING AGAINST solid() WAS NOT ENOUGH -- IT CLIPPED THROUGH EVERYTHING. Kyle played
+   the first version: "the intro tour is really bad. clips through everything and they sprint." The
+   walkers are TELEPORTED along the route and never collide with anything, so the route is the only
+   thing keeping them out of the furniture -- and a shelf run collides with a 40-unit box while
+   DRAWING 330 tall. A route checked against collision boxes walks straight through the art. That is
+   the same overhang that caused the culling bug, and it will keep causing this class of thing.
+   The generator now avoids every prop's DRAWN rect with 3 units to spare, and the simplifier checks
+   its own shortcuts: dropping a point creates a NEW segment, and that segment can cut a corner the
+   pathfinder went round -- which is how the first route ended up crossing the pallet display.
+
+   ⚠️ AND THAT SHORTCUT-CHECKER WAS ITSELF HOLLOW, so this route STILL walked through a wall.
+   `solid()` takes a BOX, and every check in the generator called it as solid(x,y,w,h). `box` was
+   then a number, aabb() read undefined properties off it, and the function returned false for
+   every point in the building -- so "is this walkable" answered YES for solid wall, everywhere.
+   The route left receiving by heading west along y=130 straight through its west wall at x=1224,
+   and the leg is now squared through the doorway at x=1310 instead. A verification that cannot
+   fail is worse than none, because it is quoted afterwards: this route was described as checked
+   against collision AND art when it had only ever been checked against art. t_intro_route now
+   asserts the finished route against solid(), so the claim is made by the suite and not by me.
+
+   THE ORDER IS KYLE'S: "start at Shipping, walk past the managers offices, down the corridor,
+   across past Deli - bakery then down to produce. then walk over to the tills to start your first
+   shift as a bagger. the player doesn't need to see the frozen aisle, cooler, or washrooms."
+   PAST the offices, not into one -- a stop inside the assistant manager's room is a dead end and
+   the walk turned round in it, three small jogs that read as a stagger. The corridor runs along
+   their doors, which is what "past" means. */
 const STORE_INTRO_ROUTE=[
-  {x:620,y:892},{x:520,y:892},{x:520,y:700},{x:170,y:700},{x:170,y:530},{x:170,y:410},
-  {x:220,y:410},{x:220,y:300},{x:510,y:300},{x:510,y:530},{x:510,y:410},{x:700,y:410},
-  {x:700,y:345},{x:1010,y:345},{x:1010,y:380},{x:1010,y:510},{x:1030,y:510},{x:1030,y:610},
-  {x:1010,y:610},{x:1010,y:620},{x:930,y:620},{x:930,y:510},{x:770,y:510},{x:770,y:310},
-  {x:750,y:310},{x:750,y:70},{x:1050,y:70},{x:1050,y:175},{x:1070,y:175},{x:1070,y:70},
-  {x:1370,y:70},{x:1370,y:190},{x:1300,y:190},{x:1300,y:235},{x:1370,y:235},{x:1370,y:130},
-  {x:750,y:130},{x:750,y:70},{x:530,y:70},{x:530,y:670},{x:350,y:670},{x:350,y:750},
+  {x:1300,y:235},{x:1370,y:235},{x:1370,y:130},{x:1310,y:130},{x:1310,y:50},{x:830,y:50},
+  {x:600,y:50},{x:690,y:50},{x:690,y:290},{x:700,y:290},{x:700,y:345},{x:770,y:345},
+  {x:770,y:390},{x:1010,y:390},{x:1010,y:380},{x:1010,y:620},{x:870,y:620},{x:870,y:670},
+  {x:570,y:670},{x:570,y:690},{x:520,y:690},{x:520,y:700},
 ];
-/* Fractions are MEASURED along the route above by the same generator, not guessed: tills 0.045,
-   frozen 0.126, dairy 0.170, aisles 0.251, deli 0.309, bakery 0.363, produce 0.407, back rooms
-   0.596, receiving 0.699, lockers 1.000. Re-run it if the route moves. */
+/* Fractions are MEASURED along the route above by the same generator, not guessed. Re-run it if
+   the route moves; it prints these. */
 const STORE_INTRO_BEATS=[
-  {at:0.000,t:2.4,hold:true,say:"You'll be the new bagger. Come on, before it gets busy — quick walk round."},
-  {at:0.045,t:2.6,hold:true,say:"Front end. Three lanes. You bag at the end of whichever one's moving."},
-  {at:0.126,t:2.5,hold:true,say:"Frozen. Doors shut behind you, always. Head office reads the temperature logs."},
-  {at:0.170,t:2.5,hold:true,say:"Dairy's on the cooler wall. Date codes matter more here than anywhere."},
-  {at:0.251,t:2.7,hold:true,say:"The aisles. You'll face these, zone these, and get very tired of these."},
-  {at:0.309,t:2.5,hold:true,say:"Deli — that's Doreen's. She's been here longer than the building."},
-  {at:0.363,t:2.5,hold:true,say:"Bakery. Racks come out when the timer goes, not when you feel like it."},
-  {at:0.407,t:2.6,hold:true,say:"Produce. Looks after itself until it very much doesn't."},
-  {at:0.596,t:2.8,hold:true,say:"Through the doors — staff only. Break room's here. Your locker isn't."},
-  {at:0.699,t:2.9,hold:true,linger:1.6,say:"Receiving. Deliveries, the baler, and the morning huddle. Nine sharp."},
-  {at:1.000,t:3.0,hold:true,say:"And this is you. Locker's yours. Two jobs a shift — clear them and we'll talk. Go on."},
+  {at:0.000,t:2.6,hold:true,say:"You'll be the new bagger. Clocked in through the back — everyone does. Come on."},
+  {at:0.306,t:2.7,hold:true,say:"Offices. Mine's the middle one. You knock, you don't wander in."},
+  {at:0.395,t:2.6,hold:true,say:"Staff only down here. Break room's off this corridor. Huddle's in receiving, nine sharp."},
+  {at:0.547,t:2.6,hold:true,say:"Deli — that's Doreen's. She's been here longer than the building."},
+  {at:0.688,t:2.6,hold:true,say:"Bakery. Racks come out when the timer goes, not when you feel like it."},
+  {at:0.780,t:2.6,hold:true,say:"Produce. Looks after itself right up until it very much doesn't."},
+  {at:1.000,t:3.0,hold:true,say:"And this is you. Front end. Bag whichever lane's moving. Two jobs a shift — go on."},
 ];
 /* the tour a level runs: its route, its beats, and who walks you round it */
 function levelIntro(){
@@ -4779,7 +4838,12 @@ const INTRO_BASE_SPEED=Math.round(62*S), OFFICE_ROUTE_LEN=Math.round(2680*S);
 function introSpeed(){
   if(!INTRO_LEN||currentLevel==='office')return INTRO_BASE_SPEED;
   const r=INTRO_LEN/OFFICE_ROUTE_LEN;
-  return Math.round(INTRO_BASE_SPEED*Math.max(1,Math.min(2.2,r)));   // never slower, never a sprint
+  /* ⚠️ 2.2x WAS A SPRINT AND KYLE SAW IT. Scaling the walk to the route's length is right in
+     principle, but a cap that lets it run at over twice the office's pace is not "brisker", it is a
+     jog -- and the store's first route was long enough to hit the cap outright. Kyle's route is
+     shorter than the office's, so this returns the base speed and the cap never comes near; it is
+     lowered anyway, because the number that bit was the ceiling and not the idea. */
+  return Math.round(INTRO_BASE_SPEED*Math.max(1,Math.min(1.25,r)));
 }
 const INTRO_GAP=Math.round(26*S);     // how far you trail behind Dale
 function startIntro(){
@@ -4800,6 +4864,13 @@ function startIntro(){
      normal staggered arrival: they ride up, walk to their own desk and sit down while Dale is
      still talking. (This block used to teleport the whole cast onto their seats before the first
      line, which is why they all stood over their chairs until 8:30.) */
+  /* ⚠️ THE GUIDE WAS INVISIBLE IN THE STORE. Kyle: "during the intro tour, store owner was
+     invisible." Day 1 at 08:00 the cast has not arrived yet -- almost everyone is `gone:true` and
+     parked off-screen (CLAUDE.md 15) -- and a `gone` worker is not drawn. The office never showed
+     it because Dale is on the floor from the first frame; Lorne is not. Teleporting him onto the
+     route put an invisible man at the head of the tour, talking. He is AT WORK for the duration of
+     his own tour, which is the fact the flags were failing to state. */
+  dale.gone=false; dale.wentHome=false; dale.onFloor=true;
   intro={i:0,t:0,dale,desk:myD,d:0,age:0,pause:0};
   const p0=routeAt(INTRO_ROUTE,0);
   dale.x=p0.x;dale.y=p0.y;dale.goal=null;dale.path=null;
@@ -4867,7 +4938,15 @@ function tickIntro(dt){
     player.moving=true;player.animT=(player.animT||0)+step;
   } else {d.moving=false;player.moving=false;}
   // finish once we've arrived AND he's said his piece
-  if(!walking&&intro.i>=INTRO_BEATS.length&&intro.t<=0){endIntro(false);return true;}
+  /* ⚠️ THE END CONDITION WAS STILL COUNTING THE OFFICE'S BEATS. The comment eleven lines up
+     says "three references to INTRO_BEATS in here is three chances to run Dale's script over
+     Save-Rite's route" -- and there were FOUR. This one is outside the block that comment was
+     written over, so the store fired all seven of its beats, never reached the office's eleven,
+     and the tour ended only when intro.age tripped the 100-second SAFETY NET on the line above.
+     That is the whole of the store tour's length: 3164 frames of tour and 2837 of dead air with
+     the guide standing at the tills saying nothing. It read as a tour that would not end.
+     A safety net firing every single run is not a safety net, it is the exit. */
+  if(!walking&&intro.i>=BEATS.length&&intro.t<=0){endIntro(false);return true;}
   return false;
 }
 function endIntro(bailed){
@@ -13237,8 +13316,15 @@ function loadLevel(id){
     walls.push({x:cx,y:BOH_S,w:STORE_E-cx,h:T});
   }
   /* the shipping annex, outdoors, with its own south wall */
-  /* the dock building's south wall, with the roller door the truck actually backs through */
-  walls.push({x:STORE_E+T,y:300,w:110,h:T},{x:STORE_E+T+200,y:300,w:AW-T-(STORE_E+T)-200,h:T});
+  /* ⚠️ THE DOCK DOOR IS SHUT. This was two segments with a 90-unit gap between them --
+     the roller door -- and that gap was the only way into the yard, which made 708 authored units
+     of outdoor scenery fully walkable: the pathfinder reached all 40 sampled points in it from
+     inside receiving. Kyle: "the player doesn't need to be able to walk into the yard."
+     Nothing routes there -- 'YARD' appears in exactly two places in this file, a floor mapping and
+     a room caption -- so closing it costs no behaviour. The truck, the asphalt and the yard stay
+     visible through the dock; they are scenery now rather than somewhere to wander. A closed
+     roller door is also what a dock looks like with a trailer backed onto it. */
+  walls.push({x:STORE_E+T,y:300,w:AW-T-(STORE_E+T),h:T});
   /* ---- ZONES. Captions only; roomAt() reads these, nothing collides with them. ------------ */
   /* FRONT END now stops at the back-of-house divider and picks up again BELOW the new wing, so
      the two never overlap and roomAt() has one answer per point. The lost strip is y 470..506
@@ -13275,7 +13361,14 @@ function loadLevel(id){
              {name:'ENTRANCE', x:VEST_X+T, y:STORE_S+T, w:VEST_E-VEST_X-2*T, h:AH-T-(STORE_S+T), c:'#7c7768'},
              /* outdoors: the yard the truck backs into, and the dock building itself */
              {name:'SHIPPING / RECEIVING', x:STORE_E+T, y:T, w:AW-T-(STORE_E+T), h:300-T, c:'#7c7768'},
-             {name:'YARD',     x:STORE_E+T, y:316, w:AW-T-(STORE_E+T), h:AH-T-316, c:'#6b6a63'});
+             /* ⚠️ outside:true -- SCENERY, NOT SOMEWHERE TO GO. The dock door is shut (see the
+                wall push above), so this zone is deliberately unreachable, and a test that asserts
+                'every zone is reachable' is right to notice. The flag is what tells it the
+                difference between a yard nobody can walk into ON PURPOSE and a room that got
+                walled off BY ACCIDENT -- which is the failure that assertion exists to catch, and
+                which it must keep catching. Marking the exception in the data beats deleting the
+                zone: the yard is still a named place with its own floor, it just isn't floor. */
+             {name:'YARD',     x:STORE_E+T, y:316, w:AW-T-(STORE_E+T), h:AH-T-316, c:'#6b6a63', outside:true});
   /* ⚠️ THE ZONES COME OFF THE SAME TABLE AS THE WALLS. They were authored as literals beside a
      BOH_ROOMS list that drives the partitions, and the moment the row was re-cut the two disagreed:
      the walls moved and the captions did not, so the Store Manager's office was a zone with no
@@ -13446,6 +13539,38 @@ function loadLevel(id){
      and it must not become cover on a floor t_sightlines asserts you can be seen crossing.
      So it goes against the south wall WEST of the tills, where magazines actually live in a shop --
      clear of that doorway by 200 and off the crossing between the doors and the shop floor. */
+  /* ⚠️ THE WALLS BEHIND THE SERVICE COUNTERS. Kyle: "I'm trying to mess with the bakery manager,
+     but her desk is just in the bakery section floating in empty space. we need more props for sure,
+     especially along the walls above deli and bakery." A back wall is what makes a counter read as a
+     department rather than a case in a field. Both sit on their room's north wall, on the counter's
+     own centre line so the department reads as one piece. */
+  /* ⚠️ floorProp takes a LEFT EDGE and a TOP, not a centre. These are the counters' own centre
+     lines worked back to a left edge.
+     ⚠️ AND THEIR BOTTOM EDGE MUST LAND ON THE ZONE'S NORTH EDGE (280), NOT IN THE STAFF LANE.
+     Held at 284/282 they were drawn down to y 313/315, and the deli and bakery staff stand at 309 --
+     so the prop's collision box sat exactly on top of both department managers. Their stations were
+     shoved north to y~270, which is OUTSIDE their own zones (both start at 280), and roomAt() then
+     answered NONE for the two people whose whole job is being findable in their department. Five
+     tests went red on one placement: managers not in their department, no work inside deli or
+     bakery, posts on the customer side, stations unstandable, errand pins straying.
+     Moving them is not enough on its own either -- props are depth-sorted by their drawn BOTTOM, so
+     a fixture ending at 313 paints OVER anyone standing at 309. A back wall has to end where the
+     floor people stand on begins, or it is a foreground object pretending to be a background one.
+     Bottom at 280 puts the art against the corridor wall with the whole 280..323 staff lane clear
+     in front of it, which is what "along the walls above deli and bakery" actually describes. */
+  floorProp(440, 251, 'deli_backwall',    'Deli back wall');    /* 29 deep, so 251+29 = 280 */
+  floorProp(915, 247, 'bakery_backwall',  'Bakery back wall');  /* 33 deep, so 247+33 = 280 */
+  /* the generic stocked shelf, repeated along receiving's north wall -- Codex asks for exact
+     160-drawn-pixel steps, which is 89 authored */
+  floorProp(1240, 22, 'wall_shelf_run', 'Wall shelving');
+  floorProp(1329, 22, 'wall_shelf_run', 'Wall shelving');
+  /* break room dressing, so the two tables do not read as a copy-paste */
+  floorProp(930, 100, 'break_counter',     'Break room counter');
+  floorProp(1130, 98, 'break_noticeboard', 'Notice board');
+  /* ⚠️ AND A TRUCK ON THE DOCK. Rear north against the loading edge, cab pointing south down the
+     yard; 474 authored of vehicle in a yard 708 deep. Scenery only -- the player has no reason to
+     be out there and Kyle said so. */
+  floorProp(1310, 320, 'dock_truck', 'Delivery trailer');
   floorProp(700, 976, 'trolley_bay',    'Trolley bay');
   floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor
@@ -14018,7 +14143,24 @@ function loadLevel(id){
      office array, and the office never reaches that code because it returns early -- which is
      why the office keeps its own waypoints and the store had an empty route and no tour. */
   STORE_INTRO_ROUTE.forEach(p=>INTRO_ROUTE.push({x:p.x,y:p.y}));
-  MEETING_SPOT={x:1300, y:230};
+  /* ⚠️ AND EVEN IN THE RIGHT ROOM, A HAND-PICKED POINT PUT HALF THE CREW OUTSIDE IT.
+     Kyle: "in the meeting, too many people stand outside the shipping receiving room." He guessed
+     furniture -- "maybe rearrange that room so the pallet and compactor are closer to the walls?"
+     -- and the measurement says otherwise: the room is 77% standable and there are 243 standable
+     points within 90 units of the huddle for twelve people. It was never short of floor.
+     meetingStand rings outward at 26 authored per ring, up to ring 3 = 78. (1300,230) sits 76 from
+     the west wall and 70 from the south, so ring 3 lands OUTSIDE the room on two sides and
+     snapTarget pushes those people into the BOH corridor. Median 7 of 12 in the room, 5 in the
+     corridor -- which is exactly what he saw.
+     The old point was picked to dodge the two pallets, and dodging them is what moved it into a
+     corner. That is meetingStand's job, not this coordinate's: it already checks clearance per
+     spot. What this needs to be is the point whose RINGS FIT, which is the room's centre --
+     derived from the room so a resize carries it, rather than a third hand-typed coordinate in a
+     line that has now been wrong twice (office tables, then the break room). */
+  const RECV=ROOMS.find(r=>r.name==='SHIPPING / RECEIVING');
+  _mtgResolved=null;
+  MEETING_SPOT = RECV ? {x:Math.round(RECV.x+RECV.w/2), y:Math.round(RECV.y+RECV.h/2)}
+                      : {x:1300, y:230};
   /* ---- THE FRONT DOOR IS A REAL PLACE NOW. EXIT is the level's way out; in the office it is the
      lift lobby, and it was still pointing there in a shop that has actual doors — two front doors
      in the fiction and one in the geometry. Smallest possible fix: point it at the entrance.

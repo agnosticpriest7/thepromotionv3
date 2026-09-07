@@ -1,0 +1,15 @@
+{
+  "file": "sprites/dock_truck.png",
+  "size": [
+    320,
+    1708
+  ],
+  "draw_size": [
+    160.0,
+    854.0
+  ],
+  "orientation": "rear north; cab/front south; entire vehicle visible",
+  "tool": "built-in imagegen",
+  "processing": "Exterior connected bright-background flood fill, crop, premultiplied-alpha resize; interior white roof preserved",
+  "sha256": "33fef573b80ad7fab18607b4e122e65044f4a5f651f25ee9593e8c494a4d1feb"
+}

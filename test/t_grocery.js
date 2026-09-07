@@ -200,8 +200,14 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
 
   /* EVERY NAMED ZONE reachable on foot from the entrance. A zone counts as reached if any
      walkable cell inside its rect is in the fill — a zone packed with fixtures still has floor. */
-  const unreachable = [];
-  (FL.ROOMS || []).forEach(rm => {
+  /* ⚠️ A ZONE MARKED `outside` IS SCENERY AND IS SUPPOSED TO BE UNREACHABLE. The yard is
+     visible past the dock and the player has no business in it, so its roller door is shut.
+     Exempting it must not blunt the check, because the thing this catches -- a room walled off by
+     accident -- is exactly what shutting that door could have caused elsewhere. So the exemption
+     is narrow (a flag set in the level data, not a name matched here) and anchored below. */
+  const unreachable = [], exempt = [];
+  (FL.ROOMS || []).filter(rm => rm.outside).forEach(rm => exempt.push(rm.name));
+  (FL.ROOMS || []).filter(rm => !rm.outside).forEach(rm => {
     let hit = false;
     for (let y = rm.y + CE / 2; y < rm.y + rm.h && !hit; y += CE)
       for (let x = rm.x + CE / 2; x < rm.x + rm.w && !hit; x += CE) {
@@ -210,6 +216,10 @@ ck('the spawn point is walkable', S.walkableAt(Math.round(p.x), Math.round(p.y))
       }
     if (!hit) unreachable.push(rm.name);
   });
+  /* the anchor: exempting everything would pass this trivially, so cap it and name what was
+     skipped. If a second zone ever acquires the flag, this goes red and someone has to justify it. */
+  ck('  ^ and the reachability check was not simply switched off', exempt.length <= 1,
+     exempt.length ? 'exempt as outdoor scenery: ' + exempt.join(', ') : 'nothing exempt');
   ck('every zone is reachable on foot from the entrance', unreachable.length === 0,
      (FL.ROOMS || []).length + ' zones' + (unreachable.length ? ' — MISSING: ' + unreachable.join(', ') : ''));
 

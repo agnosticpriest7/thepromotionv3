@@ -86,19 +86,38 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
      divided into workable slices, and the pitch it reported -- 59/17/42 -- was a real case
      interleaved with its own invisible sections. Third time a label/shape filter has caught
      something that merely resembles the thing it was hunting. */
-  const run = re => L.containers.filter(c => !c.section && re.test(c.label || '')).sort((a, b) => a.x - b.x);
+  /* ⚠️ FOURTH TIME, AND THE COMMENT ABOVE PREDICTED IT. Selecting the run by matching a
+     REGEX ON THE LABEL swept in two props the moment they existed: 'Deli back wall' matches
+     /deli/i, and so does 'Delivery trailer' -- a semi parked in the yard 831 authored away was
+     being measured as part of the deli counter run, which is where the nonsense pitch
+     '16/831' came from. The test was right that something was wrong with the run and wrong about
+     what the run was.
+     A service case is not 'a container whose label contains the word deli'. It is the container
+     drawn with that department's CASE ART. Select on that -- identity, not prose (CLAUDE.md 14)
+     -- and no amount of new furniture named after a department can join the run again. */
+  const run = art => L.containers.filter(c => !c.section && c.art === art).sort((a, b) => a.x - b.x);
   /* THE NORTH WALL IS DAIRY AND DELI. Bakery moved to its own block in the north-east when the
      store was re-planned, so it is one case of its own rather than half of the north run. What is
      being asserted is unchanged: a service counter is a RUN of cases, not a scatter of tables. */
-  const bake = run(/bakery/i), deli = run(/deli/i), dairy = run(/dairy/i);
+  const bake = run('bakery_case'), deli = run('deli_case'), dairy = run('dairy_case');
   ck('every department has its service case', dairy.length >= 1 && deli.length >= 1 && bake.length >= 1,
      bake.length + ' bakery, ' + deli.length + ' deli');
 
   const pitches = arr => { const g2 = []; for (let i = 1; i < arr.length; i++) g2.push(A(arr[i].x) - A(arr[i - 1].x)); return g2; };
   const bp = pitches(bake), dp = pitches(deli);
-  ck('  ^ butted at a uniform pitch, no gaps and no overlaps',
-     bp.concat(dp).every(v => Math.abs(v - CASE_PITCH) <= 1),
-     'bakery ' + bp.join('/') + '  deli ' + dp.join('/') + ' authored (case is ' + CASE_PITCH + ')');
+  /* ⚠️ AND SAY SO WHEN THERE IS NOTHING TO MEASURE. every() on an empty array is true, so
+     with one case per department this line reported 'butted at a uniform pitch' having compared
+     nothing at all -- it read as proof and was decoration. That is not new and it is not caused by
+     the art selector above: bakery and deli have been a single case each since the store was
+     re-planned, so it has been vacuous the whole time. One case is the real design, so failing
+     here would be inventing a defect; the fix is to stop CLAIMING something was checked. It goes
+     back to having teeth by itself the moment any department gets a second case. */
+  const allP = bp.concat(dp);
+  ck(allP.length ? '  ^ butted at a uniform pitch, no gaps and no overlaps'
+                 : '  ^ (no multi-case run in this level, so there is no pitch to check)',
+     allP.every(v => Math.abs(v - CASE_PITCH) <= 1),
+     allP.length ? 'bakery ' + bp.join('/') + '  deli ' + dp.join('/') + ' authored (case is ' + CASE_PITCH + ')'
+                 : 'bakery ' + bake.length + ' case, deli ' + deli.length + ' case — NOTHING COMPARED');
 
   /* the two cases share a SCALE, so their drawn depths land within the level's 1-unit floor */
   const drawn = a2 => { const im = g.ART[a2], wS = L.ART_W[a2]; return (im.naturalHeight * wS / im.naturalWidth) / sc; };

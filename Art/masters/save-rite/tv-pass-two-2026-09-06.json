@@ -1,0 +1,419 @@
+{
+  "date": "2026-09-06",
+  "count": 10,
+  "tool": "Built-in image_gen; prompt records in ignored work directory. Alpha crop and premultiplied Lanczos delivery. Floor crop/periodic-plus-smooth wrap finishing.",
+  "working_directory": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\tv-pass-two-2026-09-06",
+  "disk_bytes": 1039900,
+  "decoded_bytes": 2330624,
+  "new_raw_bytes": 27923370,
+  "floor_audit": [
+    {
+      "file": "floor_vct.png",
+      "source_crop": [
+        48,
+        48,
+        576,
+        576
+      ],
+      "size": [
+        128,
+        128
+      ],
+      "drawn_size": [
+        64,
+        64
+      ],
+      "method": "Imagegen material revision and wrap healing, crop to material period, periodic-plus-smooth finishing, Lanczos128; no edge equality forcing",
+      "before": [
+        {
+          "axis": "rows",
+          "seam_step": 6.677083333333371,
+          "median_interior_step": 0.921875,
+          "ratio": 7.242937853107386,
+          "rms_pixel_step": 7.307007671482978
+        },
+        {
+          "axis": "columns",
+          "seam_step": 6.041666666666657,
+          "median_interior_step": 0.3749999999999716,
+          "ratio": 16.111111111112308,
+          "rms_pixel_step": 7.0622234459127675
+        }
+      ],
+      "after": [
+        {
+          "axis": "rows",
+          "seam_step": 0.6041666666666288,
+          "median_interior_step": 1.3906249999999716,
+          "ratio": 0.43445692883893294,
+          "rms_pixel_step": 9.049439823055963
+        },
+        {
+          "axis": "columns",
+          "seam_step": 1.0260416666666856,
+          "median_interior_step": 0.8958333333331723,
+          "ratio": 1.1453488372095293,
+          "rms_pixel_step": 8.188427640409497
+        }
+      ],
+      "texture_std": 10.278934947302528,
+      "opposite_rows_equal": false,
+      "opposite_columns_equal": false
+    },
+    {
+      "file": "floor_asphalt.png",
+      "source_crop": [
+        200,
+        200,
+        840,
+        840
+      ],
+      "size": [
+        128,
+        128
+      ],
+      "drawn_size": [
+        64,
+        64
+      ],
+      "method": "Imagegen material revision and wrap healing, crop to material period, periodic-plus-smooth finishing, Lanczos128; no edge equality forcing",
+      "before": null,
+      "after": [
+        {
+          "axis": "rows",
+          "seam_step": 0.7864583333333357,
+          "median_interior_step": 0.9010416666666643,
+          "ratio": 0.8728323699422015,
+          "rms_pixel_step": 12.288558929164784
+        },
+        {
+          "axis": "columns",
+          "seam_step": 0.2916666666666856,
+          "median_interior_step": 1.265624999999993,
+          "ratio": 0.2304526748971356,
+          "rms_pixel_step": 12.30980300411018
+        }
+      ],
+      "texture_std": 9.737026286923012,
+      "opposite_rows_equal": false,
+      "opposite_columns_equal": false
+    },
+    {
+      "file": "floor_entry.png",
+      "source_crop": [
+        200,
+        200,
+        840,
+        413
+      ],
+      "size": [
+        128,
+        128
+      ],
+      "drawn_size": [
+        64,
+        64
+      ],
+      "method": "Imagegen material revision and wrap healing, crop to material period, periodic-plus-smooth finishing, Lanczos128; no edge equality forcing",
+      "before": [
+        {
+          "axis": "rows",
+          "seam_step": 12.338541666666671,
+          "median_interior_step": 1.7447916666666643,
+          "ratio": 7.071641791044788,
+          "rms_pixel_step": 12.52116264126015
+        },
+        {
+          "axis": "columns",
+          "seam_step": 2.9739583333333,
+          "median_interior_step": 0.5104166666666785,
+          "ratio": 5.826530612244698,
+          "rms_pixel_step": 3.9168882916020062
+        }
+      ],
+      "after": [
+        {
+          "axis": "rows",
+          "seam_step": 5.067708333333336,
+          "median_interior_step": 12.588541666666664,
+          "ratio": 0.4025651634257346,
+          "rms_pixel_step": 8.179517949664815
+        },
+        {
+          "axis": "columns",
+          "seam_step": 0.08333333333332149,
+          "median_interior_step": 0.671875,
+          "ratio": 0.12403100775192036,
+          "rms_pixel_step": 8.24115687671741
+        }
+      ],
+      "texture_std": 12.16149749177759,
+      "opposite_rows_equal": false,
+      "opposite_columns_equal": false
+    },
+    {
+      "file": "floor_concrete.png",
+      "source_crop": [
+        170,
+        100,
+        300,
+        230
+      ],
+      "size": [
+        128,
+        128
+      ],
+      "drawn_size": [
+        64,
+        64
+      ],
+      "method": "Imagegen material revision and wrap healing, crop to material period, periodic-plus-smooth finishing, Lanczos128; no edge equality forcing",
+      "before": [
+        {
+          "axis": "rows",
+          "seam_step": 4.156250000000028,
+          "median_interior_step": 0.546875,
+          "ratio": 7.600000000000052,
+          "rms_pixel_step": 5.06005599442009
+        },
+        {
+          "axis": "columns",
+          "seam_step": 6.536458333333343,
+          "median_interior_step": 0.44270833333328596,
+          "ratio": 14.764705882354543,
+          "rms_pixel_step": 6.823799243171733
+        }
+      ],
+      "after": [
+        {
+          "axis": "rows",
+          "seam_step": 0.2447916666666572,
+          "median_interior_step": 0.4479166666666856,
+          "ratio": 0.5465116279069325,
+          "rms_pixel_step": 4.588822470598166
+        },
+        {
+          "axis": "columns",
+          "seam_step": 1.458333333333286,
+          "median_interior_step": 0.4218749999999716,
+          "ratio": 3.4567901234569107,
+          "rms_pixel_step": 4.264273417333575
+        }
+      ],
+      "texture_std": 4.859995369325752,
+      "opposite_rows_equal": false,
+      "opposite_columns_equal": false
+    }
+  ],
+  "props": [
+    {
+      "file": "bakery_backwall.png",
+      "size": [
+        600,
+        160
+      ],
+      "drawn_suggested": [
+        300.0,
+        80.0
+      ],
+      "raw_bbox": [
+        29,
+        50,
+        2029,
+        702
+      ]
+    },
+    {
+      "file": "break_counter.png",
+      "size": [
+        200,
+        100
+      ],
+      "drawn_suggested": [
+        100.0,
+        50.0
+      ],
+      "raw_bbox": [
+        93,
+        10,
+        1675,
+        876
+      ]
+    },
+    {
+      "file": "break_noticeboard.png",
+      "size": [
+        160,
+        87
+      ],
+      "drawn_suggested": [
+        80.0,
+        43.5
+      ],
+      "raw_bbox": [
+        67,
+        115,
+        1471,
+        876
+      ]
+    },
+    {
+      "file": "deli_backwall.png",
+      "size": [
+        600,
+        160
+      ],
+      "drawn_suggested": [
+        300.0,
+        80.0
+      ],
+      "raw_bbox": [
+        19,
+        41,
+        2030,
+        741
+      ]
+    },
+    {
+      "file": "dock_truck.png",
+      "size": [
+        600,
+        400
+      ],
+      "drawn_suggested": [
+        300.0,
+        200.0
+      ],
+      "raw_bbox": [
+        239,
+        14,
+        1313,
+        969
+      ]
+    },
+    {
+      "file": "wall_shelf_run.png",
+      "size": [
+        320,
+        160
+      ],
+      "drawn_suggested": [
+        160.0,
+        80.0
+      ],
+      "raw_bbox": [
+        0,
+        208,
+        2048,
+        538
+      ]
+    }
+  ],
+  "files": [
+    {
+      "file": "floor_vct.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 29932,
+      "decoded_bytes": 65536,
+      "sha256": "e412905a958fef79a4da0ba1ce8f0e3630ebe386fd7b764bf0908dc007e1046b"
+    },
+    {
+      "file": "floor_asphalt.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 32164,
+      "decoded_bytes": 65536,
+      "sha256": "d1a499035ae9dcf094892c299f9c82ebc23e36f3e740a4858fa4fb0224789500"
+    },
+    {
+      "file": "floor_entry.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 27928,
+      "decoded_bytes": 65536,
+      "sha256": "c066a4d31b4d649b935240092d80011fbd02cbce4214f6a1b60eb271842b483e"
+    },
+    {
+      "file": "floor_concrete.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 25974,
+      "decoded_bytes": 65536,
+      "sha256": "7aed86cd26a2b09d938db5122f43f5789b5420f2cbbf7453efef73b1d143ea5c"
+    },
+    {
+      "file": "bakery_backwall.png",
+      "size": [
+        600,
+        160
+      ],
+      "bytes": 173019,
+      "decoded_bytes": 384000,
+      "sha256": "be34c253785f4f3099dd541741ca1984afb746e8b747175014b25d183fcb6f36"
+    },
+    {
+      "file": "break_counter.png",
+      "size": [
+        200,
+        100
+      ],
+      "bytes": 34765,
+      "decoded_bytes": 80000,
+      "sha256": "f3e8cf4c2e3c6acc8d591ba12ab97a25bfca1d2fb974e2c071bf0dee2fcf7f10"
+    },
+    {
+      "file": "break_noticeboard.png",
+      "size": [
+        160,
+        87
+      ],
+      "bytes": 32871,
+      "decoded_bytes": 55680,
+      "sha256": "daf60f3353a9c6ca61047ff5cb062c183966d074eb3b5182c33b225bb468d361"
+    },
+    {
+      "file": "deli_backwall.png",
+      "size": [
+        600,
+        160
+      ],
+      "bytes": 159405,
+      "decoded_bytes": 384000,
+      "sha256": "11b3c2353b5deda97a7ce2c9bc0cb252e5cdcd99645c601ed1e69a2c02eeda85"
+    },
+    {
+      "file": "dock_truck.png",
+      "size": [
+        600,
+        400
+      ],
+      "bytes": 450062,
+      "decoded_bytes": 960000,
+      "sha256": "9c7133ee224fd6d3ddee7c7ece68ee1a91701259cf52cb1d3bfa2a77241728b3"
+    },
+    {
+      "file": "wall_shelf_run.png",
+      "size": [
+        320,
+        160
+      ],
+      "bytes": 73780,
+      "decoded_bytes": 204800,
+      "sha256": "ae5e2725daeb4440a9bfe276fdab38b54b26aea37eacc706c62177463aff3aea"
+    }
+  ],
+  "limitations": [
+    "Draw sizes proposed, not measured after game integration. Xbox visual validation remains with Kyle/Claude.",
+    "Concrete and VCT use joint-free interior material crops to avoid repeating grid boundaries.",
+    "Dock truck depicts the rear loading section in shallow elevation, not a full tractor-trailer; exact scenery anchor is layout work."
+  ]
+}

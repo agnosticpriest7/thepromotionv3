@@ -1,0 +1,97 @@
+[
+  {
+    "file": "deli_backwall.png",
+    "size": [
+      600,
+      103
+    ],
+    "suggested_draw_size": [
+      300.0,
+      51.5
+    ],
+    "alpha_min": 0,
+    "source_crop": [
+      79,
+      211,
+      2130,
+      562
+    ],
+    "sha256": "1ce51108cc70022534d7c032a73afc0a56f1fd6c5787649107dbca77375b55b8"
+  },
+  {
+    "file": "bakery_backwall.png",
+    "size": [
+      600,
+      118
+    ],
+    "suggested_draw_size": [
+      300.0,
+      59.0
+    ],
+    "alpha_min": 0,
+    "source_crop": [
+      104,
+      143,
+      2081,
+      532
+    ],
+    "sha256": "e458b87f7221c9b28c96f7c35c8f8b9da7e5d23f36c9ba99d2ea52d7c9798497"
+  },
+  {
+    "file": "break_counter.png",
+    "size": [
+      200,
+      79
+    ],
+    "suggested_draw_size": [
+      100.0,
+      39.5
+    ],
+    "alpha_min": 0,
+    "source_crop": [
+      122,
+      174,
+      1657,
+      783
+    ],
+    "sha256": "3d150a7cc6a23cb7a03681f5e52244fe41a34222e5a5a4d3008f24d90d344e64"
+  },
+  {
+    "file": "wall_shelf_run.png",
+    "size": [
+      320,
+      61
+    ],
+    "suggested_draw_size": [
+      160.0,
+      30.5
+    ],
+    "alpha_min": 242,
+    "source_crop": [
+      55,
+      157,
+      2114,
+      536
+    ],
+    "sha256": "90221408798ca68299f6b91cfd664a2d5358246e45b4e899d1185cee22fdc2b2"
+  },
+  {
+    "file": "dock_truck.png",
+    "size": [
+      600,
+      400
+    ],
+    "suggested_draw_size": [
+      300.0,
+      200.0
+    ],
+    "alpha_min": 0,
+    "source_crop": [
+      226,
+      83,
+      929,
+      1355
+    ],
+    "sha256": "4ecc8839817b023c419cc5a8aab62c57f4901982efc6418bee5725b7b253a73e"
+  }
+]
