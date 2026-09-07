@@ -1189,3 +1189,36 @@ nav grid the game actually walks on, which is the only version that matters.)
   which is a design call, so I've left them.
 - **Three item icons have no PNG** — `drawer`, `shift_covered`, `coffee_run`. They 404 and fall back
   to their emoji, so nothing is broken, but they're the only art the game asks for and doesn't get.
+
+---
+
+## V — the new props were half size
+
+You: *"some things are a little too small, and they don't fill the space."* Both true, and they were
+separate problems.
+
+**They were half size, and nothing was checking.** Measured against the player's drawn height, the
+milk pallet implied a 0.76 m stack, the bread rack 0.63 m, the carton shipper 0.45 m — about half of
+each. The reason they could ship like that: `t_props` has a table of every prop's real-world size and
+asserts the drawn size matches, and **not one of these seven was in it**. A prop the table doesn't
+name is a prop nothing checks, so `ART_W` could have been any number at all.
+
+All seven are sized at true plan scale now and all seven are in that table, so it can't drift again.
+One nice confirmation: the bakery **tray rack** recomputed to exactly the number it already had —
+which is the one that looked right in your photo.
+
+**And they now fill the room.** The cooler has a second run of stock down its west wall rather than
+one row in the corner, and the bakery got **two freestanding bread racks out on the bare red tile**
+south of the counter — the exact space in your screenshot. That's what stands there in a real bakery
+department, and it's the only thing in there a customer is meant to walk up to.
+
+**What to look at:** the walk-in cooler should read as a working cold room now, and the bakery floor
+shouldn't be an empty red field. Check the bread racks against your own height — they should be about
+chest-high.
+
+Two things caught on the way. The bread racks' first position sat squarely on the opening tour's
+path — the tour is teleported along its waypoints and collides with nothing, so it would have walked
+straight through them in full view, which is the exact complaint that rebuilt the tour. And doubling
+a prop's size moves *both* its edges, and I was only aiming the
+bottom one — the tray rack's top ended up 11 units out through the back wall of the building.
+`placement.js` flagged it as sprite-through-wall before it ever reached you.

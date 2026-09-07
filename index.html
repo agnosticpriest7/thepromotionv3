@@ -963,7 +963,15 @@ const ART_W={
      freezer_bay_wall keeps the wall unit's 50. */
   shelf_bay_a:99, shelf_bay_b:99, shelf_bay_c:99, shelf_bay_d:99,
   shelf_bay_e:99, freezer_bay_a:99, freezer_bay_b:99, freezer_bay_wall:50,
-  dairy_milk_crates:30, dairy_carton_shipper:30, dairy_empty_crate:25, dairy_milk_pallet:35,
+  /* ⚠️ SIZED AT TRUE PLAN SCALE, WHICH ROUGHLY DOUBLED ALL OF THEM. Kyle: "some things are
+     a little too small, and they don't fill the space." Measured: the pallet implied a 0.76 m
+     stack, the bread rack 0.63 m, the carton shipper 0.45 m -- about half of each. They were never
+     sized against anything, because nothing sized them: REAL_M in t_props did not list one of
+     these seven, so ART_W could be any number at all and the scale assertion had nothing to say.
+     They are in that table now, so this cannot drift again.
+     The tray rack recomputed to exactly the 50 it already had -- which is the check working: it
+     was the one that looked right on the TV. */
+  dairy_milk_crates:53, dairy_carton_shipper:76, dairy_empty_crate:46, dairy_milk_pallet:91,
   wc_sink_counter:100, wc_partition_run:100, wc_door_closed:50, wc_door_ajar:50,
   wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:18,
   /* ⚠️ THE TRUCK IS 160 WIDE AND 854 TALL DRAWN -- a whole articulated vehicle seen from above,
@@ -971,8 +979,8 @@ const ART_W={
      600x400 its first note proposed. Taking the number from the delivered manifest rather than
      from the prose is the difference between a truck and a smear. */
   deli_backwall:300, bakery_backwall:300, wall_shelf_run:160,
-  break_counter:100, break_noticeboard:80, dock_truck:160, bakery_bread_rack:70,
-  bakery_tray_rack:50, bakery_back_shelf:80,
+  break_counter:100, break_noticeboard:80, dock_truck:160, bakery_bread_rack:137,
+  bakery_tray_rack:50, bakery_back_shelf:152,
 
   cubicle_desk:108, cubicle_desk_up:108, cubicle_desk_left:58, cubicle_desk_right:58, assistant_desk:120, manager_desk:130, conference_table:205, reception_desk:140, reception_desk2:150,
   office_chair:34, filing_cabinet:44, printer:56, water_cooler:40, coffee_machine:56,
@@ -13594,18 +13602,37 @@ function loadLevel(id){
      Same shape as the yard an hour earlier, from the opposite direction: that time I shut a room
      on purpose, this time by accident, and the SAME assertion caught both. Three west of the door,
      one east, and the 131..191 approach stays open. */
-  floorProp(32,  108, 'dairy_milk_pallet',    'Milk pallet');     /* 20 deep -> bottom 128 */
-  floorProp(66,  105, 'dairy_milk_crates',    'Milk crates');     /* 23 deep -> bottom 128 */
-  floorProp(95,  116, 'dairy_carton_shipper', 'Carton shipper');  /* 12 deep -> bottom 128 */
-  floorProp(205, 114, 'dairy_empty_crate',    'Empty crates');    /* 14 deep -> bottom 128, east of the door */
-  /* ⚠️ THE BAKERY RACKS GO EAST OF THE COUNTER, NOT IN THE STAFF LANE. The lane is only 43
-     deep (280..323) and Doreen's station is at (998,309) -- which is exactly how the back walls put
-     two department managers into roomAt() === NONE last time. The counter's art ends at x1082, so
-     everything from 1090 to the east wall at 1208 is open bakery floor nobody works on, and every
-     bottom edge here sits north of where anyone stands. */
-  floorProp(1090, 278, 'bakery_back_shelf', 'Bakery back shelf'); /* 22 deep -> bottom 300 */
-  floorProp(1140, 283, 'bakery_bread_rack', 'Bread rack');        /* 17 deep -> bottom 300 */
-  floorProp(1178, 279, 'bakery_tray_rack',  'Tray rack');         /* 47 deep -> bottom 326 */
+  floorProp(24,   98, 'dairy_milk_pallet',    'Milk pallet');      /* 51x52 -> bottom 150 */
+  floorProp(84,  109, 'dairy_milk_crates',    'Milk crates');      /* 29x41 -> bottom 150 */
+  /* the cooler's only door is the gap at x 131..191 in this wall -- see the note above */
+  floorProp(198, 120, 'dairy_carton_shipper', 'Carton shipper');   /* 42x30 -> bottom 150 */
+  floorProp(250, 125, 'dairy_empty_crate',    'Empty crates');     /* 26x25 -> bottom 150 */
+  /* ⚠️ AND A SECOND RUN DOWN THE WEST WALL, because one row of stock in a 289x150 cold room still
+     reads as an empty room with something in the corner. Kyle: "they don't fill the space." The
+     centre and the whole east half stay open, so the room is dressed rather than furnished. */
+  floorProp(24,  164, 'dairy_milk_crates',    'Milk crates');      /* -> bottom 205 */
+  floorProp(24,  215, 'dairy_empty_crate',    'Empty crates');     /* -> bottom 240 */
+  /* ⚠️ BAKERY: ON THE WALL, ABOVE THE STAFF LANE. Bottom edge on the zone's north edge (280) for
+     the same two reasons as the back walls -- the lane is only 43 deep with Doreen standing at 309,
+     and props depth-sort by drawn bottom, so anything ending below her paints over her. */
+  /* ⚠️ TOP EDGE INSIDE THE WALL, NOT ABOVE IT. Aiming the BOTTOM at the zone edge (280) put
+     the tray rack's top at 233 and the wall's own top is 244, so 11 units of rack stuck out through
+     the back of the building -- placement.js caught it as sprite-thru-wall. Doubling a prop's size
+     moves BOTH its edges, and only one of them was being aimed. Anchored on the top edge now.
+     Standing in the lane is not a concern this far east: Doreen works at x998, these are past 1092. */
+  floorProp(1092, 246, 'bakery_back_shelf', 'Bakery back shelf');  /* 84x42 -> 246..288 */
+  floorProp(1176, 246, 'bakery_tray_rack',  'Tray rack');          /* 28x47 -> 246..293 */
+  /* ⚠️ AND TWO BREAD RACKS OUT ON THE FLOOR. The bare red tile south of the counter is the space
+     Kyle photographed; freestanding bread racks are what stands there in a real bakery department,
+     and they are the only thing here a customer is meant to walk up to. */
+  /* ⚠️ AND THE OPENING TOUR WALKS THROUGH HERE. At y 387..420 these sat squarely on the
+     route's run east along y=390, and t_intro_route caught all three legs. The tour is TELEPORTED
+     along its waypoints and collides with nothing, so furniture dropped on the route does not push
+     the walkers aside -- they walk through it in full view, which is the exact complaint that
+     rebuilt this tour in the first place. The route is Kyle's chosen path, so the furniture moves.
+     Clear of the east-west run at y=390 and of the turn south at x=1010, both by a body's width. */
+  floorProp(916,  412, 'bakery_bread_rack', 'Bread rack');         /* 76x33 -> 412..445 */
+  floorProp(1035, 412, 'bakery_bread_rack', 'Bread rack');         /* -> 412..445 */
   floorProp(700, 976, 'trolley_bay',    'Trolley bay');
   floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor

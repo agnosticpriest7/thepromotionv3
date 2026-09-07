@@ -263,7 +263,15 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
                    shelf_run_e: 1.3, endcap: 1.3, checkstand: 1.1, checkstand_r: 1.1,
                    deli_case: 4.27, bakery_case: 4.27, dairy_case: 2.5,
                    produce_fruit_a: 1.8, produce_fruit_b: 1.8, produce_veg: 1.8, produce_mixed: 1.8,
-                   baler: 1.5, pallet: 1.2, goback_cart: 1.0 };
+                   baler: 1.5, pallet: 1.2, goback_cart: 1.0,
+                   /* ⚠️ THE SEVEN THAT WERE NOT LISTED. Every one of them shipped at about half
+                      size and this assertion was silent, because a prop it does not name is a prop
+                      it does not check -- ART_W could be any number. They were also drawn nowhere
+                      at all for weeks, which is the same gap one layer up. Real WIDTHS, of the
+                      physical objects. */
+                   dairy_milk_pallet: 1.2, dairy_milk_crates: 0.7, dairy_carton_shipper: 1.0,
+                   dairy_empty_crate: 0.6, bakery_back_shelf: 2.0, bakery_bread_rack: 1.8,
+                   bakery_tray_rack: 0.66 };
   const ppm = w.sandbox.pxPerMetre();
   ck('the store declares one scale, derived from the character sprite',
      ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');
