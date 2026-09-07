@@ -511,6 +511,59 @@ function lint(ctx) {
       }
     }
   }
+
+  /* ---- 6) ⚠️ DID A PROP SEAL A ROOM? ----------------------------------------------------
+     The doorway check above is a WARN and a HEURISTIC: it looks for a gap between two wall
+     segments 30..60 units wide and asks whether a footprint covers it. Four crates stacked across
+     the walk-in cooler's only door produced 0 FAIL and 0 doorway warnings -- the props overlap
+     nothing, stand in no wall, and clipped the detected band by two units. The room was sealed and
+     this file said GREEN. The gate caught it fifteen minutes later; this is the tool CLAUDE.md §2
+     says to run after every prop edit, so it should have caught it in ten seconds.
+     "Covers a gap I guessed was a door" is a proxy. "You can still walk there" is the property.
+
+     ⚠️ AND ASK THE GAME WHETHER IT CAN WALK THERE -- DO NOT REIMPLEMENT IT. The first version of
+     this check flood-filled with solid() and a 16-unit body, and it SURVIVED the very mutant it was
+     written for, while t_grocery caught it. The game paths on a NAV GRID of 20-unit cells and
+     buildGrid claims any cell a blocker touches AT ALL, so a 14-wide crate in a 60-wide doorway
+     stops everyone -- while a 16-unit box slipped through in my own geometry and called the room
+     reachable. Two different questions, and only one of them is the one players live in.
+     walkableAt() is the game's own answer on the game's own grid, so this cannot drift from it. */
+  {
+    const SB = ctx.world.sandbox, G = ctx.world.g, LZ = G.layout, sc = LZ.S, au = v => Math.round(v / sc);
+    const CE = Math.round(20 * sc);
+    const cols = Math.floor(LZ.W / CE), rows = Math.floor(LZ.H / CE);
+    const seen = new Set();
+    const r0 = Math.floor(G.player.y / CE), c0 = Math.floor(G.player.x / CE);
+    const q = [[r0, c0]]; seen.add(r0 + ',' + c0);
+    while (q.length) {
+      const [r, c] = q.shift();
+      for (const [dr, dc] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+        const nr = r + dr, nc = c + dc, k = nr + ',' + nc;
+        if (nr < 0 || nc < 0 || nr >= rows || nc >= cols || seen.has(k)) continue;
+        if (!SB.walkableAt(nc * CE + CE / 2, nr * CE + CE / 2)) continue;
+        seen.add(k); q.push([nr, nc]);
+      }
+    }
+    /* ⚠️ ANCHOR: a fill that reached almost nothing would report every room sealed, and an empty
+       ROOMS list would report none. Fail loudly with the numbers instead of either. */
+    const nRooms = (LZ.ROOMS || []).filter(r => !r.outside).length;
+    if (seen.size < 100 || nRooms < 3) {
+      fails.push('FAIL fill-degenerate   flood fill reached ' + seen.size + ' cells over ' + nRooms +
+                 ' zones -- the reachability check proves nothing');
+    } else {
+      for (const rm of (LZ.ROOMS || [])) {
+        if (rm.outside) continue;                       // scenery (the yard), sealed on purpose
+        let hit = false;
+        for (let y = rm.y + CE / 2; y < rm.y + rm.h && !hit; y += CE)
+          for (let x = rm.x + CE / 2; x < rm.x + rm.w && !hit; x += CE)
+            if (seen.has(Math.floor(y / CE) + ',' + Math.floor(x / CE))) hit = true;
+        if (!hit) fails.push('FAIL sealed-room       ' + rm.name + ' @[' + au(rm.x) + ',' + au(rm.y) +
+                             ' -> ' + au(rm.x + rm.w) + ',' + au(rm.y + rm.h) + ']' +
+                             '  nothing in it can be reached on foot');
+      }
+    }
+  }
+
   return { fails, warns, nDoors: doors.length };
 }
 
