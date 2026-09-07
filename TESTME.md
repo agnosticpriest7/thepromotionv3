@@ -1259,3 +1259,48 @@ registered and **no PNG at all**.
 Given the Xbox ran out of memory earlier in this project, that's worth reclaiming — but deregistering
 art is the kind of change that can quietly break a fallback, so I've left it. Say the word and I'll
 do it properly with the gate behind it.
+
+---
+
+## X — office audit after a week of store work
+
+No code changed. This is the result of combing the office over, since almost everything this week
+touched shared code.
+
+**The strongest result: the office simulation is byte-identical to before any of it.** I ran the same
+seeded office game on the commit from before this session's first change and on `main`, 150,000
+frames each — about 5 in-game days — recording every day boundary, phase transition, headcount, rank
+and promotion count. The two traces are the same line for line. Nothing I did to Save-Rite moved the
+office by one frame.
+
+That's a different claim from "the tests pass", which is also true — the full gate was green on this
+commit, all 65.
+
+**Checked in the browser, on a clean new office game:**
+
+- Boots, correct office cast (Brenda, Wren, Sana, Gil, Marcus, Otis, Ravinder, Dale — 19 of them),
+  day 1, rank 0, **0 render errors**.
+- **Whole-floor render sweep** — 408 camera positions covering the entire office, 52 distinct
+  sprites, 0 render errors, and **not one piece of store art drawn anywhere**, including the new
+  washroom and dairy kits.
+- **The printer meltdown still works.** Homage forced, the victim walks to the printer, the bat
+  reaches the impact frame, onlookers gather. (I scrapped the store's bat sheets this week; the
+  office's are untouched.)
+- **All seven ranks** pose without error.
+- **Save round-trip** at `SAVE_VERSION 6`: rank 3 / day 4 saved, state mutated, loaded back exactly.
+  And the version discipline holds — a stale save, a save with no version, and a null are each
+  **refused** rather than loaded corrupt.
+
+**One thing to eyeball, because it's the only office-visible change:** seated characters. The
+away-facing sitter trim (`SEAT_UP_SCALE`) is shared by both buildings, so the 0.88 you approved in
+the store's break room also applies to office desks. Both facings render at consistent size in my
+shots, but that call is yours — check a desk row where someone sits with their back to you.
+
+**Two things I chased and cleared** — worth writing down so nobody re-chases them:
+
+- A junk `promo:slot:undefined` key and Save-Rite crew names appearing in the office. Both were **my
+  own artefact**: I'd removed `promo:level` by hand while a grocery save sat on disk, which is a
+  state the game never creates. A clean New Game writes only `promo:slot:0` and loads the right cast.
+- `ladderSteps()` returns null at INTERN, so "THE WAY UP" has nothing to show at the starting rank.
+  That's deliberate — the first rung is ungated (`case 'JUNIOR SALES': return {ok:true}`), and the
+  panel is only offered from rank 2 up, so the null is never reached in the UI.
