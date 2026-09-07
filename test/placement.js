@@ -33,6 +33,68 @@ let WORLD_W = 1500, WORLD_H = 760;
    The harness stubs Image at 64x64 (aspect lost), so we read the real width/
    height off disk. Fall back to a square (authored ART_W aspect) if missing. */
 const _dim = {};
+/* ⚠️ A SPRITE'S BOX IS NOT ITS PROP. The office kitchen counters are 180x180 images of a counter
+   that fills 136 of those columns -- 6.1 authored units of transparent margin down each side. Laid
+   as a continuous worktop their visible edges butt exactly, and their BOXES overlap by 13, so a
+   linter that stamps the full rect reports three overlaps in a run of furniture that is correct.
+   This linter exists to answer "does the drawn art collide", and the drawn art is the opaque part.
+
+   Decoding a PNG needs no dependency: zlib is built in, and every sprite here is 8-bit. Anything
+   this cannot read (interlaced, 16-bit, paletted) falls back to the full rect, which is the old
+   behaviour -- so a format it does not understand can only be as wrong as before, never worse.
+   An RGB image has no transparency and is its own bounds. */
+const zlib = require('zlib');
+const _opq = {};
+function opaqueBounds(key) {                 // fractions of the image: {l,r,t,b} in 0..1
+  if (!key) return null;
+  if (key in _opq) return _opq[key];
+  let f = null;
+  try {
+    const b = fs.readFileSync(path.join(ART_DIR, key + '.png'));
+    const w = b.readUInt32BE(16), h = b.readUInt32BE(20);
+    const depth = b[24], ctype = b[25], interlace = b[28];
+    if (depth === 8 && ctype === 6 && interlace === 0) {
+      const idat = [];
+      let p = 8;
+      while (p + 8 <= b.length) {
+        const len = b.readUInt32BE(p), type = b.toString('latin1', p + 4, p + 8);
+        if (type === 'IDAT') idat.push(b.slice(p + 8, p + 8 + len));
+        if (type === 'IEND') break;
+        p += 12 + len;
+      }
+      const raw = zlib.inflateSync(Buffer.concat(idat));
+      const bpp = 4, stride = w * bpp;
+      const cur = Buffer.alloc(stride), prev = Buffer.alloc(stride);
+      let minX = w, maxX = -1, minY = h, maxY = -1, off = 0;
+      for (let y = 0; y < h; y++) {
+        const filt = raw[off++];
+        raw.copy(cur, 0, off, off + stride); off += stride;
+        for (let i = 0; i < stride; i++) {          // undo the scanline filter
+          const a = i >= bpp ? cur[i - bpp] : 0, up = prev[i], ul = i >= bpp ? prev[i - bpp] : 0;
+          let v = cur[i];
+          if (filt === 1) v += a;
+          else if (filt === 2) v += up;
+          else if (filt === 3) v += (a + up) >> 1;
+          else if (filt === 4) {
+            const pa = Math.abs(up - ul), pb = Math.abs(a - ul), pc = Math.abs(a + up - 2 * ul);
+            v += (pa <= pb && pa <= pc) ? a : (pb <= pc ? up : ul);
+          }
+          cur[i] = v & 255;
+        }
+        for (let x = 0; x < w; x++) {
+          if (cur[x * bpp + 3] > 16) {
+            if (x < minX) minX = x; if (x > maxX) maxX = x;
+            if (y < minY) minY = y; if (y > maxY) maxY = y;
+          }
+        }
+        cur.copy(prev);
+      }
+      if (maxX >= minX) f = { l: minX / w, r: (maxX + 1) / w, t: minY / h, b: (maxY + 1) / h };
+    }
+  } catch (e) { /* unreadable -> null -> full rect, i.e. the old behaviour */ }
+  _opq[key] = f;
+  return f;
+}
 function spriteDims(key) {
   if (!key) return null;
   if (key in _dim) return _dim[key];
@@ -78,9 +140,19 @@ function buildContext(opts) {
   const ART_W = L.ART_W || {}, OBJ_ART = L.OBJ_ART || {}, CONT_ART = L.CONT_ART || {};
   const deskArt = w.g.fn && w.g.fn.deskArt;
 
+  /* @W@ THE PER-ENTRY `art` OVERRIDE WAS BEING IGNORED, SO THIS LINTED THE WRONG SPRITE.
+     The game draws a container with `c.art || CONT_ART[c.kind] || 'filing_cabinet'` and an object
+     with `o.art || OBJ_ART[o.type]` -- the override is how a level stands a different prop in for a
+     kind, and Save-Rite uses it for nearly every fixture it has: the shelf runs, the freezers, the
+     cases, the produce trays, the checkstands, the go-back cart. Dropping it meant this linter --
+     whose entire job is to stamp a prop's TRUE DRAWN FOOTPRINT -- was stamping a filing cabinet
+     over a five-metre freezer run and calling the result clean.
+     It stayed green because it was wrong in a way nothing collided with: one sprite per run has no
+     neighbour to overlap. The moment aisles became stacked bays it invented six overlaps that do
+     not exist, and that is the only reason anybody looked. Measure what the game draws. */
   function artKey(e, arr) {
-    if (arr === 'objects')    return OBJ_ART[e.type];
-    if (arr === 'containers') return CONT_ART[e.kind] || 'filing_cabinet';
+    if (arr === 'objects')    return e.art || OBJ_ART[e.type];
+    if (arr === 'containers') return e.art || CONT_ART[e.kind] || 'filing_cabinet';
     if (arr === 'desks')      return (deskArt ? deskArt(e) : (e.art || 'cubicle_desk'));
     return null;
   }
@@ -102,8 +174,16 @@ function buildContext(opts) {
     const dim = spriteDims(key);
     let dh = dim ? Math.round(dim.h * dw / dim.w) : dw;    // fallback: square
     if (!isFinite(dh) || dh <= 0) dh = dw;
-    const leftPx = Math.round(cx - dw / 2), bottomPx = Math.round(cyB);
-    const topPx = bottomPx - dh, rightPx = leftPx + dw;
+    let leftPx = Math.round(cx - dw / 2), bottomPx = Math.round(cyB);
+    let topPx = bottomPx - dh, rightPx = leftPx + dw;
+    /* shrink onto the visible pixels -- see opaqueBounds */
+    const ob = opaqueBounds(key);
+    if (ob) {
+      const l = leftPx + dw * ob.l, r = leftPx + dw * ob.r;
+      const t = topPx + dh * ob.t,  bt = topPx + dh * ob.b;
+      leftPx = Math.round(l); rightPx = Math.round(r);
+      topPx = Math.round(t);  bottomPx = Math.round(bt);
+    }
     return {
       left: A(leftPx), right: A(rightPx), top: A(topPx), bottom: A(bottomPx),
       cx: A(cx), cyB: A(cyB), w: A(dw), h: A(dh), key: key || '?'

@@ -1,0 +1,2198 @@
+{
+  "delivery_date": "2026-09-06",
+  "tool": "built-in image_gen for22 generated assets; deterministic requested bay recuts and premultiplied-alpha delivery resize",
+  "delivery_count": 167,
+  "environment_count": 31,
+  "cast_walk_count": 136,
+  "disk_bytes": 5285081,
+  "decoded_bytes": 17465976,
+  "new_raw_bytes": 36803332,
+  "backup_bytes": 13439573,
+  "working_directory": "C:\\Users\\Kyle_\\Documents\\thepromotionv3\\Art\\masters\\save-rite\\overnight\\tv-pass-2026-09-06",
+  "files": [
+    {
+      "file": "bakery_back_shelf.png",
+      "size": [
+        160,
+        79
+      ],
+      "bytes": 25619,
+      "decoded_bytes": 50560,
+      "sha256": "6a4abaf25c7cbf88e9602737d26c3e86e564608b18987850983036aa2b595b8b"
+    },
+    {
+      "file": "bakery_bread_rack.png",
+      "size": [
+        140,
+        60
+      ],
+      "bytes": 21317,
+      "decoded_bytes": 33600,
+      "sha256": "39cd4f0421ea4fbb2bdff00b44729b1922773867253c5e941f28ce46e499fe93"
+    },
+    {
+      "file": "bakery_tray_rack.png",
+      "size": [
+        100,
+        168
+      ],
+      "bytes": 36376,
+      "decoded_bytes": 67200,
+      "sha256": "aafb8e27801f40aa99d982cc537f29efab4781c7c9a2f2f03541170313144539"
+    },
+    {
+      "file": "dairy_carton_shipper.png",
+      "size": [
+        60,
+        43
+      ],
+      "bytes": 7418,
+      "decoded_bytes": 10320,
+      "sha256": "0c7a0042c4c0200d3272cfaccd76e54ffab8b408809054177d5e94cd6d0a4091"
+    },
+    {
+      "file": "dairy_case.png",
+      "size": [
+        380,
+        194
+      ],
+      "bytes": 169030,
+      "decoded_bytes": 294880,
+      "sha256": "9851a7cc2534732ec53691085f6f29ff1a324a53c4ccde7fec6347cc842d5d0a"
+    },
+    {
+      "file": "dairy_empty_crate.png",
+      "size": [
+        50,
+        49
+      ],
+      "bytes": 7685,
+      "decoded_bytes": 9800,
+      "sha256": "933bfaf90563e0e84f30537b1dc2bf6487b6426e5c33b16ab7a23a49f783ed10"
+    },
+    {
+      "file": "dairy_milk_crates.png",
+      "size": [
+        60,
+        83
+      ],
+      "bytes": 13408,
+      "decoded_bytes": 19920,
+      "sha256": "4e7181cac666cfb6d8b8703f079f17ac0ffb91e057fc76c68809db6e4f15f2c2"
+    },
+    {
+      "file": "dairy_milk_pallet.png",
+      "size": [
+        70,
+        72
+      ],
+      "bytes": 14946,
+      "decoded_bytes": 20160,
+      "sha256": "3898a0a37a54509c7ff768bf42c8178936b30619a8bdb6c7e08455ca89a7213c"
+    },
+    {
+      "file": "floor_carpet_tile.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 27167,
+      "decoded_bytes": 65536,
+      "sha256": "9d28c96d2163b27e7b43c99f595737d6faa0642cc2c123cb591c165c952a1af8"
+    },
+    {
+      "file": "floor_concrete.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 19339,
+      "decoded_bytes": 65536,
+      "sha256": "eab35a44814367ee6d5f4282bd7761f28f17735d735f4cd0304199a60ed1e790"
+    },
+    {
+      "file": "floor_entry.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 22237,
+      "decoded_bytes": 65536,
+      "sha256": "650e195029611deb49837f6566a8d0524e9d7354ea7ac9af2d6ed7a064299e20"
+    },
+    {
+      "file": "floor_market.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 17724,
+      "decoded_bytes": 65536,
+      "sha256": "24c94b9e4197de46959ffa9e08ea0d32a0bd69740eaac1ccd692f0835e03d5e3"
+    },
+    {
+      "file": "floor_quarry.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 24799,
+      "decoded_bytes": 65536,
+      "sha256": "23b6ecccb20bb0a683d13421b5db6c4ffac2bb0b2ce19330438fd1bdd63720c3"
+    },
+    {
+      "file": "floor_vct.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 23848,
+      "decoded_bytes": 65536,
+      "sha256": "8e07e543a7209e4cf911bc10004ee3f531813bee697efcc137415c8303b4e628"
+    },
+    {
+      "file": "floor_vinyl_break.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 24631,
+      "decoded_bytes": 65536,
+      "sha256": "bd2c25ef129d011b95c7751c97585f57b351474f7ab47e8675cbb89ee3bbf2be"
+    },
+    {
+      "file": "floor_wc.png",
+      "size": [
+        128,
+        128
+      ],
+      "bytes": 24818,
+      "decoded_bytes": 65536,
+      "sha256": "21c8e49c9f3a724a628779dfdc1f79ec02559987eeabdbe5eaa0118ce56eb582"
+    },
+    {
+      "file": "freezer_bay_a.png",
+      "size": [
+        198,
+        142
+      ],
+      "bytes": 47433,
+      "decoded_bytes": 112464,
+      "sha256": "12412322153eb3fe5599ad8800217c83d069539ca328c6be4c428ba3c7a792d0"
+    },
+    {
+      "file": "freezer_bay_b.png",
+      "size": [
+        198,
+        142
+      ],
+      "bytes": 52500,
+      "decoded_bytes": 112464,
+      "sha256": "906e6933c2373bce1578b167f80f60108f9f2174b9789aff036c868b242faef8"
+    },
+    {
+      "file": "freezer_bay_wall.png",
+      "size": [
+        100,
+        158
+      ],
+      "bytes": 29164,
+      "decoded_bytes": 63200,
+      "sha256": "6aa028abe5eab74b8d87863b87dce558de8c32cebabab054fbb2bf68a399b96e"
+    },
+    {
+      "file": "shelf_bay_a.png",
+      "size": [
+        198,
+        220
+      ],
+      "bytes": 71444,
+      "decoded_bytes": 174240,
+      "sha256": "af4cdf7be0872fe2edf089d79f3b66cc61841f25269a1f3750e8e286f77d9abb"
+    },
+    {
+      "file": "shelf_bay_b.png",
+      "size": [
+        198,
+        220
+      ],
+      "bytes": 78258,
+      "decoded_bytes": 174240,
+      "sha256": "9589dea294921c016de613388aebc0b173719c70a232cf61158022d57d21a72c"
+    },
+    {
+      "file": "shelf_bay_c.png",
+      "size": [
+        198,
+        220
+      ],
+      "bytes": 74047,
+      "decoded_bytes": 174240,
+      "sha256": "456e4922b28bd458df703c063806781e2f061ea19a5f5f219ffd04e57b106c4d"
+    },
+    {
+      "file": "shelf_bay_d.png",
+      "size": [
+        198,
+        220
+      ],
+      "bytes": 81161,
+      "decoded_bytes": 174240,
+      "sha256": "41c97be7d1838cc7c5882b5291a78eecbfbbca4022b65ecab628e848b8cdb6d3"
+    },
+    {
+      "file": "shelf_bay_e.png",
+      "size": [
+        198,
+        220
+      ],
+      "bytes": 73140,
+      "decoded_bytes": 174240,
+      "sha256": "6846ecd8031e7b094941cc1bb5d22ba4545bb6be040bc93f7c02811b12ae23e3"
+    },
+    {
+      "file": "wc_divider_h.png",
+      "size": [
+        160,
+        11
+      ],
+      "bytes": 3743,
+      "decoded_bytes": 7040,
+      "sha256": "210a9a5ab37223d92c5751e4c9c36c46a2990d3e6e78c37f7b2211f0bac8dabf"
+    },
+    {
+      "file": "wc_divider_v.png",
+      "size": [
+        11,
+        160
+      ],
+      "bytes": 3749,
+      "decoded_bytes": 7040,
+      "sha256": "3fbef767105ab456b326532784a327237d73968f679d065b6135138691fc6dec"
+    },
+    {
+      "file": "wc_door_ajar.png",
+      "size": [
+        100,
+        36
+      ],
+      "bytes": 2653,
+      "decoded_bytes": 14400,
+      "sha256": "6374342bbf655adb2c286cb7751a8f4aad653ce1ec9d105272c234ae39fa7c9e"
+    },
+    {
+      "file": "wc_door_closed.png",
+      "size": [
+        100,
+        23
+      ],
+      "bytes": 3227,
+      "decoded_bytes": 9200,
+      "sha256": "6ce1d0765a3c1d8b803ab8bd1adc0a9f593592e167cac62556a259f41c14424a"
+    },
+    {
+      "file": "wc_hand_dryer.png",
+      "size": [
+        36,
+        44
+      ],
+      "bytes": 3072,
+      "decoded_bytes": 6336,
+      "sha256": "afd407caab205ec864f02bdaf940abeca1db68116363a221ab29ab443cb5e8b2"
+    },
+    {
+      "file": "wc_partition_run.png",
+      "size": [
+        200,
+        33
+      ],
+      "bytes": 8875,
+      "decoded_bytes": 26400,
+      "sha256": "df001f8b911b977480fc91b5d3eb21a8ca53480fa7b4f4c22f3b366f94e2be94"
+    },
+    {
+      "file": "wc_sink_counter.png",
+      "size": [
+        200,
+        92
+      ],
+      "bytes": 37021,
+      "decoded_bytes": 73600,
+      "sha256": "e194f445ad0153111d63491feb06bd60b5b80cfed07a3515748277b1d3a5cf7a"
+    },
+    {
+      "file": "save-rite/walk_01_tyson_beck_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33939,
+      "decoded_bytes": 111264,
+      "sha256": "ab9327d9ac1e1c1bec3d42157f1180d3c58c527caccd313787fb2d328d1061b4"
+    },
+    {
+      "file": "save-rite/walk_01_tyson_beck_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29215,
+      "decoded_bytes": 111264,
+      "sha256": "064f14cbb48cdfaa439b1c7ac41cefa2c31cacdab2465d3b707a3102de831843"
+    },
+    {
+      "file": "save-rite/walk_01_tyson_beck_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29090,
+      "decoded_bytes": 111264,
+      "sha256": "72de8491246066ff60627b69156de7b4d636290cf87d2c84eaf8750f1ade0cee"
+    },
+    {
+      "file": "save-rite/walk_01_tyson_beck_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30095,
+      "decoded_bytes": 111264,
+      "sha256": "d4dad2b023f0bc7b7ff548d65d147b248eafe430d605d0a68907e1a317926975"
+    },
+    {
+      "file": "save-rite/walk_02_anjali_raval_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31440,
+      "decoded_bytes": 111264,
+      "sha256": "2362fe0e0a9274bbbfbd4c0680c5958bcf76a5f3b51176b5bdc8ae42fbc222d8"
+    },
+    {
+      "file": "save-rite/walk_02_anjali_raval_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27328,
+      "decoded_bytes": 111264,
+      "sha256": "75ce32ac32cbe264a18808d3dea5e69ceedec3a943172a0d23a7d51677595d86"
+    },
+    {
+      "file": "save-rite/walk_02_anjali_raval_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27327,
+      "decoded_bytes": 111264,
+      "sha256": "f81af19cc6077d6833dfd76fa1ea8e35db8734bc89f57fe9bfaae0db8100316a"
+    },
+    {
+      "file": "save-rite/walk_02_anjali_raval_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 25466,
+      "decoded_bytes": 111264,
+      "sha256": "2ff2bf9b3371d6c5fc2d778429e1d06df49eaf15a89a239bf6697496011e817d"
+    },
+    {
+      "file": "save-rite/walk_03_marguerite_dubois_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33288,
+      "decoded_bytes": 111264,
+      "sha256": "7268eefa3b8d91b7d613054fc42dbce4c1b89970f9440dac9aa2a487e5c8633b"
+    },
+    {
+      "file": "save-rite/walk_03_marguerite_dubois_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29222,
+      "decoded_bytes": 111264,
+      "sha256": "19136ff1953362fd8f2dfb146ebc87d2a82b61227eaa6c00dd1aa2ca291b8359"
+    },
+    {
+      "file": "save-rite/walk_03_marguerite_dubois_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29249,
+      "decoded_bytes": 111264,
+      "sha256": "a180924395e9503ac5a8abbfe8fb1e17e86909d960dffae5e1f819ca298c4eac"
+    },
+    {
+      "file": "save-rite/walk_03_marguerite_dubois_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29601,
+      "decoded_bytes": 111264,
+      "sha256": "e961fb0ccce28c5fdc11f79f20ac5412261fe8ad677e80e2770d0bb8a636c139"
+    },
+    {
+      "file": "save-rite/walk_04_danika_osei_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32541,
+      "decoded_bytes": 111264,
+      "sha256": "751960419c01cf43163d360d6e88f7bce89708cc3a321b13b93e83db02050524"
+    },
+    {
+      "file": "save-rite/walk_04_danika_osei_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28014,
+      "decoded_bytes": 111264,
+      "sha256": "0888a2f3dd0d274b9e33d1bf1b770c98ca889e40a537f16202a9d8f84de07eb0"
+    },
+    {
+      "file": "save-rite/walk_04_danika_osei_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27968,
+      "decoded_bytes": 111264,
+      "sha256": "09c67d608928356d59df56aadc6ffbd8b765daf0dda27b719a62625b0c0bdd0c"
+    },
+    {
+      "file": "save-rite/walk_04_danika_osei_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29172,
+      "decoded_bytes": 111264,
+      "sha256": "73c77488063b0cf99cec355c03f576307a0fe22f1356ac0a19a18d03352384b5"
+    },
+    {
+      "file": "save-rite/walk_05_curtis_lam_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34903,
+      "decoded_bytes": 111264,
+      "sha256": "8eda95e3c013a3b9e9a9313a5f6e71573905a40bc706f352ff869cbc2cbbf9ef"
+    },
+    {
+      "file": "save-rite/walk_05_curtis_lam_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30017,
+      "decoded_bytes": 111264,
+      "sha256": "c26a6307b8e116fdac5e2195877e301c62b583a5508269debb9b74e3492b220b"
+    },
+    {
+      "file": "save-rite/walk_05_curtis_lam_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30056,
+      "decoded_bytes": 111264,
+      "sha256": "7fe64d42b6ee1ed76c98ea78922511448547bd4e6b01b5f63a9303fb514060bd"
+    },
+    {
+      "file": "save-rite/walk_05_curtis_lam_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32144,
+      "decoded_bytes": 111264,
+      "sha256": "afc03348ae4a12bfaa48d7d499ee92452a82e022b2047010c3cc2b1dc34dae58"
+    },
+    {
+      "file": "save-rite/walk_06_bekah_thorne_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31193,
+      "decoded_bytes": 111264,
+      "sha256": "8daedd469625bc52b92bfcb07bcfa6d64346e50926238a533fc4530dced92ad7"
+    },
+    {
+      "file": "save-rite/walk_06_bekah_thorne_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27854,
+      "decoded_bytes": 111264,
+      "sha256": "e22820536e933867333b9d19fe8ba55c68e77fd1536820ff6a5b9f94a4e26d09"
+    },
+    {
+      "file": "save-rite/walk_06_bekah_thorne_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27849,
+      "decoded_bytes": 111264,
+      "sha256": "f74dbbfe689ddf286654a1aa31a27ea7399fcde8bd0972b5489447db87f31ddd"
+    },
+    {
+      "file": "save-rite/walk_06_bekah_thorne_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28487,
+      "decoded_bytes": 111264,
+      "sha256": "61458f3eb3723689b02d441a9d3fa68a13f964506f18072ef7eab3f2b53672a2"
+    },
+    {
+      "file": "save-rite/walk_07_ade_okonkwo_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34938,
+      "decoded_bytes": 111264,
+      "sha256": "afed3b0b53a262033c3b478ad068cb89a9ba299cd633796cc6a9c8443bec271f"
+    },
+    {
+      "file": "save-rite/walk_07_ade_okonkwo_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28765,
+      "decoded_bytes": 111264,
+      "sha256": "4efc153d6e108183151144d02f097a460d01b99d9421eb98a2593a8a3c881fd9"
+    },
+    {
+      "file": "save-rite/walk_07_ade_okonkwo_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28787,
+      "decoded_bytes": 111264,
+      "sha256": "e43cf9fcbb389aef51a0b62ca8cb541375e85c66d82bcfae316d1d2f20589c0c"
+    },
+    {
+      "file": "save-rite/walk_07_ade_okonkwo_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31047,
+      "decoded_bytes": 111264,
+      "sha256": "4665d92b6c608e59060e3a0d3fa2883bc3b78c1c07bf95f6ef4a5ea63aa04e94"
+    },
+    {
+      "file": "save-rite/walk_08_russ_pelletier_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 38077,
+      "decoded_bytes": 111264,
+      "sha256": "5a1137b5d45fc8085fed54b7733b9d8b069410523803b2bb210483bef44b3195"
+    },
+    {
+      "file": "save-rite/walk_08_russ_pelletier_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33412,
+      "decoded_bytes": 111264,
+      "sha256": "76e7e8058e814fae5f86b4532fab534d824e57b0dd3b86d27e1d1c7a0589f33a"
+    },
+    {
+      "file": "save-rite/walk_08_russ_pelletier_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33440,
+      "decoded_bytes": 111264,
+      "sha256": "371257c17c7889e98e025a35638c1ab48042e3aeb0601d6e55502aec9e4eccb7"
+    },
+    {
+      "file": "save-rite/walk_08_russ_pelletier_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33964,
+      "decoded_bytes": 111264,
+      "sha256": "e2faa26981e953bdc3081bedadba2a5f2d0b6df5d2d10330ebc734a62189456c"
+    },
+    {
+      "file": "save-rite/walk_09_joon_ho_bae_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29749,
+      "decoded_bytes": 111264,
+      "sha256": "52caf4f8baae6ac7b9c414a2f16563d94e6f801cba3bdb68013d8a3407bc940d"
+    },
+    {
+      "file": "save-rite/walk_09_joon_ho_bae_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27770,
+      "decoded_bytes": 111264,
+      "sha256": "7eb9ba7452d018f86f61c9188f101b10e466f904b14ab07d0bd961cdbe1e6439"
+    },
+    {
+      "file": "save-rite/walk_09_joon_ho_bae_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27711,
+      "decoded_bytes": 111264,
+      "sha256": "6ff684519d27fa3ab9a055ff5164add1f0e54ee3b92e24d9d64d936ee7096854"
+    },
+    {
+      "file": "save-rite/walk_09_joon_ho_bae_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28050,
+      "decoded_bytes": 111264,
+      "sha256": "7d2b1c35a30d93f47a13c3a381a1c931e03fa0ef50e558ad2b804dcaf0a8efab"
+    },
+    {
+      "file": "save-rite/walk_10_sam_whitecalf_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30539,
+      "decoded_bytes": 111264,
+      "sha256": "e2a7551ff59833d30bc1a2eab9939414ff9fe65cc6d28a82edc1959da0944ab9"
+    },
+    {
+      "file": "save-rite/walk_10_sam_whitecalf_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28181,
+      "decoded_bytes": 111264,
+      "sha256": "fa2c3441323f37fcaf54b8df96a39c535ec30f2cb1b027fb869c259ccb5d37d9"
+    },
+    {
+      "file": "save-rite/walk_10_sam_whitecalf_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28233,
+      "decoded_bytes": 111264,
+      "sha256": "839edd2e2c51cf0bf9a60da6054790636ae7a6bb0d009669213eacaf495b160a"
+    },
+    {
+      "file": "save-rite/walk_10_sam_whitecalf_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29654,
+      "decoded_bytes": 111264,
+      "sha256": "fe39f172e3078b3b8e597a5bd1635296b40afc6210d085727aab78a57f03644d"
+    },
+    {
+      "file": "save-rite/walk_11_cheryl_novak_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 41003,
+      "decoded_bytes": 111264,
+      "sha256": "fd4b53ceba371256b13ad23d3e83679fd6397e624eeecfee4bffaf34a9a085a1"
+    },
+    {
+      "file": "save-rite/walk_11_cheryl_novak_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33493,
+      "decoded_bytes": 111264,
+      "sha256": "65afb089d4c159ed75e2c823628fb3cc47067426d0da5ce030422e0dfcd88e1d"
+    },
+    {
+      "file": "save-rite/walk_11_cheryl_novak_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33433,
+      "decoded_bytes": 111264,
+      "sha256": "c59d36913f776df8ee11b05fbcdacc093eb6c47c2801ea2214d39e2bdc091e9e"
+    },
+    {
+      "file": "save-rite/walk_11_cheryl_novak_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 40474,
+      "decoded_bytes": 111264,
+      "sha256": "7885a816b7906f4a665ef2977d694b989699445213f2a20de370a8ad57acf3a2"
+    },
+    {
+      "file": "save-rite/walk_12_gita_mahal_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33297,
+      "decoded_bytes": 111264,
+      "sha256": "8ed680f8a1a9e2552035c2d524e887153f96ebea085f7d1e74b63c5ec74ae363"
+    },
+    {
+      "file": "save-rite/walk_12_gita_mahal_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27569,
+      "decoded_bytes": 111264,
+      "sha256": "e288bb59b3b8fbb25fbf0382984518578c301d7cf5e38a553e51956df5f2be22"
+    },
+    {
+      "file": "save-rite/walk_12_gita_mahal_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27598,
+      "decoded_bytes": 111264,
+      "sha256": "5b29b5c6dc1e138dc52b18e8dc12b720aac19a0373213c33ed4b8c355d6c130a"
+    },
+    {
+      "file": "save-rite/walk_12_gita_mahal_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30482,
+      "decoded_bytes": 111264,
+      "sha256": "2e0926132188df03eee58b79ebdde8dae98af87211d9170d644ee9a1c6d88bbe"
+    },
+    {
+      "file": "save-rite/walk_13_vince_carboni_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35264,
+      "decoded_bytes": 111264,
+      "sha256": "4e00663a38798f5b6cdd3ba1505873fae20aed106d85e5fcf007b6016408bf34"
+    },
+    {
+      "file": "save-rite/walk_13_vince_carboni_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31564,
+      "decoded_bytes": 111264,
+      "sha256": "3485bb0713342c31c119b7bdcec70b32102dc3f8b3e4763a868661b81d6088b2"
+    },
+    {
+      "file": "save-rite/walk_13_vince_carboni_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31708,
+      "decoded_bytes": 111264,
+      "sha256": "0808eb1b5d8ee4771c3912be5d64b299ca05ee23a0d0297430e22119b93ff9a1"
+    },
+    {
+      "file": "save-rite/walk_13_vince_carboni_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32933,
+      "decoded_bytes": 111264,
+      "sha256": "6e910224f76874db0efe1fdb282c97e32ecf61ffcd15915cb891cbca643421f6"
+    },
+    {
+      "file": "save-rite/walk_14_aleks_petrov_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33797,
+      "decoded_bytes": 111264,
+      "sha256": "0a3b85501677b1b1f7c499d146a7492c33056874f766f14f37c850f786017cff"
+    },
+    {
+      "file": "save-rite/walk_14_aleks_petrov_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29150,
+      "decoded_bytes": 111264,
+      "sha256": "dd9d29185c6074dd906e9164a7f6108d3bb3abb403ff433817c921e5f2594d05"
+    },
+    {
+      "file": "save-rite/walk_14_aleks_petrov_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29202,
+      "decoded_bytes": 111264,
+      "sha256": "cb36f26dc5acbbd75dccb87df4841b9d231bf0ab514e27995fbbfd9e8654869d"
+    },
+    {
+      "file": "save-rite/walk_14_aleks_petrov_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31955,
+      "decoded_bytes": 111264,
+      "sha256": "d4355663edd6e4c097f135266e7c4f7d7b6f3318c6ee6f10c36e74d0a4c01c07"
+    },
+    {
+      "file": "save-rite/walk_15_denise_fung_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31792,
+      "decoded_bytes": 111264,
+      "sha256": "c136c768bc03fbc27ae67cb3c12104c784ff5c14efb1b3569da1bfd0e608cb72"
+    },
+    {
+      "file": "save-rite/walk_15_denise_fung_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28162,
+      "decoded_bytes": 111264,
+      "sha256": "32dbaa544e282ce4b59094b84d1548f7e435b839b29f979a10c78d1db9e663c1"
+    },
+    {
+      "file": "save-rite/walk_15_denise_fung_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28189,
+      "decoded_bytes": 111264,
+      "sha256": "fb866d951acaea0730d798d440f88a8a6579c73c81c120a30c46910e4bad496c"
+    },
+    {
+      "file": "save-rite/walk_15_denise_fung_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28587,
+      "decoded_bytes": 111264,
+      "sha256": "8faec3920ecb98cc8012ab0d0e38bb05b7b22bb66275c797b41cbaa5176d2c98"
+    },
+    {
+      "file": "save-rite/walk_16_bruno_sarr_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32270,
+      "decoded_bytes": 111264,
+      "sha256": "1239f208ba672368dc326a94bf64d9837e04a0a3872cbe34cff1e126f29d9956"
+    },
+    {
+      "file": "save-rite/walk_16_bruno_sarr_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27245,
+      "decoded_bytes": 111264,
+      "sha256": "2edaf11416cf6f97050672b1655f45eae9716922a52caa3dfbb9f9d7643513d1"
+    },
+    {
+      "file": "save-rite/walk_16_bruno_sarr_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27266,
+      "decoded_bytes": 111264,
+      "sha256": "762a85ca703587bc4780b860660d90ed048e1de4f078e9da356a03759f840180"
+    },
+    {
+      "file": "save-rite/walk_16_bruno_sarr_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29851,
+      "decoded_bytes": 111264,
+      "sha256": "ff4ed5a5e38f2bbb73fda7784ead9e411055c45a63654a69d83f5930f248de81"
+    },
+    {
+      "file": "save-rite/walk_17_elaine_kovacs_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 36481,
+      "decoded_bytes": 111264,
+      "sha256": "ff3530e5ca353af2c7f9c0e63c1063e977a6f2fff262538dbf5950eaf8c1ed01"
+    },
+    {
+      "file": "save-rite/walk_17_elaine_kovacs_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32060,
+      "decoded_bytes": 111264,
+      "sha256": "3f01e157702f2cb78f9a063f993115d2f6b74de6bcd2c6786141a698a721e160"
+    },
+    {
+      "file": "save-rite/walk_17_elaine_kovacs_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32102,
+      "decoded_bytes": 111264,
+      "sha256": "1e8f2c446bf6f588d4c5d34b6f7001608a32212dce128977a722d87a1c13f3d5"
+    },
+    {
+      "file": "save-rite/walk_17_elaine_kovacs_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34174,
+      "decoded_bytes": 111264,
+      "sha256": "3cf8148dca33bcde5a51727218694db7a871c9e5b0b1d362f5e364b4d638bedc"
+    },
+    {
+      "file": "save-rite/walk_18_manny_reyes_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 36197,
+      "decoded_bytes": 111264,
+      "sha256": "0b2944fb544ac267f495678562dddd2d9c7cb2d0da37a5bb8e6903e8cc0756e0"
+    },
+    {
+      "file": "save-rite/walk_18_manny_reyes_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30505,
+      "decoded_bytes": 111264,
+      "sha256": "e83ee6116aeb33d11df1e2c9f694ffa09b980997d4801d35154e1226245a634b"
+    },
+    {
+      "file": "save-rite/walk_18_manny_reyes_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30409,
+      "decoded_bytes": 111264,
+      "sha256": "8ecfb4cad384b9475d4801a01bec769082f0d2c980d8cfefd3ce1d36e00dcce9"
+    },
+    {
+      "file": "save-rite/walk_18_manny_reyes_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34747,
+      "decoded_bytes": 111264,
+      "sha256": "35789751574345158cfa2aedbe5b76b8ab2516d77f3ab79025992a8732686224"
+    },
+    {
+      "file": "save-rite/walk_19_tova_lindqvist_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 37381,
+      "decoded_bytes": 111264,
+      "sha256": "76120ac83e9480c3ece9f88253e8438d344d32c2dd223cb3ebd71fbeeb773fb7"
+    },
+    {
+      "file": "save-rite/walk_19_tova_lindqvist_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35918,
+      "decoded_bytes": 111264,
+      "sha256": "8db36c29ca80c1d4a040305e512c9dfde315b7252fe492d6094d13020c301eb4"
+    },
+    {
+      "file": "save-rite/walk_19_tova_lindqvist_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35886,
+      "decoded_bytes": 111264,
+      "sha256": "65a261d62d84dcc7e98926f93ef622aa03ac8795d8df62422b716de9e37b6a71"
+    },
+    {
+      "file": "save-rite/walk_19_tova_lindqvist_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33913,
+      "decoded_bytes": 111264,
+      "sha256": "5952ebdef529a10df9d5b5d5d846144f6c33b28a1e7072035a42e6c13e2b3672"
+    },
+    {
+      "file": "save-rite/walk_20_doreen_stapp_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 42149,
+      "decoded_bytes": 111264,
+      "sha256": "3245e95b2e9bf14f5284cf03ca9601568d4e2a45092759c7ed008a392b8bfcf2"
+    },
+    {
+      "file": "save-rite/walk_20_doreen_stapp_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33225,
+      "decoded_bytes": 111264,
+      "sha256": "8b20ce0f850b80bb9e97cc77e3671b42bd104d1e15c1a15c42126bd5d57076bd"
+    },
+    {
+      "file": "save-rite/walk_20_doreen_stapp_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33252,
+      "decoded_bytes": 111264,
+      "sha256": "4423ace3244de0a74d842c1d1d25e3126fa0eb2801508f8a249b86739daba1db"
+    },
+    {
+      "file": "save-rite/walk_20_doreen_stapp_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 38484,
+      "decoded_bytes": 111264,
+      "sha256": "160f17ee7b84e75aac7802807868a4dbad62dfb39743546b5a019b790e6e38a4"
+    },
+    {
+      "file": "save-rite/walk_21_garret_voss_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 36457,
+      "decoded_bytes": 111264,
+      "sha256": "7330fc6522556fb0ae0f884264aeb73d98aec8ddd56ac8ccb5fa51a1d6200f7d"
+    },
+    {
+      "file": "save-rite/walk_21_garret_voss_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31061,
+      "decoded_bytes": 111264,
+      "sha256": "563b55a36c2815322fd4e78f28b62373117947c7cc438c311e9b6df8b0fa0f39"
+    },
+    {
+      "file": "save-rite/walk_21_garret_voss_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31141,
+      "decoded_bytes": 111264,
+      "sha256": "709001c403f63efb44e384e99f041389c0ae85566924ff840f86ad7d3f0eccf0"
+    },
+    {
+      "file": "save-rite/walk_21_garret_voss_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29181,
+      "decoded_bytes": 111264,
+      "sha256": "e1dad48144b6e39a42ae6653bd48dce8c67732d948a0af55c7450f4e1e504df3"
+    },
+    {
+      "file": "save-rite/walk_22_lorne_petrie_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 36655,
+      "decoded_bytes": 111264,
+      "sha256": "f1e46af6ba1cdf4a9f0ce53ce2785151e2c64e5fa6df3c5ee2c6de4f735fc719"
+    },
+    {
+      "file": "save-rite/walk_22_lorne_petrie_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29336,
+      "decoded_bytes": 111264,
+      "sha256": "bfdd183fe1523a880ca7d749a6841c2f950ffdf41af33883993794bc5d9f035c"
+    },
+    {
+      "file": "save-rite/walk_22_lorne_petrie_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29358,
+      "decoded_bytes": 111264,
+      "sha256": "d667db006be159b409b194ed75c4ed954639669fb8b4ebef672de6753bd2f2e2"
+    },
+    {
+      "file": "save-rite/walk_22_lorne_petrie_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27755,
+      "decoded_bytes": 111264,
+      "sha256": "9a320febf99f73556cc833b17bedf4d5bb5feba957adaee6ddc71bfa37aa58f4"
+    },
+    {
+      "file": "save-rite/walk_23_merv_kastelic_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 39177,
+      "decoded_bytes": 111264,
+      "sha256": "c2138567e075807411cf227293c6e63eb7e1f220c68f1ba5e83fd3df0f2b716a"
+    },
+    {
+      "file": "save-rite/walk_23_merv_kastelic_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33006,
+      "decoded_bytes": 111264,
+      "sha256": "e7ca30c7dcc78361678317d93820fe1f07d0dc900d722b404c2c1aa21e3ed9de"
+    },
+    {
+      "file": "save-rite/walk_23_merv_kastelic_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33139,
+      "decoded_bytes": 111264,
+      "sha256": "7fa65ee5c0136262877da0bcc48ac0d219faa86762f9be485c4ef704bb502513"
+    },
+    {
+      "file": "save-rite/walk_23_merv_kastelic_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30185,
+      "decoded_bytes": 111264,
+      "sha256": "ffb58a9eebc9c308ecd86a81902cd39e1dbb1f3ae368cdb9cb19fcb5288b8724"
+    },
+    {
+      "file": "save-rite/walk_24_sandrine_pike_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29618,
+      "decoded_bytes": 111264,
+      "sha256": "db7eec211b3d5c3ad5771f6589b5b7f1f84dd363808784613a4fa3b605258406"
+    },
+    {
+      "file": "save-rite/walk_24_sandrine_pike_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 25509,
+      "decoded_bytes": 111264,
+      "sha256": "f988fac32f835cab7973faf7e70dc0767cf917df76c6eae6a55a062f220fce3a"
+    },
+    {
+      "file": "save-rite/walk_24_sandrine_pike_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 25519,
+      "decoded_bytes": 111264,
+      "sha256": "144058cefa5636cce4ff2294879cb8f7231090513b799e35a10dd977f93a045e"
+    },
+    {
+      "file": "save-rite/walk_24_sandrine_pike_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 24856,
+      "decoded_bytes": 111264,
+      "sha256": "33ac4a618fe34ccecb411f3b3615ffb2e72bc6a6aa75cd46e31c112e39ae552f"
+    },
+    {
+      "file": "save-rite/walk_25_shopper_elderly_woman_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 36284,
+      "decoded_bytes": 111264,
+      "sha256": "7bfd844a700727056cd5bb268c2c31d6dc1ecb015ec33e1270621fb4ef8135f5"
+    },
+    {
+      "file": "save-rite/walk_25_shopper_elderly_woman_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33179,
+      "decoded_bytes": 111264,
+      "sha256": "208d605264d1d6f90e21750e2260a0000fb518d28f5d3cb227f8075618545b7d"
+    },
+    {
+      "file": "save-rite/walk_25_shopper_elderly_woman_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33092,
+      "decoded_bytes": 111264,
+      "sha256": "bc6ecfbb33737a6b281003edc303bb8d6e6a413688a0e393b5b57470bafcfdfa"
+    },
+    {
+      "file": "save-rite/walk_25_shopper_elderly_woman_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31580,
+      "decoded_bytes": 111264,
+      "sha256": "4d9c6495b5491646404f5e9634468c7ab46f03dc15ad84cc85a017cffb432ba7"
+    },
+    {
+      "file": "save-rite/walk_26_shopper_work_jacket_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34129,
+      "decoded_bytes": 111264,
+      "sha256": "9fdc0c2c9c85bb0a8a9e71438308bff35e861217909586e3090b9c3d2fd66d2a"
+    },
+    {
+      "file": "save-rite/walk_26_shopper_work_jacket_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30724,
+      "decoded_bytes": 111264,
+      "sha256": "ffc02b17350d70ca5db822b308c55211c9962da9b2f83a99602e48973a9af3d0"
+    },
+    {
+      "file": "save-rite/walk_26_shopper_work_jacket_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30760,
+      "decoded_bytes": 111264,
+      "sha256": "63679ce9f985ef3d5db94820d33830bb7046e95547ab14393ae841bc2d0a53fd"
+    },
+    {
+      "file": "save-rite/walk_26_shopper_work_jacket_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30313,
+      "decoded_bytes": 111264,
+      "sha256": "b3911b859a1210ecbfe839b101ba4acd2c4c63e479e32be4e71880280590757f"
+    },
+    {
+      "file": "save-rite/walk_27_shopper_mustard_jumper_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28293,
+      "decoded_bytes": 111264,
+      "sha256": "c14df78f299bd1c7c7bbb1414a74669e47c7dac624c92c73e68a4bddf1a49825"
+    },
+    {
+      "file": "save-rite/walk_27_shopper_mustard_jumper_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 23545,
+      "decoded_bytes": 111264,
+      "sha256": "8e4dd942d3f06f48515f1fcee598b83dc6c7a2b9ff455560b23518dce6df6cd1"
+    },
+    {
+      "file": "save-rite/walk_27_shopper_mustard_jumper_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 23581,
+      "decoded_bytes": 111264,
+      "sha256": "021f1de1e49f68594cdb3bcdafa58913813310409fbdcedad39edd000b69668f"
+    },
+    {
+      "file": "save-rite/walk_27_shopper_mustard_jumper_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27505,
+      "decoded_bytes": 111264,
+      "sha256": "25191cabc2d72e2a549cfc5fce2551cf419d32ec2edd6952fad9af114eedb5b2"
+    },
+    {
+      "file": "save-rite/walk_28_shopper_teen_hoodie_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30558,
+      "decoded_bytes": 111264,
+      "sha256": "896fa694920e02d71b098180bc2b015cf42113cae072966cf3225b3ef623bf1f"
+    },
+    {
+      "file": "save-rite/walk_28_shopper_teen_hoodie_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27191,
+      "decoded_bytes": 111264,
+      "sha256": "862aee6e2bb383735d3826b223511bd891daa0f024177db7f23125259868f7b5"
+    },
+    {
+      "file": "save-rite/walk_28_shopper_teen_hoodie_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27131,
+      "decoded_bytes": 111264,
+      "sha256": "006c3cad251d42bdc6ce00ab1893dc67f4cb618c076819560095e488c0b28390"
+    },
+    {
+      "file": "save-rite/walk_28_shopper_teen_hoodie_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28170,
+      "decoded_bytes": 111264,
+      "sha256": "82c60f59526a0232660c5eb291ff56a8a9a85526cf19ec2975453051c11821bd"
+    },
+    {
+      "file": "save-rite/walk_29_shopper_hivis_worker_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35464,
+      "decoded_bytes": 111264,
+      "sha256": "a6b01f8cdba91034c59b50d0bf000d6da6a01ab7b72fc19516db6c2dce380a6c"
+    },
+    {
+      "file": "save-rite/walk_29_shopper_hivis_worker_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28536,
+      "decoded_bytes": 111264,
+      "sha256": "b686d1ca5dcd09313929dec78ccb144d1441952ef65951809ea0fbd7ee11901c"
+    },
+    {
+      "file": "save-rite/walk_29_shopper_hivis_worker_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28484,
+      "decoded_bytes": 111264,
+      "sha256": "5a5dd88d15beb768427e64e96324bba88d056c6477bd2608aa8a5413ce9172e0"
+    },
+    {
+      "file": "save-rite/walk_29_shopper_hivis_worker_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31276,
+      "decoded_bytes": 111264,
+      "sha256": "ebbe232eddbe492aec36da071148e26774d2c8f84ffeea2b07d89a9d54b849df"
+    },
+    {
+      "file": "save-rite/walk_30_shopper_teal_blouse_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 34602,
+      "decoded_bytes": 111264,
+      "sha256": "85c6aa678b97839b4be6b87db17a132844f9e69a126c69c69baef25692ec9530"
+    },
+    {
+      "file": "save-rite/walk_30_shopper_teal_blouse_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28900,
+      "decoded_bytes": 111264,
+      "sha256": "de5ee62dfa94d447d9610978f6b24116414e882291777edf73f0b8225d083f83"
+    },
+    {
+      "file": "save-rite/walk_30_shopper_teal_blouse_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28914,
+      "decoded_bytes": 111264,
+      "sha256": "9e71b142d9cb34c0c4866a8f1abb26fd60693ee36b3ba0c071eec153b1d68d42"
+    },
+    {
+      "file": "save-rite/walk_30_shopper_teal_blouse_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 31076,
+      "decoded_bytes": 111264,
+      "sha256": "b5d52feed296737e4e487282ff1249e4a537fad6f2c803be8a50b2469bd6f8c2"
+    },
+    {
+      "file": "save-rite/walk_31_shopper_white_tee_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 30997,
+      "decoded_bytes": 111264,
+      "sha256": "19c45bcf0f02cf32ca5acce5a88cdf8f36645a970bb99c7ef8d888f15b68ab26"
+    },
+    {
+      "file": "save-rite/walk_31_shopper_white_tee_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28642,
+      "decoded_bytes": 111264,
+      "sha256": "792ec7c8d1f7186662d5792ce6a425655f5777027d5aeb371fdcc7ef4061dff7"
+    },
+    {
+      "file": "save-rite/walk_31_shopper_white_tee_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 28604,
+      "decoded_bytes": 111264,
+      "sha256": "0cc5240e9e7b46644a1dd85d61f6e576adb1b6fe7eab9e2cf0d2eadd858c31e3"
+    },
+    {
+      "file": "save-rite/walk_31_shopper_white_tee_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29009,
+      "decoded_bytes": 111264,
+      "sha256": "0265a66d8f2b0ff491d355d508958f1441f6e7f2ca449bb4a5ceb7931b07ae65"
+    },
+    {
+      "file": "save-rite/walk_32_shopper_rose_cardigan_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35732,
+      "decoded_bytes": 111264,
+      "sha256": "40a9f07ce02fb73e663baf9d5597cd388aa1bae87dfaf596a8958b1c44aa1edb"
+    },
+    {
+      "file": "save-rite/walk_32_shopper_rose_cardigan_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32451,
+      "decoded_bytes": 111264,
+      "sha256": "ae6471d60295e25551e93090423a56d1b89cc8ece2bd19761a17af51c922fd5b"
+    },
+    {
+      "file": "save-rite/walk_32_shopper_rose_cardigan_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 32455,
+      "decoded_bytes": 111264,
+      "sha256": "82a57e12a07051acb1c71eaace2a37d6d1d9d1c6c217281fcf1087174d352f06"
+    },
+    {
+      "file": "save-rite/walk_32_shopper_rose_cardigan_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33174,
+      "decoded_bytes": 111264,
+      "sha256": "4b9e5940c87c9261f1f53faa1c3e50b89057f448338169e8033a177dbc5a2006"
+    },
+    {
+      "file": "save-rite/walk_33_shopper_ginger_flannel_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 35700,
+      "decoded_bytes": 111264,
+      "sha256": "67d1171c84c66daab60d7fff79d4c8b47a49bf2a042bc69c123e2a0b9dabce8a"
+    },
+    {
+      "file": "save-rite/walk_33_shopper_ginger_flannel_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29662,
+      "decoded_bytes": 111264,
+      "sha256": "278ea36390b964234bb05a8ae890d737b28f79e525991e21444f534deeaefa72"
+    },
+    {
+      "file": "save-rite/walk_33_shopper_ginger_flannel_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29531,
+      "decoded_bytes": 111264,
+      "sha256": "3db676fd2ef2c8332aad918196c473828e9297f4e67d86cd2b8d8c57639db6de"
+    },
+    {
+      "file": "save-rite/walk_33_shopper_ginger_flannel_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33109,
+      "decoded_bytes": 111264,
+      "sha256": "feb3d3243e10d1fda2267ffc9f5930170c1e45ab125b72b02807297d085abf5e"
+    },
+    {
+      "file": "save-rite/walk_34_shopper_denim_jacket_down.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 33557,
+      "decoded_bytes": 111264,
+      "sha256": "906862d38d8900c2472e5c194e9b4059e5ba03c9a77fb82e5f241f4bb8d21abb"
+    },
+    {
+      "file": "save-rite/walk_34_shopper_denim_jacket_left.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29670,
+      "decoded_bytes": 111264,
+      "sha256": "7f0bfd67c0ea0337dbf8b3c5e8ac7254ec5ef2c6597a2105761de5c3ea5103de"
+    },
+    {
+      "file": "save-rite/walk_34_shopper_denim_jacket_right.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 29650,
+      "decoded_bytes": 111264,
+      "sha256": "4f7e89657da8f258931e9c0307617c01dc9a96f0ff64bc4f2d645a8a9622da07"
+    },
+    {
+      "file": "save-rite/walk_34_shopper_denim_jacket_up.png",
+      "size": [
+        228,
+        122
+      ],
+      "bytes": 27107,
+      "decoded_bytes": 111264,
+      "sha256": "5b81e42e35b38ba334f6c914a433418891d51cbe19bbaf6725a774d824ef44e1"
+    }
+  ],
+  "props": [
+    {
+      "file": "bakery_back_shelf.png",
+      "size": [
+        160,
+        79
+      ],
+      "drawn_suggested": [
+        80.0,
+        39.5
+      ],
+      "raw_bbox": [
+        25,
+        18,
+        1748,
+        865
+      ],
+      "alpha": true
+    },
+    {
+      "file": "bakery_bread_rack.png",
+      "size": [
+        140,
+        60
+      ],
+      "drawn_suggested": [
+        70.0,
+        30.0
+      ],
+      "raw_bbox": [
+        44,
+        66,
+        1730,
+        788
+      ],
+      "alpha": true
+    },
+    {
+      "file": "bakery_tray_rack.png",
+      "size": [
+        100,
+        168
+      ],
+      "drawn_suggested": [
+        50.0,
+        84.0
+      ],
+      "raw_bbox": [
+        198,
+        58,
+        949,
+        1316
+      ],
+      "alpha": true
+    },
+    {
+      "file": "dairy_carton_shipper.png",
+      "size": [
+        60,
+        43
+      ],
+      "drawn_suggested": [
+        30.0,
+        21.5
+      ],
+      "raw_bbox": [
+        113,
+        86,
+        1358,
+        985
+      ],
+      "alpha": true
+    },
+    {
+      "file": "dairy_case.png",
+      "size": [
+        380,
+        194
+      ],
+      "drawn_suggested": [
+        190.0,
+        97.0
+      ],
+      "raw_bbox": [
+        23,
+        18,
+        1777,
+        854
+      ],
+      "alpha": true
+    },
+    {
+      "file": "dairy_empty_crate.png",
+      "size": [
+        50,
+        49
+      ],
+      "drawn_suggested": [
+        25.0,
+        24.5
+      ],
+      "raw_bbox": [
+        65,
+        71,
+        1188,
+        1172
+      ],
+      "alpha": true
+    },
+    {
+      "file": "dairy_milk_crates.png",
+      "size": [
+        60,
+        83
+      ],
+      "drawn_suggested": [
+        30.0,
+        41.5
+      ],
+      "raw_bbox": [
+        246,
+        100,
+        1006,
+        1147
+      ],
+      "alpha": true
+    },
+    {
+      "file": "dairy_milk_pallet.png",
+      "size": [
+        70,
+        72
+      ],
+      "drawn_suggested": [
+        35.0,
+        36.0
+      ],
+      "raw_bbox": [
+        137,
+        121,
+        1121,
+        1134
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_divider_v.png",
+      "size": [
+        11,
+        160
+      ],
+      "drawn_suggested": [
+        5.5,
+        80.0
+      ],
+      "raw_bbox": [
+        461,
+        9,
+        563,
+        1473
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_divider_h.png",
+      "size": [
+        160,
+        11
+      ],
+      "drawn_suggested": [
+        80.0,
+        5.5
+      ],
+      "source": "wc_divider_v.png rotated90",
+      "alpha": true
+    },
+    {
+      "file": "wc_door_ajar.png",
+      "size": [
+        100,
+        36
+      ],
+      "drawn_suggested": [
+        50.0,
+        18.0
+      ],
+      "raw_bbox": [
+        130,
+        283,
+        1406,
+        740
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_door_closed.png",
+      "size": [
+        100,
+        23
+      ],
+      "drawn_suggested": [
+        50.0,
+        11.5
+      ],
+      "raw_bbox": [
+        180,
+        155,
+        1992,
+        571
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_hand_dryer.png",
+      "size": [
+        36,
+        44
+      ],
+      "drawn_suggested": [
+        18.0,
+        22.0
+      ],
+      "raw_bbox": [
+        194,
+        102,
+        1060,
+        1153
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_partition_run.png",
+      "size": [
+        200,
+        33
+      ],
+      "drawn_suggested": [
+        100.0,
+        16.5
+      ],
+      "raw_bbox": [
+        129,
+        332,
+        1543,
+        565
+      ],
+      "alpha": true
+    },
+    {
+      "file": "wc_sink_counter.png",
+      "size": [
+        200,
+        92
+      ],
+      "drawn_suggested": [
+        100.0,
+        46.0
+      ],
+      "raw_bbox": [
+        174,
+        149,
+        1498,
+        761
+      ],
+      "alpha": true
+    }
+  ],
+  "bays": [
+    {
+      "file": "shelf_bay_a.png",
+      "source": "shelf_run_a.png",
+      "crop": [
+        0,
+        147,
+        198,
+        367
+      ],
+      "size": [
+        198,
+        220
+      ],
+      "drawn": [
+        99.0,
+        110.0
+      ],
+      "source_seam_difference": 11.723905723905723,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "shelf_bay_b.png",
+      "source": "shelf_run_b.png",
+      "crop": [
+        0,
+        263,
+        198,
+        483
+      ],
+      "size": [
+        198,
+        220
+      ],
+      "drawn": [
+        99.0,
+        110.0
+      ],
+      "source_seam_difference": 10.025252525252526,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "shelf_bay_c.png",
+      "source": "shelf_run_c.png",
+      "crop": [
+        0,
+        385,
+        198,
+        605
+      ],
+      "size": [
+        198,
+        220
+      ],
+      "drawn": [
+        99.0,
+        110.0
+      ],
+      "source_seam_difference": 9.312710437710438,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "shelf_bay_d.png",
+      "source": "shelf_run_d.png",
+      "crop": [
+        0,
+        44,
+        198,
+        264
+      ],
+      "size": [
+        198,
+        220
+      ],
+      "drawn": [
+        99.0,
+        110.0
+      ],
+      "source_seam_difference": 12.610690235690235,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "shelf_bay_e.png",
+      "source": "shelf_run_e.png",
+      "crop": [
+        0,
+        328,
+        198,
+        548
+      ],
+      "size": [
+        198,
+        220
+      ],
+      "drawn": [
+        99.0,
+        110.0
+      ],
+      "source_seam_difference": 9.919612794612794,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "freezer_bay_a.png",
+      "source": "freezer_run_a.png",
+      "crop": [
+        0,
+        299,
+        198,
+        441
+      ],
+      "size": [
+        198,
+        142
+      ],
+      "drawn": [
+        99.0,
+        71.0
+      ],
+      "source_seam_difference": 4.817760942760943,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "freezer_bay_b.png",
+      "source": "freezer_run_b.png",
+      "crop": [
+        0,
+        299,
+        198,
+        441
+      ],
+      "size": [
+        198,
+        142
+      ],
+      "drawn": [
+        99.0,
+        71.0
+      ],
+      "source_seam_difference": 5.141835016835016,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    },
+    {
+      "file": "freezer_bay_wall.png",
+      "source": "freezer_wall.png",
+      "crop": [
+        0,
+        20,
+        100,
+        178
+      ],
+      "size": [
+        100,
+        158
+      ],
+      "drawn": [
+        50.0,
+        79.0
+      ],
+      "source_seam_difference": 8.02,
+      "final_edge_max": 0,
+      "seam_blend_rows": 4
+    }
+  ],
+  "floor_checks": [
+    {
+      "file": "floor_carpet_tile.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_concrete.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_entry.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_market.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_quarry.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_vct.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_vinyl_break.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    },
+    {
+      "file": "floor_wc.png",
+      "size": [
+        128,
+        128
+      ],
+      "edge_x_max": 0,
+      "edge_y_max": 0
+    }
+  ],
+  "cast_decoded_before": 88584960,
+  "cast_decoded_after": 15131904,
+  "cast_colour_issue": "No colour restoration claimed: six raw-source pilot strips had slightly fewer colours at identical delivery size. Existing approved poses retained and resized. Latest handoff says animations need no changes."
+}
