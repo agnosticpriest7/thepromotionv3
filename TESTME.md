@@ -1304,3 +1304,55 @@ shots, but that call is yours — check a desk row where someone sits with their
 - `ladderSteps()` returns null at INTERN, so "THE WAY UP" has nothing to show at the starting rank.
   That's deliberate — the first rung is ungated (`case 'JUNIOR SALES': return {ok:true}`), and the
   panel is only offered from rank 2 up, so the null is never reached in the UI.
+
+---
+
+## Y — new hires in the store, and the org chart
+
+Both of your observations were real, and they turned out to be the same bug plus a roster fact.
+
+### The store does hire replacements — but they joined no department
+
+Yes, Save-Rite backfills exactly like the office: dismiss someone and HR sends a new face two days
+later. Measured it — fired a front-end worker on day 1, crew back to twelve by day 3.
+
+**But the replacement belonged to nowhere.** Every backfill path hands HR `{desk, dept}` where `dept`
+is the *office* field, so a store hire arrived with `dept:'sales'` and no store department at all.
+The org chart lists people by store department, so the new person appeared in no section of it, and
+counted toward no department's health. Headcount looked fine the whole time.
+
+So each firing permanently cost a department one person: **12 crew, but departments dropped 9 → 8 and
+stayed there.** Do that a few times over a playthrough and the chart hollows out — which is exactly
+what you saw by the time you were bakery manager.
+
+Fixed at the root: a station now carries its own department, and whoever fills it inherits it. A
+station *is* the bakery counter, so anyone standing there is bakery staff, and that survives every
+person who ever works it.
+
+One deliberate limit: a replacement comes in as **staff**, never as a manager, even when the chair
+that opened was a manager's. A department manager's empty chair is your promotion route — the game
+reads the world for a manager rather than a flag — so HR quietly seating a new one would close the
+rung behind you two days after you cleared it.
+
+### The chart was showing attendance, not the org
+
+Two more of the same shape, found while checking the first:
+
+- Departments filtered out anyone who had gone home, under a header reading "N **on the books**". At
+  8am before the crew arrive it showed 3 of 9; after close, **0 of 9**.
+- Worse, the leadership rows did it too — at 4:59pm, with the assistant manager gone home, the chart
+  read **"ASSISTANT MANAGER — VACANT · nobody in the chair"**. In a game where an empty chair is the
+  promotion signal, that tells you a rung has opened when nobody has left.
+
+Both now read the roster. Being fired removes you from the org chart; going home does not. The chart
+is identical at 8:00, 12:00 and 18:30 now.
+
+### The part that is not a bug — and your call
+
+**Three of the five departments contain exactly one person: the manager.** Produce is Gita, deli is
+Bruno, bakery is Doreen — and nobody else. Front end and grocery have three each. So the bakery, once
+*you* are its manager, genuinely contains only you, and no chart can show staff who do not exist.
+
+That's a roster decision, not a defect, so I've left it. If you want those departments staffed, the
+**12 unused Save-Rite characters** still sitting in `Art/sprites/save-rite/` are the obvious source —
+they'd need seated poses adding, since they were delivered walk-only.
