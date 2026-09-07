@@ -449,6 +449,51 @@ function toStoreManager(dept) {
      (st.firstThrow ? '\n     ' + String(st.firstThrow).split('\n').slice(0, 2).join(' | ') : ''));
 }
 
+/* ---- YOUR DESK FOLLOWS YOUR JOB ---------------------------------------------------------------
+   ⚠️ IT NEVER MOVED IN THE STORE. The promotion handler's entire desk block is wrapped in
+   `if(currentLevel==='office')`, so a Save-Rite player kept the BAGGER'S LOCKERS at the front end
+   all the way to Owner -- the record that is the ownership spine, where contraband lives and what
+   you are audited from, parked by the tills while you ran the shop. Kyle found it by playing:
+   "my 'desk' just stays as lockers at the front end even after promotions".
+
+   The assertion is that the workspace is IN THE RIGHT ROOM, not that it is at some coordinate --
+   the desk is placed by inheriting the outgoing role-holder's station, so a coordinate here would
+   be a third copy of a number the level already owns (CLAUDE.md 14). */
+{
+  const w = mk(); w.run(600);
+  const g = w.g, S = w.sandbox, L = g.layout;
+  const roomOf = (x, y) => (L.ROOMS.find(r => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h) || { name: 'NONE' }).name;
+  const deskRoom = () => { const d = S.myDesk(); return d ? roomOf(d.x + d.w / 2, d.y + d.h / 2) : 'NO DESK'; };
+
+  g.player.storeDept = 'bakery';
+  ck('a bagger works out of the locker bank at the front end', deskRoom() === 'FRONT END',
+     'rank 0 -> ' + deskRoom());
+
+  /* every rung from department manager up moves you, and moves you somewhere that matches the badge */
+  const want = { 2: 'BAKERY', 3: 'ASSISTANT MANAGER', 4: 'STORE MANAGER', 5: 'OWNER' };
+  const wrong = [];
+  Object.keys(want).forEach(r => {
+    S.moveStoreDesk(+r);
+    const got = deskRoom();
+    if (got !== want[r]) wrong.push(g.RANKS[+r] + ' -> ' + got + ' (want ' + want[r] + ')');
+  });
+  ck('  ^ and every rung above it moves you into the room that matches the badge',
+     wrong.length === 0,
+     wrong.length ? wrong.join('; ') : 'department manager, AM, store manager, owner all correct');
+
+  /* ⚠️ ANCHOR: if myDesk() ever returned nothing, every check above would compare 'NO DESK'
+     against itself and pass in a world with no ownership spine at all. */
+  ck('  ^ and there was a desk to move the whole time', !!S.myDesk(),
+     S.myDesk() ? 'the ownership spine survived four moves' : 'NO DESK -- the checks above proved nothing');
+
+  /* a department manager sits in THEIR department, not in a fixed one */
+  S.moveStoreDesk(0);
+  g.player.storeDept = 'deli';
+  S.moveStoreDesk(2);
+  ck('  ^ and a department manager sits in their OWN department', deskRoom() === 'DELI',
+     'deli manager -> ' + deskRoom());
+}
+
 console.log('upper: ' + pass + ' pass, ' + fail + ' fail');
 console.log(fail ? 'GROCERY UPPER RUNGS: RED ❌' : 'GROCERY UPPER RUNGS: GREEN ✅ (out-manage, settle, succeed)');
 process.exit(fail ? 1 : 0);

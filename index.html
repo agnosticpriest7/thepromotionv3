@@ -7989,6 +7989,41 @@ function claimAsstOffice(){
   toast('The assistant manager\u2019s office is yours.');
   SFX.promote();
 }
+/* ⚠️ IN THE STORE YOUR DESK NEVER MOVED. The promotion handler's whole desk block is wrapped in
+   `if(currentLevel==='office')`, so a Save-Rite player kept the bagger's LOCKERS at the front end
+   through every rung to Owner -- the one record that is the ownership spine, the place contraband
+   lives and the thing you are audited from, sitting by the tills while you ran the shop. Kyle:
+   "my 'desk' just stays as lockers at the front end even after promotions".
+
+   THE DESK FOLLOWS THE JOB, and it finds the job rather than being told where it is: the workspace
+   you inherit is the one the person you replaced was using. That is self-maintaining -- move the
+   store manager's office and the player's promotion follows it, with nothing to keep in step -- and
+   it is also the fiction. You are sitting in their chair.
+
+   Rungs 0 and 1 keep the lockers on purpose: a bagger and a department clerk do not have a desk in
+   any shop, and the locker bank IS the staff corner. The move starts at DEPARTMENT MANAGER. */
+const STORE_DESK_ROLE={2:'manager', 3:'am', 4:'store', 5:'owner'};
+function storeWorkspaceFor(rank){
+  const role=STORE_DESK_ROLE[rank]; if(!role)return null;
+  /* the person whose job this is -- for a department manager, the one in YOUR department */
+  const who=(role==='manager')
+    ? NPCS.find(n=>n.storeRole==='manager'&&n.storeDept===(player.storeDept||'grocery'))
+    : NPCS.find(n=>n.storeRole===role);
+  if(!who)return null;
+  return desks.find(d=>d.station&&d.owner===who.name)||null;
+}
+function moveStoreDesk(rank){
+  const d=myDesk(); if(!d)return false;
+  const w=storeWorkspaceFor(rank); if(!w)return false;
+  /* take their spot, and their furniture with it -- a manager's office has a desk in it, and the
+     locker art would read as a locker bank parked in the owner's office. */
+  d.x=w.x; d.y=w.y; d.w=w.w; d.h=w.h;
+  d.art=(rank>=3)?'manager_desk':'cubicle_desk';
+  d.noChair=false; d.seatSide='down'; d.seatDir='up';
+  d.ax=undefined; d.ay=undefined;                 // re-derived by scaleWorld's stamp / fitDeskBoxes
+  buildGrid();
+  return true;
+}
 function myDesk(){return desks.find(d=>d.owner==='you');}
 /* ===== TEST GAME: drop into a fresh round at any rank (dev menu) =====
    Places the player at INTERN..MANAGER with a consistent world, using the same office/desk plumbing
@@ -8520,6 +8555,10 @@ function tryPromote(){
     else if(next===4)claimAsstOffice();   // ASSISTANT MANAGER: its own office off the senior floor
     else movePlayerDesk();                // worker ranks: the room that matches the badge
     if(next>=2)unlockSales();
+  } else if(moveStoreDesk(next)){
+    /* said out loud, because a desk moving is the most legible thing a promotion does */
+    logLine('They cleared your things out of the locker bank. You have somewhere to sit now, and a door between you and the floor.','g');
+    toast('You have a new desk.');
   }
   renderDeleg();                        // the delegation tray appears at AM, hides again above it
   logLine(`PROMOTED: you are now ${RANKS[next]}.`,'g');toast('Promoted: '+RANKS[next]);
