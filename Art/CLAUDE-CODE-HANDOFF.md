@@ -1017,3 +1017,125 @@ worth asking what produced it.** The suite now asserts both of these itself (`t_
 Nothing urgent. The floors and props are all in and I have no outstanding art request — the next
 one will come from Kyle's TV pass rather than from me.
 
+
+---
+
+# ART REQUEST — six crew who can sit down, and the back of house (2026-09-07)
+
+Kyle, from play: *"we need to add more staff to those departments for it to make sense."* He is
+right, and it is the one thing blocking a real fix, so **section 1 is the priority and the rest can
+wait.**
+
+Everything here is sized from the game's own scale (`pxPerMetre` = 42.22 authored units per metre,
+`S` = 1.8), because the last batch shipped at roughly **half size** — the milk pallet implied a
+0.76 m stack, the bread rack 0.63 m. That was my fault, not yours: nothing in the suite pinned those
+sizes. All 30 store props are now in `t_props`' `REAL_M` table and checked against their real-world
+width, so **give me a real width in metres for each new prop and I will do the conversion.**
+
+---
+
+## 1. ⭐ SEATED POSES FOR SIX CREW — the blocker
+
+**Why:** three of Save-Rite's five departments contain exactly one person — the manager. Produce is
+Gita, deli is Bruno, **bakery is Doreen and nobody else**. Front end and grocery have three each. So
+when the player becomes bakery manager, the department genuinely contains only them, and the org
+chart has nothing to show. Measured, not impressions: 9 of 12 crew are in departments, split
+3 / 3 / 1 / 1 / 1.
+
+**The fix is six more crew, two per thin department** — every department then reads 2 staff + 1
+manager, 15 on the floor plus the 3 back-office rungs = 18. Their **walk strips already exist**; what
+does not exist is seated art, and Save-Rite's crew sit down at break, so a crew member without it
+cannot be added at all.
+
+**Please draw 4 seated facings for these six:**
+
+| department | character | files needed |
+|---|---|---|
+| PRODUCE | `13_vince_carboni` | `sit_13_vince_carboni_{down,up,left,right}.png` |
+| PRODUCE | `14_aleks_petrov` | `sit_14_aleks_petrov_{down,up,left,right}.png` |
+| DELI | `17_elaine_kovacs` | `sit_17_elaine_kovacs_{down,up,left,right}.png` |
+| DELI | `18_manny_reyes` | `sit_18_manny_reyes_{down,up,left,right}.png` |
+| BAKERY | `24_sandrine_pike` | `sit_24_sandrine_pike_{down,up,left,right}.png` |
+| BAKERY | `01_tyson_beck` | `sit_01_tyson_beck_{down,up,left,right}.png` |
+
+**24 files. Match the existing 48 exactly: 416×416, one person only, no chair** — the renderer
+composites the chair separately and derives the away-facing scale from the down pose's own content
+height. Same style and body scale as `sit_12_gita_mahal_*`, who these six stand beside.
+
+**I picked those six from your numbering** — 12 is the produce manager and 13/14/15 follow it; 16 is
+deli and 17/18/19 follow. If your roster recorded a different intended department for any of them,
+**your mapping wins** — tell me and I will wire them that way.
+
+⚠️ **Please do NOT draw the other six** (`07`, `09`, `10`, `11`, `15`, `19`) yet. Art that is
+registered and never drawn costs its memory on every boot and shows up nowhere — I found seven props
+and a whole washroom kit in exactly that state this week. Six is what the departments need; the rest
+stay in reserve until there is a use.
+
+Budget is fine: six crew adds ~18 MB decoded, taking the library from 95 MB to ~113 MB against a
+260 MB ceiling.
+
+---
+
+## 2. THE BACK OF HOUSE IS THE BAREST PART OF THE STORE
+
+I swept every room for empty floor. The **BOH corridor is 100% empty with zero props in it** — three
+segments, one of them 1192×70 authored, and nothing in any of them. Receiving is 79% empty with two
+pallets and the baler. These are the spaces a supermarket fills with working clutter, and none of it
+exists.
+
+Four pieces, and none can be faked from what we have:
+
+| prop | real size | what it is |
+|---|---|---|
+| `roll_cage` | 0.7 m wide × 1.8 m tall | the wheeled stock cage — the single most characteristic BOH object |
+| `pallet_jack` | 0.55 m wide × 1.5 m long | manual pump truck, tines forward |
+| `mop_bucket` | 0.45 m wide | yellow bucket + wringer, mop leaning in it |
+| `cardboard_bale` | 1.2 m × 1.0 m | a strapped cube of flattened card — what the baler produces |
+
+A roll cage that reads well would earn a second copy or two; the rest are one each.
+
+**Camera:** as you corrected before — mostly top down, broad top surfaces, only a small front strip
+facing south. Same treatment as the existing `baler` and `pallet`.
+
+---
+
+## 3. A SAFE FOR THE CASH OFFICE
+
+The cash office is 264×160 authored and contains one counter. `safe` — **0.6 m wide**, floor-standing,
+dial or keypad front. It is the only thing in a cash office that says what the room is.
+
+---
+
+## 4. THREE ITEM ICONS THAT DO NOT EXIST
+
+These three are requested by name at boot and 404 every time. The game falls back to an emoji, so
+nothing is broken — they are the only art the game asks for and does not get:
+
+`drawer.png` · `shift_covered.png` · `coffee_run.png`
+
+Same treatment as the existing icons in `Art/sprites/` (`stapler`, `keycard`, `mug` et al).
+
+---
+
+## 5. Not a request — two notes
+
+**Four washroom sprites are still unplaced:** `mirror`, `stall_h`, `wc_divider_v`, `wc_divider_h`.
+The five front-elevation pieces went in this week (vanity, partition run, both doors, hand dryer) and
+the room reads properly now. The two thin dividers are top-down partitions and the office restrooms
+already build stalls from `stall_v`. **No action needed** — I mention them only so you know they were
+not forgotten. If you think one has an obvious home, say so.
+
+**19 registered sprites are never drawn in either level, ~5.8 MB decoded per boot** — mostly
+superseded aisle art (`shelf_run_a`..`e`, `freezer_run_a`/`b`, `freezer_wall`), plus
+`cubicle_desk_up` at 1.3 MB, and two names with a draw width and no PNG at all (`break_table`,
+`kitchen_table`). **That is code-side and mine to clean up, not yours** — no art is missing. Flagging
+it because it is your budget too.
+
+---
+
+## What I am doing on the code side meanwhile
+
+- Dressing the three manager offices and the cash office with art that already exists
+  (`manager_desk`, `filing_cabinet`, `whiteboard`, `phone`) — they are 69–83% empty with one or two
+  props each, and none of that needs you.
+- Wiring the six new crew the moment their seated poses land: stations, departments, break seating.
