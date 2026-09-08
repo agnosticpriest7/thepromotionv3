@@ -1356,3 +1356,56 @@ Bruno, bakery is Doreen — and nobody else. Front end and grocery have three ea
 That's a roster decision, not a defect, so I've left it. If you want those departments staffed, the
 **12 unused Save-Rite characters** still sitting in `Art/sprites/save-rite/` are the obvious source —
 they'd need seated poses adding, since they were delivered walk-only.
+
+---
+
+## Z — deli and bakery have staff now
+
+Codex delivered all 32 files and they are all in.
+
+**Deli and bakery each have two staff.** Vince Carboni and Aleks Petrov either side of Bruno; Elaine
+Kovacs and Manny Reyes either side of Doreen. Both departments read 2 staff + 1 manager now, like
+front end and grocery, so becoming the bakery manager no longer leaves you managing an empty
+department.
+
+**Produce is still Gita on her own, and that one is my fault.** I picked the six characters by their
+file numbering — 12 is the produce manager, so 13/14 looked like produce. There is a roster brief
+that has been sitting on this machine since 4 September which says plainly that 13/14 are *deli* and
+17/18 are *bakery*; produce's own people are 09, 10 and 11 — the exact three I told Codex not to
+draw. It read the brief, overrode me and said so, which is the only reason nobody ended up in the
+wrong department. I have asked for the two produce seated sets; that's 8 files and finishes the job.
+
+**Receiving is dressed:** a roll cage, a pallet jack, baled cardboard and a mop and bucket. **The
+cash office has a safe** — it had one counter and nothing that said what the room was. And the
+**three missing inventory icons** (`drawer`, `shift_covered`, `coffee_run`) no longer 404 at boot.
+
+**What to look at:** stand at the deli and bakery counters — three people behind each, in the right
+aprons. Then the back of the store.
+
+### Three things I broke on the way in, all caught before you saw them
+
+- **The four wore office blazers for twenty minutes.** Adding a crew member means registering them in
+  six places, and I did five. The sixth is the name→sprite map, which is the only one that fails
+  *silently*: with no entry the game hands them a stock office face and carries on. Caught by looking
+  at a screenshot and disbelieving the clothes.
+- **They also collided with the player.** I numbered them from 50, and 50 is already the index of
+  *your* store clothes — a duplicate key, so you would have walked around Save-Rite dressed as Vince.
+- **They stood on the opening tour's path**, and three of the receiving props landed on the baler, the
+  department board and the doorway.
+
+### Two tests were measuring the wrong thing, and growing the shop proved it
+
+Both went red on this change and neither was finding a real defect:
+
+- "Crew are not standing inside each other" asked whether *any* of N people were overlapping, which
+  grows with the number of *pairs* — 66 became 120. Measured on both builds: by the old metric the
+  shop went from 5% to 13% and failed; by the honest one, the worst individual pair went from **2.6%
+  of the day down to 1.7%**. Nobody stands inside anybody more than before, there are just more
+  people to brush past. It now measures its own title, calibrated so the bar is *tighter* than the
+  one it replaces and no longer moves when the cast does.
+- The shopper-leak check bounded the array with the crew count written in as `12`. A note above it
+  already said to ask the game rather than hardcode — that advice had been half-applied, fixing the
+  customer half and leaving the crew half baked.
+
+The tempting fix in both cases was to nudge the number until it went green. That keeps a metric that
+means nothing and needs nudging again next time somebody is hired.

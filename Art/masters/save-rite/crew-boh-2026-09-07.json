@@ -1,0 +1,818 @@
+{
+  "date": "2026-09-07",
+  "tool": "built-in imagegen; exact prompts and sources in overnight/crew-boh-2026-09-07",
+  "files": [
+    {
+      "file": "sprites\\save-rite\\sit_13_vince_carboni_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 79836,
+      "decoded_bytes": 692224,
+      "sha256": "2a8abafa500c9f3d5c723dcb8261f6629207583a7491903d926782734a4aa7fc",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.893,
+        "colours_at_192h": 7306,
+        "native_colours": 20168,
+        "bbox": [
+          130,
+          28,
+          286,
+          388
+        ],
+        "width_height": 0.43333,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_13_vince_carboni_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 73862,
+      "decoded_bytes": 692224,
+      "sha256": "7894707317506222686d6286eb748e90c626847abd032774141b4d602cde05e2",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.349,
+        "colours_at_192h": 6184,
+        "native_colours": 13582,
+        "bbox": [
+          119,
+          65,
+          297,
+          388
+        ],
+        "width_height": 0.55108,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_13_vince_carboni_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 45737,
+      "decoded_bytes": 692224,
+      "sha256": "2e8e2bf47aaa49e11943cab7837e464c418e0cbdf853537a5dbcf17d9bd54eb6",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.493,
+        "colours_at_192h": 5550,
+        "native_colours": 11438,
+        "bbox": [
+          137,
+          93,
+          279,
+          388
+        ],
+        "width_height": 0.48136,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_13_vince_carboni_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 50684,
+      "decoded_bytes": 692224,
+      "sha256": "6f5b716a4fd80f2506e79153459c16688566d7c377b1528796d28c9665f0092d",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.493,
+        "colours_at_192h": 6197,
+        "native_colours": 12658,
+        "bbox": [
+          133,
+          93,
+          283,
+          388
+        ],
+        "width_height": 0.50847,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_14_aleks_petrov_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 80221,
+      "decoded_bytes": 692224,
+      "sha256": "98430c7e4720610830d47bb43ab8758cfe0188cfd7820df0b5add22b981db904",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.913,
+        "colours_at_192h": 7111,
+        "native_colours": 19898,
+        "bbox": [
+          127,
+          28,
+          288,
+          388
+        ],
+        "width_height": 0.44722,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_14_aleks_petrov_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 71014,
+      "decoded_bytes": 692224,
+      "sha256": "c8d63fddf461647310d37dc3c2b8689941424bb3d6f0aaf068a3be301479225f",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.372,
+        "colours_at_192h": 6913,
+        "native_colours": 15655,
+        "bbox": [
+          122,
+          65,
+          293,
+          388
+        ],
+        "width_height": 0.52941,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_14_aleks_petrov_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 47033,
+      "decoded_bytes": 692224,
+      "sha256": "11680c606d23add023a740433f3c25f92d3fc4ab5d71e8d2abea9ba993e2540b",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.484,
+        "colours_at_192h": 5734,
+        "native_colours": 11830,
+        "bbox": [
+          134,
+          93,
+          282,
+          388
+        ],
+        "width_height": 0.50169,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_14_aleks_petrov_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 51446,
+      "decoded_bytes": 692224,
+      "sha256": "555acf4088562513fa526cd815de4c907b57c52777ac4ed9c973f8dce44802c1",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.477,
+        "colours_at_192h": 6493,
+        "native_colours": 13454,
+        "bbox": [
+          130,
+          93,
+          285,
+          388
+        ],
+        "width_height": 0.52542,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_17_elaine_kovacs_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 81324,
+      "decoded_bytes": 692224,
+      "sha256": "e6125901b4f97023f3a9e305ea94690543e1ae9c581ad6a829788aed1635004b",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.854,
+        "colours_at_192h": 7406,
+        "native_colours": 20588,
+        "bbox": [
+          129,
+          28,
+          286,
+          388
+        ],
+        "width_height": 0.43611,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_17_elaine_kovacs_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 76006,
+      "decoded_bytes": 692224,
+      "sha256": "0a821d55e59584b6ca6bd205539c011611d8f42f011bfc3a1276bc4a1f305b68",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.3,
+        "colours_at_192h": 7478,
+        "native_colours": 17418,
+        "bbox": [
+          121,
+          65,
+          295,
+          388
+        ],
+        "width_height": 0.5387,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_17_elaine_kovacs_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 47616,
+      "decoded_bytes": 692224,
+      "sha256": "ad35926824837e067c47aef72de2602703644977428b53f686aa8e07002f95ae",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.466,
+        "colours_at_192h": 6129,
+        "native_colours": 12840,
+        "bbox": [
+          132,
+          93,
+          283,
+          388
+        ],
+        "width_height": 0.51186,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_17_elaine_kovacs_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 49710,
+      "decoded_bytes": 692224,
+      "sha256": "ca87891fc61d10b0e5a236c08d365900addbfc39fd1e9e0b2be25f6847fb87a9",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.464,
+        "colours_at_192h": 6260,
+        "native_colours": 13118,
+        "bbox": [
+          136,
+          93,
+          279,
+          388
+        ],
+        "width_height": 0.48475,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_18_manny_reyes_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 78087,
+      "decoded_bytes": 692224,
+      "sha256": "d2bd5a44dee8ca42df900f1744bf6fd7d371bb04fcabc2a903c2548c8204af04",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.895,
+        "colours_at_192h": 6936,
+        "native_colours": 19131,
+        "bbox": [
+          132,
+          28,
+          283,
+          388
+        ],
+        "width_height": 0.41944,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_18_manny_reyes_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 71645,
+      "decoded_bytes": 692224,
+      "sha256": "cc6810d8932b251d3969b8e3f7643b893e425eec02a84de010ac2e22013c164a",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.314,
+        "colours_at_192h": 5972,
+        "native_colours": 13327,
+        "bbox": [
+          120,
+          65,
+          295,
+          388
+        ],
+        "width_height": 0.5418,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_18_manny_reyes_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 48286,
+      "decoded_bytes": 692224,
+      "sha256": "bd8ca071a0bc1f672e2935eac4fa388e9b35d01e3b431d38b14722290ccbc89e",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.476,
+        "colours_at_192h": 6304,
+        "native_colours": 12764,
+        "bbox": [
+          130,
+          93,
+          285,
+          388
+        ],
+        "width_height": 0.52542,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_18_manny_reyes_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 45928,
+      "decoded_bytes": 692224,
+      "sha256": "7cfdfb8dae8b2bc4be2c325f0cc94e0f7d452acb9595e9be11809fad7e3ab846",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.469,
+        "colours_at_192h": 6058,
+        "native_colours": 12545,
+        "bbox": [
+          133,
+          93,
+          283,
+          388
+        ],
+        "width_height": 0.50847,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_24_sandrine_pike_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 72056,
+      "decoded_bytes": 692224,
+      "sha256": "86723164616062a5a6e33e3e1a8534f12fbcc2d5d91f5013fe6bd45d8e496ca0",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.916,
+        "colours_at_192h": 4344,
+        "native_colours": 10984,
+        "bbox": [
+          135,
+          28,
+          280,
+          388
+        ],
+        "width_height": 0.40278,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_24_sandrine_pike_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 58148,
+      "decoded_bytes": 692224,
+      "sha256": "04905b5cfec2d8cac82c60c907e057bd002c6b7dfeda0965619fea688d19c01b",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.363,
+        "colours_at_192h": 2765,
+        "native_colours": 5255,
+        "bbox": [
+          129,
+          65,
+          286,
+          388
+        ],
+        "width_height": 0.48607,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_24_sandrine_pike_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 40706,
+      "decoded_bytes": 692224,
+      "sha256": "5dff261d28c762413860472891e90209033454e849b20b4ff20e82f64c0d1c13",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.571,
+        "colours_at_192h": 3663,
+        "native_colours": 6965,
+        "bbox": [
+          130,
+          93,
+          285,
+          388
+        ],
+        "width_height": 0.52542,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_24_sandrine_pike_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 40775,
+      "decoded_bytes": 692224,
+      "sha256": "1ac081b5a3a252ae9db1e8f817817ed033148cedc3f9beb04549d3a58f9b92e9",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.536,
+        "colours_at_192h": 3969,
+        "native_colours": 7360,
+        "bbox": [
+          131,
+          93,
+          284,
+          388
+        ],
+        "width_height": 0.51864,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_01_tyson_beck_down.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 77030,
+      "decoded_bytes": 692224,
+      "sha256": "48d0aa08291c685c841bcfc5d997aba2e4401fd19ce015316f8839ca054662af",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 2.892,
+        "colours_at_192h": 6622,
+        "native_colours": 17502,
+        "bbox": [
+          133,
+          28,
+          283,
+          388
+        ],
+        "width_height": 0.41667,
+        "height": 360,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_01_tyson_beck_up.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 67992,
+      "decoded_bytes": 692224,
+      "sha256": "9f60341f568594096720e38da4b9d0a1d31343d99660a36f5dd4300523377ccf",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.463,
+        "colours_at_192h": 6628,
+        "native_colours": 14861,
+        "bbox": [
+          115,
+          65,
+          300,
+          388
+        ],
+        "width_height": 0.57276,
+        "height": 323,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_01_tyson_beck_left.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 46896,
+      "decoded_bytes": 692224,
+      "sha256": "5e84c93671d1ad28f944f3ce9f12ba96073e9e37561071281b33e66566366a94",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.522,
+        "colours_at_192h": 6128,
+        "native_colours": 12729,
+        "bbox": [
+          133,
+          93,
+          283,
+          388
+        ],
+        "width_height": 0.50847,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\save-rite\\sit_01_tyson_beck_right.png",
+      "size": [
+        416,
+        416
+      ],
+      "mode": "RGB",
+      "disk_bytes": 44856,
+      "decoded_bytes": 692224,
+      "sha256": "99cea711434438777fa58c1f26136578c4c07d16ace9f1f61794e7690c6c7f21",
+      "metrics": {
+        "effective_pixel_size_per_1000h": 3.534,
+        "colours_at_192h": 5588,
+        "native_colours": 11206,
+        "bbox": [
+          132,
+          93,
+          283,
+          388
+        ],
+        "width_height": 0.51186,
+        "height": 295,
+        "margin": 8,
+        "holes": 0,
+        "components": 1
+      }
+    },
+    {
+      "file": "sprites\\roll_cage.png",
+      "size": [
+        106,
+        190
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 39744,
+      "decoded_bytes": 80560,
+      "sha256": "5d88dd4c8e2a3783240733f9e05afac7df489617bf83be2df4335f59046b88a2",
+      "metrics": {
+        "size": [
+          106,
+          190
+        ],
+        "real_width_m": 0.7,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\pallet_jack.png",
+      "size": [
+        84,
+        220
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 22029,
+      "decoded_bytes": 73920,
+      "sha256": "f2ae8725212fb4e3f7acc65e91158ad061c74f477d942b039f86165240e31c9e",
+      "metrics": {
+        "size": [
+          84,
+          220
+        ],
+        "real_width_m": 0.55,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\mop_bucket.png",
+      "size": [
+        68,
+        163
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 16259,
+      "decoded_bytes": 44336,
+      "sha256": "4330710b29132fd74dfaec5ca6dac1002cfc486053666a902c6e747966bb389f",
+      "metrics": {
+        "size": [
+          68,
+          163
+        ],
+        "real_width_m": 0.45,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\cardboard_bale.png",
+      "size": [
+        182,
+        144
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 36965,
+      "decoded_bytes": 104832,
+      "sha256": "02067ee482258cdcde1b2e702e7f9c1fdbcdbe2824179102cd12aa0a1096bbed",
+      "metrics": {
+        "size": [
+          182,
+          144
+        ],
+        "real_width_m": 1.2,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\safe.png",
+      "size": [
+        91,
+        97
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 11377,
+      "decoded_bytes": 35308,
+      "sha256": "59c1d5bce337311b0419795f2546dce7a36847d8814e2cf356df1fd2340fe931",
+      "metrics": {
+        "size": [
+          91,
+          97
+        ],
+        "real_width_m": 0.6,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\drawer.png",
+      "size": [
+        64,
+        44
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 6522,
+      "decoded_bytes": 11264,
+      "sha256": "67410da7c8275416c6968ff009f064ccaf5581a08842400cc77b2f9a18a03980",
+      "metrics": {
+        "size": [
+          64,
+          44
+        ],
+        "real_width_m": null,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\shift_covered.png",
+      "size": [
+        64,
+        78
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 10025,
+      "decoded_bytes": 19968,
+      "sha256": "551406f1da6d0e8b3097846fd6b1f92ebc6e8de036e9ade0a86360f4e9238fa9",
+      "metrics": {
+        "size": [
+          64,
+          78
+        ],
+        "real_width_m": null,
+        "alpha_min": 0
+      }
+    },
+    {
+      "file": "sprites\\coffee_run.png",
+      "size": [
+        64,
+        65
+      ],
+      "mode": "RGBA",
+      "disk_bytes": 9245,
+      "decoded_bytes": 16640,
+      "sha256": "0756ed4217ce9e74ead3cb05d543418dbbc0e1efbaaecf2a6bfad0650aa2abce",
+      "metrics": {
+        "size": [
+          64,
+          65
+        ],
+        "real_width_m": null,
+        "alpha_min": 0
+      }
+    }
+  ],
+  "disk_bytes": 1599060,
+  "decoded_bytes": 17000204,
+  "roster_correction": {
+    "13_vince_carboni": "Deli",
+    "14_aleks_petrov": "Deli",
+    "17_elaine_kovacs": "Bakery",
+    "18_manny_reyes": "Bakery",
+    "24_sandrine_pike": "Head office",
+    "01_tyson_beck": "Front end"
+  },
+  "seat_check": "24 RGB 416x416, zero enclosed keyed pixels, margin >=8, one component, common bottom388; front360/back323/side295",
+  "limits": "Roster mismatch means original department staffing objective still needs Claude decision. Art delivered for exactly six named people; no reserve crew drawn."
+}

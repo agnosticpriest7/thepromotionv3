@@ -515,6 +515,9 @@ const ART_FILES=['chars',
   'wc_sink_counter','wc_partition_run','wc_door_closed','wc_door_ajar',
   'wc_divider_v','wc_divider_h','wc_hand_dryer','bakery_bread_rack',
   'bakery_tray_rack','bakery_back_shelf',
+  /* the back-of-house working kit and the cash office safe (Codex, 2026-09-07). RGBA with real
+     alpha, so deliberately out of COLORKEY like the rest of that delivery. */
+  'roll_cage','pallet_jack','mop_bucket','cardboard_bale','safe',
   /* ⚠️ CODEX DELIVERY 2026-09-06 -- crew meltdown sheets and the player's store clothes.
      These carry REAL ALPHA, not a magenta background, so they are deliberately absent from
      MAGENTA_BG: keying them would cost a second full canvas copy of each for no benefit. The
@@ -544,6 +547,22 @@ const ART_FILES=['chars',
   'save-rite/sit_08_russ_pelletier_down','save-rite/sit_08_russ_pelletier_up','save-rite/sit_08_russ_pelletier_left','save-rite/sit_08_russ_pelletier_right',
   'save-rite/walk_12_gita_mahal_down','save-rite/walk_12_gita_mahal_up','save-rite/walk_12_gita_mahal_left','save-rite/walk_12_gita_mahal_right',
   'save-rite/sit_12_gita_mahal_down','save-rite/sit_12_gita_mahal_up','save-rite/sit_12_gita_mahal_left','save-rite/sit_12_gita_mahal_right',
+  /* ⚠️ FOUR MORE CREW (Codex, 2026-09-07). Deli and bakery held a manager and nobody else,
+     so becoming the bakery manager left the department containing only you. They read 2 staff + 1
+     manager now, like front end and grocery. The walk strips shipped with the original cast and
+     were never registered; the seated poses are the new art.
+     ⚠️ PRODUCE IS STILL ONE PERSON, and that is my mistake. I mapped these six by their file
+     numbering; the roster brief sitting on disk since 2026-09-04 -- which I never opened -- puts
+     13/14 in DELI and 17/18 in BAKERY. Produce's own reserves are 09/10/11, and I had told Codex
+     not to draw them. It read the brief, overrode me, and said so. */
+  'save-rite/walk_13_vince_carboni_down','save-rite/walk_13_vince_carboni_up','save-rite/walk_13_vince_carboni_left','save-rite/walk_13_vince_carboni_right',
+  'save-rite/sit_13_vince_carboni_down','save-rite/sit_13_vince_carboni_up','save-rite/sit_13_vince_carboni_left','save-rite/sit_13_vince_carboni_right',
+  'save-rite/walk_14_aleks_petrov_down','save-rite/walk_14_aleks_petrov_up','save-rite/walk_14_aleks_petrov_left','save-rite/walk_14_aleks_petrov_right',
+  'save-rite/sit_14_aleks_petrov_down','save-rite/sit_14_aleks_petrov_up','save-rite/sit_14_aleks_petrov_left','save-rite/sit_14_aleks_petrov_right',
+  'save-rite/walk_17_elaine_kovacs_down','save-rite/walk_17_elaine_kovacs_up','save-rite/walk_17_elaine_kovacs_left','save-rite/walk_17_elaine_kovacs_right',
+  'save-rite/sit_17_elaine_kovacs_down','save-rite/sit_17_elaine_kovacs_up','save-rite/sit_17_elaine_kovacs_left','save-rite/sit_17_elaine_kovacs_right',
+  'save-rite/walk_18_manny_reyes_down','save-rite/walk_18_manny_reyes_up','save-rite/walk_18_manny_reyes_left','save-rite/walk_18_manny_reyes_right',
+  'save-rite/sit_18_manny_reyes_down','save-rite/sit_18_manny_reyes_up','save-rite/sit_18_manny_reyes_left','save-rite/sit_18_manny_reyes_right',
   'save-rite/walk_16_bruno_sarr_down','save-rite/walk_16_bruno_sarr_up','save-rite/walk_16_bruno_sarr_left','save-rite/walk_16_bruno_sarr_right',
   'save-rite/sit_16_bruno_sarr_down','save-rite/sit_16_bruno_sarr_up','save-rite/sit_16_bruno_sarr_left','save-rite/sit_16_bruno_sarr_right',
   'save-rite/walk_20_doreen_stapp_down','save-rite/walk_20_doreen_stapp_up','save-rite/walk_20_doreen_stapp_left','save-rite/walk_20_doreen_stapp_right',
@@ -715,6 +734,10 @@ const MAGENTA_BG=new Set(['cubicle_desk',
   'save-rite/sit_05_curtis_lam_down','save-rite/sit_05_curtis_lam_up','save-rite/sit_05_curtis_lam_left','save-rite/sit_05_curtis_lam_right',
   'save-rite/sit_06_bekah_thorne_down','save-rite/sit_06_bekah_thorne_up','save-rite/sit_06_bekah_thorne_left','save-rite/sit_06_bekah_thorne_right',
   'save-rite/sit_08_russ_pelletier_down','save-rite/sit_08_russ_pelletier_up','save-rite/sit_08_russ_pelletier_left','save-rite/sit_08_russ_pelletier_right',
+  'save-rite/sit_13_vince_carboni_down','save-rite/sit_13_vince_carboni_up','save-rite/sit_13_vince_carboni_left','save-rite/sit_13_vince_carboni_right',
+  'save-rite/sit_14_aleks_petrov_down','save-rite/sit_14_aleks_petrov_up','save-rite/sit_14_aleks_petrov_left','save-rite/sit_14_aleks_petrov_right',
+  'save-rite/sit_17_elaine_kovacs_down','save-rite/sit_17_elaine_kovacs_up','save-rite/sit_17_elaine_kovacs_left','save-rite/sit_17_elaine_kovacs_right',
+  'save-rite/sit_18_manny_reyes_down','save-rite/sit_18_manny_reyes_up','save-rite/sit_18_manny_reyes_left','save-rite/sit_18_manny_reyes_right',
   'save-rite/sit_12_gita_mahal_down','save-rite/sit_12_gita_mahal_up','save-rite/sit_12_gita_mahal_left','save-rite/sit_12_gita_mahal_right',
   'save-rite/sit_16_bruno_sarr_down','save-rite/sit_16_bruno_sarr_up','save-rite/sit_16_bruno_sarr_left','save-rite/sit_16_bruno_sarr_right',
   'save-rite/sit_20_doreen_stapp_down','save-rite/sit_20_doreen_stapp_up','save-rite/sit_20_doreen_stapp_left','save-rite/sit_20_doreen_stapp_right',
@@ -949,6 +972,8 @@ const ART_SRC={
   dairy_milk_pallet:[70,72], bakery_tray_rack:[100,168], bakery_back_shelf:[160,79],
   wc_sink_counter:[200,92], wc_partition_run:[200,33], wc_door_closed:[100,23],
   wc_door_ajar:[100,36], wc_hand_dryer:[36,44],
+  roll_cage:[106,190], pallet_jack:[84,220], mop_bucket:[68,163],
+  cardboard_bale:[182,144], safe:[91,97],
   bakery_bread_rack:[140,60],
   shelf_run_a:[496,1650],shelf_run_b:[496,1650],shelf_run_c:[496,1650],
   shelf_run_d:[496,1650],shelf_run_e:[496,1650],endcap:[496,386],
@@ -981,6 +1006,12 @@ const ART_W={
      cannot ship at half size the way the last batch did. */
   wc_sink_counter:122, wc_partition_run:182, wc_door_closed:46, wc_door_ajar:46,
   wc_divider_v:6, wc_divider_h:80, wc_hand_dryer:23,
+  /* ⚠️ FROM CODEX'S STATED REAL WIDTHS, NOT ITS PIXEL SIZES: roll cage 0.70 m, pallet jack
+     0.55, mop bucket 0.45, bale 1.20, safe 0.60 -- times 42.222 authored/m, times S. It stored
+     them at roughly twice their drawn size, so reading the file dimensions as drawn ones would
+     have repeated the half-size batch in the opposite direction. All five go into t_props'
+     REAL_M below, so the number is checked rather than merely chosen. */
+  roll_cage:53, pallet_jack:42, mop_bucket:34, cardboard_bale:91, safe:46,
   /* ⚠️ THE TRUCK IS 160 WIDE AND 854 TALL DRAWN -- a whole articulated vehicle seen from above,
      rear north against the dock and cab south down the yard, which is why it is nothing like the
      600x400 its first note proposed. Taking the number from the delivered manifest rather than
@@ -1138,6 +1169,10 @@ const CHAR_SHEETS={
   47:{down:'save-rite/walk_32_shopper_rose_cardigan_down', up:'save-rite/walk_32_shopper_rose_cardigan_up', left:'save-rite/walk_32_shopper_rose_cardigan_left', right:'save-rite/walk_32_shopper_rose_cardigan_right'},
   48:{down:'save-rite/walk_33_shopper_ginger_flannel_down', up:'save-rite/walk_33_shopper_ginger_flannel_up', left:'save-rite/walk_33_shopper_ginger_flannel_left', right:'save-rite/walk_33_shopper_ginger_flannel_right'},
   49:{down:'save-rite/walk_34_shopper_denim_jacket_down', up:'save-rite/walk_34_shopper_denim_jacket_up', left:'save-rite/walk_34_shopper_denim_jacket_left', right:'save-rite/walk_34_shopper_denim_jacket_right'},
+  51:{down:'save-rite/walk_13_vince_carboni_down', up:'save-rite/walk_13_vince_carboni_up', left:'save-rite/walk_13_vince_carboni_left', right:'save-rite/walk_13_vince_carboni_right'},   // Vince Carboni
+  52:{down:'save-rite/walk_14_aleks_petrov_down', up:'save-rite/walk_14_aleks_petrov_up', left:'save-rite/walk_14_aleks_petrov_left', right:'save-rite/walk_14_aleks_petrov_right'},   // Aleks Petrov
+  53:{down:'save-rite/walk_17_elaine_kovacs_down', up:'save-rite/walk_17_elaine_kovacs_up', left:'save-rite/walk_17_elaine_kovacs_left', right:'save-rite/walk_17_elaine_kovacs_right'},   // Elaine Kovacs
+  54:{down:'save-rite/walk_18_manny_reyes_down', up:'save-rite/walk_18_manny_reyes_up', left:'save-rite/walk_18_manny_reyes_left', right:'save-rite/walk_18_manny_reyes_right'},   // Manny Reyes
 
   21:{down:'walk_stacie_down', up:'walk_stacie_up', left:'walk_stacie_left', right:'walk_stacie_right'},
   22:{down:'walk_kyle_down',   up:'walk_kyle_up',   left:'walk_kyle_left',   right:'walk_kyle_right'},
@@ -1237,6 +1272,23 @@ const CAST={
   'Garret Voss': 37,
   'Lorne Petrie': 38,
   'Merv Kastelic': 39,
+  /* ⚠️ AND 50 WAS ALREADY TAKEN. STORE_OUTFIT={0:50} maps the PLAYER to index 50 -- their
+     store clothes -- so numbering these from 50 put a duplicate key in CHAR_SHEETS and SEAT_ART.
+     A later duplicate wins in an object literal, so index 50 quietly became Vince Carboni and the
+     player would have worn his apron in the shop. No error, no warning; t_grocery_crew caught it
+     as "nobody else changes clothes with them: Vince Carboni". They start at 51 now.
+  ⚠️ THE FIFTH PLACE A CAST MEMBER HAS TO BE REGISTERED, AND THE ONE THAT FAILS SILENTLY.
+     rawCharIndexFor reads CAST[name] first; with no entry it falls through to the name-hash pool
+     and the character quietly wears a stock office face. Their art loads, their seated poses key,
+     every test passes -- and two bakery staff stand behind the counter in office blazers instead
+     of cream aprons. ART-SPEC.md 5 warns about exactly this and I still missed it; it took looking
+     at the screenshot and not believing the outfits. Adding a crew member means ART_FILES,
+     MAGENTA_BG, CHAR_SPRITES, SEAT_ART, CAST *and* the CREW table -- six places, five of which
+     break loudly and this one does not. t_store_cast now asserts the join. */
+  'Vince Carboni': 51,
+  'Aleks Petrov':  52,
+  'Elaine Kovacs': 53,
+  'Manny Reyes':   54,
 
   'you':            0,    // ginger, blue shirt, cheap tie
   'Mr. Sterling':   1,    // the CEO: silver hair, charcoal three-piece
@@ -1428,6 +1480,10 @@ const SEAT_ART={
   37:'save-rite/sit_21_garret_voss',
   38:'save-rite/sit_22_lorne_petrie',
   39:'save-rite/sit_23_merv_kastelic',
+  51:'save-rite/sit_13_vince_carboni',
+  52:'save-rite/sit_14_aleks_petrov',
+  53:'save-rite/sit_17_elaine_kovacs',
+  54:'save-rite/sit_18_manny_reyes',
   0:'sit_intern', 1:'sit_sterling', 2:'sit_brenda', 3:'sit_marla', 4:'sit_peggy', 5:'sit_marcus', 6:'sit_priya', 7:'sit_chad', 8:'sit_dana', 9:'sit_otis', 10:'sit_wren', 11:'sit_sana', 12:'sit_gil', 13:'sit_ramesh', 14:'sit_vera', 15:'sit_doug', 16:'sit_ravinder', 17:'sit_hank', 18:'sit_zora', 19:'sit_hire_blazer', 20:'sit_dale', 21:'sit_stacie', 22:'sit_kyle', 23:'sit_raelee', 24:'sit_jax', 25:'sit_rod', 26:'sit_karl', 27:'sit_nwh'};   // 0 you, 1 Sterling (CEO), 2 Brenda (HR), 3 Marla (HR), 4 Peggy (reception), 5-15 sales floor, 16 Ravinder (CEO assistant, exec), 17 Hank (accountant), 18 Zora (accountant), 19 generic female hire face (blazer), 20 Dale (branch manager)
 /* returns {name, mirror} for (npc,dir), or null => placeholder. mirror flips a right-facing 'side'
    sprite for the left direction; explicit _left art is drawn as-is. */
@@ -13670,6 +13726,36 @@ function loadLevel(id){
   floorProp(967,  789, 'wc_door_closed',   'Stall door');         /* 26x6  -> bottom 795 */
   floorProp(1077, 788, 'wc_door_ajar',     'Stall door');         /* 26x9  -> bottom 797 */
   floorProp(1165, 774, 'wc_hand_dryer',    'Hand dryer');         /* 13x16 -> bottom 790 */
+  /* ⚠️ THE WORKING KIT GOES IN RECEIVING, NOT THE CORRIDOR I ASKED FOR IT FOR. The BOH
+     corridor is the barest space in the building -- 1192x70 authored with literally zero props --
+     but it is only 70 DEEP, about 1.65 m, and every piece in this kit stands 40 to 61 deep.
+     Anything placed there leaves under two nav cells to pass through, and buildGrid claims any
+     cell a blocker touches at all, so dressing that corridor means closing the store's main back
+     artery. Measuring the room before placing beats discovering it in the reachability check.
+     Receiving was 79% empty at 260x284, and a roll cage and a pallet jack live there anyway.
+     Clear of the two pallets at y150..174 and of the huddle spot at (1360,158). */
+  /* ⚠️ AND THREE OF THESE FIVE LANDED ON SOMETHING FIRST TIME. The room already holds a
+     baler and a department board whose DRAWN rects reach far past their collision boxes -- the
+     baler's box is 32x24 and it paints roughly 60x67 -- and receiving's only door is a 44-unit gap
+     at x1224..1238. Reading the container list is not enough: two of these overlapped art I could
+     not see in it, and the third stood in the doorway. placement.js named all three.
+     Cages and jack across the clear band at y67..130, mop and bale down the east side, everything
+     east of the door mouth and clear of the pallets at y150. */
+  /* ⚠️ AND THE OPENING TOUR WALKS THROUGH THIS ROOM. Receiving is where the store tour
+     BEGINS -- (1300,235), then north up x=1370 and west along y=130 -- and the walkers are
+     teleported along it, so anything on those legs is walked through in full view. t_intro_route
+     named four. Two of them cleared the collision box by two units and still failed, because the
+     check walks a 16-unit BODY along the line, not a point.
+     So the usable floor here is smaller than 79% empty suggests: minus the tour corridor, minus
+     the baler's drawn rect (far bigger than its box), minus the doorway at x1224..1238, minus the
+     pallets and the department board. The second roll cage is dropped -- there is no honest room
+     for it, and one cage that is not walked through beats two that are. */
+  floorProp(1245,  67, 'roll_cage',      'Roll cage');        /* 29x53 -> 1245..1274, bottom 120 */
+  floorProp(1445,  69, 'pallet_jack',    'Pallet jack');      /* 23x61 -> 1445..1468, bottom 130 */
+  floorProp(1400, 200, 'cardboard_bale', 'Baled cardboard');  /* 51x40 -> 1400..1451, bottom 240 */
+  floorProp(1460, 205, 'mop_bucket',     'Mop and bucket');   /* 19x45 -> 1460..1479, bottom 250 */
+  /* the cash office held one counter in 264x160 and nothing that said what the room was */
+  floorProp(200,  773, 'safe',           'Safe');             /* 26x27 -> bottom 800 */
   floorProp(700, 976, 'trolley_bay',    'Trolley bay');
   floorProp(330, 892, 'magazine_rack',  'Magazines and sweets');
   /* ⚠️ THE PALLET MOVES TO THE DELI'S OPEN EAST END, where Kyle marked it -- the bare floor
@@ -14138,6 +14224,22 @@ function loadLevel(id){
          its top edge. */
       ['Bruno Sarr',        caseMidX('DELI'),   caseStaffY('DELI'),   'down', 'deli',   'manager'],
       ['Doreen Stapp',      caseMidX('BAKERY'), caseStaffY('BAKERY'), 'down', 'bakery', 'manager'],
+      /* ⚠️ TWO STAFF EACH, BECAUSE A DEPARTMENT OF ONE IS NOT A DEPARTMENT. Kyle, on the
+         org chart: "once I hit bakery manager it wasn't showing many staff members". It was
+         telling the truth -- deli and bakery held exactly one person, and that person was the
+         manager, so taking the job left the department containing nobody but you.
+         Derived off the same case as their manager, one body either side, so redrawing a counter
+         moves all three together instead of stranding two of them inside a wall.
+         ⚠️ 80 EITHER SIDE, NOT 62. At 62 the three of them on a 178-wide case drifted into
+         each other as they worked: t_grocery_crew measured 14% of the day with some pair inside 8
+         authored against a 12% ceiling, and half those events involved these four -- Doreen+Manny,
+         Aleks+Bruno, Elaine+Manny. Diagnosed by naming the pairs rather than by nudging the
+         threshold, which was the tempting fix and the wrong one. 80 is the widest spacing that
+         still keeps all three standing over their own case. */
+      ['Vince Carboni',     caseMidX('DELI')-80,   caseStaffY('DELI'),   'down', 'deli',   'staff'],
+      ['Aleks Petrov',      caseMidX('DELI')+80,   caseStaffY('DELI'),   'down', 'deli',   'staff'],
+      ['Elaine Kovacs',     caseMidX('BAKERY')-80, caseStaffY('BAKERY'), 'down', 'bakery', 'staff'],
+      ['Manny Reyes',       caseMidX('BAKERY')+80, caseStaffY('BAKERY'), 'down', 'bakery', 'staff'],
       /* ---- THE STORE MANAGER. Not a department manager — he is the store's Dale, the man whose
          work you can do for him. He has no storeDept on purpose: he is above all five, and the
          loyalty path routes through him rather than through any one department. */

@@ -277,7 +277,12 @@ const REUSED = [['Staff lockers', 'lockers'], ['Department board', 'whiteboard']
                       with HEIGHT rather than floor extent, so a real 'width' for them is their
                       6 cm thickness and asserting against it would be meaningless. */
                    wc_sink_counter: 1.6, wc_partition_run: 2.4, wc_door_closed: 0.6,
-                   wc_door_ajar: 0.6, wc_hand_dryer: 0.3 };
+                   wc_door_ajar: 0.6, wc_hand_dryer: 0.3,
+                   /* the back-of-house kit and the safe. Codex supplies a real width with each
+                      delivery now, and stores the file at roughly twice the drawn size -- so these
+                      are its stated metres, not its pixel dimensions. */
+                   roll_cage: 0.7, pallet_jack: 0.55, mop_bucket: 0.45,
+                   cardboard_bale: 1.2, safe: 0.6 };
   const ppm = w.sandbox.pxPerMetre();
   ck('the store declares one scale, derived from the character sprite',
      ppm > 40 && ppm < 45, ppm.toFixed(1) + ' authored units per metre (a person is 0.5 m across)');

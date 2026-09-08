@@ -21,6 +21,9 @@ const ck = (n, c, d) => { console.log('  ' + (c ? 'PASS' : 'FAIL') + '  ' + n + 
 /* The crew list is a SPEC, so it is named here deliberately (§14: game-rule constants are the
    exception and should be hard-coded — a test SHOULD fail when the cast changes). */
 const CREW = ['Priya Raval', 'Marguerite Dubois', 'Danika Osei', 'Curtis Lam', 'Bekah Thorne', 'Russ Pelletier',
+              /* deli and bakery each held one person -- their manager -- so taking the bakery
+                 manager's job left the department containing only you. Two staff each. */
+              'Vince Carboni', 'Aleks Petrov', 'Elaine Kovacs', 'Manny Reyes',
               /* the three departments that had no manager, plus the store's own — added because the
                  ladder offers five departments and three of them dead-ended at rung 3 with nobody
                  to succeed. */
@@ -44,7 +47,7 @@ const S = w.sandbox, g = w.g;
    through all of it. The assertion was not weak -- it was measuring a world that did not exist. */
 w.run(1);
 
-ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name === nm)) && g.NPCS.length === CREW.length,
+ck('the whole crew is on the floor', CREW.every(nm => g.NPCS.some(n => n.name === nm)) && g.NPCS.length === CREW.length,
    g.NPCS.length + ' NPCs: ' + g.NPCS.map(n => n.name).join(', '));
 
 {
@@ -644,6 +647,7 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
   const tally = {}, where = {};
   const bump = (k, hit) => { tally[k] = tally[k] || [0, 0]; tally[k][1]++; if (hit) tally[k][0]++; };
   let samples = 0, overlap = 0;
+  const pairTally = {};   // how long each SPECIFIC pair spends inside each other
   for (let i = 0; i < 700; i++) {
     fw.run(40);
     if (fsb.currentPhase().name !== 'Regular Work') continue;
@@ -654,7 +658,11 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
     for (let a = 0; a < crew.length; a++) {
       const n = crew[a];
       for (let b = a + 1; b < crew.length; b++)
-        if (Math.hypot(n.x - crew[b].x, n.y - crew[b].y) < 8 * SC) pair = true;
+        if (Math.hypot(n.x - crew[b].x, n.y - crew[b].y) < 8 * SC) {
+          pair = true;
+          const key = [n.name, crew[b].name].sort().join(' + ');
+          pairTally[key] = (pairTally[key] || 0) + 1;
+        }
       /* ⚠️ ONLY JUDGE THE SIDE WHEN THEY ARE ACTUALLY AT THE COUNTER. The first version counted
          every sample, so an errand two departments away scored as "in front of the case" and the
          number moved whenever the errand rate did -- it fell 92% -> 64% on a change that moved the
@@ -689,8 +697,25 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
      'deli ' + pct('deli') + '%, bakery ' + pct('bakery') + '% on the staff side');
   ck('cashiers are at a till', pct('till') >= 45, pct('till') + '% of the working day');
   ck('grocery clerks are at a shelf run', pct('aisle') >= 55, pct('aisle') + '% of the working day');
-  ck('crew are not standing inside each other', 100 * overlap / samples <= 12,
-     Math.round(100 * overlap / samples) + '% of samples had a pair closer than 8 authored');
+  /* ⚠️ THIS COUNTED FLOOR BUSYNESS, NOT PEOPLE STANDING INSIDE EACH OTHER, AND IT ROTTED
+     THE MOMENT THE SHOP GREW. It asked whether ANY of N crew were within 8 authored, which scales
+     with the number of PAIRS -- N(N-1)/2 -- not with how crowded any two people actually are.
+     Measured on both builds when deli and bakery went from one person to three (12 crew -> 16):
+         'any pair close'   5% of samples  ->  13%   (the old metric: FAIL against a 12% ceiling)
+         worst single pair  2.6% of the day ->  1.7%  (the real property: BETTER)
+         distinct pairs ever close  15 -> 42        (66 pairs became 120)
+     Nobody stands inside anybody more than they used to; there are simply more people to brush
+     past. The old number would have condemned every future hire, and the tempting fix -- nudge 12
+     up until it passes -- keeps a metric that means nothing and will need nudging again.
+     So it measures its own title now: no ONE pair may be inside 8 authored for more than 5% of
+     the working day. Calibrated on the 12-crew build, whose worst pair was 2.6%, so this is a
+     TIGHTER bar than the one it replaces and it no longer moves when the cast does. */
+  const worstPair = Object.entries(pairTally).sort((a, b) => b[1] - a[1])[0] || ['(none)', 0];
+  const worstPct = 100 * worstPair[1] / samples;
+  ck('no two crew stand inside each other', worstPct <= 5,
+     'worst pair ' + worstPair[0] + ' at ' + worstPct.toFixed(1) + '% of the day' +
+     '  (' + Object.keys(pairTally).length + ' pairs ever within 8 authored, ' +
+     Math.round(100 * overlap / samples) + '% of samples had any)');
 
   /* the department each person spends the most time in must be their OWN. This is the assertion
      that would have caught the drained floor: before the errand pins were re-cut, four of the
@@ -946,5 +971,5 @@ ck('all six crew are on the floor', CREW.every(nm => g.NPCS.some(n => n.name ===
 }
 
 console.log('crew: ' + pass + ' pass, ' + fail + ' fail');
-console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (twelve on the floor, nobody in a shelf)');
+console.log(fail ? 'GROCERY CREW: RED ❌' : 'GROCERY CREW: GREEN ✅ (the whole crew on the floor, nobody in a shelf)');
 process.exit(fail ? 1 : 0);
