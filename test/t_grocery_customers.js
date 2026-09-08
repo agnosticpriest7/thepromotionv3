@@ -68,8 +68,16 @@ const mk = () => createWorld({ storage: { 'promo:level': 'grocery', 'promo:newga
      /* ⚠️ BOUND IT AGAINST THE PEAK THE CURVE CAN REACH, asked of the game. This said
         `12 + TARGET + 2` with TARGET as the flat dial, so the day the shop got a lunch rush
         it read 22 against a limit of 20 and called a working store a corpse leak. */
-     g.NPCS.length <= 12 + S.customerPeak() + 2 && g.NPCS.filter(n => n.customer && !n.alive).length === 0,
-     g.NPCS.length + ' in the array, ' + g.NPCS.filter(n => n.customer).length + ' of them shoppers');
+     /* ⚠️ AND THE CREW HALF WAS STILL A LITERAL. The note above fixed the customer half by
+        asking the game for its peak, then left `12` -- the crew count -- baked in beside it. The
+        day deli and bakery went from one person to three, a working store read 25 against a limit
+        of 21 and was called a corpse leak. Same lesson, same line, half applied: this is a test
+        about SHOPPERS not accumulating, so count the shoppers and let the crew be whatever the
+        roster says. */
+     g.NPCS.filter(n => !n.customer).length + S.customerPeak() + 2 >= g.NPCS.length &&
+       g.NPCS.filter(n => n.customer && !n.alive).length === 0,
+     g.NPCS.length + ' in the array = ' + g.NPCS.filter(n => !n.customer).length + ' crew + ' +
+       g.NPCS.filter(n => n.customer).length + ' shoppers (peak ' + S.customerPeak() + ')');
 }
 
 /* ---- 3. NO STAFF QUERY EVER SEES A CUSTOMER --------------------------------------------- */
